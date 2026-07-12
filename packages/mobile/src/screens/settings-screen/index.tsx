@@ -173,8 +173,6 @@ export function SettingsScreen() {
           profile={downloadQualityProfile}
           title={t('downloadQualityTitle')}
           description={t('downloadQualityDescription')}
-          normalLabel={t('downloadQualityNormalValue')}
-          bestLabel={t('downloadQualityBestValue')}
           warning={t('downloadQualityWarning')}
           onChange={setDownloadQualityProfile}
         />

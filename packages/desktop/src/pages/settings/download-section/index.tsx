@@ -38,49 +38,41 @@ export function DownloadSection({
 
       <div className="flex flex-col gap-4" style={{ paddingLeft: layout.sectionIndent }}>
         <div
-          className="flex justify-between gap-3"
+          className="flex justify-between gap-5"
           style={{
-            alignItems: layout.compact ? 'flex-start' : 'center',
+            alignItems: layout.compact ? 'stretch' : 'center',
             flexDirection: layout.compact ? 'column' : 'row',
+            padding: layout.compact ? '16px' : '18px 20px',
+            borderRadius: '12px',
+            border: '1px solid rgba(214, 170, 106, 0.5)',
+            background: 'linear-gradient(135deg, rgba(214, 170, 106, 0.12), rgba(214, 170, 106, 0.035))',
+            boxShadow: 'inset 0 0 24px rgba(214, 170, 106, 0.035)',
           }}
         >
-          <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-            {t('downloadFormat')}
-          </span>
-          <span
-            style={{
-              fontSize: '0.78rem',
-              color: 'var(--text-primary)',
-              fontWeight: 500,
-            }}
-          >
-            {qualityProfile === 'best_compatible'
-              ? t('downloadQualityBestValue')
-              : t('downloadQualityNormalValue')}
-          </span>
-        </div>
-
-        <div
-          className="flex justify-between gap-3"
-          style={{
-            alignItems: layout.compact ? 'flex-start' : 'center',
-            flexDirection: layout.compact ? 'column' : 'row',
-          }}
-        >
-          <div>
-            <div style={{ fontSize: '0.78rem', color: 'var(--text-primary)', fontWeight: 500 }}>
+          <div style={{ minWidth: 0, maxWidth: '680px' }}>
+            <div style={{ fontSize: '1rem', color: 'var(--white)', fontWeight: 650 }}>
               {t('downloadQualityBest')}
             </div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: 3 }}>
+            <div
+              style={{
+                fontSize: '0.78rem',
+                color: '#d6aa6a',
+                lineHeight: 1.55,
+                marginTop: 7,
+              }}
+            >
               {t('downloadQualityWarning')}
             </div>
           </div>
-          <ToggleSwitch
-            enabled={qualityProfile === 'best_compatible'}
-            onClick={() => void setQualityProfile(
-              qualityProfile === 'best_compatible' ? 'normal' : 'best_compatible',
-            )}
-          />
+          <div className="flex shrink-0 items-center" style={{ alignSelf: layout.compact ? 'flex-end' : 'center' }}>
+            <ToggleSwitch
+              large
+              enabled={qualityProfile === 'best_compatible'}
+              onClick={() => void setQualityProfile(
+                qualityProfile === 'best_compatible' ? 'normal' : 'best_compatible',
+              )}
+            />
+          </div>
         </div>
 
         <div>

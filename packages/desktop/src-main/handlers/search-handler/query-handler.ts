@@ -15,8 +15,6 @@ import {
 } from './library-search';
 import { sendSearchSourceResults } from './renderer-events';
 
-const SEARCH_PROVIDER_TIMEOUT_MS = 12_000;
-
 export async function handleSearchQuery(
   target: Electron.WebContents,
   query: SearchQuery,
@@ -71,12 +69,11 @@ export async function handleSearchQuery(
       target,
       query,
       'youtube',
-      () => withSearchTimeout('youtube', () =>
-        searchYouTubePage(
-          query.query,
-          getSourceLimit('youtube'),
-          getSourceOffset(query, 'youtube'),
-        )),
+      () => searchYouTubePage(
+        query.query,
+        getSourceLimit('youtube'),
+        getSourceOffset(query, 'youtube'),
+      ),
       promises,
       sourceErrors,
     );
@@ -84,12 +81,11 @@ export async function handleSearchQuery(
       target,
       query,
       'spotify',
-      () => withSearchTimeout('spotify', () =>
-        searchSpotifyPage(
-          query.query,
-          getSourceLimit('spotify'),
-          getSourceOffset(query, 'spotify'),
-        )),
+      () => searchSpotifyPage(
+        query.query,
+        getSourceLimit('spotify'),
+        getSourceOffset(query, 'spotify'),
+      ),
       promises,
       sourceErrors,
     );
@@ -97,12 +93,11 @@ export async function handleSearchQuery(
       target,
       query,
       'soundcloud',
-      () => withSearchTimeout('soundcloud', () =>
-        searchSoundCloudPage(
-          query.query,
-          getSourceLimit('soundcloud'),
-          getSourceOffset(query, 'soundcloud'),
-        )),
+      () => searchSoundCloudPage(
+        query.query,
+        getSourceLimit('soundcloud'),
+        getSourceOffset(query, 'soundcloud'),
+      ),
       promises,
       sourceErrors,
     );
@@ -157,26 +152,4 @@ function getSourceOffset(
   source: SearchResult['source'],
 ): number {
   return query.offsetBySource?.[source] ?? 0;
-}
-
-async function withSearchTimeout<T>(
-  source: Extract<SearchResult['source'], 'youtube' | 'spotify' | 'soundcloud'>,
-  run: () => Promise<T>,
-): Promise<T> {
-  let timer: ReturnType<typeof setTimeout> | null = null;
-
-  try {
-    return await Promise.race([
-      run(),
-      new Promise<T>((_, reject) => {
-        timer = setTimeout(() => {
-          reject(new Error(`${source} search timed out after ${SEARCH_PROVIDER_TIMEOUT_MS}ms`));
-        }, SEARCH_PROVIDER_TIMEOUT_MS);
-      }),
-    ]);
-  } finally {
-    if (timer) {
-      clearTimeout(timer);
-    }
-  }
 }

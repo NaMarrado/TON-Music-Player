@@ -125,7 +125,7 @@ export function MainLayout() {
         }
       />
       <div className="flex overflow-hidden" style={{ background: 'var(--bg-deep)' }}>
-        <main className="flex-1 overflow-y-auto flex flex-col relative">
+        <main className="flex min-h-0 flex-1 flex-col overflow-hidden relative">
           <div
             style={{
               position: 'sticky',

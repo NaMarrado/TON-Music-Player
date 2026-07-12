@@ -4,20 +4,27 @@ import type { ReactNode } from 'react';
 
 export function ToggleSwitch({
   enabled,
+  large = false,
   onClick,
 }: {
   enabled: boolean;
+  large?: boolean;
   onClick: () => void;
 }) {
+  const width = large ? 48 : 36;
+  const height = large ? 28 : 20;
+  const inset = large ? 4 : 3;
+  const thumbSize = large ? 20 : 14;
+
   return (
     <button
       onClick={onClick}
       className="toggle-switch cursor-pointer shrink-0"
       style={{
         position: 'relative',
-        width: '36px',
-        height: '20px',
-        borderRadius: '10px',
+        width: `${width}px`,
+        height: `${height}px`,
+        borderRadius: `${height / 2}px`,
         border: 'none',
         background: enabled ? 'var(--white)' : 'var(--bg-active)',
         transition: 'background var(--transition)',
@@ -27,10 +34,10 @@ export function ToggleSwitch({
       <div
         style={{
           position: 'absolute',
-          top: '3px',
-          left: enabled ? '19px' : '3px',
-          width: '14px',
-          height: '14px',
+          top: `${inset}px`,
+          left: enabled ? `${width - thumbSize - inset}px` : `${inset}px`,
+          width: `${thumbSize}px`,
+          height: `${thumbSize}px`,
           borderRadius: '50%',
           background: enabled ? 'var(--bg-deep)' : 'var(--text-secondary)',
           transition: 'all var(--transition)',
