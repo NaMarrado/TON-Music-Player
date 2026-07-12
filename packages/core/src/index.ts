@@ -71,7 +71,6 @@ export {
   TON_REPOSITORY_URL,
   TON_RELEASES_URL,
   TON_UPDATE_MANIFEST_URL,
-  TON_PACKAGE_VERSION_URL,
   compareVersions,
   checkForAppUpdate,
 } from './services/app-update';

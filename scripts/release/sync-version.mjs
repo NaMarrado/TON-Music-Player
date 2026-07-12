@@ -25,6 +25,7 @@ function parseArgs(argv) {
     bump: null,
     check: false,
     fromGitTags: false,
+    skipManifest: false,
     version: null,
     write: false,
   };
@@ -41,6 +42,9 @@ function parseArgs(argv) {
         break;
       case '--from-git-tags':
         options.fromGitTags = true;
+        break;
+      case '--skip-manifest':
+        options.skipManifest = true;
         break;
       case '--version':
         options.version = argv[index + 1] ?? null;
@@ -207,7 +211,7 @@ function assertEqual(actual, expected, label) {
   }
 }
 
-function assertFilesSynced(version) {
+function assertFilesSynced(version, includeManifest) {
   const buildNumber = versionCodeFor(version);
 
   for (const relativePath of VERSIONED_PACKAGES) {
@@ -257,21 +261,25 @@ function assertFilesSynced(version) {
     assertEqual(marketingVersion[1], version, 'MARKETING_VERSION');
   }
 
-  const expectedManifest = JSON.stringify(buildUpdateManifest(version));
-  const actualManifest = JSON.stringify(readJson('update.json'));
-  if (expectedManifest !== actualManifest) {
-    throw new Error(`update.json is not synchronized for version ${version}`);
+  if (includeManifest) {
+    const expectedManifest = JSON.stringify(buildUpdateManifest(version));
+    const actualManifest = JSON.stringify(readJson('update.json'));
+    if (expectedManifest !== actualManifest) {
+      throw new Error(`update.json is not synchronized for version ${version}`);
+    }
   }
 }
 
-function syncFiles(version) {
+function syncFiles(version, includeManifest) {
   const buildNumber = versionCodeFor(version);
   syncPackageVersions(version);
   syncCoreVersion(version);
   syncExpoConfig(version, buildNumber);
   syncIosNativeVersion(version, buildNumber);
   syncGeneratedAndroidGradle(version, buildNumber);
-  writeJson('update.json', buildUpdateManifest(version));
+  if (includeManifest) {
+    writeJson('update.json', buildUpdateManifest(version));
+  }
 }
 
 function resolveTargetVersion(options) {
@@ -289,14 +297,15 @@ function main() {
   const options = parseArgs(process.argv.slice(2));
   const currentVersion = getPackageVersion();
   const targetVersion = resolveTargetVersion(options);
+  const includeManifest = !options.skipManifest;
 
   if (options.write) {
-    syncFiles(targetVersion);
+    syncFiles(targetVersion, includeManifest);
     console.log(`Synced TON release version ${targetVersion}`);
     return;
   }
 
-  assertFilesSynced(options.bump ? currentVersion : targetVersion);
+  assertFilesSynced(options.bump ? currentVersion : targetVersion, includeManifest);
 
   console.log(`Current version: ${currentVersion}`);
   console.log(`Target version: ${targetVersion}`);

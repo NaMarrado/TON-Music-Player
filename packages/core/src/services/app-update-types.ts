@@ -1,4 +1,4 @@
-export type UpdateSource = 'manifest' | 'package' | 'simulation';
+export type UpdateSource = 'manifest' | 'simulation';
 export type AppUpdatePlatform =
   | 'desktop-darwin'
   | 'desktop-win32'
