@@ -1,6 +1,6 @@
 {
   "name": "@ton/desktop",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "private": true,
   "type": "module",
   "main": "./out/main/main.js",
