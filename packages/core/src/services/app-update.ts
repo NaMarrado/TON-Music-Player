@@ -1,5 +1,5 @@
 import { resolveUpdateManifest } from './app-update-manifest';
-import { loadRemoteManifest, loadRemotePackageVersion } from './app-update-remote';
+import { loadRemoteManifest } from './app-update-remote';
 import { compareVersions, normalizeAppVersion } from './app-update-version';
 import type {
   AppUpdateCheck,
@@ -9,7 +9,6 @@ import type {
 } from './app-update-types';
 
 export {
-  TON_PACKAGE_VERSION_URL,
   TON_RELEASES_URL,
   TON_REPOSITORY_URL,
   TON_UPDATE_MANIFEST_URL,
@@ -35,9 +34,10 @@ export async function checkForAppUpdate(
   const platform = options.platform ?? 'unknown';
 
   try {
-    const remoteTarget =
-      (await loadRemoteManifest(fetcher, platform)) ??
-      (await loadRemotePackageVersion(fetcher, platform));
+    const remoteTarget = await loadRemoteManifest(fetcher, platform);
+    if (!remoteTarget) {
+      throw new Error('Unable to fetch the published update manifest');
+    }
 
     return {
       currentVersion: normalizedCurrentVersion,

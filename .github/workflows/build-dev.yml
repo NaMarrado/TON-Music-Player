@@ -98,6 +98,10 @@ jobs:
         if: ${{ matrix.id == 'linux' }}
         run: pnpm i18n:validate
 
+      - name: Test published update feed behavior
+        if: ${{ matrix.id == 'linux' }}
+        run: pnpm test:app-update
+
       - name: Ensure xvfb is available
         if: ${{ matrix.id == 'linux' }}
         shell: bash

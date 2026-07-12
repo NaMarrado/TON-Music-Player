@@ -91,9 +91,10 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git fetch --tags origin
 
-          node scripts/release/sync-version.mjs --bump patch --from-git-tags --write
+          # Keep the public update feed on the last completed release while assets build.
+          node scripts/release/sync-version.mjs --bump patch --from-git-tags --write --skip-manifest
           VERSION="$(node -p "require('./package.json').version")"
-          node scripts/release/sync-version.mjs --version "$VERSION" --check
+          node scripts/release/sync-version.mjs --version "$VERSION" --check --skip-manifest
           node scripts/release/validate-update-manifest.mjs update.json
 
           if git rev-parse "v${VERSION}" >/dev/null 2>&1; then
@@ -101,7 +102,7 @@ jobs:
             exit 1
           fi
 
-          git add package.json packages/core/package.json packages/desktop/package.json packages/mobile/package.json packages/core/src/utils/constants.ts packages/mobile/app.config.ts packages/mobile/ios/TON/Info.plist packages/mobile/ios/TON.xcodeproj/project.pbxproj update.json
+          git add package.json packages/core/package.json packages/desktop/package.json packages/mobile/package.json packages/core/src/utils/constants.ts packages/mobile/app.config.ts packages/mobile/ios/TON/Info.plist packages/mobile/ios/TON.xcodeproj/project.pbxproj
           git commit -m "chore(release): v${VERSION}"
           git tag "v${VERSION}"
           git push origin HEAD:main
@@ -160,12 +161,12 @@ jobs:
           if [ "${{ github.event_name }}" = "push" ] && [[ "${{ github.event.head_commit.message }}" == chore\(release\):\ v* ]]; then
             RELEASE=true
             CHECKOUT_REF="${{ github.sha }}"
-            node scripts/release/sync-version.mjs --version "$VERSION" --check
+            node scripts/release/sync-version.mjs --version "$VERSION" --check --skip-manifest
             node scripts/release/validate-update-manifest.mjs update.json
           fi
 
           if [ "$RELEASE" = "true" ]; then
-            node scripts/release/sync-version.mjs --version "$VERSION" --check
+            node scripts/release/sync-version.mjs --version "$VERSION" --check --skip-manifest
             node scripts/release/validate-update-manifest.mjs update.json
           fi
 
@@ -266,6 +267,10 @@ jobs:
       - name: Validate locale resources
         if: ${{ matrix.id == 'linux' }}
         run: pnpm i18n:validate
+
+      - name: Test published update feed behavior
+        if: ${{ matrix.id == 'linux' }}
+        run: pnpm test:app-update
 
       - name: Ensure xvfb is available
         if: ${{ matrix.id == 'linux' }}
@@ -626,11 +631,50 @@ jobs:
             --title "Download v${VERSION}" \
             --notes "Unsigned desktop builds and a persistent-key signed Android APK for TON v${VERSION}."
 
+      - name: Validate published release assets
+        env:
+          VERSION: ${{ needs.metadata.outputs.version }}
+        run: |
+          set -euo pipefail
+          node scripts/release/generate-update-manifest.mjs \
+            --version "$VERSION" \
+            --output /tmp/ton-update-candidate.json
+          node scripts/release/validate-update-manifest.mjs /tmp/ton-update-candidate.json --live
+
+      - name: Publish update feed
+        env:
+          VERSION: ${{ needs.metadata.outputs.version }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git checkout -B publish-update-feed origin/main
+
+          CURRENT_VERSION="$(node -p "require('./package.json').version")"
+          if [ "$CURRENT_VERSION" != "$VERSION" ]; then
+            echo "Refusing to publish feed v${VERSION}; main is already v${CURRENT_VERSION}." >&2
+            exit 1
+          fi
+
+          node scripts/release/generate-update-manifest.mjs --version "$VERSION" --output update.json
+          node scripts/release/validate-update-manifest.mjs update.json --live
+
+          if git diff --quiet -- update.json; then
+            echo "update.json already publishes v${VERSION}."
+          else
+            git add update.json
+            git commit -m "chore(update-feed): v${VERSION}"
+            git push origin HEAD:main
+          fi
+
       - name: Validate public update feed
         run: |
           set -euo pipefail
           VERSION="${{ needs.metadata.outputs.version }}"
-          curl --fail --location --retry 6 --retry-delay 5 "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/update.json" --output /tmp/ton-update.json
+          curl --fail --location --retry 6 --retry-delay 5 \
+            "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/update.json?run=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            --output /tmp/ton-update.json
           node scripts/release/validate-update-manifest.mjs /tmp/ton-update.json --live
           test "$(node -p "require('/tmp/ton-update.json').version")" = "$VERSION"
 
