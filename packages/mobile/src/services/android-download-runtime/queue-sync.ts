@@ -4,14 +4,12 @@ import {
   dismissDownloadNotifications,
   showCompletedDownloadNotification,
   showErrorDownloadNotification,
-  startDownloadBackgroundWork,
   stopDownloadBackgroundWork,
   syncActiveDownloadNotifications,
 } from '../native-downloads';
 import {
   ACTIVE_STATUSES,
   ensureChannelsReady,
-  getAppState,
   hasGrantedPermission,
   isAndroid,
   toNativeActiveDownload,
@@ -63,18 +61,10 @@ export async function syncAndroidDownloadQueueSnapshot(
     }
   }
 
-  if (!hasGrantedPermission()) {
-    return;
-  }
-
   await syncActiveDownloadNotifications(activeItems.map(toNativeActiveDownload));
 
   if (activeItems.length === 0) {
     await stopDownloadBackgroundWork();
     return;
-  }
-
-  if (getAppState() !== 'active') {
-    await startDownloadBackgroundWork('resume');
   }
 }

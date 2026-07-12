@@ -163,6 +163,10 @@ export function invalidatePoToken(options: { binding?: PoTokenBinding; videoId?:
   if (!binding || binding === 'session') {
     cachedSessionResult = null;
     pendingSessionGeneration = null;
+    webViewRef?.injectJavaScript(`
+      if (window.__resetPoTokenGenerator) window.__resetPoTokenGenerator();
+      true;
+    `);
   }
 
   if (!binding || binding === 'video') {

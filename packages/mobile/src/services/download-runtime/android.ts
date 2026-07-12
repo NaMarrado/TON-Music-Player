@@ -17,7 +17,7 @@ import type {
 export function getDownloadRuntimePermissionNoticeKey(
   permission: DownloadNotificationPermission,
 ): DownloadRuntimePermissionNoticeKey | null {
-  return permission === 'denied' ? 'backgroundPermissionNotice' : null;
+  return permission === 'denied' ? 'notificationPermissionNotice' : null;
 }
 
 export function initializeDownloadRuntime(): void {

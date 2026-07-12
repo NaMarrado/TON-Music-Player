@@ -8,30 +8,68 @@ import {
 } from './audio-strategies';
 import { isIosCompatibleAudioMimeType } from './audio-strategies/format-helpers';
 import { validateIosAudioCandidate } from './audio-strategies/validation';
-import { getPlayerClient, resetPlayerClient } from './client';
-import { getErrorMessage } from './errors';
+import {
+  getAndroidCandidateViolation,
+  type AndroidAudioStrategy,
+} from './audio-strategies/android-candidate-policy';
+import { invalidateAndroidVrVisitorData } from './audio-strategies/android-vr-visitor-session';
+import { invalidatePoToken } from '../po-token-service';
+import { resetPlayerClient } from './client';
+import {
+  getErrorMessage,
+  isYouTubeResolverError,
+  YouTubeResolverError,
+} from './errors';
 import type { ResolvedAudioUrl } from './types';
 
-type AudioStrategyName = 'MWEB' | 'IOS' | 'ANDROID' | 'ANDROID_VR' | 'WEB';
+export type AudioStrategyName = 'MWEB' | 'IOS' | 'ANDROID' | 'ANDROID_VR';
 type AudioStrategyResolver = (videoId: string) => Promise<ResolvedAudioUrl>;
-type ResolvedAudioCandidate = ResolvedAudioUrl & { strategy: AudioStrategyName };
+export type ResolvedAudioCandidate = ResolvedAudioUrl & {
+  client: AudioStrategyName;
+  strategy: AudioStrategyName;
+};
 
-interface GetYouTubeAudioUrlOptions {
+export interface GetYouTubeAudioUrlOptions {
+  forceFreshStrategies?: readonly string[];
+  signal?: AbortSignal;
   skipStrategies?: readonly string[];
 }
 
-type PlayerFormat = {
-  has_audio?: boolean;
-  has_video?: boolean;
-  url?: string;
-  signature_cipher?: string;
-  cipher?: string;
-};
+function ensureAndroidCandidate(
+  strategy: AudioStrategyName,
+  resolved: ResolvedAudioUrl,
+): ResolvedAudioUrl {
+  if (strategy !== 'ANDROID_VR' && strategy !== 'MWEB') {
+    throw new YouTubeResolverError({
+      message: `${strategy} is not allowed by the Android audio policy`,
+      stage: 'candidate',
+      strategy,
+    });
+  }
+
+  const violation = getAndroidCandidateViolation(
+    strategy as AndroidAudioStrategy,
+    resolved,
+  );
+  if (violation) {
+    throw new YouTubeResolverError({
+      message: violation,
+      stage: 'candidate',
+      strategy,
+    });
+  }
+
+  return resolved;
+}
 
 function ensurePlatformCompatibleAudio(
   strategy: string,
   resolved: ResolvedAudioUrl,
 ): ResolvedAudioUrl {
+  if (Platform.OS === 'android') {
+    return ensureAndroidCandidate(strategy as AudioStrategyName, resolved);
+  }
+
   if (Platform.OS !== 'ios') {
     return resolved;
   }
@@ -44,7 +82,7 @@ function ensurePlatformCompatibleAudio(
 }
 
 function strategyRequiresPoToken(strategy: AudioStrategyName): boolean {
-  return strategy === 'MWEB' || strategy === 'IOS' || strategy === 'WEB';
+  return strategy === 'MWEB';
 }
 
 async function finalizeCandidateForPlatform(
@@ -77,10 +115,21 @@ async function tryAudioStrategy(
     console.log(`[YT-AUDIO] Trying ${strategy} for`, videoId);
     return {
       ...(await finalizeCandidateForPlatform(strategy, await resolver(videoId))),
+      client: strategy,
       strategy,
     };
   } catch (error) {
     const message = getErrorMessage(error);
+    if (
+      message === 'download_cancelled'
+      || (error instanceof Error && error.name === 'AbortError')
+    ) {
+      throw new Error('download_cancelled');
+    }
+    if (isYouTubeResolverError(error) && error.status === 429) {
+      console.log(`[YT-AUDIO] ${strategy} rate limited; stopping provider resolution`);
+      throw error;
+    }
     console.log(`[YT-AUDIO] ${strategy} rejected:`, message);
     errors.push(`${strategy}: ${message}`);
     return null;
@@ -92,6 +141,7 @@ export async function getYouTubeAudioUrl(
   options: GetYouTubeAudioUrlOptions = {},
 ): Promise<ResolvedAudioCandidate> {
   const errors: string[] = [];
+  const forceFreshStrategies = new Set(options.forceFreshStrategies ?? []);
   const skippedStrategies = new Set(options.skipStrategies ?? []);
 
   if (Platform.OS === 'ios' && !isWebViewReady()) {
@@ -104,15 +154,28 @@ export async function getYouTubeAudioUrl(
 
   const strategyOrder: readonly (readonly [AudioStrategyName, AudioStrategyResolver])[] = Platform.OS === 'ios'
     ? [
-        ['MWEB', getAudioUrlViaMweb],
-        ['IOS', (id) => getAudioUrlViaIos(id, { requirePoToken: true })],
+        ['MWEB', (id) => getAudioUrlViaMweb(id, {
+          forceFresh: forceFreshStrategies.has('MWEB'),
+          platform: 'ios',
+          signal: options.signal,
+        })],
+        ['IOS', getAudioUrlViaIos],
         ['ANDROID', (id) => getAudioUrlViaAndroid(id, { requireIosCompatibleFormat: true })],
-        ['ANDROID_VR', getAudioUrlViaAndroidVR],
+        ['ANDROID_VR', (id) => getAudioUrlViaAndroidVR(id, {
+          forceFreshVisitor: forceFreshStrategies.has('ANDROID_VR'),
+          signal: options.signal,
+        })],
       ] as const
     : [
-        ['ANDROID_VR', getAudioUrlViaAndroidVR],
-        ['ANDROID', getAudioUrlViaAndroid],
-        ['IOS', (id) => getAudioUrlViaIos(id, { requirePoToken: false })],
+        ['ANDROID_VR', (id) => getAudioUrlViaAndroidVR(id, {
+          forceFreshVisitor: forceFreshStrategies.has('ANDROID_VR'),
+          signal: options.signal,
+        })],
+        ['MWEB', (id) => getAudioUrlViaMweb(id, {
+          forceFresh: forceFreshStrategies.has('MWEB'),
+          platform: 'android',
+          signal: options.signal,
+        })],
       ] as const;
 
   for (const [strategy, resolver] of strategyOrder) {
@@ -126,75 +189,29 @@ export async function getYouTubeAudioUrl(
     }
   }
 
-  const shouldTryWebFallback = Platform.OS !== 'ios'
-    && !skippedStrategies.has('WEB')
-    && isWebViewReady();
-  const webFallbackReady = shouldTryWebFallback;
+  throw new YouTubeResolverError({
+    message: `[provider_exhausted] Could not resolve audio URL: ${errors.join('; ')}`,
+    stage: 'candidate',
+    strategy: 'ALL',
+  });
+}
 
-  if (webFallbackReady) {
-    try {
-      console.log('[YT-AUDIO] Trying WEB client with po_token for', videoId);
-      const yt = await getPlayerClient({ useSessionPoToken: true });
-      const info = await yt.getBasicInfo(videoId);
-
-      if (info.streaming_data) {
-        const adaptiveFormats = info.streaming_data.adaptive_formats || [];
-        const audioFormats = adaptiveFormats.filter(
-          (format: PlayerFormat) => format.has_audio && !format.has_video,
-        );
-        const formatsWithUrl = adaptiveFormats.filter(
-          (format: PlayerFormat) => format.url || format.signature_cipher || format.cipher,
-        );
-        console.log(
-          '[YT-AUDIO] WEB formats:',
-          adaptiveFormats.length,
-          'audio-only:',
-          audioFormats.length,
-          'with-url:',
-          formatsWithUrl.length,
-        );
-        if (formatsWithUrl.length === 0) {
-          errors.push('WEB: SABR-only (no URLs in formats)');
-          throw new Error('SABR-only response - no decodable URLs');
-        }
-      }
-
-      const format = await yt.getStreamingData(videoId, {
-        type: 'audio',
-        quality: 'best',
-      });
-
-      if (format.url) {
-        console.log(
-          '[YT-AUDIO] WEB+po_token success! itag:',
-          format.itag,
-          'size:',
-          format.content_length,
-        );
-        return {
-          ...(await finalizeCandidateForPlatform('WEB', {
-            url: format.url,
-            mimeType: format.mime_type || 'audio/webm',
-            contentLength: format.content_length ? Number(format.content_length) : 0,
-            headers: {
-              'User-Agent':
-                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-            },
-          })),
-          strategy: 'WEB',
-        };
-      }
-
-      errors.push('WEB: no URL after decipher');
-    } catch (error) {
-      const message = getErrorMessage(error);
-      console.warn('[YT-AUDIO] WEB client failed:', message);
-      if (!errors.some((entry) => entry.startsWith('WEB:'))) {
-        errors.push(`WEB: ${message}`);
-      }
-      resetPlayerClient();
-    }
+export function invalidateYouTubeAudioStrategy(
+  strategy: AudioStrategyName,
+  videoId: string,
+): void {
+  if (strategy === 'ANDROID_VR') {
+    invalidateAndroidVrVisitorData();
+    return;
   }
 
-  throw new Error(`Could not resolve audio URL: ${errors.join('; ')}`);
+  if (strategy === 'MWEB') {
+    invalidatePoToken();
+    resetPlayerClient();
+    return;
+  }
+
+  if (strategy === 'IOS') {
+    invalidatePoToken({ binding: 'video', videoId });
+  }
 }

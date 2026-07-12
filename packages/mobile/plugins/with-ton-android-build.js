@@ -361,6 +361,9 @@ module.exports = function withTonAndroidBuild(config) {
   });
 
   config = withGradleProperties(config, (gradleConfig) => {
+    // RN Track Player 4.1 exposes coroutine Jobs from @ReactMethod methods,
+    // which Android's TurboModule parser rejects at runtime.
+    upsertGradleProperty(gradleConfig.modResults, 'newArchEnabled', 'false');
     upsertGradleProperty(gradleConfig.modResults, 'org.gradle.caching', 'true');
     upsertGradleProperty(gradleConfig.modResults, 'org.gradle.parallel', 'true');
     return gradleConfig;

@@ -1,6 +1,4 @@
-import { getPoToken, isPoTokenReady } from '../../po-token-service';
-import { CDN_UA, IOS_UA, IOS_VERSION } from '../constants';
-import { getErrorMessage } from '../errors';
+import { IOS_UA, IOS_VERSION } from '../constants';
 import type { ResolvedAudioUrl } from '../types';
 import {
   getAudioFormats,
@@ -11,51 +9,9 @@ import {
 import { maybeDecipherCipherUrl, maybeDecipherNParam } from './player-decipher';
 import type { RawPlayerResponse } from './types';
 
-export interface GetAudioUrlViaIosOptions {
-  requirePoToken?: boolean;
-}
-
-function ensureGvsPoToken(url: string, poToken: string | undefined): string {
-  if (!poToken) {
-    return url;
-  }
-
-  const parsedUrl = new URL(url);
-  if (!parsedUrl.searchParams.has('pot')) {
-    parsedUrl.searchParams.set('pot', poToken);
-  }
-  return parsedUrl.toString();
-}
-
 export async function getAudioUrlViaIos(
   videoId: string,
-  options: GetAudioUrlViaIosOptions = {},
 ): Promise<ResolvedAudioUrl> {
-  let poToken: string | undefined;
-  let visitorData: string | undefined;
-
-  if (isPoTokenReady()) {
-    try {
-      const token = await getPoToken({ binding: 'video', videoId });
-      poToken = token.poToken;
-      visitorData = token.visitorData;
-    } catch (error) {
-      console.warn('[YT-AUDIO] IOS po_token unavailable:', getErrorMessage(error));
-    }
-  }
-
-  if (options.requirePoToken && !poToken) {
-    throw new Error('IOS player: video-bound po_token unavailable');
-  }
-
-  const playerOptions = poToken
-    ? {
-        cacheKey: `ios:${videoId}:${poToken}`,
-        poToken,
-        visitorData,
-      }
-    : {};
-
   const response = await fetch('https://www.youtube.com/youtubei/v1/player', {
     method: 'POST',
     headers: {
@@ -75,9 +31,7 @@ export async function getAudioUrlViaIos(
           osVersion: '18.3.0.22D64',
           hl: 'en',
           gl: 'US',
-          ...(visitorData ? { visitorData } : {}),
         },
-        ...(poToken ? { serviceIntegrityDimensions: { poToken } } : {}),
       },
       videoId,
       contentCheckOk: true,
@@ -116,7 +70,6 @@ export async function getAudioUrlViaIos(
     finalUrl = await maybeDecipherCipherUrl(
       best.signatureCipher,
       best.cipher,
-      playerOptions,
     );
     if (!finalUrl) {
       throw new Error('IOS player: cipher format but player unavailable');
@@ -127,12 +80,7 @@ export async function getAudioUrlViaIos(
     throw new Error('IOS player: missing final URL');
   }
 
-  finalUrl = await maybeDecipherNParam(finalUrl, 'IOS', playerOptions);
-  finalUrl = ensureGvsPoToken(finalUrl, poToken);
-
-  if (options.requirePoToken && !new URL(finalUrl).searchParams.has('pot')) {
-    throw new Error('IOS player: missing GVS PO token');
-  }
+  finalUrl = await maybeDecipherNParam(finalUrl, 'IOS');
 
   console.log(
     '[YT-AUDIO] IOS player success, itag:',
@@ -149,6 +97,6 @@ export async function getAudioUrlViaIos(
     url: finalUrl,
     mimeType: best.mimeType || 'audio/mp4',
     contentLength,
-    headers: { 'User-Agent': poToken ? IOS_UA : CDN_UA },
+    headers: { 'User-Agent': IOS_UA },
   };
 }

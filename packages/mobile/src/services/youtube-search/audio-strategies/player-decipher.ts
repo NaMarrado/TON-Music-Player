@@ -1,5 +1,6 @@
-import { isWebViewReady } from '../../js-evaluator';
+import { isWebViewReady, waitForWebViewReady } from '../../js-evaluator';
 import { getPlayerClient, type GetPlayerClientOptions } from '../client';
+import { YouTubeResolverError } from '../errors';
 
 export async function maybeDecipherCipherUrl(
   signatureCipher?: string,
@@ -61,4 +62,67 @@ export async function maybeDecipherNParam(
   }
 
   return inputUrl;
+}
+
+export async function decipherCipherUrlStrict(
+  strategy: string,
+  signatureCipher?: string,
+  cipher?: string,
+  playerOptions: GetPlayerClientOptions = {},
+): Promise<string> {
+  try {
+    await waitForWebViewReady();
+    const result = await maybeDecipherCipherUrl(signatureCipher, cipher, playerOptions);
+    if (!result) {
+      throw new Error('player returned no URL');
+    }
+    return result;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new YouTubeResolverError({
+      canRefresh: true,
+      message: `${strategy} cipher decipher failed: ${message}`,
+      stage: 'decipher',
+      strategy,
+    });
+  }
+}
+
+export async function decipherNParamStrict(
+  inputUrl: string,
+  strategy: string,
+  playerOptions: GetPlayerClientOptions = {},
+): Promise<string> {
+  const original = new URL(inputUrl);
+  const originalN = original.searchParams.get('n');
+  if (!originalN) {
+    return inputUrl;
+  }
+
+  try {
+    await waitForWebViewReady();
+    const yt = await getPlayerClient(playerOptions);
+    const player = yt.session.player;
+    if (!player?.data) {
+      throw new Error('player runtime unavailable');
+    }
+
+    const deciphered = await player.decipher(inputUrl, undefined, undefined, undefined);
+    const decipheredUrl = new URL(deciphered);
+    const decipheredN = decipheredUrl.searchParams.get('n');
+    if (!decipheredN || decipheredN === originalN) {
+      throw new Error('n parameter was not transformed');
+    }
+
+    console.log(`[YT-AUDIO] ${strategy} n-param deobfuscated`);
+    return decipheredUrl.toString();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new YouTubeResolverError({
+      canRefresh: true,
+      message: `${strategy} n-param decipher failed: ${message}`,
+      stage: 'decipher',
+      strategy,
+    });
+  }
 }

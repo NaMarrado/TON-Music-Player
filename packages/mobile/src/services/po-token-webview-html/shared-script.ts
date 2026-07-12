@@ -3,8 +3,8 @@ Object.defineProperty(navigator, 'webdriver', { get: function() { return false; 
 
 // ========== Constants ==========
 var GOOG_API_KEY = 'AIzaSyDyT5W0Jh49F30Pqqtyfdf7pDLFKLJoAnw';
-var CREATE_URL = 'https://jnn-pa.googleapis.com/$rpc/google.internal.waa.v1.Waa/Create';
-var GENERATE_IT_URL = 'https://jnn-pa.googleapis.com/$rpc/google.internal.waa.v1.Waa/GenerateIT';
+var CREATE_URL = 'https://www.youtube.com/api/jnn/v1/Create';
+var GENERATE_IT_URL = 'https://www.youtube.com/api/jnn/v1/GenerateIT';
 var REQUEST_KEY = 'O43z0dpjhgX20SCx4KAo';
 
 // ========== Logging ==========
@@ -35,6 +35,7 @@ function u8ToBase64(u8, websafe) {
 
 function getHeaders() {
   return {
+    'accept': 'application/json',
     'content-type': 'application/json+protobuf',
     'x-goog-api-key': GOOG_API_KEY,
     'x-user-agent': 'grpc-web-javascript/0.1'

@@ -3,7 +3,6 @@ import {
   ensureChannelsReady,
   getAppState,
   getQueue,
-  hasGrantedPermission,
   isAndroid,
 } from './shared';
 
@@ -11,7 +10,7 @@ export async function maybeStartBackgroundWork(
   action: 'resume' | 'cancel' | 'retry',
   itemId: number | null = null,
 ): Promise<boolean> {
-  if (!isAndroid() || !hasGrantedPermission() || getAppState() === 'active') {
+  if (!isAndroid() || getAppState() === 'active') {
     return false;
   }
 
@@ -21,7 +20,7 @@ export async function maybeStartBackgroundWork(
 }
 
 export async function stopBackgroundWorkIfIdle(): Promise<void> {
-  if (!isAndroid() || !hasGrantedPermission()) {
+  if (!isAndroid()) {
     return;
   }
 

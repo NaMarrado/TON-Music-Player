@@ -8,7 +8,6 @@ import {
   ensureChannelsReady,
   getAppState,
   getQueue,
-  hasGrantedPermission,
   hasRuntimeInitialized,
   isAndroid,
   markRuntimeInitialized,
@@ -28,7 +27,7 @@ export function initializeAndroidDownloadRuntime(): void {
     const previous = getAppState();
     setAppState(nextState);
 
-    if (previous === 'active' && nextState !== 'active' && hasGrantedPermission()) {
+    if (previous === 'active' && nextState !== 'active') {
       const queue = getQueue();
       if (queue.hasActive()) {
         void maybeStartBackgroundWork('resume');

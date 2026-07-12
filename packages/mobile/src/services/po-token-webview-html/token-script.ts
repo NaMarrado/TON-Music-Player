@@ -29,14 +29,58 @@ async function mintPoToken(integrityTokenData, webPoSignalOutput, identifier) {
     return u8ToBase64(result, true);
   }
 
-  // Fallback: use websafeFallbackToken directly as po_token
-  if (integrityTokenData.websafeFallbackToken) {
-    log('Using websafeFallbackToken as po_token fallback');
-    return integrityTokenData.websafeFallbackToken;
+  throw new Error('BotGuard did not provide a usable po_token minter');
+}
+
+var poTokenGeneratorState = null;
+var poTokenGeneratorPromise = null;
+
+async function createPoTokenGeneratorState() {
+  var challenge = await fetchChallenge();
+  log('Challenge: JS=' + (challenge.interpreterJavascript ? challenge.interpreterJavascript.length + 'ch' : 'null') +
+    ', prog=' + (challenge.program ? String(challenge.program).substring(0,30) + '...' : 'null') +
+    ', name=' + challenge.globalName);
+
+  if (!challenge.interpreterJavascript) {
+    throw new Error('No interpreter JS in challenge');
   }
 
-  throw new Error('No minter (' + (getMinter ? 'has getMinter' : 'no getMinter') + ') and no fallback token');
+  var bgResult = await runBotGuard(challenge.interpreterJavascript, challenge.program, challenge.globalName);
+  log('BotGuard done: response=' + (bgResult.botguardResponse ? bgResult.botguardResponse.length + 'ch' : 'null') +
+    ', webPoSO=' + bgResult.webPoSignalOutput.length);
+
+  var itData = await getIntegrityToken(bgResult.botguardResponse);
+  var ttlSecs = itData.estimatedTtlSecs || 21600;
+  return {
+    expiresAt: Date.now() + Math.max(60, ttlSecs - 600) * 1000,
+    integrityTokenData: itData,
+    webPoSignalOutput: bgResult.webPoSignalOutput
+  };
 }
+
+async function getPoTokenGeneratorState() {
+  if (poTokenGeneratorState && poTokenGeneratorState.expiresAt > Date.now()) {
+    return poTokenGeneratorState;
+  }
+
+  if (!poTokenGeneratorPromise) {
+    poTokenGeneratorPromise = createPoTokenGeneratorState()
+      .then(function(state) {
+        poTokenGeneratorState = state;
+        return state;
+      })
+      .finally(function() {
+        poTokenGeneratorPromise = null;
+      });
+  }
+
+  return poTokenGeneratorPromise;
+}
+
+window.__resetPoTokenGenerator = function() {
+  poTokenGeneratorState = null;
+  poTokenGeneratorPromise = null;
+};
 
 // ========== Main Generation Flow ==========
 window.__generatePoToken = async function(requestId, existingVisitorData, tokenIdentifier, binding, videoId) {
@@ -46,26 +90,13 @@ window.__generatePoToken = async function(requestId, existingVisitorData, tokenI
     var tokenBinding = binding === 'video' ? 'video' : 'session';
     log('Starting ' + tokenBinding + ' po_token generation, visitorData=' + visitorData.substring(0, 20) + ', identifier=' + identifier.substring(0, 20) + '...');
 
-    // Step 1: Fetch challenge
-    var challenge = await fetchChallenge();
-    log('Challenge: JS=' + (challenge.interpreterJavascript ? challenge.interpreterJavascript.length + 'ch' : 'null') +
-      ', prog=' + (challenge.program ? String(challenge.program).substring(0,30) + '...' : 'null') +
-      ', name=' + challenge.globalName);
-
-    if (!challenge.interpreterJavascript) {
-      throw new Error('No interpreter JS in challenge');
-    }
-
-    // Step 2+3: Run BotGuard (loads interpreter + runs VM)
-    var bgResult = await runBotGuard(challenge.interpreterJavascript, challenge.program, challenge.globalName);
-    log('BotGuard done: response=' + (bgResult.botguardResponse ? bgResult.botguardResponse.length + 'ch' : 'null') +
-      ', webPoSO=' + bgResult.webPoSignalOutput.length);
-
-    // Step 4: Get integrity token
-    var itData = await getIntegrityToken(bgResult.botguardResponse);
-
-    // Step 5: Mint po_token (or use fallback)
-    var poToken = await mintPoToken(itData, bgResult.webPoSignalOutput, identifier);
+    // One BotGuard integrity/minter session must mint both GVS and player tokens.
+    var generatorState = await getPoTokenGeneratorState();
+    var poToken = await mintPoToken(
+      generatorState.integrityTokenData,
+      generatorState.webPoSignalOutput,
+      identifier
+    );
     log('po_token generated: ' + poToken.substring(0, 30) + '... (' + poToken.length + 'ch)');
 
     // Step 6: Send result back
@@ -76,7 +107,7 @@ window.__generatePoToken = async function(requestId, existingVisitorData, tokenI
       poToken: poToken,
       visitorData: visitorData,
       videoId: videoId || undefined,
-      ttlSecs: itData.estimatedTtlSecs || 21600
+      ttlSecs: Math.max(60, Math.floor((generatorState.expiresAt - Date.now()) / 1000))
     }));
   } catch (e) {
     log('FAILED: ' + (e.message || String(e)));

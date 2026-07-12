@@ -2,6 +2,8 @@ export const BOTGUARD_SCRIPT = `// ========== BotGuard Client ==========
 async function runBotGuard(interpreterJs, program, globalName) {
   // Load interpreter via <script> tag — BotGuard checks document.scripts
   log('Loading interpreter via script tag...');
+  var previousScript = document.getElementById('bg-interpreter');
+  if (previousScript) previousScript.remove();
   var script = document.createElement('script');
   script.type = 'text/javascript';
   script.id = 'bg-interpreter';

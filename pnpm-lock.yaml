@@ -42,8 +42,8 @@ patchedDependencies:
     hash: 6c682880c77aa49ee01ceba7133f91ee4fae62f12c4d09b207d2fb9526e6d426
     path: patches/react-native-screens@4.4.0.patch
   react-native-track-player@4.1.2:
-    hash: dd15cd4f7e566b64222d6a8c908f26847685080cb8909d92d4bf22eeab2c55eb
-    path: patches/react-native-track-player.patch
+    hash: c1ccc1ec6decbf078cb7dd26b1ec6c46cc53c747ad64e911f12cfc25e23f495e
+    path: patches/react-native-track-player@4.1.2.patch
 
 importers:
 
@@ -299,7 +299,7 @@ importers:
         version: 4.4.0(patch_hash=6c682880c77aa49ee01ceba7133f91ee4fae62f12c4d09b207d2fb9526e6d426)(react-native@0.76.9(@babel/core@7.29.0)(@babel/preset-env@7.29.0(@babel/core@7.29.0))(@types/react@18.3.28)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
       react-native-track-player:
         specifier: 4.1.2
-        version: 4.1.2(patch_hash=dd15cd4f7e566b64222d6a8c908f26847685080cb8909d92d4bf22eeab2c55eb)(react-native@0.76.9(@babel/core@7.29.0)(@babel/preset-env@7.29.0(@babel/core@7.29.0))(@types/react@18.3.28)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
+        version: 4.1.2(patch_hash=c1ccc1ec6decbf078cb7dd26b1ec6c46cc53c747ad64e911f12cfc25e23f495e)(react-native@0.76.9(@babel/core@7.29.0)(@babel/preset-env@7.29.0(@babel/core@7.29.0))(@types/react@18.3.28)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
       react-native-url-polyfill:
         specifier: ^2.0.0
         version: 2.0.0(react-native@0.76.9(@babel/core@7.29.0)(@babel/preset-env@7.29.0(@babel/core@7.29.0))(@types/react@18.3.28)(encoding@0.1.13)(react@18.3.1))
@@ -11613,7 +11613,7 @@ snapshots:
       react-native: 0.76.9(@babel/core@7.29.0)(@babel/preset-env@7.29.0(@babel/core@7.29.0))(@types/react@18.3.28)(encoding@0.1.13)(react@18.3.1)
       warn-once: 0.1.1
 
-  react-native-track-player@4.1.2(patch_hash=dd15cd4f7e566b64222d6a8c908f26847685080cb8909d92d4bf22eeab2c55eb)(react-native@0.76.9(@babel/core@7.29.0)(@babel/preset-env@7.29.0(@babel/core@7.29.0))(@types/react@18.3.28)(encoding@0.1.13)(react@18.3.1))(react@18.3.1):
+  react-native-track-player@4.1.2(patch_hash=c1ccc1ec6decbf078cb7dd26b1ec6c46cc53c747ad64e911f12cfc25e23f495e)(react-native@0.76.9(@babel/core@7.29.0)(@babel/preset-env@7.29.0(@babel/core@7.29.0))(@types/react@18.3.28)(encoding@0.1.13)(react@18.3.1))(react@18.3.1):
     dependencies:
       react: 18.3.1
       react-native: 0.76.9(@babel/core@7.29.0)(@babel/preset-env@7.29.0(@babel/core@7.29.0))(@types/react@18.3.28)(encoding@0.1.13)(react@18.3.1)

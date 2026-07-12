@@ -2,6 +2,8 @@ const HTTP_DOWNLOAD_FAILURE_RE = /\bHTTP (\d{3})\b/;
 const NON_RETRYABLE_LOCAL_FAILURES = [
   /UNIQUE constraint failed/i,
   /\bconstraint failed\b/i,
+  /\[provider_exhausted\]/i,
+  /\[provider_rate_limited\]/i,
 ];
 
 function parseDownloadHttpStatus(message: string): number | null {

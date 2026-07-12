@@ -1,14 +1,47 @@
 diff --git a/android/src/main/AndroidManifest.xml b/android/src/main/AndroidManifest.xml
-index b05570c..d64d527 100644
+index deabf14ce0f31b804d0979774b856bc786bdb3cf..0751856507878b8eba8b3d5c22b3b13a37341814 100644
 --- a/android/src/main/AndroidManifest.xml
 +++ b/android/src/main/AndroidManifest.xml
-@@ -1,3 +1,2 @@
+@@ -1,6 +1,5 @@
  <?xml version="1.0" encoding="utf-8"?>
 -<manifest xmlns:android="http://schemas.android.com/apk/res/android"
 -          package="com.doublesymmetry.trackplayer">
 +<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+ 
+     <uses-permission android:name="android.permission.WAKE_LOCK" />
+     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+diff --git a/android/src/main/java/com/doublesymmetry/trackplayer/module/MusicModule.kt b/android/src/main/java/com/doublesymmetry/trackplayer/module/MusicModule.kt
+index b2409a09939164c49c0f7a16bb6d3284e8eab8fb..3795af7517938a269e82db5439861772e24ded5a 100644
+--- a/android/src/main/java/com/doublesymmetry/trackplayer/module/MusicModule.kt
++++ b/android/src/main/java/com/doublesymmetry/trackplayer/module/MusicModule.kt
+@@ -503,6 +503,25 @@ class MusicModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
+         callback.resolve(null)
+     }
+ 
++    @ReactMethod
++    fun setPitch(pitch: Float, callback: Promise) {
++        scope.launch {
++            if (verifyServiceBoundOrReject(callback)) return@launch
++
++            musicService.setPitch(pitch)
++            callback.resolve(null)
++        }
++    }
++
++    @ReactMethod
++    fun getAudioSessionId(callback: Promise) {
++        scope.launch {
++            if (verifyServiceBoundOrReject(callback)) return@launch
++
++            callback.resolve(musicService.getAudioSessionId())
++        }
++    }
++
+     @ReactMethod
+     fun getRate(callback: Promise) = scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
 diff --git a/android/src/main/java/com/doublesymmetry/trackplayer/service/MusicService.kt b/android/src/main/java/com/doublesymmetry/trackplayer/service/MusicService.kt
-index 7af5cde..db61d7b 100644
+index afa6b0f335714de0cc8741d5bbdd51b4e04bb3bb..db61d7b59e4780d7056e3eb0ebdacd05bb82e85e 100644
 --- a/android/src/main/java/com/doublesymmetry/trackplayer/service/MusicService.kt
 +++ b/android/src/main/java/com/doublesymmetry/trackplayer/service/MusicService.kt
 @@ -33,6 +33,8 @@ import com.facebook.react.HeadlessJsTaskService

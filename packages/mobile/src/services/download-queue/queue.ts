@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import type { DownloadInput } from '../downloader';
 import {
   maybeStartDownloadBackgroundWork,
@@ -260,6 +261,7 @@ export class MobileDownloadQueue {
       await backfillCompletedQueueItemFormats();
       const rows = await getStoredQueueRows();
       const knownIds = new Set(this.runtime.items.map((item) => item.id));
+      const interruptedAndroidItemIds: number[] = [];
       let changed = false;
 
       for (const row of rows) {
@@ -267,10 +269,27 @@ export class MobileDownloadQueue {
           continue;
         }
 
-        this.runtime.items.push(hydrateQueueItem(row));
-        this.runtime.persistedProgress.set(row.id, row.progress ?? 0);
+        const hydratedItem = hydrateQueueItem(row);
+        const wasInterruptedOnAndroid = Platform.OS === 'android'
+          && (hydratedItem.status === 'downloading' || hydratedItem.status === 'retrying');
+
+        if (wasInterruptedOnAndroid) {
+          interruptedAndroidItemIds.push(row.id);
+          this.runtime.items.push({
+            ...hydratedItem,
+            status: 'pending',
+            progress: 0,
+            error: null,
+          });
+          this.runtime.persistedProgress.set(row.id, 0);
+        } else {
+          this.runtime.items.push(hydratedItem);
+          this.runtime.persistedProgress.set(row.id, row.progress ?? 0);
+        }
         changed = true;
       }
+
+      await Promise.all(interruptedAndroidItemIds.map(requeueQueueItem));
 
       await restoreIosBackgroundQueueItems(this);
 
