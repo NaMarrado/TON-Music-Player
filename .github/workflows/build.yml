@@ -476,6 +476,9 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
+      - name: Test Android signature verifier
+        run: python3 -m unittest scripts.tests.test_android_signature_parser
+
       - name: Setup permanent Android release signing
         if: ${{ needs.metadata.outputs.release == 'true' }}
         env:
@@ -503,16 +506,14 @@ jobs:
             exit 1
           fi
           APK="packages/mobile/android/app/build/outputs/apk/release/app-release.apk"
-          VERIFY_OUTPUT="$("$APKSIGNER" verify --print-certs "$APK")"
-          printf '%s\n' "$VERIFY_OUTPUT"
 
           if [ "${{ needs.metadata.outputs.release }}" = "true" ]; then
-            EXPECTED="$(tr -d '[:space:]' < scripts/android-release-cert.sha256 | tr '[:upper:]' '[:lower:]')"
-            ACTUAL="$(printf '%s\n' "$VERIFY_OUTPUT" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -n 1 | tr '[:upper:]' '[:lower:]')"
-            if [ -z "$ACTUAL" ] || [ "$ACTUAL" != "$EXPECTED" ]; then
-              echo "Release APK certificate does not match scripts/android-release-cert.sha256" >&2
-              exit 1
-            fi
+            python3 scripts/verify_android_release_apk.py \
+              --apksigner "$APKSIGNER" \
+              --apk "$APK" \
+              --expected scripts/android-release-cert.sha256
+          else
+            "$APKSIGNER" verify --print-certs "$APK"
           fi
 
       - name: Upload Android release asset
@@ -632,3 +633,36 @@ jobs:
           curl --fail --location --retry 6 --retry-delay 5 "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/update.json" --output /tmp/ton-update.json
           node scripts/release/validate-update-manifest.mjs /tmp/ton-update.json --live
           test "$(node -p "require('/tmp/ton-update.json').version")" = "$VERSION"
+
+  cleanup-failed-release:
+    name: "MAIN: Clean failed draft release"
+    needs:
+      - metadata
+      - release-draft
+      - desktop
+      - android
+      - ios-validate
+      - publish-release
+    if: >-
+      ${{
+        always() &&
+        needs.metadata.outputs.release == 'true' &&
+        github.event_name == 'push' &&
+        needs.publish-release.result != 'success'
+      }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    steps:
+      - name: Delete incomplete draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ needs.metadata.outputs.version }}
+        run: |
+          set -euo pipefail
+          IS_DRAFT="$(gh release view "v${VERSION}" --json isDraft --jq '.isDraft' 2>/dev/null || true)"
+          if [ "$IS_DRAFT" = "true" ]; then
+            gh release delete "v${VERSION}" --yes
+          fi
