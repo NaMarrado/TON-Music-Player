@@ -314,10 +314,32 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Restore iOS native build cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            packages/mobile/ios/Pods
+            ~/Library/Caches/CocoaPods
+            ${{ runner.temp }}/TONDerivedData
+          key: ${{ runner.os }}-ios-native-${{ hashFiles('pnpm-lock.yaml', 'packages/mobile/ios/Podfile', 'packages/mobile/ios/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-ios-native-
+
       - name: Install CocoaPods
         working-directory: packages/mobile/ios
         run: RUBYOPT=-rlogger pod install
 
       - name: Build unsigned iOS simulator app
         working-directory: packages/mobile/ios
-        run: xcodebuild -workspace TON.xcworkspace -scheme TON -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' build
+        run: |
+          xcodebuild \
+            -workspace TON.xcworkspace \
+            -scheme TON \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "${RUNNER_TEMP}/TONDerivedData" \
+            -showBuildTimingSummary \
+            CODE_SIGNING_ALLOWED=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            build

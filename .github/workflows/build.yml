@@ -45,7 +45,8 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event.inputs.target || 'auto' }}
-  cancel-in-progress: true
+  # Queue newer main pushes instead of deleting an otherwise valid draft release.
+  cancel-in-progress: false
 
 env:
   CI: '1'
@@ -563,13 +564,35 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Restore iOS native build cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            packages/mobile/ios/Pods
+            ~/Library/Caches/CocoaPods
+            ${{ runner.temp }}/TONDerivedData
+          key: ${{ runner.os }}-ios-native-${{ hashFiles('pnpm-lock.yaml', 'packages/mobile/ios/Podfile', 'packages/mobile/ios/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-ios-native-
+
       - name: Install CocoaPods
         working-directory: packages/mobile/ios
         run: RUBYOPT=-rlogger pod install
 
       - name: Build unsigned iOS simulator app
         working-directory: packages/mobile/ios
-        run: xcodebuild -workspace TON.xcworkspace -scheme TON -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' build
+        run: |
+          xcodebuild \
+            -workspace TON.xcworkspace \
+            -scheme TON \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "${RUNNER_TEMP}/TONDerivedData" \
+            -showBuildTimingSummary \
+            CODE_SIGNING_ALLOWED=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            build
 
   publish-release:
     name: "MAIN: Publish GitHub Release"
@@ -642,6 +665,7 @@ jobs:
           node scripts/release/validate-update-manifest.mjs /tmp/ton-update-candidate.json --live
 
       - name: Publish update feed
+        id: publish-feed
         env:
           VERSION: ${{ needs.metadata.outputs.version }}
         run: |
@@ -668,12 +692,16 @@ jobs:
             git push origin HEAD:main
           fi
 
+          echo "feed_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
       - name: Validate public update feed
         run: |
           set -euo pipefail
           VERSION="${{ needs.metadata.outputs.version }}"
+          FEED_SHA="${{ steps.publish-feed.outputs.feed_sha }}"
+          test -n "$FEED_SHA"
           curl --fail --location --retry 6 --retry-delay 5 \
-            "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/update.json?run=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${FEED_SHA}/update.json" \
             --output /tmp/ton-update.json
           node scripts/release/validate-update-manifest.mjs /tmp/ton-update.json --live
           test "$(node -p "require('/tmp/ton-update.json').version")" = "$VERSION"
