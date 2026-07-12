@@ -23,7 +23,7 @@ const TRACK_SNAPSHOT_SELECT = `
   t.cover_art_path AS cover_art_path,
   NULL AS loudness_lufs,
   t.loudness_gain AS loudness_gain,
-  NULL AS youtube_id,
+  t.youtube_id AS youtube_id,
   NULL AS spotify_id,
   NULL AS soundcloud_id,
   NULL AS source_url,

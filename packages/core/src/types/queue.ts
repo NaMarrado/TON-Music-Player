@@ -10,6 +10,7 @@ export interface QueueItem {
   duration_ms?: number | null;
   cover_art_path?: string | null;
   loudness_gain?: number | null;
+  youtube_id?: string | null;
 }
 
 export type QueueSource = 'user' | 'auto' | 'smart-playlist';

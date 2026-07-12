@@ -12,6 +12,7 @@ export function buildQueueItems(tracks: Track[]) {
     duration_ms: track.duration_ms,
     cover_art_path: track.cover_art_path,
     loudness_gain: track.loudness_gain,
+    youtube_id: track.youtube_id,
     ...('playlist_track_id' in track
       ? { playlist_track_id: (track as Track & { playlist_track_id: number }).playlist_track_id }
       : {}),
@@ -45,7 +46,7 @@ export function getQueueItemTrackSnapshot(item: QueueItem): Track | null {
     cover_art_path: item.cover_art_path ?? null,
     loudness_lufs: null,
     loudness_gain: item.loudness_gain ?? null,
-    youtube_id: null,
+    youtube_id: item.youtube_id ?? null,
     spotify_id: null,
     soundcloud_id: null,
     source_url: null,

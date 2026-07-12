@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { SetActivity } from '@xhayper/discord-rpc';
+import type { Track } from '@ton/core';
+import {
+  buildQueueItems,
+  getQueueItemTrackSnapshot,
+} from '../../packages/desktop/src/audio/playback-service/queue-helpers.ts';
 import {
   buildDiscordActivity,
   getDiscordArtworkUrl,
@@ -76,6 +81,29 @@ test('builds listening activity with stable playback timestamps and YouTube artw
   assert.equal(activity.startTimestamp, 980_000);
   assert.equal(activity.endTimestamp, 1_080_000);
   assert.equal(activity.largeImageKey, 'https://i.ytimg.com/vi/yHU6g3-35IU/hqdefault.jpg');
+  assert.equal(activity.largeImageText, undefined);
+});
+
+test('queue transitions preserve the YouTube ID used for Discord artwork', () => {
+  const [item] = buildQueueItems([{
+    id: 7,
+    file_path: '/music/test.m4a',
+    title: 'Queued Track',
+    artist: 'Queued Artist',
+    album: null,
+    duration_ms: 120_000,
+    cover_art_path: '/music/test.jpg',
+    loudness_gain: 0,
+    youtube_id: 'yHU6g3-35IU',
+  } as Track]);
+
+  assert.equal(item?.youtube_id, 'yHU6g3-35IU');
+  const snapshot = item ? getQueueItemTrackSnapshot(item) : null;
+  assert.equal(snapshot?.youtube_id, 'yHU6g3-35IU');
+  assert.equal(
+    getDiscordArtworkUrl(snapshot?.youtube_id ?? null),
+    'https://i.ytimg.com/vi/yHU6g3-35IU/hqdefault.jpg',
+  );
 });
 
 test('paused activity keeps metadata and removes timestamps', () => {

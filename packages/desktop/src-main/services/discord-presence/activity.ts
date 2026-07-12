@@ -57,7 +57,6 @@ export function buildDiscordActivity(
     state: payload.isPlaying
       ? artist
       : truncateDiscordText(`${artist} · Paused`),
-    largeImageText: truncateDiscordText(`${title} — ${artist}`),
     instance: false,
   };
 
