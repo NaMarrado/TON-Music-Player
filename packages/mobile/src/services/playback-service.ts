@@ -1,4 +1,3 @@
-import { Platform } from 'react-native';
 import {
   addPlaybackRuntimeEventListener,
   getPlaybackProgress,
@@ -12,7 +11,6 @@ import {
 } from './playback-runtime';
 
 let listenersRegistered = false;
-const androidHandlesRemoteTransport = Platform.OS === 'android';
 
 function logRemote(event: string, details?: string): void {
   console.log(`[RNTP Remote] ${event}${details ? ` ${details}` : ''}`);
@@ -28,25 +26,16 @@ export async function PlaybackService(): Promise<void> {
 
   addPlaybackRuntimeEventListener(PlaybackEvent.RemotePlay, async () => {
     logRemote('play');
-    if (androidHandlesRemoteTransport) {
-      return;
-    }
     await playPlayback();
   });
 
   addPlaybackRuntimeEventListener(PlaybackEvent.RemotePause, async () => {
     logRemote('pause');
-    if (androidHandlesRemoteTransport) {
-      return;
-    }
     await pausePlayback();
   });
 
   addPlaybackRuntimeEventListener(PlaybackEvent.RemoteNext, async () => {
     logRemote('next');
-    if (androidHandlesRemoteTransport) {
-      return;
-    }
     try {
       await skipToNextPlayback();
     } catch (error) {
@@ -56,9 +45,6 @@ export async function PlaybackService(): Promise<void> {
 
   addPlaybackRuntimeEventListener(PlaybackEvent.RemotePrevious, async () => {
     logRemote('previous');
-    if (androidHandlesRemoteTransport) {
-      return;
-    }
     try {
       const progress = await getPlaybackProgress();
       if (progress.position > 3) {
@@ -74,17 +60,11 @@ export async function PlaybackService(): Promise<void> {
 
   addPlaybackRuntimeEventListener(PlaybackEvent.RemoteSeek, async ({ position }) => {
     logRemote('seek', `position=${position}`);
-    if (androidHandlesRemoteTransport) {
-      return;
-    }
     await seekPlayback(position);
   });
 
   addPlaybackRuntimeEventListener(PlaybackEvent.RemoteStop, async () => {
     logRemote('stop');
-    if (androidHandlesRemoteTransport) {
-      return;
-    }
     await stopPlayback();
   });
 
