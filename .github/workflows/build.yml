@@ -193,7 +193,7 @@ jobs:
             gh release create "v${VERSION}" \
               --draft \
               --title "Download v${VERSION}" \
-              --notes "Unsigned desktop builds and self-signed Android APK for TON v${VERSION}."
+              --notes "Unsigned desktop builds and a persistent-key signed Android APK for TON v${VERSION}."
           fi
 
   desktop:
@@ -624,7 +624,7 @@ jobs:
           gh release edit "v${VERSION}" \
             --draft=false \
             --title "Download v${VERSION}" \
-            --notes "Unsigned desktop builds and self-signed Android APK for TON v${VERSION}."
+            --notes "Unsigned desktop builds and a persistent-key signed Android APK for TON v${VERSION}."
 
       - name: Validate public update feed
         run: |
