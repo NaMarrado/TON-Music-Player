@@ -9,6 +9,7 @@ export function prepareScenarioPaths(rootDir: string): ScenarioPaths {
   const playlistImportDir = path.join(rootDir, 'playlist-import');
   const exportDir = path.join(rootDir, 'exports');
   const exportBundleDir = path.join(exportDir, 'compat-folder-bundle');
+  const directPlaylistBundleZip = path.join(exportDir, 'direct-playlist-bundle.zip');
   const playlistBundleZip = path.join(exportDir, 'playlist-bundle.zip');
 
   for (const dir of [sourceDir, duplicateDir, playlistImportDir, exportDir]) {
@@ -30,6 +31,7 @@ export function prepareScenarioPaths(rootDir: string): ScenarioPaths {
     playlistImportDir,
     exportDir,
     exportBundleDir,
+    directPlaylistBundleZip,
     playlistBundleZip,
     trackOne,
     trackTwo,

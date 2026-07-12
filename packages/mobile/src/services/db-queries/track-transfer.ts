@@ -1,4 +1,4 @@
-import type { Track } from '@ton/core';
+import type { ExportTrackEntry, Track } from '@ton/core';
 import { getDb } from '../database';
 
 type TrackAssetRow = Pick<Track, 'id' | 'file_path' | 'cover_art_path' | 'in_library'>;
@@ -12,44 +12,69 @@ export async function getAllTracksForTransfer(): Promise<Track[]> {
   );
 }
 
-export async function getTrackIdsByHashes(hashes: string[]): Promise<Record<string, number>> {
-  if (hashes.length === 0) {
+export async function getTrackIdsByTransferEntries(
+  entries: Array<Pick<ExportTrackEntry, 'file_hash' | 'content_hash_sha256'>>,
+): Promise<Record<string, number>> {
+  if (entries.length === 0) {
     return {};
   }
 
   const db = getDb();
-  const placeholders = hashes.map(() => '?').join(',');
-  const rows = await db.getAllAsync<{ id: number; file_hash: string }>(
-    `SELECT id, file_hash
-     FROM tracks
-     WHERE file_hash IN (${placeholders})
-     ORDER BY id ASC`,
-    hashes,
-  );
-
-  const mapping: Record<string, number> = {};
+  const rows = await db.getAllAsync<{
+    id: number;
+    file_hash: string | null;
+    content_hash_sha256: string | null;
+  }>(`
+    SELECT id, file_hash, content_hash_sha256
+    FROM tracks
+    WHERE (file_hash IS NOT NULL AND file_hash != '')
+       OR (content_hash_sha256 IS NOT NULL AND content_hash_sha256 != '')
+    ORDER BY id ASC
+  `);
+  const trackIdByIdentity = new Map<string, number>();
   for (const row of rows) {
-    if (!(row.file_hash in mapping)) {
-      mapping[row.file_hash] = row.id;
+    if (row.file_hash && !trackIdByIdentity.has(row.file_hash)) {
+      trackIdByIdentity.set(row.file_hash, row.id);
+    }
+    if (row.content_hash_sha256 && !trackIdByIdentity.has(row.content_hash_sha256)) {
+      trackIdByIdentity.set(row.content_hash_sha256, row.id);
     }
   }
 
+  const mapping: Record<string, number> = {};
+  for (const entry of entries) {
+    const trackId = trackIdByIdentity.get(entry.file_hash)
+      ?? (entry.content_hash_sha256
+        ? trackIdByIdentity.get(entry.content_hash_sha256)
+        : undefined);
+    if (trackId != null) {
+      mapping[entry.file_hash] = trackId;
+    }
+  }
   return mapping;
 }
 
 export async function getAllTrackIdsByHash(): Promise<Record<string, number>> {
   const db = getDb();
-  const rows = await db.getAllAsync<{ id: number; file_hash: string }>(
-    `SELECT id, file_hash
+  const rows = await db.getAllAsync<{
+    id: number;
+    file_hash: string | null;
+    content_hash_sha256: string | null;
+  }>(
+    `SELECT id, file_hash, content_hash_sha256
      FROM tracks
-     WHERE file_hash IS NOT NULL AND file_hash != ''
+     WHERE (file_hash IS NOT NULL AND file_hash != '')
+        OR (content_hash_sha256 IS NOT NULL AND content_hash_sha256 != '')
      ORDER BY id ASC`,
   );
 
   const mapping: Record<string, number> = {};
   for (const row of rows) {
-    if (!(row.file_hash in mapping)) {
+    if (row.file_hash && !(row.file_hash in mapping)) {
       mapping[row.file_hash] = row.id;
+    }
+    if (row.content_hash_sha256 && !(row.content_hash_sha256 in mapping)) {
+      mapping[row.content_hash_sha256] = row.id;
     }
   }
 

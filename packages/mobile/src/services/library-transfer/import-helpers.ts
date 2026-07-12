@@ -18,6 +18,7 @@ import { yieldToUiAsync } from './file-helpers';
 import { resolveArchiveEntryName } from './import-archive';
 
 export interface PreparedImportTrack {
+  contentHashSha256: string | null;
   fileHash: string;
   filePath: string;
   fileSize: number | null;
@@ -39,7 +40,6 @@ export async function prepareImportTracks(
   trackIdsByHash: Record<string, number>;
   skippedTracks: number;
 }> {
-  const libraryTrackHashes = new Set(manifest.tracks.map((track) => track.file_hash));
   const preparedTracksByHash = new Map<string, PreparedImportTrack>();
   const trackIdsByHash: Record<string, number> = { ...existingTrackIdsByHash };
   const trackIdsToMarkInLibrary = new Set<number>();
@@ -52,9 +52,7 @@ export async function prepareImportTracks(
     const entry = manifest.tracks[index];
     const existingTrackId = existingTrackIdsByHash[entry.file_hash];
     if (existingTrackId) {
-      if (libraryTrackHashes.has(entry.file_hash)) {
-        trackIdsToMarkInLibrary.add(existingTrackId);
-      }
+      trackIdsToMarkInLibrary.add(existingTrackId);
       skippedTracks += 1;
       onProgress?.({ phase: 'tracks', current: index + 1, total: manifest.tracks.length });
       continue;
@@ -94,6 +92,7 @@ export async function prepareImportTracks(
 
     const info = await FileSystem.getInfoAsync(destinationUri, { size: true });
     const preparedTrack: PreparedImportTrack = {
+      contentHashSha256: entry.content_hash_sha256 ?? null,
       fileHash: entry.file_hash,
       filePath: destinationUri,
       fileSize: info.exists && typeof info.size === 'number' ? info.size : null,
@@ -202,7 +201,7 @@ export async function insertImportedLibraryAsync(
         [
           track.filePath,
           track.fileHash,
-          null,
+          track.contentHashSha256,
           track.fileSize,
           null,
           track.metadata.title,

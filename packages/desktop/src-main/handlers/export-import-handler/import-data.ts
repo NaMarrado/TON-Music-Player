@@ -1,7 +1,5 @@
 export {
   cleanupImportTempDir,
-  copyImportArtwork,
-  copyImportTracks,
   extractImportBundle,
   insertImportedLibrary,
   loadExistingTrackHashes,

@@ -75,6 +75,7 @@ private data class LoadedManifest(
 )
 
 private data class ImportTrackTarget(
+  val contentHashSha256: String?,
   val fileHash: String,
   val inLibrary: Boolean,
   val relativePath: String,
@@ -309,23 +310,28 @@ class AndroidLibraryTransferModule(
     job.cleanupPaths.add(stage.rootDir.absolutePath)
     writeTextFile(stage.manifestFile, loadedManifest.rawJson)
 
-    val libraryTrackHashes = resolveLibraryTrackHashes(loadedManifest.json)
     val trackTargets = linkedMapOf<String, ImportTrackTarget>()
     val trackHashesToMarkInLibrary = mutableSetOf<String>()
+    val existingTrackAliases = JSONObject()
     var skippedTracks = 0
 
     for (index in 0 until tracks.length()) {
       val track = tracks.optJSONObject(index) ?: continue
       val fileHash = track.optString("file_hash")
+      val contentHashSha256 = track.optString("content_hash_sha256").ifBlank { null }
       if (fileHash.isBlank()) {
         skippedTracks += 1
         continue
       }
 
-      if (request.existingHashes.contains(fileHash)) {
-        if (libraryTrackHashes.contains(fileHash)) {
-          trackHashesToMarkInLibrary.add(fileHash)
-        }
+      val existingIdentity = when {
+        request.existingHashes.contains(fileHash) -> fileHash
+        contentHashSha256 != null && request.existingHashes.contains(contentHashSha256) -> contentHashSha256
+        else -> null
+      }
+      if (existingIdentity != null) {
+        existingTrackAliases.put(fileHash, existingIdentity)
+        trackHashesToMarkInLibrary.add(fileHash)
         skippedTracks += 1
         continue
       }
@@ -344,8 +350,9 @@ class AndroidLibraryTransferModule(
       val ext = getFileExtension(relativePath)
       val stageFile = File(stage.tracksDir, "${fileHash}${ext.ifBlank { "" }}")
       val target = ImportTrackTarget(
+        contentHashSha256 = contentHashSha256,
         fileHash = fileHash,
-        inLibrary = libraryTrackHashes.contains(fileHash),
+        inLibrary = true,
         relativePath = relativePath,
         stageFile = stageFile,
         format = ext.removePrefix(".").ifBlank { null }?.lowercase(),
@@ -384,6 +391,7 @@ class AndroidLibraryTransferModule(
           copyZipEntryToFile(zipInputStream, trackTarget.stageFile)
           extractedTrackPaths.add(normalizedName)
           preparedTracks.put(JSONObject().apply {
+            put("contentHashSha256", trackTarget.contentHashSha256)
             put("fileHash", trackTarget.fileHash)
             put("stagedFilePath", Uri.fromFile(trackTarget.stageFile).toString())
             put("fileSize", trackTarget.stageFile.length())
@@ -417,6 +425,7 @@ class AndroidLibraryTransferModule(
       .put("manifestFilePath", Uri.fromFile(stage.manifestFile).toString())
       .put("preparedTracks", preparedTracks)
       .put("trackHashesToMarkInLibrary", JSONArray(trackHashesToMarkInLibrary.toList()))
+      .put("existingTrackAliases", existingTrackAliases)
       .put("playlistCoverStagePaths", coverPathMap)
       .toString()
     writeTextFile(stage.resultFile, resultJson)
@@ -553,46 +562,6 @@ class AndroidLibraryTransferModule(
       json = parsed,
       prefix = prefix,
     )
-  }
-
-  private fun resolveLibraryTrackHashes(manifest: JSONObject): Set<String> {
-    val bundleType = manifest.optString("bundle_type").ifBlank { "library" }
-    val explicitHashes = manifest.optJSONArray("library_track_hashes")
-
-    if (bundleType == "playlist") {
-      return jsonArrayStrings(explicitHashes)
-    }
-
-    val explicit = jsonArrayStrings(explicitHashes)
-    if (explicit.isNotEmpty()) {
-      return explicit
-    }
-
-    val tracks = manifest.optJSONArray("tracks") ?: return emptySet()
-    return buildSet {
-      for (index in 0 until tracks.length()) {
-        val track = tracks.optJSONObject(index) ?: continue
-        val fileHash = track.optString("file_hash")
-        if (fileHash.isNotBlank()) {
-          add(fileHash)
-        }
-      }
-    }
-  }
-
-  private fun jsonArrayStrings(value: JSONArray?): Set<String> {
-    if (value == null) {
-      return emptySet()
-    }
-
-    return buildSet {
-      for (index in 0 until value.length()) {
-        val entry = value.optString(index)
-        if (entry.isNotBlank()) {
-          add(entry)
-        }
-      }
-    }
   }
 
   private fun readZipEntryText(zipInputStream: ZipInputStream): String {

@@ -5,6 +5,7 @@ export const EXPECTED_HANDLER_CHANNELS = [
   'library:loudness-stats',
   'playlist:create',
   'playlist:check-duplicates',
+  'playlist:export',
   'playlist:import-folder',
   'export:start',
   'import:start',

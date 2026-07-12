@@ -28,7 +28,7 @@ export async function getPlaylistTracks(
      FROM playlist_tracks pt
      JOIN tracks t ON t.id = pt.track_id
      WHERE pt.playlist_id = ?
-     ORDER BY pt.position ASC`,
+     ORDER BY pt.position ASC, pt.id ASC`,
     [playlistId],
   );
 }

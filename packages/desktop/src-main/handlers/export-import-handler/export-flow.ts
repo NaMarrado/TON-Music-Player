@@ -7,8 +7,15 @@ import {
   createExportArchiveOffthread,
   createExportFolderOffthread,
 } from '../../services/export-import-offload';
-import { getExportSummary, loadExportBundleData, loadExportSummary } from './export-data';
+import {
+  getExportSummary,
+  loadExportBundleData,
+  loadExportSourcePaths,
+  loadExportSummary,
+} from './export-data';
+import { runAtomicExport } from './atomic-export';
 import { pickExportDestination } from './dialogs';
+import { ensureExportSourcesReadable } from './export-source-access';
 import { createProgressSender } from './progress';
 import type { ExportResult, ExportStartOptions, ExportSummaryResult } from './types';
 
@@ -37,6 +44,8 @@ export async function startLibraryExport(
   event: Electron.IpcMainInvokeEvent,
   options?: ExportStartOptions,
 ): Promise<ExportResult> {
+  const win = resolveEventWindow(event);
+  await ensureExportSourcesReadable(win, loadExportSourcePaths(options));
   const {
     libraryTrackHashes,
     trackEntries,
@@ -50,7 +59,6 @@ export async function startLibraryExport(
     return { trackCount: 0, playlistCount: 0, sizeBytes: 0 };
   }
 
-  const win = resolveEventWindow(event);
   const destination = await pickExportDestination(
     win,
     options?.destinationPath,
@@ -81,26 +89,26 @@ export async function startLibraryExport(
     playlists: playlistEntries,
   };
 
-  if (destination.bundleFormat === 'folder') {
-    return measurePerfAsync('export:create-folder', () =>
-      createExportFolderOffthread(
-        destination.destinationPath,
-        manifest,
-        trackFiles,
-        artworkFiles,
-        sendProgress,
-      ),
-    );
-  }
-
-  return measurePerfAsync('export:create-archive', () =>
-    createExportArchiveOffthread(
-      destination.destinationPath,
-      manifest,
-      trackFiles,
-      artworkFiles,
-      sendProgress,
-    ),
+  return runAtomicExport(
+    destination.destinationPath,
+    destination.bundleFormat,
+    (stagingPath) => destination.bundleFormat === 'folder'
+      ? measurePerfAsync('export:create-folder', () =>
+        createExportFolderOffthread(
+          stagingPath,
+          manifest,
+          trackFiles,
+          artworkFiles,
+          sendProgress,
+        ))
+      : measurePerfAsync('export:create-archive', () =>
+        createExportArchiveOffthread(
+          stagingPath,
+          manifest,
+          trackFiles,
+          artworkFiles,
+          sendProgress,
+        )),
   );
 }
 

@@ -15,6 +15,7 @@ export type ScenarioPaths = {
   playlistImportDir: string;
   exportDir: string;
   exportBundleDir: string;
+  directPlaylistBundleZip: string;
   playlistBundleZip: string;
   trackOne: string;
   trackTwo: string;

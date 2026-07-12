@@ -2,7 +2,6 @@ import { parentPort, workerData } from 'node:worker_threads';
 import type { ProgressPayload } from '../handlers/export-import-handler/types';
 import { createExportArchive, createExportFolder } from './export-import-archive-tasks';
 import { copyImportData } from './export-import-copy-task';
-import { createMetadataArchive } from './export-import-metadata-archive-task';
 import type {
   ExportImportOffloadRequest,
   ExportImportOffloadResult,
@@ -40,15 +39,6 @@ async function runTask(currentRequest: ExportImportOffloadRequest): Promise<Expo
       currentRequest.manifest,
       currentRequest.trackFiles,
       currentRequest.artworkFiles,
-      sendProgress,
-    );
-  }
-
-  if (currentRequest.kind === 'playlist-archive') {
-    return createMetadataArchive(
-      currentRequest.destinationPath,
-      currentRequest.tracks,
-      currentRequest.playlist,
       sendProgress,
     );
   }

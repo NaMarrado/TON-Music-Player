@@ -1,24 +1,32 @@
 import fs from 'fs';
 import path from 'path';
 import { getDb } from '../../services/database';
+import { hashFileSha256 } from '../../services/cloud-sync/hash';
 import type {
   ExportBundleData,
   ExportSummaryResult,
   PreparedArtworkFile,
   ExportPlaylistRow,
   ExportTrackRow,
-  PlaylistTrackHashRow,
 } from './types';
 
-type ExportSelection = {
+export type ExportSelection = {
   includeLibrary?: boolean;
   playlistIds?: number[];
 };
 
 type ExportableTrackRow = ExportTrackRow & {
   archivePath: string;
+  content_hash_sha256: string;
   file_hash: string;
   in_library: number;
+};
+
+type SelectedExportRows = {
+  allTracks: Array<ExportTrackRow & { in_library: number }>;
+  membershipsByPlaylistId: Map<number, number[]>;
+  playlists: ExportPlaylistRow[];
+  selectedTrackIds: Set<number>;
 };
 
 async function pathExists(targetPath: string): Promise<boolean> {
@@ -30,34 +38,30 @@ async function pathExists(targetPath: string): Promise<boolean> {
   }
 }
 
-export function getExportSummary(bundleData: Pick<ExportBundleData, 'trackEntries' | 'playlistEntries'>): ExportSummaryResult {
-  return {
-    exportableTrackCount: bundleData.trackEntries.length,
-    exportablePlaylistCount: bundleData.playlistEntries.length,
-  };
-}
-
-export async function loadExportBundleData(selection?: ExportSelection): Promise<ExportBundleData> {
+function loadSelectedExportRows(selection?: ExportSelection): SelectedExportRows {
   const db = getDb();
   const includeLibrary = selection?.includeLibrary ?? true;
   const hasExplicitPlaylistSelection = selection?.playlistIds !== undefined;
   const selectedPlaylistIds = new Set(selection?.playlistIds ?? []);
 
   const allTracks = db.prepare(`
-    SELECT id, file_path, file_hash, title, artist, album, genre, year,
+    SELECT id, file_path, file_hash, content_hash_sha256, title, artist, album, genre, year,
            duration_ms, loudness_lufs, loudness_gain, cover_art_path, format, in_library
     FROM tracks
-  `).all() as (ExportTrackRow & { in_library: number })[];
+    ORDER BY id ASC
+  `).all() as Array<ExportTrackRow & { in_library: number }>;
 
   const allPlaylists = db.prepare(`
-    SELECT id, name, description, cover_path, is_smart, smart_rules FROM playlists
+    SELECT id, name, description, cover_path, is_smart, smart_rules
+    FROM playlists
+    ORDER BY sort_order ASC, id ASC
   `).all() as ExportPlaylistRow[];
 
   const playlists = hasExplicitPlaylistSelection
     ? allPlaylists.filter((playlist) => selectedPlaylistIds.has(playlist.id))
     : allPlaylists;
-
   const selectedTrackIds = new Set<number>();
+  const membershipsByPlaylistId = new Map<number, number[]>();
 
   if (includeLibrary) {
     for (const track of allTracks) {
@@ -67,33 +71,116 @@ export async function loadExportBundleData(selection?: ExportSelection): Promise
     }
   }
 
+  const loadMemberships = db.prepare(`
+    SELECT track_id
+    FROM playlist_tracks
+    WHERE playlist_id = ?
+    ORDER BY position ASC, id ASC
+  `);
+
+  for (const playlist of playlists) {
+    const trackIds = (loadMemberships.all(playlist.id) as Array<{ track_id: number }>)
+      .map((row) => row.track_id);
+    membershipsByPlaylistId.set(playlist.id, trackIds);
+    for (const trackId of trackIds) {
+      selectedTrackIds.add(trackId);
+    }
+  }
+
+  return {
+    allTracks,
+    membershipsByPlaylistId,
+    playlists,
+    selectedTrackIds,
+  };
+}
+
+export function getExportSummary(
+  bundleData: Pick<ExportBundleData, 'trackEntries' | 'playlistEntries'>,
+): ExportSummaryResult {
+  return {
+    exportableTrackCount: bundleData.trackEntries.length,
+    exportablePlaylistCount: bundleData.playlistEntries.length,
+  };
+}
+
+export function loadExportSourcePaths(selection?: ExportSelection): string[] {
+  const {
+    allTracks,
+    playlists,
+    selectedTrackIds,
+  } = loadSelectedExportRows(selection);
+  const sourcePaths = new Set<string>();
+
+  for (const track of allTracks) {
+    if (selectedTrackIds.has(track.id)) {
+      sourcePaths.add(track.file_path);
+    }
+  }
+  for (const playlist of playlists) {
+    if (playlist.cover_path && fs.existsSync(playlist.cover_path)) {
+      sourcePaths.add(playlist.cover_path);
+    }
+  }
+
+  return [...sourcePaths];
+}
+
+export async function loadExportBundleData(selection?: ExportSelection): Promise<ExportBundleData> {
+  const db = getDb();
+  const {
+    allTracks,
+    membershipsByPlaylistId,
+    playlists,
+    selectedTrackIds,
+  } = loadSelectedExportRows(selection);
   const exportableTrackById = new Map<number, ExportableTrackRow>();
-  await Promise.all(allTracks.map(async (track) => {
-    const fileHash = track.file_hash;
-    if (!fileHash || !(await pathExists(track.file_path))) {
-      return;
+  const exportableTrackByHash = new Map<string, ExportableTrackRow>();
+  const updateTrackHashes = db.prepare(`
+    UPDATE tracks
+    SET file_hash = CASE
+          WHEN file_hash IS NULL OR file_hash = '' THEN ?
+          ELSE file_hash
+        END,
+        content_hash_sha256 = ?
+    WHERE id = ?
+  `);
+
+  for (const track of allTracks) {
+    if (!selectedTrackIds.has(track.id)) {
+      continue;
+    }
+    if (!(await pathExists(track.file_path))) {
+      throw new Error(`Cannot export missing Library file: ${track.file_path}`);
     }
 
-    exportableTrackById.set(track.id, {
-      ...track,
-      file_hash: fileHash,
-      archivePath: `tracks/${fileHash}${path.extname(track.file_path)}`,
-    });
-  }));
+    let contentHash = track.content_hash_sha256;
+    if (!contentHash) {
+      try {
+        contentHash = await hashFileSha256(track.file_path);
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : String(error);
+        throw new Error(`Cannot read Library file for export: ${track.file_path} (${detail})`);
+      }
+    }
+
+    const fileHash = track.file_hash || contentHash;
+    updateTrackHashes.run(fileHash, contentHash, track.id);
+    let prepared = exportableTrackByHash.get(fileHash);
+    if (!prepared) {
+      prepared = {
+        ...track,
+        archivePath: `tracks/${fileHash}${path.extname(track.file_path)}`,
+        content_hash_sha256: contentHash,
+        file_hash: fileHash,
+      };
+      exportableTrackByHash.set(fileHash, prepared);
+    }
+    exportableTrackById.set(track.id, prepared);
+  }
 
   const artworkFileBySourcePath = new Map<string, PreparedArtworkFile>();
   const playlistEntries = await Promise.all(playlists.map(async (playlist) => {
-    const trackHashes = db.prepare(`
-      SELECT t.id, t.file_hash FROM playlist_tracks pt
-      JOIN tracks t ON t.id = pt.track_id
-      WHERE pt.playlist_id = ?
-      ORDER BY pt.position
-    `).all(playlist.id) as Array<PlaylistTrackHashRow & { id: number }>;
-
-    for (const row of trackHashes) {
-      selectedTrackIds.add(row.id);
-    }
-
     let coverRelativePath: string | null = null;
     if (playlist.cover_path && await pathExists(playlist.cover_path)) {
       let artworkFile = artworkFileBySourcePath.get(playlist.cover_path);
@@ -114,58 +201,46 @@ export async function loadExportBundleData(selection?: ExportSelection): Promise
       cover_relative_path: coverRelativePath,
       is_smart: playlist.is_smart === 1,
       smart_rules: playlist.smart_rules,
-      track_hashes: trackHashes
-        .filter((row) => row.file_hash && exportableTrackById.has(row.id))
-        .map((row) => row.file_hash as string),
+      track_hashes: (membershipsByPlaylistId.get(playlist.id) ?? [])
+        .map((trackId) => exportableTrackById.get(trackId)?.file_hash ?? null)
+        .filter((value): value is string => Boolean(value)),
     };
   }));
 
-  const tracks = [...selectedTrackIds]
-    .map((trackId) => exportableTrackById.get(trackId) ?? null)
-    .filter((track): track is ExportableTrackRow => Boolean(track));
-
-  const libraryTrackHashes = tracks
-    .map((track) => track.file_hash)
-    .filter((value): value is string => Boolean(value));
-
-  const trackEntries: ExportBundleData['trackEntries'] = [];
-  const trackFiles: ExportBundleData['trackFiles'] = [];
-
-  for (const track of tracks) {
-    trackEntries.push({
-      file_hash: track.file_hash,
-      relative_path: track.archivePath,
-      metadata: {
-        title: track.title,
-        artist: track.artist,
-        album: track.album,
-        genre: track.genre,
-        year: track.year,
-        duration_ms: track.duration_ms,
-        loudness_lufs: track.loudness_lufs,
-        loudness_gain: track.loudness_gain,
-      },
-    });
-
-    trackFiles.push({ filePath: track.file_path, archivePath: track.archivePath });
-  }
-
-  const artworkFiles: PreparedArtworkFile[] = [];
-  for (const artworkFile of artworkFileBySourcePath.values()) {
-    if (await pathExists(artworkFile.filePath)) {
-      artworkFiles.push(artworkFile);
-    }
-  }
+  const tracks = [...exportableTrackByHash.values()];
+  const trackEntries: ExportBundleData['trackEntries'] = tracks.map((track) => ({
+    file_hash: track.file_hash,
+    content_hash_sha256: track.content_hash_sha256,
+    relative_path: track.archivePath,
+    metadata: {
+      title: track.title,
+      artist: track.artist,
+      album: track.album,
+      genre: track.genre,
+      year: track.year,
+      duration_ms: track.duration_ms,
+      loudness_lufs: track.loudness_lufs,
+      loudness_gain: track.loudness_gain,
+    },
+  }));
+  const trackFiles: ExportBundleData['trackFiles'] = tracks.map((track) => ({
+    filePath: track.file_path,
+    archivePath: track.archivePath,
+  }));
 
   return {
-    libraryTrackHashes: [...new Set(libraryTrackHashes)],
+    libraryTrackHashes: tracks.map((track) => track.file_hash),
     trackEntries,
     playlistEntries,
     trackFiles,
-    artworkFiles,
+    artworkFiles: [...artworkFileBySourcePath.values()],
   };
 }
 
 export async function loadExportSummary(selection?: ExportSelection): Promise<ExportSummaryResult> {
-  return getExportSummary(await loadExportBundleData(selection));
+  const { playlists, selectedTrackIds } = loadSelectedExportRows(selection);
+  return {
+    exportableTrackCount: selectedTrackIds.size,
+    exportablePlaylistCount: playlists.length,
+  };
 }

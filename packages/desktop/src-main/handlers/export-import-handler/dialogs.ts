@@ -31,7 +31,7 @@ export async function pickExportDestination(
     type: 'question',
     title: 'Export Library',
     message: 'Choose export format',
-    detail: 'Archive (.ton) keeps the current desktop bundle. Folder bundle is compatible with Android import/export.',
+    detail: 'Both formats contain the same cross-platform TON bundle.',
     buttons: ['Archive (.ton)', 'Folder bundle', 'Cancel'],
     defaultId: 0,
     cancelId: 2,

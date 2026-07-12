@@ -2,6 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { findBestMatch, type LoadedPlaylistImport } from '@ton/core';
 import { getDb } from '../../services/database';
+import { getArtworkDir } from '../../services/metadata-reader/artwork';
+import { runAtomicExport } from '../../handlers/export-import-handler/atomic-export';
 import { replaceDesktopPlaylistImportSnapshot } from '../../services/playlist-import/snapshot';
 import {
   assignDesktopPlaylistImportQueues,
@@ -108,6 +110,79 @@ export async function runExportImportRoundTrip(
   importedPlaylistId: number,
   importedPlaylistName: string,
 ): Promise<ScenarioExportImportResults> {
+  const atomicDestination = path.join(paths.exportDir, 'atomic-existing.ton');
+  fs.writeFileSync(atomicDestination, 'existing-export');
+  let atomicFailureObserved = false;
+  try {
+    await runAtomicExport(atomicDestination, 'archive', async (stagingPath) => {
+      fs.writeFileSync(stagingPath, 'partial-export');
+      throw new Error('fixture export failure');
+    });
+  } catch {
+    atomicFailureObserved = true;
+  }
+  assert(atomicFailureObserved, 'Expected atomic export fixture to fail');
+  assert(
+    fs.readFileSync(atomicDestination, 'utf-8') === 'existing-export',
+    'Expected a failed export to preserve the previous destination',
+  );
+  assert(
+    !fs.readdirSync(paths.exportDir).some((entry) => entry.includes('.partial-')),
+    'Expected a failed export to remove its staging output',
+  );
+
+  const atomicFinalizeDestination = path.join(paths.exportDir, 'atomic-finalize-existing.ton');
+  fs.writeFileSync(atomicFinalizeDestination, 'existing-finalized-export');
+  let atomicFinalizeFailureObserved = false;
+  try {
+    await runAtomicExport(atomicFinalizeDestination, 'archive', async (stagingPath) => {
+      fs.writeFileSync(stagingPath, 'incomplete-replacement');
+      fs.rmSync(stagingPath);
+      return null;
+    });
+  } catch {
+    atomicFinalizeFailureObserved = true;
+  }
+  assert(atomicFinalizeFailureObserved, 'Expected atomic finalization fixture to fail');
+  assert(
+    fs.readFileSync(atomicFinalizeDestination, 'utf-8') === 'existing-finalized-export',
+    'Expected a final rename failure to restore the previous destination',
+  );
+  assert(
+    !fs.readdirSync(paths.exportDir).some((entry) => (
+      entry.includes('.partial-') || entry.includes('.backup-')
+    )),
+    'Expected failed atomic finalization to clean its sibling files',
+  );
+
+  const db = getDb();
+  const canonicalMembership = db.prepare(`
+    SELECT track_id, file_path
+    FROM playlist_tracks
+    WHERE playlist_id = ?
+    ORDER BY position ASC
+    LIMIT 1
+  `).get(importedPlaylistId) as { track_id: number; file_path: string | null } | undefined;
+  assert(canonicalMembership, 'Expected imported playlist membership before export');
+  assert(
+    canonicalMembership.file_path === null,
+    'Expected canonical playlist membership to have no duplicated file path',
+  );
+  db.prepare(`
+    UPDATE tracks
+    SET file_hash = NULL, content_hash_sha256 = NULL
+    WHERE id = ?
+  `).run(canonicalMembership.track_id);
+  db.prepare(`
+    INSERT INTO playlist_tracks (playlist_id, track_id, position, file_path)
+    VALUES (?, ?, 1, NULL)
+  `).run(importedPlaylistId, canonicalMembership.track_id);
+  const playlistCoverSourcePath = path.join(paths.exportDir, 'playlist-cover-source.png');
+  const playlistCoverContents = Buffer.from('fixture-playlist-cover-v1');
+  fs.writeFileSync(playlistCoverSourcePath, playlistCoverContents);
+  db.prepare('UPDATE playlists SET cover_path = ? WHERE id = ?')
+    .run(playlistCoverSourcePath, importedPlaylistId);
+
   const folderExportResult = await invoke<{
     trackCount: number;
     playlistCount: number;
@@ -133,7 +208,8 @@ export async function runExportImportRoundTrip(
   ) as {
     track_count: number;
     playlist_count: number;
-    tracks: Array<{ relative_path: string }>;
+    tracks: Array<{ content_hash_sha256?: string; relative_path: string }>;
+    playlists: Array<{ cover_relative_path?: string | null; track_hashes: string[] }>;
   };
   assert(exportedManifest.track_count === 3, `Expected exported manifest track_count=3, got ${exportedManifest.track_count}`);
   assert(
@@ -143,6 +219,32 @@ export async function runExportImportRoundTrip(
   assert(
     exportedManifest.tracks.every((track) => track.relative_path.startsWith('tracks/')),
     'Expected exported manifest track paths to live under tracks/',
+  );
+  assert(
+    exportedManifest.tracks.every((track) => /^[a-f0-9]{64}$/.test(track.content_hash_sha256 ?? '')),
+    'Expected every exported track to include a stable SHA-256 content identity',
+  );
+  const backfilledTrackIdentity = db.prepare(`
+    SELECT file_hash, content_hash_sha256
+    FROM tracks
+    WHERE id = ?
+  `).get(canonicalMembership.track_id) as {
+    file_hash: string | null;
+    content_hash_sha256: string | null;
+  };
+  assert(
+    backfilledTrackIdentity.file_hash === backfilledTrackIdentity.content_hash_sha256
+      && /^[a-f0-9]{64}$/.test(backfilledTrackIdentity.content_hash_sha256 ?? ''),
+    'Expected export to persist a stable identity for a canonical track with no legacy hash',
+  );
+  assert(
+    exportedManifest.playlists[0]?.track_hashes.length === 2
+      && exportedManifest.playlists[0].track_hashes[0] === exportedManifest.playlists[0].track_hashes[1],
+    'Expected duplicate playlist positions to reference one canonical exported track',
+  );
+  assert(
+    Boolean(exportedManifest.playlists[0]?.cover_relative_path),
+    'Expected playlist cover to be included in the portable bundle',
   );
 
   const playlistBundleExportResult = await invoke<{
@@ -165,7 +267,20 @@ export async function runExportImportRoundTrip(
   );
   assert(fs.existsSync(paths.playlistBundleZip), 'Expected playlist bundle archive to exist');
 
-  const db = getDb();
+  const directPlaylistPath = await invoke<string | null>(
+    'playlist:export',
+    importedPlaylistId,
+    paths.directPlaylistBundleZip,
+  );
+  assert(
+    directPlaylistPath === paths.directPlaylistBundleZip,
+    'Expected direct playlist export to return its canonical bundle path',
+  );
+  assert(
+    fs.existsSync(paths.directPlaylistBundleZip),
+    'Expected direct playlist export bundle to exist',
+  );
+
   db.exec(`
     DELETE FROM playlist_tracks;
     DELETE FROM playlists;
@@ -177,6 +292,12 @@ export async function runExportImportRoundTrip(
     .get() as { tracks: number; playlists: number };
   assert(clearedCounts.tracks === 0, `Expected cleared tracks=0, got ${clearedCounts.tracks}`);
   assert(clearedCounts.playlists === 0, `Expected cleared playlists=0, got ${clearedCounts.playlists}`);
+
+  const exportedCoverRelativePath = exportedManifest.playlists[0].cover_relative_path as string;
+  const artworkDir = getArtworkDir();
+  fs.mkdirSync(artworkDir, { recursive: true });
+  const staleCoverPath = path.join(artworkDir, path.basename(exportedCoverRelativePath));
+  fs.writeFileSync(staleCoverPath, 'stale-cover-with-colliding-name');
 
   const folderImportResult = await invoke<{
     importedTracks: number;
@@ -207,6 +328,17 @@ export async function runExportImportRoundTrip(
     .get() as { tracks: number; playlists: number };
   assert(importedCounts.tracks === 3, `Expected imported tracks=3, got ${importedCounts.tracks}`);
   assert(importedCounts.playlists === 1, `Expected imported playlists=1, got ${importedCounts.playlists}`);
+  const importedCover = db.prepare('SELECT cover_path FROM playlists LIMIT 1')
+    .get() as { cover_path: string | null } | undefined;
+  assert(importedCover?.cover_path, 'Expected imported playlist cover path');
+  assert(
+    importedCover.cover_path !== staleCoverPath,
+    'Expected a colliding artwork filename not to reuse an unrelated cover',
+  );
+  assert(
+    fs.readFileSync(importedCover.cover_path).equals(playlistCoverContents),
+    'Expected imported playlist to reference the exported cover contents',
+  );
 
   db.exec(`
     DELETE FROM playlist_tracks;
@@ -216,7 +348,7 @@ export async function runExportImportRoundTrip(
 
   const importedTonPlaylist = await invoke<{ id: number; name: string } | { empty: true } | null>(
     'playlist:import-folder',
-    paths.playlistBundleZip,
+    paths.directPlaylistBundleZip,
     false,
   );
   assert(
@@ -232,8 +364,8 @@ export async function runExportImportRoundTrip(
     .prepare('SELECT COUNT(*) as count FROM playlist_tracks WHERE playlist_id = ?')
     .get(importedTonPlaylist.id) as { count: number };
   assert(
-    tonPlaylistTrackCount.count === 1,
-    `Expected TON bundle imported playlist to contain 1 track, got ${tonPlaylistTrackCount.count}`,
+    tonPlaylistTrackCount.count === 2,
+    `Expected TON bundle imported playlist to preserve 2 ordered positions, got ${tonPlaylistTrackCount.count}`,
   );
 
   return {

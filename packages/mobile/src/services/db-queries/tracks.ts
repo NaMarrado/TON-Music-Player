@@ -11,7 +11,7 @@ export {
   getAllTrackIdsByHash,
   getAllTracksForTransfer,
   getTrackAssetRowsByIds,
-  getTrackIdsByHashes,
+  getTrackIdsByTransferEntries,
   getTrackIdsBySourceIdentity,
 } from './track-transfer';
 export {

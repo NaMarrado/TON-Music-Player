@@ -2,7 +2,7 @@ import * as FileSystem from 'expo-file-system';
 import type { ExportManifest } from '@ton/core';
 import { ensureArtworkDir } from '../cover-art';
 import { ensureMusicDir } from '../downloader/filesystem';
-import { getAllTrackIdsByHash, getTrackIdsByHashes } from '../db-queries';
+import { getAllTrackIdsByHash, getTrackIdsByTransferEntries } from '../db-queries';
 import {
   cleanupStageDirectoryAsync,
   copySafFileToLocalAsync,
@@ -40,6 +40,7 @@ import { acquireMobileJob } from '../job-scheduler';
 import { scheduleTrackLoudnessAnalysis } from '../loudness-analysis';
 
 type NativeImportTrackPayload = {
+  contentHashSha256?: string | null;
   fileHash: string;
   stagedFilePath: string;
   fileSize: number | null;
@@ -60,6 +61,7 @@ type StagedImportResult = {
   manifestFilePath: string;
   preparedTracks: NativeImportTrackPayload[];
   trackHashesToMarkInLibrary: string[];
+  existingTrackAliases?: Record<string, string>;
   playlistCoverStagePaths: Record<string, string>;
 };
 
@@ -111,9 +113,18 @@ async function finalizeAndroidImportResult(
     manifest.tracks.map((track) => [track.file_hash, track] as const),
   );
   const trackIdsToMarkInLibrary = stagedResult.trackHashesToMarkInLibrary
-    .map((hash) => existingTrackIdsByHash[hash])
+    .map((hash) => stagedResult.existingTrackAliases?.[hash] ?? hash)
+    .map((identity) => existingTrackIdsByHash[identity])
     .filter((value): value is number => typeof value === 'number');
   const trackIdsByHash = { ...existingTrackIdsByHash };
+  for (const [manifestHash, existingIdentity] of Object.entries(
+    stagedResult.existingTrackAliases ?? {},
+  )) {
+    const trackId = existingTrackIdsByHash[existingIdentity];
+    if (trackId != null) {
+      trackIdsByHash[manifestHash] = trackId;
+    }
+  }
   const preparedTracks: PreparedImportTrack[] = [];
   const playlistCoverPaths: Record<string, string> = {};
   const createdTrackUris: string[] = [];
@@ -163,6 +174,9 @@ async function finalizeAndroidImportResult(
       await FileSystem.moveAsync({ from: track.stagedFilePath, to: destinationUri });
       createdTrackUris.push(destinationUri);
       preparedTracks.push({
+        contentHashSha256: track.contentHashSha256
+          ?? manifestTrack.content_hash_sha256
+          ?? null,
         fileHash: track.fileHash,
         filePath: destinationUri,
         fileSize: track.fileSize,
@@ -344,9 +358,7 @@ async function importMobileLibraryJs(
     const bundleType = resolveImportBundleType(manifest);
     await ensureMusicDir();
 
-    const existingTrackIdsByHash = await getTrackIdsByHashes(
-      [...new Set(manifest.tracks.map((track) => track.file_hash))],
-    );
+    const existingTrackIdsByHash = await getTrackIdsByTransferEntries(manifest.tracks);
 
     const {
       preparedTracks,

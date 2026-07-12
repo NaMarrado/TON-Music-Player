@@ -32,41 +32,19 @@ export type ImportCopyRequest = {
   existingHashes: string[];
 };
 
-export type MetadataArchiveTrack = {
-  file_path: string;
-  cover_art_path: string | null;
-  title: string | null;
-  artist: string | null;
-  album: string | null;
-};
-
-export type PlaylistArchiveRequest = {
-  kind: 'playlist-archive';
-  destinationPath: string;
-  playlist: {
-    name: string;
-    cover_path: string | null;
-  };
-  tracks: MetadataArchiveTrack[];
-};
-
 export type ExportImportOffloadRequest =
   | ExportArchiveRequest
   | ExportFolderRequest
-  | ImportCopyRequest
-  | PlaylistArchiveRequest;
+  | ImportCopyRequest;
 
 export type ImportCopyResult = {
   filesToInsert: ImportPreparedFile[];
   importedTracks: number;
+  playlistCoverPaths: Record<string, string>;
   skippedTracks: number;
 };
 
-export type ArchiveFileResult = {
-  filePath: string;
-};
-
-export type ExportImportOffloadResult = ExportResult | ImportCopyResult | ArchiveFileResult;
+export type ExportImportOffloadResult = ExportResult | ImportCopyResult;
 
 export type WorkerProgressMessage = {
   type: 'progress';

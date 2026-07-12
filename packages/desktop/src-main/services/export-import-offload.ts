@@ -7,11 +7,9 @@ import type {
   ProgressPayload,
 } from '../handlers/export-import-handler/types';
 import type {
-  ArchiveFileResult,
   ExportImportOffloadRequest,
   ExportImportOffloadResult,
   ImportCopyResult,
-  PlaylistArchiveRequest,
   WorkerMessage,
 } from './export-import-offload-types';
 import { scheduleMainProcessJob } from './job-scheduler';
@@ -22,11 +20,7 @@ function runOffthreadTask<T extends ExportImportOffloadResult>(
   request: ExportImportOffloadRequest,
   onProgress: (data: ProgressPayload) => void,
 ): Promise<T> {
-  const kind = request.kind === 'import-copy'
-    ? 'library-import'
-    : request.kind === 'playlist-archive'
-      ? 'playlist-export'
-      : 'library-export';
+  const kind = request.kind === 'import-copy' ? 'library-import' : 'library-export';
 
   return scheduleMainProcessJob<T>({
     kind,
@@ -142,23 +136,6 @@ export function copyImportDataOffthread(
       downloadDir,
       artworkDir,
       existingHashes: [...existingHashes],
-    },
-    onProgress,
-  );
-}
-
-export function createPlaylistArchiveOffthread(
-  destinationPath: string,
-  playlist: PlaylistArchiveRequest['playlist'],
-  tracks: PlaylistArchiveRequest['tracks'],
-  onProgress: (data: ProgressPayload) => void,
-): Promise<ArchiveFileResult> {
-  return runOffthreadTask<ArchiveFileResult>(
-    {
-      kind: 'playlist-archive',
-      destinationPath,
-      playlist,
-      tracks,
     },
     onProgress,
   );

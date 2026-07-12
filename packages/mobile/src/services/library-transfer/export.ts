@@ -68,14 +68,12 @@ async function buildExportPayload(
     selectedPlaylists.map((playlist) => playlist.name),
   );
   const selectedTrackMap = new Map<number, Track>();
-  const libraryTrackIds = new Set<number>();
   const playlistTrackIdsByPlaylistId = new Map<number, number[]>();
 
   if (selection.includeLibrary) {
     for (const track of allTracks) {
       if (track.in_library === 1) {
         selectedTrackMap.set(track.id, track);
-        libraryTrackIds.add(track.id);
       }
     }
   }
@@ -318,7 +316,11 @@ export async function beginExportMobileLibrary(
 
       try {
         onProgress?.({ phase: 'preparing', current: 0, total: 1 });
-        const payload = await buildExportPayload(selection, onProgress);
+        const payload = await buildExportPayload(
+          selection,
+          onProgress,
+          () => cancelRequested,
+        );
         if (cancelRequested) {
           return null;
         }
@@ -346,6 +348,11 @@ export async function beginExportMobileLibrary(
         }
 
         return nativeTask.result;
+      } catch (error) {
+        if (isLibraryTransferCancelledError(error)) {
+          return null;
+        }
+        throw error;
       } finally {
         releaseLease();
       }

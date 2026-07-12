@@ -43,6 +43,7 @@ export type ExportTrackRow = {
   id: number;
   file_path: string;
   file_hash: string | null;
+  content_hash_sha256: string | null;
   title: string | null;
   artist: string | null;
   album: string | null;
@@ -62,10 +63,6 @@ export type ExportPlaylistRow = {
   cover_path: string | null;
   is_smart: number;
   smart_rules: string | null;
-};
-
-export type PlaylistTrackHashRow = {
-  file_hash: string | null;
 };
 
 export type PreparedTrackFile = {
@@ -89,11 +86,6 @@ export type ExportBundleData = {
 export type ImportPreparedFile = {
   destPath: string;
   hash: string;
+  contentHashSha256: string | null;
   meta: ExportTrackEntry['metadata'];
-};
-
-export type CopyImportTracksResult = {
-  filesToInsert: ImportPreparedFile[];
-  importedTracks: number;
-  skippedTracks: number;
 };

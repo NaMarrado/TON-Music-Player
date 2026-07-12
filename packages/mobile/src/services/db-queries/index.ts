@@ -8,7 +8,7 @@ export {
   getAllTrackAssetRows,
   getTrackAssetRowsByIds,
   getTrackIdsBySourceIdentity,
-  getTrackIdsByHashes,
+  getTrackIdsByTransferEntries,
   getTrackById,
   getTracksMissingLoudness,
   getTracksByIds,

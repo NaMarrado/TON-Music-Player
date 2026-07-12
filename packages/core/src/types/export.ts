@@ -13,6 +13,8 @@ export interface ExportManifest {
 
 export interface ExportTrackEntry {
   file_hash: string;
+  /** Stable full-file identity used across desktop and mobile exports. */
+  content_hash_sha256?: string;
   relative_path: string;
   metadata: {
     title: string | null;

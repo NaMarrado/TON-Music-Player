@@ -2,6 +2,7 @@ import * as FileSystem from 'expo-file-system';
 import type { ExportTrackEntry, Track, ExportManifest } from '@ton/core';
 import type { Playlist } from '@ton/core';
 import { updateTrack } from '../db-queries';
+import { hashFileSha256 } from '../cloud-sync/hash';
 import {
   buildExportTrackFileName,
   EXPORT_ARTWORK_DIR_NAME,
@@ -91,15 +92,18 @@ export async function prepareTrackExports(
   for (let index = 0; index < tracks.length; index += 1) {
     throwIfLibraryTransferCancelled(shouldCancel);
     const track = tracks[index];
-    const info = await FileSystem.getInfoAsync(track.file_path, { md5: true, size: true });
-    if (!info.exists || !info.md5) {
-      onProgress?.({ phase: 'tracks', current: index + 1, total: tracks.length });
-      continue;
+    const info = await FileSystem.getInfoAsync(track.file_path, { size: true });
+    if (!info.exists) {
+      throw new Error(`Cannot export missing Library file: ${track.file_path}`);
     }
 
-    const fileHash = info.md5;
-    if (track.file_hash !== fileHash) {
-      await updateTrack(track.id, { file_hash: fileHash });
+    const contentHash = track.content_hash_sha256 || await hashFileSha256(track.file_path);
+    const fileHash = track.file_hash || contentHash;
+    if (track.file_hash !== fileHash || track.content_hash_sha256 !== contentHash) {
+      await updateTrack(track.id, {
+        file_hash: fileHash,
+        content_hash_sha256: contentHash,
+      });
     }
 
     let prepared = preparedByHash.get(fileHash);
@@ -113,6 +117,7 @@ export async function prepareTrackExports(
         sizeBytes: typeof info.size === 'number' ? info.size : 0,
         trackEntry: {
           file_hash: fileHash,
+          content_hash_sha256: contentHash,
           relative_path: `tracks/${exportFileName}`,
           metadata: {
             title: track.title,

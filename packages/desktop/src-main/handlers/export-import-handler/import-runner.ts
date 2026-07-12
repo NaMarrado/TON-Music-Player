@@ -35,7 +35,12 @@ export async function runLibraryImportBundle(
     const downloadDir = await resolveImportDownloadDir();
     const artworkDir = getArtworkDir();
     const existingHashes = loadExistingTrackHashes();
-    const { filesToInsert, importedTracks, skippedTracks } = await measurePerfAsync(
+    const {
+      filesToInsert,
+      importedTracks,
+      playlistCoverPaths,
+      skippedTracks,
+    } = await measurePerfAsync(
       'import:copy-data',
       () =>
         copyImportDataOffthread(
@@ -50,6 +55,7 @@ export async function runLibraryImportBundle(
     const { importedPlaylists, playlistIds } = insertImportedLibrary(
       manifest,
       filesToInsert,
+      playlistCoverPaths,
       sendProgress,
     );
 
