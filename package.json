@@ -29,7 +29,7 @@
     "dist:desktop": "corepack pnpm --filter @ton/desktop dist",
     "dist:desktop:dir": "corepack pnpm --filter @ton/desktop dist:dir",
     "build:mobile": "corepack pnpm --filter @ton/mobile build",
-    "build:android:release": "python3 scripts/setup_free_signing.py && (cd packages/mobile/android && ./gradlew assembleRelease)",
+    "build:android:release": "corepack pnpm --filter @ton/mobile exec expo prebuild --platform android --no-install && python3 scripts/setup_free_signing.py && (cd packages/mobile/android && ./gradlew assembleRelease)",
     "lint": "eslint 'packages/*/src/**/*.{ts,tsx}'",
     "typecheck": "tsc --build",
     "format": "prettier --write 'packages/*/src/**/*.{ts,tsx,json,css}'"

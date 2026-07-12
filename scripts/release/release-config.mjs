@@ -7,7 +7,7 @@ export const REPOSITORY_OWNER = 'NaMarrado';
 export const REPOSITORY_NAME = 'TON-Music-Player';
 export const REPOSITORY_URL = `https://github.com/${REPOSITORY_OWNER}/${REPOSITORY_NAME}`;
 export const RAW_MAIN_URL = `https://raw.githubusercontent.com/${REPOSITORY_OWNER}/${REPOSITORY_NAME}/main`;
-export const RELEASE_NOTES = 'TON checks GitHub Releases for newer desktop and Android builds.';
+export const RELEASE_NOTES = 'TON checks GitHub Releases for updates.';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = join(SCRIPT_DIR, '..', '..');

@@ -26,7 +26,7 @@ Production builds are published on the [GitHub Releases](https://github.com/NaMa
 - **Android:** installable APK
 - **iOS:** build and sign the app from source with your own Apple account
 
-> Windows and macOS builds are not code-signed, so the operating system may show a security warning on first launch. Android APKs are self-signed and may require removing an older build if it was signed with a different key.
+> Windows and macOS builds are not code-signed, so the operating system may show a security warning on first launch. Android v1.0.15 and newer use one permanent project signing key. Upgrading from v1.0.14 or older requires uninstalling TON once because those builds used temporary keys.
 
 ## 🤍 Support TON
 
@@ -104,6 +104,8 @@ corepack pnpm dist:desktop
 # Signed Android release APK using a locally generated project key
 corepack pnpm build:android:release
 ```
+
+The first local Android release build creates a personal signing key in `.signing/android/`. Back up both files in that directory: losing the key prevents future APKs from updating builds signed with it. Official GitHub Release APKs use the maintainer's separate permanent key stored in GitHub Actions secrets.
 
 For iOS, install the CocoaPods dependencies, open `packages/mobile/ios/TON.xcworkspace` in Xcode, select your Apple Development team, and build for your device. TON does not publish a pre-signed iOS binary.
 

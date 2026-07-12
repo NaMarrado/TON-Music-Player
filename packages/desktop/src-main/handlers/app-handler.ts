@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'path';
 import { pipeline } from 'node:stream/promises';
 import { Readable } from 'node:stream';
+import { pathToFileURL } from 'node:url';
 import { checkForAppUpdate, type AppUpdatePlatform } from '@ton/core';
 
 interface UpdateDownloadRequest {
@@ -100,6 +101,16 @@ async function writeSimulationArtifact(
 async function openDownloadedArtifact(filePath: string): Promise<boolean> {
   if (path.extname(filePath).toLowerCase() === '.appimage') {
     await fs.chmod(filePath, 0o755);
+  }
+
+  if (process.platform === 'darwin') {
+    try {
+      await shell.openExternal(pathToFileURL(filePath).href, { activate: true });
+      return true;
+    } catch {
+      shell.showItemInFolder(filePath);
+      return false;
+    }
   }
 
   const openError = await shell.openPath(filePath);

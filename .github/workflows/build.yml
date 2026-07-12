@@ -476,7 +476,17 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      - name: Setup Android generated signing
+      - name: Setup permanent Android release signing
+        if: ${{ needs.metadata.outputs.release == 'true' }}
+        env:
+          TON_ANDROID_KEYSTORE_BASE64: ${{ secrets.TON_ANDROID_KEYSTORE_BASE64 }}
+          TON_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.TON_ANDROID_KEYSTORE_PASSWORD }}
+          TON_ANDROID_KEY_ALIAS: ${{ secrets.TON_ANDROID_KEY_ALIAS }}
+          TON_ANDROID_KEY_PASSWORD: ${{ secrets.TON_ANDROID_KEY_PASSWORD }}
+        run: python3 scripts/setup_free_signing.py --ci
+
+      - name: Setup temporary Android CI signing
+        if: ${{ needs.metadata.outputs.release != 'true' }}
         run: python3 scripts/setup_free_signing.py
 
       - name: Build Android release APK
@@ -486,12 +496,24 @@ jobs:
       - name: Verify Android release signature
         shell: bash
         run: |
+          set -euo pipefail
           APKSIGNER="$(find "${ANDROID_HOME:-$ANDROID_SDK_ROOT}"/build-tools -name apksigner | sort | tail -n 1)"
           if [ -z "$APKSIGNER" ]; then
             echo "apksigner not found" >&2
             exit 1
           fi
-          "$APKSIGNER" verify --print-certs packages/mobile/android/app/build/outputs/apk/release/app-release.apk
+          APK="packages/mobile/android/app/build/outputs/apk/release/app-release.apk"
+          VERIFY_OUTPUT="$("$APKSIGNER" verify --print-certs "$APK")"
+          printf '%s\n' "$VERIFY_OUTPUT"
+
+          if [ "${{ needs.metadata.outputs.release }}" = "true" ]; then
+            EXPECTED="$(tr -d '[:space:]' < scripts/android-release-cert.sha256 | tr '[:upper:]' '[:lower:]')"
+            ACTUAL="$(printf '%s\n' "$VERIFY_OUTPUT" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -n 1 | tr '[:upper:]' '[:lower:]')"
+            if [ -z "$ACTUAL" ] || [ "$ACTUAL" != "$EXPECTED" ]; then
+              echo "Release APK certificate does not match scripts/android-release-cert.sha256" >&2
+              exit 1
+            fi
+          fi
 
       - name: Upload Android release asset
         if: ${{ needs.metadata.outputs.release == 'true' && github.event_name == 'push' }}
