@@ -1,0 +1,9 @@
+diff --git a/android/src/main/AndroidManifest.xml b/android/src/main/AndroidManifest.xml
+index b75bc365031a6ac72a8710a789400a3a3e05ab14..a2f47b6057db70071e9080281db29d78ac165e66 100644
+--- a/android/src/main/AndroidManifest.xml
++++ b/android/src/main/AndroidManifest.xml
+@@ -1,3 +1,2 @@
+-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+-          package="com.arthenica.ffmpegkit.reactnative">
++<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+ </manifest>

@@ -1,0 +1,6 @@
+{
+  "title": "Artistes",
+  "count": "{{count}} artistes",
+  "trackCount": "{{count}} titres",
+  "empty": "Votre bibliothèque ne contient encore aucun artiste."
+}

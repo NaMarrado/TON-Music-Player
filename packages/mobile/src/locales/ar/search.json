@@ -1,0 +1,16 @@
+{
+  "placeholder": "بحث عن الموسيقى...",
+  "play": "تشغيل",
+  "download": "تنزيل",
+  "downloadStarted": "جارٍ التنزيل: {{title}}",
+  "downloadAlreadyQueued": "موجود بالفعل في التنزيلات: {{title}}",
+  "alreadySaved": "تم الحفظ بالفعل: {{title}}",
+  "addToPlaylist": "أضف إلى قائمة التشغيل",
+  "noResults": "لم يتم العثور على نتائج",
+  "loadMore": "قم بتحميل {{count}} المزيد من {{source}}",
+  "loadingMore": "جارٍ تحميل المزيد...",
+  "emptyHint": "ابحث عن الموسيقى عبر YouTube وSpotify ومكتبتك",
+  "spotifyError": "فشل البحث في Spotify - تحقق من بيانات الاعتماد الخاصة بك",
+  "openSettings": "افتح الإعدادات",
+  "tabLabel": "بحث"
+}

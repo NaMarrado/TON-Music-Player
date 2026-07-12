@@ -1,0 +1,16 @@
+{
+  "placeholder": "Искать музыку...",
+  "play": "Воспроизвести",
+  "download": "Скачать",
+  "downloadStarted": "Скачиваем: {{title}}",
+  "downloadAlreadyQueued": "Уже в загрузках: {{title}}",
+  "alreadySaved": "Уже сохранено: {{title}}",
+  "addToPlaylist": "Добавить в плейлист",
+  "noResults": "Результаты не найдены",
+  "loadMore": "Загрузите еще {{count}} из {{source}}",
+  "loadingMore": "Загружается еще...",
+  "emptyHint": "Ищите музыку на YouTube, Spotify и в своей библиотеке.",
+  "spotifyError": "Поиск Spotify не удался — проверьте свои учетные данные",
+  "openSettings": "Открыть настройки",
+  "tabLabel": "Поиск"
+}

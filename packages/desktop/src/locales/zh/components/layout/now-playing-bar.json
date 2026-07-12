@@ -1,0 +1,10 @@
+{
+  "noTrackPlaying": "没有曲目播放",
+  "unknownArtist": "未知艺术家",
+  "frequencyTuning": "频率调谐",
+  "loudnessNorm": "响度归一化",
+  "equalizer": "均衡器",
+  "queue": "队列",
+  "nowPlaying": "正在播放",
+  "audioSettings": "音频设置"
+}

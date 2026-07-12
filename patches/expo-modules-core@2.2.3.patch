@@ -1,0 +1,14 @@
+diff --git a/android/src/main/AndroidManifest.xml b/android/src/main/AndroidManifest.xml
+index d00d6fb..b454f4d 100644
+--- a/android/src/main/AndroidManifest.xml
++++ b/android/src/main/AndroidManifest.xml
+@@ -7,8 +7,7 @@
+             android:value="expo.modules.adapters.react.apploader.RNHeadlessAppLoader" />
+         <meta-data
+             android:name="com.facebook.soloader.enabled"
+-            android:value="true"
+-            tools:replace="android:value" />
++            android:value="true" />
+     </application>
+ 
+ </manifest>

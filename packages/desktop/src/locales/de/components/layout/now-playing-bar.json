@@ -1,0 +1,10 @@
+{
+  "noTrackPlaying": "Kein Titel wird wiedergegeben",
+  "unknownArtist": "Unbekannter Künstler",
+  "frequencyTuning": "Frequenzstimmung",
+  "loudnessNorm": "Lautstärkeanpassung",
+  "equalizer": "Equalizer",
+  "queue": "Warteschlange",
+  "nowPlaying": "Aktueller Titel",
+  "audioSettings": "Audioeinstellungen"
+}

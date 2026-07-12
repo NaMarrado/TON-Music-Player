@@ -1,0 +1,16 @@
+{
+  "placeholder": "Wyszukaj muzykę...",
+  "play": "Odtwórz",
+  "download": "Pobierz",
+  "downloadStarted": "Pobieranie: {{title}}",
+  "downloadAlreadyQueued": "Już w pobraniu: {{title}}",
+  "alreadySaved": "Już zapisane: {{title}}",
+  "addToPlaylist": "Dodaj do listy odtwarzania",
+  "noResults": "Nie znaleziono żadnych wyników",
+  "loadMore": "Załaduj więcej {{count}} z {{source}}",
+  "loadingMore": "Ładowanie więcej...",
+  "emptyHint": "Szukaj muzyki w YouTube, Spotify i swojej bibliotece",
+  "spotifyError": "Wyszukiwanie w Spotify nie powiodło się — sprawdź swoje dane uwierzytelniające",
+  "openSettings": "Otwórz Ustawienia",
+  "tabLabel": "Szukaj"
+}

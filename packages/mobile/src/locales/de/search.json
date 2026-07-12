@@ -1,0 +1,16 @@
+{
+  "placeholder": "Musik suchen...",
+  "play": "Wiedergeben",
+  "download": "Herunterladen",
+  "downloadStarted": "Wird heruntergeladen: {{title}}",
+  "downloadAlreadyQueued": "Bereits in den Downloads: {{title}}",
+  "alreadySaved": "Bereits gespeichert: {{title}}",
+  "addToPlaylist": "Zur Playlist hinzufügen",
+  "noResults": "Keine Ergebnisse gefunden",
+  "loadMore": "{{count}} weitere von {{source}} laden",
+  "loadingMore": "Weitere werden geladen...",
+  "emptyHint": "Durchsuche YouTube, Spotify und deine Mediathek",
+  "spotifyError": "Spotify-Suche fehlgeschlagen. Prüfe deine Zugangsdaten.",
+  "openSettings": "Einstellungen öffnen",
+  "tabLabel": "Suchen"
+}

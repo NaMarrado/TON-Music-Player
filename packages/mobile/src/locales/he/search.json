@@ -1,0 +1,16 @@
+{
+  "placeholder": "חפש מוזיקה...",
+  "play": "הפעלה",
+  "download": "הורד",
+  "downloadStarted": "הורדה: {{title}}",
+  "downloadAlreadyQueued": "כבר בהורדות: {{title}}",
+  "alreadySaved": "כבר נשמר: {{title}}",
+  "addToPlaylist": "הוסף לפלייליסט",
+  "noResults": "לא נמצאו תוצאות",
+  "loadMore": "טען עוד {{count}} מ-{{source}}",
+  "loadingMore": "טוען עוד...",
+  "emptyHint": "חפש מוזיקה ברחבי YouTube, Spotify והספרייה שלך",
+  "spotifyError": "חיפוש Spotify נכשל - בדוק את האישורים שלך",
+  "openSettings": "פתח את ההגדרות",
+  "tabLabel": "חיפוש"
+}

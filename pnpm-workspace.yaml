@@ -1,0 +1,22 @@
+packages:
+  - 'packages/*'
+
+onlyBuiltDependencies:
+  - electron
+  - esbuild
+  - better-sqlite3
+
+patchedDependencies:
+  '@react-native-community/netinfo@11.4.1': patches/@react-native-community__netinfo@11.4.1.patch
+  '@react-native-community/slider@4.5.5': patches/@react-native-community__slider@4.5.5.patch
+  '@shopify/flash-list@1.7.3': patches/@shopify__flash-list@1.7.3.patch
+  expo-file-system@18.0.12: patches/expo-file-system@18.0.12.patch
+  expo-image@2.0.7: patches/expo-image@2.0.7.patch
+  expo-localization@16.0.1: patches/expo-localization@16.0.1.patch
+  expo-modules-core@2.2.3: patches/expo-modules-core@2.2.3.patch
+  ffmpeg-kit-react-native@6.0.2: patches/ffmpeg-kit-react-native@6.0.2.patch
+  react-native-gesture-handler@2.20.2: patches/react-native-gesture-handler@2.20.2.patch
+  react-native-reanimated@3.16.7: patches/react-native-reanimated@3.16.7.patch
+  react-native-safe-area-context@4.12.0: patches/react-native-safe-area-context@4.12.0.patch
+  react-native-screens@4.4.0: patches/react-native-screens@4.4.0.patch
+  react-native-track-player@4.1.2: patches/react-native-track-player.patch

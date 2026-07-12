@@ -1,0 +1,319 @@
+name: "DEV: Build"
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - .github/workflows/build.yml
+      - .github/workflows/build-dev.yml
+      - package.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - tsconfig.json
+      - tsconfig.base.json
+      - eslint.config.js
+      - scripts/**
+      - packages/**
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Which build matrix to run
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - desktop
+          - android
+          - ios
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event.inputs.target || 'auto' }}
+  cancel-in-progress: true
+
+env:
+  CI: '1'
+  EXPO_NO_GIT_STATUS: '1'
+  EXPO_NO_TELEMETRY: '1'
+  NODE_ENV: 'production'
+  NODE_VERSION: '22'
+
+jobs:
+  desktop:
+    name: "DEV: Desktop"
+    if: ${{ github.ref == 'refs/heads/dev' && (github.event_name != 'workflow_dispatch' || github.event.inputs.target == 'all' || github.event.inputs.target == 'desktop') }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: macos
+            os: macos-14
+            build_command: pnpm --filter @ton/desktop dist:mac
+          - id: windows
+            os: windows-2022
+            build_command: pnpm --filter @ton/desktop dist:win
+          - id: linux
+            os: ubuntu-24.04
+            build_command: pnpm --filter @ton/desktop dist:linux
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable pnpm
+        shell: bash
+        run: |
+          corepack enable
+          corepack prepare pnpm@10 --activate
+          pnpm --version
+
+      - name: Resolve pnpm store path
+        id: pnpm-store
+        shell: bash
+        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore pnpm store cache
+        uses: actions/cache@v5
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate locale resources
+        if: ${{ matrix.id == 'linux' }}
+        run: pnpm i18n:validate
+
+      - name: Ensure xvfb is available
+        if: ${{ matrix.id == 'linux' }}
+        shell: bash
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb
+          fi
+
+      - name: Run desktop database and handler smoke tests
+        if: ${{ matrix.id == 'linux' }}
+        run: xvfb-run -a pnpm --filter @ton/desktop smoke:handlers
+
+      - name: Build desktop artifact
+        run: ${{ matrix.build_command }}
+
+      - name: Locate packaged app
+        id: paths
+        shell: bash
+        run: |
+          case "${{ matrix.id }}" in
+            macos)
+              echo "asar=$(find packages/desktop/release -path '*/TON.app/Contents/Resources/app.asar' | head -n 1)" >> "$GITHUB_OUTPUT"
+              echo "binary=$(find packages/desktop/release -path '*/TON.app/Contents/MacOS/TON' | head -n 1)" >> "$GITHUB_OUTPUT"
+              ;;
+            windows)
+              echo "asar=packages/desktop/release/win-unpacked/resources/app.asar" >> "$GITHUB_OUTPUT"
+              echo "binary=packages/desktop/release/win-unpacked/TON.exe" >> "$GITHUB_OUTPUT"
+              ;;
+            linux)
+              echo "asar=packages/desktop/release/linux-unpacked/resources/app.asar" >> "$GITHUB_OUTPUT"
+              echo "binary=packages/desktop/release/linux-unpacked/TON" >> "$GITHUB_OUTPUT"
+              ;;
+          esac
+          cat "$GITHUB_OUTPUT"
+
+      - name: Validate packaged app paths
+        shell: bash
+        run: |
+          test -n "${{ steps.paths.outputs.asar }}"
+          test -f "${{ steps.paths.outputs.asar }}"
+          test -n "${{ steps.paths.outputs.binary }}"
+          test -f "${{ steps.paths.outputs.binary }}"
+
+      - name: Verify packaged runtime modules
+        run: node scripts/verify_packaged_desktop_bundle.mjs "${{ steps.paths.outputs.asar }}"
+
+      - name: Smoke start macOS app
+        if: ${{ matrix.id == 'macos' }}
+        shell: bash
+        run: |
+          "${{ steps.paths.outputs.binary }}" > desktop-smoke.log 2>&1 &
+          APP_PID=$!
+          sleep 8
+          if ! kill -0 "$APP_PID" 2>/dev/null; then
+            cat desktop-smoke.log
+            exit 1
+          fi
+          kill "$APP_PID" || true
+          wait "$APP_PID" || true
+
+      - name: Smoke start Linux app
+        if: ${{ matrix.id == 'linux' }}
+        shell: bash
+        run: |
+          xvfb-run -a "${{ steps.paths.outputs.binary }}" --no-sandbox > desktop-smoke.log 2>&1 &
+          APP_PID=$!
+          sleep 8
+          if ! kill -0 "$APP_PID" 2>/dev/null; then
+            cat desktop-smoke.log
+            exit 1
+          fi
+          kill "$APP_PID" || true
+          wait "$APP_PID" || true
+
+      - name: Smoke start Windows app
+        if: ${{ matrix.id == 'windows' }}
+        shell: pwsh
+        run: |
+          $proc = Start-Process -FilePath "${{ steps.paths.outputs.binary }}" -PassThru
+          Start-Sleep -Seconds 8
+          if ($proc.HasExited) {
+            throw "TON.exe exited early with code $($proc.ExitCode)"
+          }
+          Stop-Process -Id $proc.Id -Force
+
+  android:
+    name: "DEV: Android"
+    if: ${{ github.ref == 'refs/heads/dev' && (github.event_name != 'workflow_dispatch' || github.event.inputs.target == 'all' || github.event.inputs.target == 'android') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      ANDROID_RELEASE_ARCHITECTURES: armeabi-v7a,arm64-v8a
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable pnpm
+        shell: bash
+        run: |
+          corepack enable
+          corepack prepare pnpm@10 --activate
+          pnpm --version
+
+      - name: Resolve pnpm store path
+        id: pnpm-store
+        shell: bash
+        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore pnpm store cache
+        uses: actions/cache@v5
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Configure Android SDK environment
+        shell: bash
+        run: |
+          if [ -n "${ANDROID_SDK_ROOT:-}" ]; then
+            SDK_ROOT="$ANDROID_SDK_ROOT"
+          elif [ -n "${ANDROID_HOME:-}" ]; then
+            SDK_ROOT="$ANDROID_HOME"
+          elif [ -d "$HOME/Android/Sdk" ]; then
+            SDK_ROOT="$HOME/Android/Sdk"
+          else
+            echo "Android SDK not found on runner" >&2
+            exit 1
+          fi
+
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
+
+          if [ -d "$SDK_ROOT/platform-tools" ]; then
+            echo "$SDK_ROOT/platform-tools" >> "$GITHUB_PATH"
+          fi
+
+          if [ -d "$SDK_ROOT/cmdline-tools/latest/bin" ]; then
+            echo "$SDK_ROOT/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          fi
+
+      - name: Accept Android SDK licenses
+        shell: bash
+        run: |
+          if command -v sdkmanager >/dev/null 2>&1; then
+            yes | sdkmanager --licenses >/dev/null || true
+          fi
+
+      - name: Generate Android native project
+        run: pnpm --filter @ton/mobile exec expo prebuild --platform android --no-install
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Setup local release signing
+        run: python3 scripts/setup_free_signing.py
+
+      - name: Build Android release APK
+        working-directory: packages/mobile/android
+        run: ./gradlew assembleRelease --build-cache --console=plain -PreactNativeArchitectures="${ANDROID_RELEASE_ARCHITECTURES}"
+
+      - name: Verify Android release signature
+        shell: bash
+        run: |
+          APKSIGNER="$(find "${ANDROID_HOME:-$ANDROID_SDK_ROOT}"/build-tools -name apksigner | sort | tail -n 1)"
+          if [ -z "$APKSIGNER" ]; then
+            echo "apksigner not found" >&2
+            exit 1
+          fi
+          "$APKSIGNER" verify --print-certs packages/mobile/android/app/build/outputs/apk/release/app-release.apk
+
+  ios-validate:
+    name: "DEV: iOS validate"
+    if: ${{ github.ref == 'refs/heads/dev' && (github.event_name != 'workflow_dispatch' || github.event.inputs.target == 'all' || github.event.inputs.target == 'ios') }}
+    runs-on: macos-15
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable pnpm
+        shell: bash
+        run: |
+          corepack enable
+          corepack prepare pnpm@10 --activate
+          pnpm --version
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install CocoaPods
+        working-directory: packages/mobile/ios
+        run: RUBYOPT=-rlogger pod install
+
+      - name: Build unsigned iOS simulator app
+        working-directory: packages/mobile/ios
+        run: xcodebuild -workspace TON.xcworkspace -scheme TON -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' build

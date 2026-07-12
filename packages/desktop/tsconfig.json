@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@ton/core": ["../core/src"],
+      "@ton/core/*": ["../core/src/*"]
+    }
+  },
+  "include": ["src", "src/**/*.json"],
+  "references": [
+    { "path": "../core" },
+    { "path": "./tsconfig.node.json" }
+  ]
+}

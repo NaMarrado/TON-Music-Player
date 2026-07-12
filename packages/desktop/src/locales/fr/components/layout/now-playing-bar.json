@@ -1,0 +1,10 @@
+{
+  "noTrackPlaying": "Aucun titre en cours de lecture",
+  "unknownArtist": "Artiste inconnu",
+  "frequencyTuning": "Fréquence d’accordage",
+  "loudnessNorm": "Normalisation du volume",
+  "equalizer": "Égaliseur",
+  "queue": "File d’attente",
+  "nowPlaying": "Lecture en cours",
+  "audioSettings": "Paramètres audio"
+}

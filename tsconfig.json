@@ -1,0 +1,8 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/core" },
+    { "path": "packages/desktop" },
+    { "path": "packages/desktop/tsconfig.node.json" }
+  ]
+}

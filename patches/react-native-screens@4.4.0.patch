@@ -1,0 +1,26 @@
+diff --git a/android/src/main/AndroidManifest.xml b/android/src/main/AndroidManifest.xml
+index 2de74e8..5f5d7a2 100644
+--- a/android/src/main/AndroidManifest.xml
++++ b/android/src/main/AndroidManifest.xml
+@@ -1,5 +1,4 @@
+ 
+-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+-          package="com.swmansion.rnscreens">
++<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+ 
+ </manifest>
+diff --git a/android/src/main/java/com/swmansion/rnscreens/RNScreensPackage.kt b/android/src/main/java/com/swmansion/rnscreens/RNScreensPackage.kt
+index 2d95965..7b8e60b 100644
+--- a/android/src/main/java/com/swmansion/rnscreens/RNScreensPackage.kt
++++ b/android/src/main/java/com/swmansion/rnscreens/RNScreensPackage.kt
+@@ -65,9 +65,8 @@ class RNScreensPackage : TurboReactPackage() {
+                     ScreensModule.NAME,
+                     false, // canOverrideExistingModule
+                     false, // needsEagerInit
+-                    true, // hasConstants
+                     false, // isCxxModule
+-                    isTurboModule,
++                    isTurboModule,
+                 )
+             moduleInfos
+         }

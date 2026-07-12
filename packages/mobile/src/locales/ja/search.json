@@ -1,0 +1,16 @@
+{
+  "placeholder": "音楽を検索...",
+  "play": "再生",
+  "download": "ダウンロード",
+  "downloadStarted": "ダウンロード中: {{title}}",
+  "downloadAlreadyQueued": "すでにダウンロード中: {{title}}",
+  "alreadySaved": "すでに保存されています: {{title}}",
+  "addToPlaylist": "プレイリストに追加",
+  "noResults": "結果が見つかりませんでした",
+  "loadMore": "{{source}} から {{count}} をさらにロードします",
+  "loadingMore": "さらに読み込み中...",
+  "emptyHint": "YouTube、Spotify、ライブラリ全体で音楽を検索します",
+  "spotifyError": "Spotify の検索に失敗しました — 資格情報を確認してください",
+  "openSettings": "設定を開く",
+  "tabLabel": "検索"
+}

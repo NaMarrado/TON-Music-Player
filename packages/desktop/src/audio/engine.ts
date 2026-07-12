@@ -1,0 +1,17 @@
+export {
+  destroyAudioEngine,
+  disablePitchShifter,
+  enablePitchShifter,
+  getAudioContext,
+  getChainInput,
+  initAudioEngine,
+  muteHead,
+  resumeContext,
+  setAllEqBands,
+  setEqBandGain,
+  setLoudnessGain,
+  setPitchRatio,
+  setVolume,
+  setVolumeImmediate,
+  unmuteHead,
+} from './engine/index';

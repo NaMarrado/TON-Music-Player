@@ -1,0 +1,10 @@
+{
+  "noTrackPlaying": "No hay ninguna canción en reproducción",
+  "unknownArtist": "Artista desconocido",
+  "frequencyTuning": "Afinación de frecuencia",
+  "loudnessNorm": "Normalización de volumen",
+  "equalizer": "Ecualizador",
+  "queue": "Cola",
+  "nowPlaying": "En reproducción",
+  "audioSettings": "Ajustes de audio"
+}

@@ -1,0 +1,105 @@
+{
+  "name": "@ton/desktop",
+  "version": "1.0.12",
+  "private": true,
+  "type": "module",
+  "main": "./out/main/main.js",
+  "description": "TON desktop player",
+  "author": "NaMarrado",
+  "scripts": {
+    "dev": "node ./scripts/run-electron-vite.mjs dev",
+    "build": "electron-vite build",
+    "preview": "node ./scripts/run-electron-vite.mjs preview",
+    "dist": "electron-vite build && electron-builder",
+    "dist:dir": "electron-vite build && electron-builder --dir",
+    "dist:mac": "electron-vite build && electron-builder --mac dmg",
+    "dist:win": "electron-vite build && electron-builder --win nsis --x64",
+    "dist:linux": "electron-vite build && electron-builder --linux AppImage",
+    "smoke:handlers": "node ./scripts/run-handler-smoke.mjs",
+    "typecheck": "tsc -b tsconfig.json tsconfig.node.json",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "build": {
+    "appId": "com.ton.player",
+    "productName": "TON",
+    "electronVersion": "34.0.0",
+    "asar": true,
+    "directories": {
+      "output": "release",
+      "buildResources": "build-resources"
+    },
+    "files": [
+      "out/**/*",
+      "package.json",
+      "node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "build-resources/dock-icon.png",
+        "to": "dock-icon.png"
+      },
+      {
+        "from": "build-resources/bin",
+        "to": "bin"
+      }
+    ],
+    "beforePack": "./scripts/prepare-bundled-binaries.cjs",
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "icon.png"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "icon.ico"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "AudioVideo",
+      "icon": "icon.png",
+      "executableName": "TON"
+    }
+  },
+  "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/modifiers": "^9.0.0",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "@fontsource/outfit": "^5.2.8",
+    "@fontsource/syne": "^5.2.7",
+    "@spotify/web-api-ts-sdk": "^1.2.0",
+    "@tanstack/react-virtual": "^3.13.18",
+    "@ton/core": "workspace:*",
+    "archiver": "^7.0.1",
+    "archiver-utils": "^5.0.2",
+    "better-sqlite3": "^12.6.2",
+    "extract-zip": "^2.0.1",
+    "i18next": "^24.0.0",
+    "music-metadata": "^11.11.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-i18next": "^15.0.0",
+    "react-router": "^7.0.0",
+    "youtubei.js": "17.2.0",
+    "zustand": "^5.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/archiver": "^7.0.0",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^25.2.1",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.0.0",
+    "electron": "^34.0.0",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^2.0.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.7.0"
+  }
+}

@@ -1,0 +1,319 @@
+diff --git a/android/build.gradle b/android/build.gradle
+index 11492a22ba2646b0dc71edbf26b13e8b8fa518cb..79e4c2bdd32e133c06b7c3337deb236470270386 100644
+--- a/android/build.gradle
++++ b/android/build.gradle
+@@ -1,5 +1,4 @@
+ apply plugin: 'com.android.library'
+-apply plugin: 'kotlin-kapt'
+ 
+ def expoModulesCorePlugin = new File(project(":expo-modules-core").projectDir.absolutePath, "ExpoModulesCorePlugin.gradle")
+ apply from: expoModulesCorePlugin
+@@ -41,7 +40,7 @@ dependencies {
+   implementation 'com.facebook.react:react-android'
+ 
+   api "com.github.bumptech.glide:glide:${GLIDE_VERSION}"
+-  kapt "com.github.bumptech.glide:compiler:${GLIDE_VERSION}"
++  annotationProcessor "com.github.bumptech.glide:compiler:${GLIDE_VERSION}"
+   api 'com.caverock:androidsvg-aar:1.4'
+ 
+   implementation "com.github.penfeizhou.android.animation:glide-plugin:3.0.2"
+diff --git a/android/src/main/java/expo/modules/image/ExpoImageAppGlideModule.java b/android/src/main/java/expo/modules/image/ExpoImageAppGlideModule.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..3330b4dadb52b010b8b8eb0afb9203c4e1b95500
+--- /dev/null
++++ b/android/src/main/java/expo/modules/image/ExpoImageAppGlideModule.java
+@@ -0,0 +1,20 @@
++package expo.modules.image;
++
++import android.content.Context;
++import android.util.Log;
++import com.bumptech.glide.GlideBuilder;
++import com.bumptech.glide.annotation.GlideModule;
++import com.bumptech.glide.module.AppGlideModule;
++
++/**
++ * We need to include an {@link AppGlideModule} for {@link GlideModule} annotations to work.
++ */
++@GlideModule
++public final class ExpoImageAppGlideModule extends AppGlideModule {
++  @Override
++  public void applyOptions(Context context, GlideBuilder builder) {
++    super.applyOptions(context, builder);
++
++    builder.setLogLevel(BuildConfig.ALLOW_GLIDE_LOGS ? Log.VERBOSE : Log.ERROR);
++  }
++}
+diff --git a/android/src/main/java/expo/modules/image/ExpoImageAppGlideModule.kt b/android/src/main/java/expo/modules/image/ExpoImageAppGlideModule.kt
+deleted file mode 100644
+index 5735515fb2a04ab717956a93b506cb1edb934c39..0000000000000000000000000000000000000000
+diff --git a/android/src/main/java/expo/modules/image/blurhash/BlurhashModule.java b/android/src/main/java/expo/modules/image/blurhash/BlurhashModule.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..c1ae3bf0867560d3c1b2c47733a5f527ce3afefa
+--- /dev/null
++++ b/android/src/main/java/expo/modules/image/blurhash/BlurhashModule.java
+@@ -0,0 +1,17 @@
++package expo.modules.image.blurhash;
++
++import android.content.Context;
++import android.graphics.Bitmap;
++import com.bumptech.glide.Glide;
++import com.bumptech.glide.Registry;
++import com.bumptech.glide.annotation.GlideModule;
++import com.bumptech.glide.module.LibraryGlideModule;
++
++@GlideModule
++public final class BlurhashModule extends LibraryGlideModule {
++  @Override
++  public void registerComponents(Context context, Glide glide, Registry registry) {
++    super.registerComponents(context, glide, registry);
++    registry.prepend(BlurhashModel.class, Bitmap.class, new BlurhashModelLoaderFactory());
++  }
++}
+diff --git a/android/src/main/java/expo/modules/image/blurhash/BlurhashModule.kt b/android/src/main/java/expo/modules/image/blurhash/BlurhashModule.kt
+deleted file mode 100644
+index 980ef3521f7e550199840ad5338feb68deffb245..0000000000000000000000000000000000000000
+diff --git a/android/src/main/java/expo/modules/image/dataurls/Base64Module.java b/android/src/main/java/expo/modules/image/dataurls/Base64Module.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..4d07bcbea7d951ae7777fc79598507502e76ef3b
+--- /dev/null
++++ b/android/src/main/java/expo/modules/image/dataurls/Base64Module.java
+@@ -0,0 +1,17 @@
++package expo.modules.image.dataurls;
++
++import android.content.Context;
++import com.bumptech.glide.Glide;
++import com.bumptech.glide.Registry;
++import com.bumptech.glide.annotation.GlideModule;
++import com.bumptech.glide.module.LibraryGlideModule;
++import java.nio.ByteBuffer;
++
++@GlideModule
++public final class Base64Module extends LibraryGlideModule {
++  @Override
++  public void registerComponents(Context context, Glide glide, Registry registry) {
++    super.registerComponents(context, glide, registry);
++    registry.prepend(String.class, ByteBuffer.class, new Base64ModelLoaderFactory());
++  }
++}
+diff --git a/android/src/main/java/expo/modules/image/dataurls/Base64Module.kt b/android/src/main/java/expo/modules/image/dataurls/Base64Module.kt
+deleted file mode 100644
+index d363af1700bfca5a0475928c4ce9de0708280d89..0000000000000000000000000000000000000000
+diff --git a/android/src/main/java/expo/modules/image/decodedsource/DecodedModule.java b/android/src/main/java/expo/modules/image/decodedsource/DecodedModule.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..5429b08255ac7cb8f2832923e6c915dcb219570f
+--- /dev/null
++++ b/android/src/main/java/expo/modules/image/decodedsource/DecodedModule.java
+@@ -0,0 +1,17 @@
++package expo.modules.image.decodedsource;
++
++import android.content.Context;
++import android.graphics.drawable.Drawable;
++import com.bumptech.glide.Glide;
++import com.bumptech.glide.Registry;
++import com.bumptech.glide.annotation.GlideModule;
++import com.bumptech.glide.module.LibraryGlideModule;
++
++@GlideModule
++public final class DecodedModule extends LibraryGlideModule {
++  @Override
++  public void registerComponents(Context context, Glide glide, Registry registry) {
++    super.registerComponents(context, glide, registry);
++    registry.prepend(DecodedModel.class, Drawable.class, new DecodedModelLoaderFactory());
++  }
++}
+diff --git a/android/src/main/java/expo/modules/image/decodedsource/DecodedModule.kt b/android/src/main/java/expo/modules/image/decodedsource/DecodedModule.kt
+deleted file mode 100644
+index eb22a0f91a4e46cbaa5ebfaa521dfc8f7f73c298..0000000000000000000000000000000000000000
+diff --git a/android/src/main/java/expo/modules/image/okhttp/ExpoImageOkHttpClientGlideModule.java b/android/src/main/java/expo/modules/image/okhttp/ExpoImageOkHttpClientGlideModule.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..8e11dd578b75cb5005781bb1760461d0628143fc
+--- /dev/null
++++ b/android/src/main/java/expo/modules/image/okhttp/ExpoImageOkHttpClientGlideModule.java
+@@ -0,0 +1,23 @@
++package expo.modules.image.okhttp;
++
++import android.content.Context;
++import com.bumptech.glide.Glide;
++import com.bumptech.glide.Registry;
++import com.bumptech.glide.annotation.GlideModule;
++import com.bumptech.glide.integration.okhttp3.OkHttpUrlLoader;
++import com.bumptech.glide.load.model.GlideUrl;
++import com.bumptech.glide.module.LibraryGlideModule;
++import java.io.InputStream;
++import okhttp3.OkHttpClient;
++
++@GlideModule
++public final class ExpoImageOkHttpClientGlideModule extends LibraryGlideModule {
++  @Override
++  public void registerComponents(Context context, Glide glide, Registry registry) {
++    OkHttpClient client = new OkHttpClient();
++    // We don't use the `GlideUrl` directly but we want to replace the default okhttp loader anyway
++    // to make sure that the app will use only one client.
++    registry.replace(GlideUrl.class, InputStream.class, new OkHttpUrlLoader.Factory(client));
++    registry.prepend(GlideUrlWrapper.class, InputStream.class, new GlideUrlWrapperLoader.Factory(client));
++  }
++}
+diff --git a/android/src/main/java/expo/modules/image/okhttp/ExpoImageOkHttpClientGlideModule.kt b/android/src/main/java/expo/modules/image/okhttp/ExpoImageOkHttpClientGlideModule.kt
+deleted file mode 100644
+index 071907c97adcd8b0cac7ce662be42229eb74778e..0000000000000000000000000000000000000000
+diff --git a/android/src/main/java/expo/modules/image/okhttp/GlideUrlWithCustomCacheKey.java b/android/src/main/java/expo/modules/image/okhttp/GlideUrlWithCustomCacheKey.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..cbca59ed9a6982d9ff8d8a0368e1234fd9a3b64c
+--- /dev/null
++++ b/android/src/main/java/expo/modules/image/okhttp/GlideUrlWithCustomCacheKey.java
+@@ -0,0 +1,52 @@
++package expo.modules.image.okhttp;
++
++import com.bumptech.glide.load.model.GlideUrl;
++import com.bumptech.glide.load.model.Headers;
++
++/**
++ * GlideUrl with custom cache key.
++ * It wraps the base implementation and overrides logic behind cache key and when two
++ * objects are equal. Typically, Glide uses the only cache key to compare objects.
++ * It won't suit our use case. We want to make custom cache key transparent and
++ * not use it to compare objects.
++ */
++public final class GlideUrlWithCustomCacheKey extends GlideUrl {
++  private final String cacheKey;
++  private int hashCode;
++
++  public GlideUrlWithCustomCacheKey(String uri, Headers headers, String cacheKey) {
++    super(uri, headers);
++    this.cacheKey = cacheKey;
++  }
++
++  private String getBaseCacheKey() {
++    return super.getCacheKey();
++  }
++
++  @Override
++  public String getCacheKey() {
++    return cacheKey;
++  }
++
++  @Override
++  public boolean equals(Object other) {
++    if (other instanceof GlideUrlWithCustomCacheKey) {
++      GlideUrlWithCustomCacheKey glideUrl = (GlideUrlWithCustomCacheKey) other;
++      return getBaseCacheKey().equals(glideUrl.getBaseCacheKey()) && getHeaders().equals(glideUrl.getHeaders());
++    }
++    if (other instanceof GlideUrl) {
++      GlideUrl glideUrl = (GlideUrl) other;
++      return getBaseCacheKey().equals(glideUrl.getCacheKey()) && getHeaders().equals(glideUrl.getHeaders());
++    }
++    return false;
++  }
++
++  @Override
++  public int hashCode() {
++    if (hashCode == 0) {
++      hashCode = getBaseCacheKey().hashCode();
++      hashCode = 31 * hashCode + getHeaders().hashCode();
++    }
++    return hashCode;
++  }
++}
+diff --git a/android/src/main/java/expo/modules/image/okhttp/GlideUrlWrapper.java b/android/src/main/java/expo/modules/image/okhttp/GlideUrlWrapper.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..6009fd483517801f9780e159a7c55245a38587bf
+--- /dev/null
++++ b/android/src/main/java/expo/modules/image/okhttp/GlideUrlWrapper.java
+@@ -0,0 +1,34 @@
++package expo.modules.image.okhttp;
++
++import com.bumptech.glide.load.model.GlideUrl;
++import expo.modules.image.events.OkHttpProgressListener;
++
++/**
++ * To connect listener with the request we have to create custom model.
++ * In that way, we're passing more information to the final data loader.
++ */
++public final class GlideUrlWrapper {
++  private final GlideUrl glideUrl;
++  private OkHttpProgressListener progressListener;
++
++  public GlideUrlWrapper(GlideUrl glideUrl) {
++    this.glideUrl = glideUrl;
++  }
++
++  public GlideUrl getGlideUrl() {
++    return glideUrl;
++  }
++
++  public OkHttpProgressListener getProgressListener() {
++    return progressListener;
++  }
++
++  public void setProgressListener(OkHttpProgressListener progressListener) {
++    this.progressListener = progressListener;
++  }
++
++  @Override
++  public String toString() {
++    return glideUrl.toString();
++  }
++}
+diff --git a/android/src/main/java/expo/modules/image/svg/SVGModule.java b/android/src/main/java/expo/modules/image/svg/SVGModule.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..de4668dc3da093a3b10aaaaedba2a8e8bae0be00
+--- /dev/null
++++ b/android/src/main/java/expo/modules/image/svg/SVGModule.java
+@@ -0,0 +1,28 @@
++package expo.modules.image.svg;
++
++import android.content.Context;
++import android.graphics.drawable.Drawable;
++import com.bumptech.glide.Glide;
++import com.bumptech.glide.Registry;
++import com.bumptech.glide.annotation.GlideModule;
++import com.bumptech.glide.module.LibraryGlideModule;
++import com.caverock.androidsvg.SVG;
++import java.io.InputStream;
++
++/**
++ * {@link LibraryGlideModule} registering support for SVG to Glide.
++ *
++ * <p>Copied from
++ * https://github.com/bumptech/glide/blob/10acc31a16b4c1b5684f69e8de3117371dfa77a8/samples/svg/src/main/java/com/bumptech/glide/samples/svg/SvgModule.java
++ * and rewritten for this module.
++ */
++@GlideModule
++public final class SVGModule extends LibraryGlideModule {
++  @Override
++  public void registerComponents(Context context, Glide glide, Registry registry) {
++    super.registerComponents(context, glide, registry);
++    registry
++        .append(InputStream.class, SVG.class, new SVGDecoder())
++        .register(SVG.class, Drawable.class, new SVGDrawableTranscoder(context));
++  }
++}
+diff --git a/android/src/main/java/expo/modules/image/svg/SVGModule.kt b/android/src/main/java/expo/modules/image/svg/SVGModule.kt
+deleted file mode 100644
+index 97970a3688f97be7ed56e50645af38bf39c99457..0000000000000000000000000000000000000000
+diff --git a/android/src/main/java/expo/modules/image/thumbhash/ThumbhashModule.java b/android/src/main/java/expo/modules/image/thumbhash/ThumbhashModule.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..dd4bd7ab022d9de4666af8b1829d7ef979777720
+--- /dev/null
++++ b/android/src/main/java/expo/modules/image/thumbhash/ThumbhashModule.java
+@@ -0,0 +1,17 @@
++package expo.modules.image.thumbhash;
++
++import android.content.Context;
++import android.graphics.Bitmap;
++import com.bumptech.glide.Glide;
++import com.bumptech.glide.Registry;
++import com.bumptech.glide.annotation.GlideModule;
++import com.bumptech.glide.module.LibraryGlideModule;
++
++@GlideModule
++public final class ThumbhashModule extends LibraryGlideModule {
++  @Override
++  public void registerComponents(Context context, Glide glide, Registry registry) {
++    super.registerComponents(context, glide, registry);
++    registry.prepend(ThumbhashModel.class, Bitmap.class, new ThumbhashModelLoaderFactory());
++  }
++}
+diff --git a/android/src/main/java/expo/modules/image/thumbhash/ThumbhashModule.kt b/android/src/main/java/expo/modules/image/thumbhash/ThumbhashModule.kt
+deleted file mode 100644
+index e22ac36fad8515a57646d3c12c5416c4e109bc6a..0000000000000000000000000000000000000000

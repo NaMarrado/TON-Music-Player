@@ -1,0 +1,16 @@
+{
+  "placeholder": "Hledat hudbu...",
+  "play": "Přehrát",
+  "download": "Stáhnout",
+  "downloadStarted": "Stahování: {{title}}",
+  "downloadAlreadyQueued": "Už je ve stahování: {{title}}",
+  "alreadySaved": "Už je uložené: {{title}}",
+  "addToPlaylist": "Přidat do playlistu",
+  "noResults": "Žádné výsledky",
+  "loadMore": "Načíst dalších {{count}} z {{source}}",
+  "loadingMore": "Načítám další...",
+  "emptyHint": "Hledej hudbu na YouTube, Spotify a ve své knihovně",
+  "spotifyError": "Hledání na Spotify selhalo — zkontroluj přihlašovací údaje",
+  "openSettings": "Otevřít nastavení",
+  "tabLabel": "Hledat"
+}

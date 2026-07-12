@@ -1,0 +1,10 @@
+{
+  "noTrackPlaying": "Не воспроизводится трек",
+  "unknownArtist": "Неизвестный художник",
+  "frequencyTuning": "Настройка частоты",
+  "loudnessNorm": "Нормализация громкости",
+  "equalizer": "Эквалайзер",
+  "queue": "Очередь",
+  "nowPlaying": "Сейчас играет",
+  "audioSettings": "Настройки звука"
+}

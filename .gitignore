@@ -1,0 +1,73 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+dist-node/
+build/
+out/
+.next/
+*.tsbuildinfo
+
+# Electron
+release/
+!scripts/release/
+!scripts/release/**
+
+# React Native / Expo
+.expo/
+packages/mobile/android/
+packages/mobile/ios/Pods/
+packages/mobile/ios/build/
+packages/mobile/ios/.symlinks/
+packages/mobile/ios/**/*.xcuserstate
+packages/mobile/ios/**/xcuserdata/
+*.apk
+*.aab
+*.ipa
+
+# Environment
+.env
+.env.local
+.env.*.local
+.signing/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Playwright MCP (browser automation artifacts)
+.playwright-mcp/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Testing
+coverage/
+
+# Temp
+*.tmp
+*.bak
+
+# SQLite databases (user data)
+*.sqlite
+*.sqlite3
+*.db
+
+# ffmpeg/yt-dlp binaries (bundled at build time)
+bin/
+packages/desktop/build-resources/bin/
+
+# Design screenshots (generated artifacts)
+design/*.png
+design/*.jpg
+design/*.jpeg

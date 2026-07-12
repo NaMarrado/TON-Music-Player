@@ -1,0 +1,73 @@
+diff --git a/android/src/main/java/com/swmansion/gesturehandler/RNGestureHandlerPackage.kt b/android/src/main/java/com/swmansion/gesturehandler/RNGestureHandlerPackage.kt
+index e3ad6a6..0154ecb 100644
+--- a/android/src/main/java/com/swmansion/gesturehandler/RNGestureHandlerPackage.kt
++++ b/android/src/main/java/com/swmansion/gesturehandler/RNGestureHandlerPackage.kt
+@@ -71,9 +71,8 @@ class RNGestureHandlerPackage : TurboReactPackage(), ViewManagerOnDemandReactPac
+             RNGestureHandlerModule::class.java.name,
+             reactModule.canOverrideExistingModule,
+             reactModule.needsEagerInit,
+-            true, // Has constants is hardcoded to return true, so replacing it with `true` changes nothing.
+             reactModule.isCxxModule,
+-            true
++            ReactModuleInfo.classIsTurboModule(RNGestureHandlerModule::class.java)
+           )
+         )
+       }
+diff --git a/android/src/main/java/com/swmansion/gesturehandler/core/FlingGestureHandler.kt b/android/src/main/java/com/swmansion/gesturehandler/core/FlingGestureHandler.kt
+index e6e40c8..fed8183 100644
+--- a/android/src/main/java/com/swmansion/gesturehandler/core/FlingGestureHandler.kt
++++ b/android/src/main/java/com/swmansion/gesturehandler/core/FlingGestureHandler.kt
+@@ -22,7 +22,7 @@ class FlingGestureHandler : GestureHandler<FlingGestureHandler>() {
+     direction = DEFAULT_DIRECTION
+   }
+ 
+-  private fun startFling(event: MotionEvent) {
++  private fun startFling() {
+     velocityTracker = VelocityTracker.obtain()
+     begin()
+     maxNumberOfPointersSimultaneously = 1
+@@ -94,7 +94,7 @@ class FlingGestureHandler : GestureHandler<FlingGestureHandler>() {
+ 
+     val state = state
+     if (state == STATE_UNDETERMINED) {
+-      startFling(sourceEvent)
++      startFling()
+     }
+     if (state == STATE_BEGAN) {
+       tryEndFling(sourceEvent)
+diff --git a/android/src/main/java/com/swmansion/gesturehandler/react/RNGestureHandlerButtonViewManager.kt b/android/src/main/java/com/swmansion/gesturehandler/react/RNGestureHandlerButtonViewManager.kt
+index 97dc50e..e9d03f6 100644
+--- a/android/src/main/java/com/swmansion/gesturehandler/react/RNGestureHandlerButtonViewManager.kt
++++ b/android/src/main/java/com/swmansion/gesturehandler/react/RNGestureHandlerButtonViewManager.kt
+@@ -69,23 +69,23 @@ class RNGestureHandlerButtonViewManager : ViewGroupManager<ButtonViewGroup>(), R
+   }
+ 
+   @ReactProp(name = "borderTopLeftRadius")
+-  override fun setBorderTopLeftRadius(view: ButtonViewGroup, borderTopLeftRadius: Float) {
+-    view.borderTopLeftRadius = borderTopLeftRadius
++  override fun setBorderTopLeftRadius(view: ButtonViewGroup, borderRadius: Float) {
++    view.borderTopLeftRadius = borderRadius
+   }
+ 
+   @ReactProp(name = "borderTopRightRadius")
+-  override fun setBorderTopRightRadius(view: ButtonViewGroup, borderTopRightRadius: Float) {
+-    view.borderTopRightRadius = borderTopRightRadius
++  override fun setBorderTopRightRadius(view: ButtonViewGroup, borderRadius: Float) {
++    view.borderTopRightRadius = borderRadius
+   }
+ 
+   @ReactProp(name = "borderBottomLeftRadius")
+-  override fun setBorderBottomLeftRadius(view: ButtonViewGroup, borderBottomLeftRadius: Float) {
+-    view.borderBottomLeftRadius = borderBottomLeftRadius
++  override fun setBorderBottomLeftRadius(view: ButtonViewGroup, borderRadius: Float) {
++    view.borderBottomLeftRadius = borderRadius
+   }
+ 
+   @ReactProp(name = "borderBottomRightRadius")
+-  override fun setBorderBottomRightRadius(view: ButtonViewGroup, borderBottomRightRadius: Float) {
+-    view.borderBottomRightRadius = borderBottomRightRadius
++  override fun setBorderBottomRightRadius(view: ButtonViewGroup, borderRadius: Float) {
++    view.borderBottomRightRadius = borderRadius
+   }
+ 
+   @ReactProp(name = "borderWidth")

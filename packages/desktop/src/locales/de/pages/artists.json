@@ -1,0 +1,6 @@
+{
+  "title": "Künstler",
+  "count": "{{count}} Künstler",
+  "trackCount": "{{count}} Titel",
+  "empty": "Noch keine Künstler in deiner Mediathek."
+}

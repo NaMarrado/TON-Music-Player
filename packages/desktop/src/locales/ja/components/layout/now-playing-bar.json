@@ -1,0 +1,10 @@
+{
+  "noTrackPlaying": "トラックが再生されていません",
+  "unknownArtist": "不明なアーティスト",
+  "frequencyTuning": "周波数チューニング",
+  "loudnessNorm": "ラウドネスの正規化",
+  "equalizer": "イコライザ",
+  "queue": "キュー",
+  "nowPlaying": "プレイ中",
+  "audioSettings": "オーディオ設定"
+}

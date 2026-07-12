@@ -1,0 +1,16 @@
+{
+  "placeholder": "Pesquisar música...",
+  "play": "Reproduzir",
+  "download": "Transferir",
+  "downloadStarted": "A transferir: {{title}}",
+  "downloadAlreadyQueued": "Já está nas transferências: {{title}}",
+  "alreadySaved": "Já está guardada: {{title}}",
+  "addToPlaylist": "Adicionar à playlist",
+  "noResults": "Nenhum resultado encontrado",
+  "loadMore": "Carregar mais {{count}} de {{source}}",
+  "loadingMore": "A carregar mais...",
+  "emptyHint": "Pesquise música no YouTube, Spotify e na sua biblioteca",
+  "spotifyError": "A pesquisa no Spotify falhou. Verifique as credenciais.",
+  "openSettings": "Abrir definições",
+  "tabLabel": "Pesquisar"
+}

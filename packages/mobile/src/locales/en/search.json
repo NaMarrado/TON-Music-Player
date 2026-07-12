@@ -1,0 +1,16 @@
+{
+  "placeholder": "Search music...",
+  "play": "Play",
+  "download": "Download",
+  "downloadStarted": "Downloading: {{title}}",
+  "downloadAlreadyQueued": "Already in downloads: {{title}}",
+  "alreadySaved": "Already saved: {{title}}",
+  "addToPlaylist": "Add to Playlist",
+  "noResults": "No results found",
+  "loadMore": "Load {{count}} more from {{source}}",
+  "loadingMore": "Loading more...",
+  "emptyHint": "Search for music across YouTube, Spotify, and your library",
+  "spotifyError": "Spotify search failed — check your credentials",
+  "openSettings": "Open Settings",
+  "tabLabel": "Search"
+}

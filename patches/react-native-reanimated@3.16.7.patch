@@ -1,0 +1,15 @@
+diff --git a/src/valueUnpacker.ts b/src/valueUnpacker.ts
+index 8249a97..0e04a89 100644
+--- a/src/valueUnpacker.ts
++++ b/src/valueUnpacker.ts
+@@ -43,8 +43,8 @@ function valueUnpacker(
+         ) as (...args: any[]) => any;
+       } else {
+         // in release we use the regular eval to save on JSI calls
+-        // eslint-disable-next-line no-eval
+-        workletFun = eval('(' + initData.code + '\n)') as (
++        const runtimeEval = global.eval ?? ((0, eval) as typeof eval);
++        workletFun = runtimeEval('(' + initData.code + '\n)') as (
+           ...args: any[]
+         ) => any;
+       }

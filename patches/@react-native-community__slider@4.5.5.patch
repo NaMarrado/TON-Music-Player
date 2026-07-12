@@ -1,0 +1,10 @@
+diff --git a/android/src/main/AndroidManifest.xml b/android/src/main/AndroidManifest.xml
+index f8c7bb8..2664c70 100644
+--- a/android/src/main/AndroidManifest.xml
++++ b/android/src/main/AndroidManifest.xml
+@@ -1,3 +1,2 @@
+-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
++<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+-          package="com.reactnativecommunity.slider">
+ </manifest>
+\ No newline at end of file

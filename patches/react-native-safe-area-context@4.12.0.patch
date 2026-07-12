@@ -1,0 +1,40 @@
+diff --git a/android/src/main/AndroidManifest.xml b/android/src/main/AndroidManifest.xml
+index f5da598..4b624d1 100644
+--- a/android/src/main/AndroidManifest.xml
++++ b/android/src/main/AndroidManifest.xml
+@@ -1,5 +1,4 @@
+ 
+ <manifest
+-	xmlns:android="http://schemas.android.com/apk/res/android"
+-  package="com.th3rdwave.safeareacontext">
++	xmlns:android="http://schemas.android.com/apk/res/android">
+ </manifest>
+diff --git a/android/src/main/java/com/th3rdwave/safeareacontext/SafeAreaContextPackage.kt b/android/src/main/java/com/th3rdwave/safeareacontext/SafeAreaContextPackage.kt
+index 691a782..17690ea 100644
+--- a/android/src/main/java/com/th3rdwave/safeareacontext/SafeAreaContextPackage.kt
++++ b/android/src/main/java/com/th3rdwave/safeareacontext/SafeAreaContextPackage.kt
+@@ -29,10 +29,8 @@ class SafeAreaContextPackage : TurboReactPackage() {
+               moduleClass.name,
+               true,
+               reactModule.needsEagerInit,
+-              /** TODO remove the parameter once support for RN < 0.73 is dropped */
+-              reactModule.hasConstants,
+               reactModule.isCxxModule,
+-              BuildConfig.IS_NEW_ARCHITECTURE_ENABLED)
++              ReactModuleInfo.classIsTurboModule(moduleClass))
+     }
+     return ReactModuleInfoProvider { reactModuleInfoMap }
+   }
+diff --git a/android/src/main/java/com/th3rdwave/safeareacontext/SafeAreaView.kt b/android/src/main/java/com/th3rdwave/safeareacontext/SafeAreaView.kt
+index b29e787..eefa387 100644
+--- a/android/src/main/java/com/th3rdwave/safeareacontext/SafeAreaView.kt
++++ b/android/src/main/java/com/th3rdwave/safeareacontext/SafeAreaView.kt
+@@ -56,7 +56,7 @@ class SafeAreaView(context: Context?) :
+           // we
+           // are in the middle of a layout so always do it.
+           reactContext.runOnNativeModulesQueueThread {
+-            uiManager.uiImplementation.dispatchViewUpdates(-1)
++            uiManager.invalidateNodeLayout(id)
+           }
+           waitForReactLayout()
+         }

@@ -1,0 +1,50 @@
+{
+  "name": "ton",
+  "private": true,
+  "version": "1.0.12",
+  "packageManager": "pnpm@10.33.0",
+  "description": "Local-first music player with built-in search and download",
+  "author": "NaMarrado",
+  "license": "MIT",
+  "scripts": {
+    "logo:crop": "python3 scripts/crop_ton_logo.py public/TONlogo.png --backup public/TONlogo.original.png",
+    "logo:assets": "python3 scripts/generate_logo_assets.py",
+    "postinstall": "node scripts/ensure-expo-sqlite-ios-vendor.mjs",
+    "release:stage-artifacts": "node scripts/release/stage-release-artifacts.mjs",
+    "release:sync-version": "node scripts/release/sync-version.mjs",
+    "release:validate-manifest": "node scripts/release/validate-update-manifest.mjs update.json",
+    "locales:validate": "node scripts/validate-locales.mjs",
+    "i18n:validate": "tsc --build packages/core/tsconfig.json --force && node scripts/validate-locales.mjs && node scripts/validate-i18n-runtime.mjs",
+    "android:signing:setup": "python3 scripts/setup_free_signing.py",
+    "sign:setup": "python3 scripts/setup_free_signing.py",
+    "dev": "corepack pnpm --filter @ton/desktop dev",
+    "dev:update": "VITE_TON_SIMULATE_UPDATE_VERSION=1.0.1 corepack pnpm --filter @ton/desktop dev",
+    "dev:mobile": "corepack pnpm --filter @ton/mobile start",
+    "dev:mobile:update": "EXPO_PUBLIC_TON_ENABLE_UPDATE_SIMULATION=1 EXPO_PUBLIC_TON_SIMULATE_UPDATE_VERSION=1.0.1 corepack pnpm --filter @ton/mobile start",
+    "perf:desktop": "TON_PERF=1 VITE_TON_PERF=1 corepack pnpm --filter @ton/desktop dev",
+    "perf:mobile": "EXPO_PUBLIC_TON_PERF=1 corepack pnpm --filter @ton/mobile start",
+    "build": "corepack pnpm --filter @ton/desktop build",
+    "dist:desktop": "corepack pnpm --filter @ton/desktop dist",
+    "dist:desktop:dir": "corepack pnpm --filter @ton/desktop dist:dir",
+    "build:mobile": "corepack pnpm --filter @ton/mobile build",
+    "build:android:release": "python3 scripts/setup_free_signing.py && (cd packages/mobile/android && ./gradlew assembleRelease)",
+    "lint": "eslint 'packages/*/src/**/*.{ts,tsx}'",
+    "typecheck": "tsc --build",
+    "format": "prettier --write 'packages/*/src/**/*.{ts,tsx,json,css}'"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.0.0"
+  },
+  "dependencies": {}
+}

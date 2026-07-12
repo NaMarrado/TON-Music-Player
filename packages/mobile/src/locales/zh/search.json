@@ -1,0 +1,16 @@
+{
+  "placeholder": "搜索音乐...",
+  "play": "播放",
+  "download": "下载",
+  "downloadStarted": "下载：{{title}}",
+  "downloadAlreadyQueued": "已在下载：{{title}}",
+  "alreadySaved": "已保存：{{title}}",
+  "addToPlaylist": "添加到播放列表",
+  "noResults": "没有找到结果",
+  "loadMore": "从 {{source}} 加载 {{count}} 更多内容",
+  "loadingMore": "加载更多...",
+  "emptyHint": "在 YouTube、Spotify 和您的音乐音乐库中搜索音乐",
+  "spotifyError": "Spotify 搜索失败 — 检查您的凭据",
+  "openSettings": "打开设置",
+  "tabLabel": "搜索"
+}

@@ -1,0 +1,6 @@
+{
+  "title": "艺术家",
+  "count": "{{count}} 艺术家",
+  "trackCount": "曲目：{{count}}",
+  "empty": "您的音乐音乐库中还没有艺术家。"
+}

@@ -1,0 +1,612 @@
+name: "MAIN: Build"
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/build.yml
+      - package.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - tsconfig.json
+      - tsconfig.base.json
+      - eslint.config.js
+      - scripts/**
+      - update.json
+      - packages/**
+  pull_request:
+    paths:
+      - .github/workflows/build.yml
+      - package.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - tsconfig.json
+      - tsconfig.base.json
+      - eslint.config.js
+      - scripts/**
+      - update.json
+      - packages/**
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Which build matrix to run
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - desktop
+          - android
+          - ios
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event.inputs.target || 'auto' }}
+  cancel-in-progress: true
+
+env:
+  CI: '1'
+  EXPO_NO_GIT_STATUS: '1'
+  EXPO_NO_TELEMETRY: '1'
+  NODE_ENV: 'production'
+  NODE_VERSION: '22'
+
+jobs:
+  prepare-release:
+    name: "MAIN: Prepare release"
+    if: >-
+      ${{
+        github.event_name == 'push' &&
+        github.ref == 'refs/heads/main' &&
+        !startsWith(github.event.head_commit.message, 'chore(release): v')
+      }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    outputs:
+      prepared: ${{ steps.release.outputs.prepared }}
+      version: ${{ steps.release.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Prepare patch release commit
+        id: release
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch --tags origin
+
+          node scripts/release/sync-version.mjs --bump patch --from-git-tags --write
+          VERSION="$(node -p "require('./package.json').version")"
+          node scripts/release/sync-version.mjs --version "$VERSION" --check
+          node scripts/release/validate-update-manifest.mjs update.json
+
+          if git rev-parse "v${VERSION}" >/dev/null 2>&1; then
+            echo "Tag v${VERSION} already exists." >&2
+            exit 1
+          fi
+
+          git add package.json packages/core/package.json packages/desktop/package.json packages/mobile/package.json packages/core/src/utils/constants.ts packages/mobile/app.config.ts packages/mobile/ios/TON/Info.plist packages/mobile/ios/TON.xcodeproj/project.pbxproj update.json
+          git commit -m "chore(release): v${VERSION}"
+          git tag "v${VERSION}"
+          git push origin HEAD:main
+          git push origin "v${VERSION}"
+
+          echo "prepared=true" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+  metadata:
+    name: "MAIN: Release metadata"
+    needs: prepare-release
+    if: >-
+      ${{
+        always() &&
+        (
+          github.event_name != 'push' ||
+          startsWith(github.event.head_commit.message, 'chore(release): v') ||
+          needs.prepare-release.outputs.prepared == 'true'
+        )
+      }}
+    runs-on: ubuntu-24.04
+    outputs:
+      checkout_ref: ${{ steps.meta.outputs.checkout_ref }}
+      release: ${{ steps.meta.outputs.release }}
+      version: ${{ steps.meta.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Resolve release metadata
+        id: meta
+        shell: bash
+        run: |
+          set -euo pipefail
+          RELEASE=false
+          CHECKOUT_REF="${{ github.sha }}"
+
+          if [ "${{ needs.prepare-release.outputs.prepared }}" = "true" ]; then
+            VERSION="${{ needs.prepare-release.outputs.version }}"
+            RELEASE=true
+            CHECKOUT_REF="refs/tags/v${VERSION}"
+            git fetch --tags origin
+            git checkout --detach "$CHECKOUT_REF"
+          else
+            VERSION="$(node -p "require('./package.json').version")"
+          fi
+
+          if [ "${{ github.event_name }}" = "push" ] && [[ "${{ github.event.head_commit.message }}" == chore\(release\):\ v* ]]; then
+            RELEASE=true
+            CHECKOUT_REF="${{ github.sha }}"
+            node scripts/release/sync-version.mjs --version "$VERSION" --check
+            node scripts/release/validate-update-manifest.mjs update.json
+          fi
+
+          if [ "$RELEASE" = "true" ]; then
+            node scripts/release/sync-version.mjs --version "$VERSION" --check
+            node scripts/release/validate-update-manifest.mjs update.json
+          fi
+
+          echo "checkout_ref=${CHECKOUT_REF}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "release=${RELEASE}" >> "$GITHUB_OUTPUT"
+
+  release-draft:
+    name: "MAIN: Create draft release"
+    needs: metadata
+    if: ${{ needs.metadata.outputs.release == 'true' && github.event_name == 'push' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    steps:
+      - name: Create draft GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ needs.metadata.outputs.version }}
+        run: |
+          set -euo pipefail
+          if ! gh release view "v${VERSION}" >/dev/null 2>&1; then
+            gh release create "v${VERSION}" \
+              --draft \
+              --title "Download v${VERSION}" \
+              --notes "Unsigned desktop builds and self-signed Android APK for TON v${VERSION}."
+          fi
+
+  desktop:
+    name: "MAIN: Desktop (${{ matrix.id }})"
+    needs:
+      - metadata
+      - release-draft
+    if: >-
+      ${{
+        always() &&
+        needs.metadata.result == 'success' &&
+        (needs.release-draft.result == 'success' || needs.release-draft.result == 'skipped') &&
+        (github.event_name != 'workflow_dispatch' || github.event.inputs.target == 'all' || github.event.inputs.target == 'desktop')
+      }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: macos
+            os: macos-14
+            build_command: pnpm --filter @ton/desktop dist:mac
+            release_suffix: macos.dmg
+          - id: windows
+            os: windows-2022
+            build_command: pnpm --filter @ton/desktop dist:win
+            release_suffix: windows.exe
+          - id: linux
+            os: ubuntu-24.04
+            build_command: pnpm --filter @ton/desktop dist:linux
+            release_suffix: linux.AppImage
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.metadata.outputs.checkout_ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable pnpm
+        shell: bash
+        run: |
+          corepack enable
+          corepack prepare pnpm@10 --activate
+          pnpm --version
+
+      - name: Resolve pnpm store path
+        id: pnpm-store
+        shell: bash
+        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore pnpm store cache
+        uses: actions/cache@v5
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate locale resources
+        if: ${{ matrix.id == 'linux' }}
+        run: pnpm i18n:validate
+
+      - name: Ensure xvfb is available
+        if: ${{ matrix.id == 'linux' }}
+        shell: bash
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb
+          fi
+
+      - name: Run desktop database and handler smoke tests
+        if: ${{ matrix.id == 'linux' }}
+        run: xvfb-run -a pnpm --filter @ton/desktop smoke:handlers
+
+      - name: Build unsigned desktop artifact
+        run: ${{ matrix.build_command }}
+
+      - name: Locate packaged app
+        id: paths
+        shell: bash
+        run: |
+          case "${{ matrix.id }}" in
+            macos)
+              echo "asar=$(find packages/desktop/release -path '*/TON.app/Contents/Resources/app.asar' | head -n 1)" >> "$GITHUB_OUTPUT"
+              echo "binary=$(find packages/desktop/release -path '*/TON.app/Contents/MacOS/TON' | head -n 1)" >> "$GITHUB_OUTPUT"
+              ;;
+            windows)
+              echo "asar=packages/desktop/release/win-unpacked/resources/app.asar" >> "$GITHUB_OUTPUT"
+              echo "binary=packages/desktop/release/win-unpacked/TON.exe" >> "$GITHUB_OUTPUT"
+              ;;
+            linux)
+              echo "asar=packages/desktop/release/linux-unpacked/resources/app.asar" >> "$GITHUB_OUTPUT"
+              echo "binary=packages/desktop/release/linux-unpacked/TON" >> "$GITHUB_OUTPUT"
+              ;;
+          esac
+          cat "$GITHUB_OUTPUT"
+
+      - name: Validate packaged app paths
+        shell: bash
+        run: |
+          test -n "${{ steps.paths.outputs.asar }}"
+          test -f "${{ steps.paths.outputs.asar }}"
+          test -n "${{ steps.paths.outputs.binary }}"
+          test -f "${{ steps.paths.outputs.binary }}"
+
+      - name: Verify packaged runtime modules
+        run: node scripts/verify_packaged_desktop_bundle.mjs "${{ steps.paths.outputs.asar }}"
+
+      - name: Smoke start macOS app
+        if: ${{ matrix.id == 'macos' }}
+        shell: bash
+        run: |
+          "${{ steps.paths.outputs.binary }}" > desktop-smoke.log 2>&1 &
+          APP_PID=$!
+          sleep 8
+          if ! kill -0 "$APP_PID" 2>/dev/null; then
+            cat desktop-smoke.log
+            exit 1
+          fi
+          kill "$APP_PID" || true
+          wait "$APP_PID" || true
+
+      - name: Smoke start Linux app
+        if: ${{ matrix.id == 'linux' }}
+        shell: bash
+        run: |
+          xvfb-run -a "${{ steps.paths.outputs.binary }}" --no-sandbox > desktop-smoke.log 2>&1 &
+          APP_PID=$!
+          sleep 8
+          if ! kill -0 "$APP_PID" 2>/dev/null; then
+            cat desktop-smoke.log
+            exit 1
+          fi
+          kill "$APP_PID" || true
+          wait "$APP_PID" || true
+
+      - name: Smoke start Windows app
+        if: ${{ matrix.id == 'windows' }}
+        shell: pwsh
+        run: |
+          $proc = Start-Process -FilePath "${{ steps.paths.outputs.binary }}" -PassThru
+          Start-Sleep -Seconds 8
+          if ($proc.HasExited) {
+            throw "TON.exe exited early with code $($proc.ExitCode)"
+          }
+          Stop-Process -Id $proc.Id -Force
+
+      - name: Upload desktop release asset
+        if: ${{ needs.metadata.outputs.release == 'true' && github.event_name == 'push' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ needs.metadata.outputs.version }}
+        run: |
+          set -euo pipefail
+          case "${{ matrix.id }}" in
+            macos)
+              SOURCE="$(find packages/desktop/release -maxdepth 1 -type f -name '*.dmg' -print -quit)"
+              ;;
+            windows)
+              SOURCE="$(find packages/desktop/release -maxdepth 1 -type f -name '*.exe' -print -quit)"
+              ;;
+            linux)
+              SOURCE="$(find packages/desktop/release -maxdepth 1 -type f -name '*.AppImage' -print -quit)"
+              ;;
+          esac
+          test -n "$SOURCE"
+          mkdir -p release-upload
+          DESTINATION="release-upload/TON-${{ matrix.release_suffix }}"
+          cp "$SOURCE" "$DESTINATION"
+          gh release upload "v${VERSION}" "$DESTINATION" --clobber
+
+  android:
+    name: "MAIN: Android"
+    needs:
+      - metadata
+      - release-draft
+    if: >-
+      ${{
+        always() &&
+        needs.metadata.result == 'success' &&
+        (needs.release-draft.result == 'success' || needs.release-draft.result == 'skipped') &&
+        (github.event_name != 'workflow_dispatch' || github.event.inputs.target == 'all' || github.event.inputs.target == 'android')
+      }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: write
+    env:
+      ANDROID_RELEASE_ARCHITECTURES: armeabi-v7a,arm64-v8a
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.metadata.outputs.checkout_ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable pnpm
+        shell: bash
+        run: |
+          corepack enable
+          corepack prepare pnpm@10 --activate
+          pnpm --version
+
+      - name: Resolve pnpm store path
+        id: pnpm-store
+        shell: bash
+        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore pnpm store cache
+        uses: actions/cache@v5
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Configure Android SDK environment
+        shell: bash
+        run: |
+          if [ -n "${ANDROID_SDK_ROOT:-}" ]; then
+            SDK_ROOT="$ANDROID_SDK_ROOT"
+          elif [ -n "${ANDROID_HOME:-}" ]; then
+            SDK_ROOT="$ANDROID_HOME"
+          elif [ -d "$HOME/Android/Sdk" ]; then
+            SDK_ROOT="$HOME/Android/Sdk"
+          else
+            echo "Android SDK not found on runner" >&2
+            exit 1
+          fi
+
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
+
+          if [ -d "$SDK_ROOT/platform-tools" ]; then
+            echo "$SDK_ROOT/platform-tools" >> "$GITHUB_PATH"
+          fi
+
+          if [ -d "$SDK_ROOT/cmdline-tools/latest/bin" ]; then
+            echo "$SDK_ROOT/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          fi
+
+      - name: Accept Android SDK licenses
+        shell: bash
+        run: |
+          if command -v sdkmanager >/dev/null 2>&1; then
+            yes | sdkmanager --licenses >/dev/null || true
+          fi
+
+      - name: Generate Android native project
+        run: pnpm --filter @ton/mobile exec expo prebuild --platform android --no-install
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Setup Android generated signing
+        run: python3 scripts/setup_free_signing.py
+
+      - name: Build Android release APK
+        working-directory: packages/mobile/android
+        run: ./gradlew assembleRelease --build-cache --console=plain -PreactNativeArchitectures="${ANDROID_RELEASE_ARCHITECTURES}"
+
+      - name: Verify Android release signature
+        shell: bash
+        run: |
+          APKSIGNER="$(find "${ANDROID_HOME:-$ANDROID_SDK_ROOT}"/build-tools -name apksigner | sort | tail -n 1)"
+          if [ -z "$APKSIGNER" ]; then
+            echo "apksigner not found" >&2
+            exit 1
+          fi
+          "$APKSIGNER" verify --print-certs packages/mobile/android/app/build/outputs/apk/release/app-release.apk
+
+      - name: Upload Android release asset
+        if: ${{ needs.metadata.outputs.release == 'true' && github.event_name == 'push' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ needs.metadata.outputs.version }}
+        run: |
+          set -euo pipefail
+          SOURCE="packages/mobile/android/app/build/outputs/apk/release/app-release.apk"
+          DESTINATION="TON-android.apk"
+          test -f "$SOURCE"
+          cp "$SOURCE" "$DESTINATION"
+          gh release upload "v${VERSION}" "$DESTINATION" --clobber
+
+  ios-validate:
+    name: "MAIN: iOS validate"
+    needs: metadata
+    if: ${{ needs.metadata.result == 'success' && (github.event_name != 'workflow_dispatch' || github.event.inputs.target == 'all' || github.event.inputs.target == 'ios') }}
+    runs-on: macos-15
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.metadata.outputs.checkout_ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable pnpm
+        shell: bash
+        run: |
+          corepack enable
+          corepack prepare pnpm@10 --activate
+          pnpm --version
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install CocoaPods
+        working-directory: packages/mobile/ios
+        run: RUBYOPT=-rlogger pod install
+
+      - name: Build unsigned iOS simulator app
+        working-directory: packages/mobile/ios
+        run: xcodebuild -workspace TON.xcworkspace -scheme TON -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' build
+
+  publish-release:
+    name: "MAIN: Publish GitHub Release"
+    needs:
+      - metadata
+      - release-draft
+      - desktop
+      - android
+      - ios-validate
+    if: ${{ needs.metadata.outputs.release == 'true' && github.event_name == 'push' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.metadata.outputs.checkout_ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Download release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ needs.metadata.outputs.version }}
+        run: |
+          set -euo pipefail
+          mkdir -p release/github
+          gh release download "v${VERSION}" \
+            --dir release/github \
+            --pattern "TON-*"
+
+          test -f "release/github/TON-macos.dmg"
+          test -f "release/github/TON-windows.exe"
+          test -f "release/github/TON-linux.AppImage"
+          test -f "release/github/TON-android.apk"
+
+      - name: Generate release checksums
+        env:
+          VERSION: ${{ needs.metadata.outputs.version }}
+        working-directory: release/github
+        run: sha256sum "TON-macos.dmg" "TON-windows.exe" "TON-linux.AppImage" "TON-android.apk" > SHA256SUMS
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ needs.metadata.outputs.version }}
+        run: |
+          set -euo pipefail
+          gh release upload "v${VERSION}" release/github/SHA256SUMS --clobber
+          gh release edit "v${VERSION}" \
+            --draft=false \
+            --title "Download v${VERSION}" \
+            --notes "Unsigned desktop builds and self-signed Android APK for TON v${VERSION}."
+
+      - name: Validate public update feed
+        run: |
+          set -euo pipefail
+          VERSION="${{ needs.metadata.outputs.version }}"
+          curl --fail --location --retry 6 --retry-delay 5 "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/update.json" --output /tmp/ton-update.json
+          node scripts/release/validate-update-manifest.mjs /tmp/ton-update.json --live
+          test "$(node -p "require('/tmp/ton-update.json').version")" = "$VERSION"

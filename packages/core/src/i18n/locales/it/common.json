@@ -1,0 +1,10 @@
+{
+  "play": "Riproduci", "pause": "Pausa", "stop": "Interrompi", "next": "Successivo", "previous": "Precedente",
+  "shuffle": "Riproduzione casuale", "repeat": "Ripeti", "repeat_one": "Ripeti brano", "repeat_all": "Ripeti tutto", "repeat_off": "Ripetizione disattivata",
+  "volume": "Volume", "volume_decrease_step": "Riduci il volume del {{step}}%", "volume_increase_step": "Aumenta il volume del {{step}}%", "mute": "Disattiva audio", "unmute": "Attiva audio",
+  "search": "Cerca", "download": "Scarica", "downloading": "Download in corso", "cancel": "Annulla", "delete": "Elimina", "edit": "Modifica", "save": "Salva", "close": "Chiudi", "confirm": "Conferma", "back": "Indietro",
+  "settings": "Impostazioni", "home": "Home", "library": "Libreria", "playlists": "Playlist", "albums": "Album", "artists": "Artisti", "tracks": "Brani", "queue": "Coda", "downloads": "Download",
+  "create_playlist": "Crea playlist", "no_results": "Nessun risultato", "loading": "Caricamento...", "archivePickerEmpty": "Qui non ci sono file .zip o .ton", "error": "Errore", "retry": "Riprova",
+  "unknown_artist": "Artista sconosciuto", "unknown_album": "Album sconosciuto", "unknown_title": "Titolo sconosciuto", "track_one": "{{count}} brano", "track_other": "{{count}} brani", "all": "Tutti",
+  "eq_flat": "Neutro", "eq_bass_boost": "Enfasi bassi", "eq_treble_boost": "Enfasi alti", "eq_vocal": "Voce", "eq_rock": "Rock", "eq_electronic": "Elettronica", "eq_acoustic": "Acustica"
+}
