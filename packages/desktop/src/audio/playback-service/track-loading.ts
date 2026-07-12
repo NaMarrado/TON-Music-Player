@@ -60,6 +60,7 @@ export async function startTrack(track: Track): Promise<void> {
 
   usePlaybackStore.setState({
     currentTrack: track,
+    isPlaying: false,
     position: 0,
     duration: track.duration_ms ? track.duration_ms / 1000 : 0,
   });
@@ -103,6 +104,7 @@ export async function loadQueueIndex(index: number): Promise<void> {
 
     usePlaybackStore.setState({
       currentTrack: track,
+      isPlaying: false,
       position: 0,
       duration: track.duration_ms ? track.duration_ms / 1000 : 0,
     });

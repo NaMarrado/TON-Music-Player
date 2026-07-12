@@ -7,7 +7,7 @@ import {
   type RepeatMode,
 } from '@ton/core';
 
-interface PlaybackState {
+export interface PlaybackState {
   currentTrack: Track | null;
   isPlaying: boolean;
   position: number;

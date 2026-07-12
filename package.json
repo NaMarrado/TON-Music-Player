@@ -15,6 +15,7 @@
     "release:validate-manifest": "node scripts/release/validate-update-manifest.mjs update.json",
     "locales:validate": "node scripts/validate-locales.mjs",
     "test:android-resolver": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test scripts/tests/android-youtube-resolver.test.ts",
+    "test:discord-presence": "tsx --test scripts/tests/discord-presence.test.ts",
     "i18n:validate": "tsc --build packages/core/tsconfig.json --force && node scripts/validate-locales.mjs && node scripts/validate-i18n-runtime.mjs",
     "android:signing:setup": "python3 scripts/setup_free_signing.py",
     "sign:setup": "python3 scripts/setup_free_signing.py",
@@ -44,8 +45,8 @@
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.0",
     "prettier": "^3.0.0",
+    "tsx": "4.23.0",
     "typescript": "^5.7.0",
     "typescript-eslint": "^8.0.0"
-  },
-  "dependencies": {}
+  }
 }

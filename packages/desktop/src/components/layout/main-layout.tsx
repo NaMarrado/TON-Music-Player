@@ -7,6 +7,7 @@ import { AppUpdateDialog } from './app-update-dialog';
 import { QueuePanel } from '../player/queue-panel';
 import { ToastContainer } from '../ui/toast';
 import { useMediaSession } from '../../hooks/use-media-session';
+import { useDiscordPresence } from '../../hooks/use-discord-presence';
 import { useKeyboardShortcuts } from '../../hooks/use-keyboard-shortcuts';
 import { loadDownloads, subscribeToDownloadEvents } from '../../stores/download-store';
 import {
@@ -29,6 +30,7 @@ import { useShellLayout } from './use-shell-layout';
 
 export function MainLayout() {
   useMediaSession();
+  useDiscordPresence();
   useKeyboardShortcuts();
   const location = useLocation();
   const { isCompactPlayer, isSidebarOverlayViewport, viewportWidth } = useShellLayout();

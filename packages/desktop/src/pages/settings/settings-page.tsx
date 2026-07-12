@@ -13,6 +13,7 @@ import { SettingsCard } from './settings-card';
 import { useSettingsLayout } from './use-settings-layout';
 import { AppCredit } from '../../components/app-credit';
 import { CommunityCard } from './community-card';
+import { DiscordPresenceSection } from './discord-presence-section';
 
 export function SettingsPage() {
   const { t } = useTranslation('pages/settings');
@@ -76,6 +77,9 @@ export function SettingsPage() {
         <SettingsGroup label={t('connectionsGroup')} compact={layout.compact}>
           <SettingsCard layout={layout}>
             <SpotifySection layout={layout} t={t} />
+          </SettingsCard>
+          <SettingsCard layout={layout}>
+            <DiscordPresenceSection layout={layout} t={t} />
           </SettingsCard>
           <SettingsCard layout={layout}>
             <CloudSection layout={layout} t={t} />

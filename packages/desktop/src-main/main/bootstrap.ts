@@ -10,6 +10,7 @@ import { createMainWindow } from './window';
 import { createAppMenu } from '../menu';
 import { updateTrayDownloads } from '../tray';
 import { applyDockIcon, applyPlatformAppIdentity } from './app-icon';
+import { disposeDiscordPresenceService } from '../services/discord-presence';
 
 prepareSmokeMode();
 
@@ -69,6 +70,7 @@ export function startMainProcess(): void {
 
   app.on('will-quit', () => {
     cleanupBackgroundServices?.();
+    void disposeDiscordPresenceService();
     void disposeLibraryOffloadWorker();
     closeDatabase();
   });

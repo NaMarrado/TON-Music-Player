@@ -1,4 +1,5 @@
 import type { AllowedInvokeChannel, AllowedOnChannel } from '../shared/ipc-channels';
+import type { DiscordPresencePayload } from '../shared/discord-presence';
 
 interface TransactionStatement {
   sql: string;
@@ -45,6 +46,8 @@ interface ElectronAPI {
   invoke(channel: 'db:transaction', statements: TransactionStatement[]): Promise<ExecuteResult[]>;
   invoke(channel: 'settings:get', key: string): Promise<string | null>;
   invoke(channel: 'settings:set', key: string, value: string): Promise<void>;
+  invoke(channel: 'discord:sync-activity', payload: DiscordPresencePayload): Promise<void>;
+  invoke(channel: 'discord:clear-activity'): Promise<void>;
   invoke(channel: 'binaries:get-status'): Promise<DesktopBinaryStatus[]>;
   invoke(channel: 'binaries:repair'): Promise<DesktopBinaryStatus[]>;
   invoke(channel: 'cloud:get-config'): Promise<import('@ton/core').CloudStoragePublicConfig | null>;

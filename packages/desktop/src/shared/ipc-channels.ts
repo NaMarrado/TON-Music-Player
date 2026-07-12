@@ -55,6 +55,8 @@ export const ALLOWED_INVOKE_CHANNELS = [
   'cloud:fetch-library',
   'cloud:sync-now',
   'cloud:cancel',
+  'discord:sync-activity',
+  'discord:clear-activity',
   'export:start',
   'export:summary',
   'import:start',

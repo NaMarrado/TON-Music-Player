@@ -48,6 +48,7 @@ If TON is useful to you, the easiest way to support the project is to star the r
 - ⚡ **Lightweight by Design:** A fast, focused player without ads, bloated dashboards, or unnecessary background services.
 - 🧼 **Simple, Intentional UI:** A clean interface that stays out of the way. Every screen and control exists for a reason instead of filling the app with visual clutter.
 - 🔎 **Unified Music Search:** Find music from YouTube, Spotify, and SoundCloud without switching apps.
+- 🎮 **Discord Rich Presence on Desktop:** Share the current track, artist, artwork, and live playback progress on your Discord profile, with pause and resume reflected automatically.
 - ⬇️ **Local Downloads:** Save playable audio directly to your device and listen offline.
 - 🎵 **Library and Playlists:** Keep a separate main library, create playlists, reorder tracks, and preserve playlist order.
 - ☁️ **Cloud Library:** Connect your own Cloudflare R2 bucket and move your library and playlists between devices.

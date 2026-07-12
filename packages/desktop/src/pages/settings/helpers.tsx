@@ -4,10 +4,12 @@ import type { ReactNode } from 'react';
 
 export function ToggleSwitch({
   enabled,
+  disabled = false,
   large = false,
   onClick,
 }: {
   enabled: boolean;
+  disabled?: boolean;
   large?: boolean;
   onClick: () => void;
 }) {
@@ -19,6 +21,7 @@ export function ToggleSwitch({
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
       className="toggle-switch cursor-pointer shrink-0"
       style={{
         position: 'relative',
@@ -29,6 +32,7 @@ export function ToggleSwitch({
         background: enabled ? 'var(--white)' : 'var(--bg-active)',
         transition: 'background var(--transition)',
         padding: 0,
+        opacity: disabled ? 0.5 : 1,
       }}
     >
       <div
