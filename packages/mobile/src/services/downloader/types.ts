@@ -1,3 +1,5 @@
+import type { DownloadQualityProfile } from '@ton/core';
+
 export interface DownloadInput {
   source: 'spotify' | 'youtube';
   sourceId: string;
@@ -8,9 +10,10 @@ export interface DownloadInput {
   coverUrl: string | null;
   sourceUrl: string;
   playlistId: number | null;
+  qualityProfile?: DownloadQualityProfile;
 }
 
-export type DownloadFormat = 'webm' | 'm4a' | 'opus' | 'aac' | 'mp3';
+export type DownloadFormat = 'm4a' | 'aac' | 'webm' | 'opus' | 'mp3';
 
 export interface DownloadResult {
   trackId: number;

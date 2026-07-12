@@ -74,7 +74,7 @@ interface ElectronAPI {
   invoke(channel: 'download:get-all'): Promise<import('@ton/core').DownloadItem[]>;
   invoke(
     channel: 'download:import-playlist',
-    options: { url: string; format?: 'opus' | 'mp3' },
+    options: { url: string },
   ): Promise<import('@ton/core').PlaylistImportResult>;
   invoke(
     channel: 'search:query',

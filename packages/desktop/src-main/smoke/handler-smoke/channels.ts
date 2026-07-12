@@ -6,8 +6,6 @@ export const EXPECTED_HANDLER_CHANNELS = [
   'playlist:create',
   'playlist:check-duplicates',
   'playlist:import-folder',
-  'playlist:library-status',
-  'playlist:add-to-library',
   'export:start',
   'import:start',
 ] as const;

@@ -3,7 +3,8 @@ import type { DownloadItem, DownloadRequest } from '@ton/core';
 import type { DownloadRuntimeMeta, DownloadState } from './download-store-types';
 
 export const useDownloadStore = create<DownloadState>()(() => ({
-  items: [],
+  itemsById: {},
+  orderedIds: [],
   activeCount: 0,
   isLoading: false,
   runtimeMetaById: {},
@@ -28,7 +29,8 @@ export function pruneRuntimeMeta(
 export function setDownloadSnapshot(items: DownloadItem[], isLoading = false): void {
   const { runtimeMetaById } = useDownloadStore.getState();
   useDownloadStore.setState({
-    items,
+    itemsById: Object.fromEntries(items.map((item) => [item.id, item])),
+    orderedIds: items.map((item) => item.id),
     activeCount: getActiveCount(items),
     isLoading,
     runtimeMetaById: pruneRuntimeMeta(items, runtimeMetaById),
@@ -60,22 +62,16 @@ export function patchDownloadItem(
   id: number,
   updater: (item: DownloadItem) => DownloadItem,
 ): boolean {
-  const { items } = useDownloadStore.getState();
-  let changed = false;
-  const nextItems = items.map((item) => {
-    if (item.id !== id) {
-      return item;
-    }
-
-    changed = true;
-    return updater(item);
+  const state = useDownloadStore.getState();
+  const current = state.itemsById[id];
+  if (!current) return false;
+  const updated = updater(current);
+  const wasActive = ['downloading', 'resolving', 'converting'].includes(current.status);
+  const isActive = ['downloading', 'resolving', 'converting'].includes(updated.status);
+  useDownloadStore.setState({
+    itemsById: { ...state.itemsById, [id]: updated },
+    activeCount: state.activeCount + Number(isActive) - Number(wasActive),
   });
-
-  if (!changed) {
-    return false;
-  }
-
-  setDownloadSnapshot(nextItems);
   return true;
 }
 
@@ -97,7 +93,8 @@ export function createPendingDownloadItem(id: number, request: DownloadRequest):
     album: request.album ?? null,
     cover_url: request.cover_url ?? null,
     playlist_id: request.playlist_id ?? null,
-    format: request.format ?? 'opus',
+    format: 'm4a',
+    quality_profile: request.quality_profile ?? 'normal',
     status: 'pending',
     progress: 0,
     error_message: null,
@@ -109,19 +106,22 @@ export function createPendingDownloadItem(id: number, request: DownloadRequest):
 }
 
 export function appendDownloadItem(item: DownloadItem): void {
-  const { items } = useDownloadStore.getState();
-  const existingIndex = items.findIndex((entry) => entry.id === item.id);
-  if (existingIndex >= 0) {
-    const nextItems = items.slice();
-    nextItems[existingIndex] = item;
-    setDownloadSnapshot(nextItems);
+  const state = useDownloadStore.getState();
+  if (state.itemsById[item.id]) {
+    patchDownloadItem(item.id, () => item);
     return;
   }
-
-  setDownloadSnapshot([...items, item]);
+  useDownloadStore.setState({
+    itemsById: { ...state.itemsById, [item.id]: item },
+    orderedIds: [...state.orderedIds, item.id],
+    activeCount: state.activeCount + Number(
+      ['downloading', 'resolving', 'converting'].includes(item.status),
+    ),
+  });
 }
 
 export function removeDownloads(predicate: (item: DownloadItem) => boolean): void {
-  const { items } = useDownloadStore.getState();
+  const state = useDownloadStore.getState();
+  const items = state.orderedIds.map((id) => state.itemsById[id]).filter(Boolean);
   setDownloadSnapshot(items.filter((item) => !predicate(item)));
 }

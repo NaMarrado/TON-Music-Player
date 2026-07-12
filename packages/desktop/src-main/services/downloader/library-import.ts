@@ -1,10 +1,7 @@
-import fs from 'fs';
-import path from 'path';
 import type { DownloadItem } from '@ton/core';
 import { analyzeLoudness } from '../loudness-analyzer';
 import { readTrackMetadataOffthread } from '../metadata-reader';
 import { getFileStatsAsync } from '../file-scanner';
-import { findNonCollidingFileAsync, getPlaylistDir } from '../library-paths';
 import { getDb } from '../database';
 import { getFfmpegPathAsync } from '../binary-manager';
 import { downloadCoverArt } from './artwork';
@@ -73,7 +70,7 @@ export async function importDownloadedTrack(
   const trackId = trackRow?.id ?? 0;
 
   await analyzeTrackLoudness(outputFile, trackId);
-  const legacyPlaylistId = await linkTrackToPlaylist(item, trackId, outputFile);
+  const legacyPlaylistId = await linkTrackToPlaylist(item, trackId);
   const importedPlaylistIds = await settleDesktopPlaylistImportQueueItem(item.id, trackId);
 
   return {
@@ -110,19 +107,12 @@ async function analyzeTrackLoudness(outputFile: string, trackId: number): Promis
 async function linkTrackToPlaylist(
   item: DownloadItem,
   trackId: number,
-  outputFile: string,
 ): Promise<number | null> {
   if (!item.playlist_id || trackId <= 0) {
     return null;
   }
 
   try {
-    const playlistDir = getPlaylistDir(item.playlist_id);
-    await fs.promises.mkdir(playlistDir, { recursive: true });
-
-    const playlistPath = await findNonCollidingFileAsync(playlistDir, path.basename(outputFile));
-    await fs.promises.copyFile(outputFile, playlistPath);
-
     const db = getDb();
     const maxRow = db.prepare(
       'SELECT MAX(position) as maxPos FROM playlist_tracks WHERE playlist_id = ?',
@@ -130,8 +120,8 @@ async function linkTrackToPlaylist(
     const nextPosition = (maxRow?.maxPos ?? -1) + 1;
 
     db.prepare(
-      'INSERT INTO playlist_tracks (playlist_id, track_id, position, file_path) VALUES (?, ?, ?, ?)',
-    ).run(item.playlist_id, trackId, nextPosition, playlistPath);
+      'INSERT INTO playlist_tracks (playlist_id, track_id, position, file_path) VALUES (?, ?, ?, NULL)',
+    ).run(item.playlist_id, trackId, nextPosition);
 
     db.prepare("UPDATE playlists SET updated_at = strftime('%s','now') WHERE id = ?").run(
       item.playlist_id,

@@ -1,11 +1,9 @@
-import fs from 'fs';
-import path from 'path';
 import { BrowserWindow, dialog } from 'electron';
 import { SUPPORTED_AUDIO_EXTENSIONS } from '@ton/core';
 import { getDb } from '../../services/database';
 import { getFfmpegPathAsync } from '../../services/binary-manager';
 import { getFileStatsAsync } from '../../services/file-scanner';
-import { getLibraryDir, getPlaylistDir, findNonCollidingFileAsync, ensureInLibraryAsync } from '../../services/library-paths';
+import { getLibraryDir, ensureInLibraryAsync } from '../../services/library-paths';
 import { readTrackMetadata } from '../../services/metadata-reader';
 import { analyzeLoudnessBatch } from '../playlist-helpers';
 import type { ImportedPlaylistTrack } from './types';
@@ -34,8 +32,6 @@ export async function handleImportFiles(playlistId: number): Promise<{ imported:
 
   const db = getDb();
   const libraryDir = getLibraryDir();
-  const playlistDir = getPlaylistDir(playlistId);
-  await fs.promises.mkdir(playlistDir, { recursive: true });
 
   const insertStmt = db.prepare(`
     INSERT OR IGNORE INTO tracks (
@@ -55,8 +51,6 @@ export async function handleImportFiles(playlistId: number): Promise<{ imported:
 
     const libraryPath = await ensureInLibraryAsync(filePath, libraryDir);
     const meta = await readTrackMetadata(libraryPath, stats.size);
-    const playlistPath = await findNonCollidingFileAsync(playlistDir, path.basename(filePath));
-    await fs.promises.copyFile(filePath, playlistPath);
 
     const result = insertStmt.run(
       libraryPath,
@@ -89,7 +83,7 @@ export async function handleImportFiles(playlistId: number): Promise<{ imported:
       trackId = existing.id;
     }
 
-    imported.push({ trackId, playlistPath });
+    imported.push({ trackId });
   }
 
   if (imported.length > 0) {
@@ -99,12 +93,12 @@ export async function handleImportFiles(playlistId: number): Promise<{ imported:
     let nextPosition = (maxRow?.maxPos ?? -1) + 1;
 
     const addStmt = db.prepare(
-      'INSERT INTO playlist_tracks (playlist_id, track_id, position, file_path) VALUES (?, ?, ?, ?)',
+      'INSERT INTO playlist_tracks (playlist_id, track_id, position, file_path) VALUES (?, ?, ?, NULL)',
     );
 
     db.transaction(() => {
       for (const entry of imported) {
-        addStmt.run(playlistId, entry.trackId, nextPosition++, entry.playlistPath);
+        addStmt.run(playlistId, entry.trackId, nextPosition++);
       }
     })();
 

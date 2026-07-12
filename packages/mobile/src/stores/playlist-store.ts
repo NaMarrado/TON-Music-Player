@@ -4,16 +4,14 @@ import {
   getAllPlaylists,
   getPlaylistById,
   getPlaylistTracks,
+  getPlaylistMembershipsForTrack,
   createPlaylist as dbCreatePlaylist,
   updatePlaylist as dbUpdatePlaylist,
   deletePlaylist as dbDeletePlaylist,
   addTracksToPlaylist as dbAddTracks,
   removeTrackFromPlaylist as dbRemoveTrack,
   reorderPlaylistTracks as dbReorderTracks,
-  updateTracksInLibrary,
 } from '../services/db-queries';
-import { cleanupOrphanedTracks } from '../services/track-removal';
-import { clearDeletedTracksFromPlayback } from '../services/playback-deletion-cleanup';
 
 export interface PlaylistDetailState {
   playlist: Playlist | null;
@@ -194,6 +192,53 @@ export async function refreshPlaylistsById(ids: number[]): Promise<void> {
     .map((id) => loadPlaylist(id)));
 }
 
+export async function mergeCompletedTrackIntoPlaylists(
+  trackId: number,
+  ids: number[],
+): Promise<void> {
+  const playlistIds = [...new Set(ids)];
+  if (playlistIds.length === 0) return;
+  const [memberships, refreshed] = await Promise.all([
+    getPlaylistMembershipsForTrack(trackId, playlistIds),
+    Promise.all(playlistIds.map((id) => getPlaylistById(id))),
+  ]);
+  const membershipsByPlaylist = new Map<number, typeof memberships>();
+  for (const membership of memberships) {
+    const rows = membershipsByPlaylist.get(membership.playlist_id) ?? [];
+    rows.push(membership);
+    membershipsByPlaylist.set(membership.playlist_id, rows);
+  }
+
+  usePlaylistStore.setState((state) => {
+    const refreshedById = new Map(
+      refreshed.filter((playlist): playlist is Playlist => playlist != null)
+        .map((playlist) => [playlist.id, playlist]),
+    );
+    const playlistDetails = { ...state.playlistDetails };
+    for (const playlistId of playlistIds) {
+      const detail = playlistDetails[playlistId];
+      if (!detail?.hasLoaded) continue;
+      const incoming = membershipsByPlaylist.get(playlistId) ?? [];
+      const incomingIds = new Set(incoming.map((track) => track.playlist_track_id));
+      const tracks = [...detail.tracks.filter(
+        (track) => !incomingIds.has(track.playlist_track_id),
+      ), ...incoming].sort((left, right) => (
+        ((left as PlaylistTrackEntry & { position?: number }).position ?? Number.MAX_SAFE_INTEGER)
+        - ((right as PlaylistTrackEntry & { position?: number }).position ?? Number.MAX_SAFE_INTEGER)
+      ));
+      playlistDetails[playlistId] = {
+        ...detail,
+        playlist: refreshedById.get(playlistId) ?? detail.playlist,
+        tracks,
+      };
+    }
+    return {
+      playlists: state.playlists.map((playlist) => refreshedById.get(playlist.id) ?? playlist),
+      playlistDetails,
+    };
+  });
+}
+
 export async function createPlaylist(
   name: string,
   description?: string,
@@ -228,7 +273,7 @@ export async function updatePlaylist(
 }
 
 export async function deletePlaylist(id: number): Promise<void> {
-  const removedTrackIds = await dbDeletePlaylist(id);
+  await dbDeletePlaylist(id);
   usePlaylistStore.setState((state) => {
     const nextDetails = { ...state.playlistDetails };
     delete nextDetails[id];
@@ -238,8 +283,6 @@ export async function deletePlaylist(id: number): Promise<void> {
       playlistDetails: nextDetails,
     };
   });
-  const deletedTrackIds = await cleanupOrphanedTracks(removedTrackIds);
-  await clearDeletedTracksFromPlayback(deletedTrackIds);
 }
 
 export async function addTracksToPlaylist(
@@ -279,8 +322,6 @@ export async function removeTrackFromPlaylist(
     };
   });
 
-  const deletedTrackIds = await cleanupOrphanedTracks([removedTrack.trackId]);
-  await clearDeletedTracksFromPlayback(deletedTrackIds);
 }
 
 export async function reorderPlaylistTracks(
@@ -333,45 +374,4 @@ export async function reorderPlaylistTracks(
     usePlaylistStore.setState({ playlists: previousPlaylists });
     throw error;
   }
-}
-
-export async function addTracksToLibrary(
-  trackIds: number[],
-): Promise<{ added: number; skipped: number }> {
-  const uniqueTrackIds = Array.from(new Set(trackIds));
-  if (uniqueTrackIds.length === 0) {
-    return { added: 0, skipped: 0 };
-  }
-
-  const { playlistDetails } = usePlaylistStore.getState();
-  const trackIdsToAdd = uniqueTrackIds.filter((trackId) => (
-    Object.values(playlistDetails).some((detail) => (
-      detail.tracks.some((track) => track.id === trackId && track.in_library !== 1)
-    ))
-  ));
-
-  if (trackIdsToAdd.length === 0) {
-    return { added: 0, skipped: uniqueTrackIds.length };
-  }
-
-  await updateTracksInLibrary(trackIdsToAdd, 1);
-
-  usePlaylistStore.setState((state) => ({
-    playlistDetails: Object.fromEntries(
-      Object.entries(state.playlistDetails).map(([playlistId, detail]) => [
-        playlistId,
-        {
-          ...detail,
-          tracks: detail.tracks.map((track) => (
-            trackIdsToAdd.includes(track.id) ? { ...track, in_library: 1 } : track
-          )),
-        },
-      ]),
-    ),
-  }));
-
-  return {
-    added: trackIdsToAdd.length,
-    skipped: uniqueTrackIds.length - trackIdsToAdd.length,
-  };
 }

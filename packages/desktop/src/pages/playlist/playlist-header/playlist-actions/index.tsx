@@ -1,6 +1,5 @@
 import { ActionButton } from './action-button';
 import {
-  AddToLibraryIcon,
   DeletePlaylistIcon,
   EditIcon,
   ExportIcon,
@@ -14,7 +13,6 @@ type PlaylistActionsProps = {
   isSmart: boolean;
   t: (key: string, vars?: Record<string, unknown>) => string;
   tracksCount: number;
-  onAddToLibrary: () => void;
   onDelete: () => void;
   onEdit: () => void;
   onExport: () => void;
@@ -28,7 +26,6 @@ export function PlaylistActions({
   isSmart,
   t,
   tracksCount,
-  onAddToLibrary,
   onDelete,
   onEdit,
   onExport,
@@ -73,10 +70,6 @@ export function PlaylistActions({
             {t('export')}
           </ActionButton>
 
-          <ActionButton compact={compact} fillWidth={compact} onClick={onAddToLibrary}>
-            <AddToLibraryIcon />
-            {t('addToLibrary')}
-          </ActionButton>
         </>
       )}
 

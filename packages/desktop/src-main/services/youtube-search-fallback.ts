@@ -21,6 +21,7 @@ export async function searchYouTubeWithYtDlp(
   query: string,
   limit: number,
   offset: number,
+  signal?: AbortSignal,
 ): Promise<{ results: SearchResult[]; hasMore: boolean }> {
   const requestedCount = offset + limit + 1;
   const result = await runYtDlpSearch(await getYtDlpPathAsync(), [
@@ -30,7 +31,7 @@ export async function searchYouTubeWithYtDlp(
     '--no-warnings',
     '--extractor-args', 'youtube:player_client=default,-android_sdkless',
     '--js-runtimes', 'node',
-  ]);
+  ], signal);
 
   const results = (result.entries ?? []).flatMap((entry): SearchResult[] => {
     const id = entry.id?.trim();
@@ -68,12 +69,13 @@ function pickThumbnail(entry: YtDlpYouTubeEntry): string | null {
 function runYtDlpSearch(
   binaryPath: string,
   args: string[],
+  signal?: AbortSignal,
 ): Promise<YtDlpYouTubeSearch> {
   return new Promise((resolve, reject) => {
     execFile(
       binaryPath,
       args,
-      { timeout: 30_000, maxBuffer: 10 * 1024 * 1024 },
+      { timeout: 30_000, maxBuffer: 10 * 1024 * 1024, signal },
       (error, stdout, stderr) => {
         if (error) {
           const detail = stderr.trim().split('\n').at(-1) || error.message;

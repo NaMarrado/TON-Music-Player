@@ -1,9 +1,8 @@
 /**
  * Library Paths - shared utilities for library and playlist directory management.
  *
- * Library and playlists are physically separate:
- *  - Library: {download_directory setting, default ~/Music/TON/}
- *  - Playlists: {libraryDir}/Playlists/{playlistId}/
+ * Audio is stored once in the canonical Library directory. Playlists only
+ * reference Library tracks in the database.
  */
 
 import fs from 'fs';

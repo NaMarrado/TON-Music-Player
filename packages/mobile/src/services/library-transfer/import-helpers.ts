@@ -12,7 +12,6 @@ import {
   getFileExtension,
 } from './naming';
 import { throwIfLibraryTransferCancelled } from './cancellation';
-import { resolveImportBundleType } from './bundle-type';
 import type { LibraryTransferProgress } from './types';
 import { ensureUniqueLocalFilePathAsync } from './file-helpers';
 import { yieldToUiAsync } from './file-helpers';
@@ -40,14 +39,7 @@ export async function prepareImportTracks(
   trackIdsByHash: Record<string, number>;
   skippedTracks: number;
 }> {
-  const bundleType = resolveImportBundleType(manifest);
-  const libraryTrackHashes = new Set(
-    bundleType === 'playlist'
-      ? (manifest.library_track_hashes ?? [])
-      : (manifest.library_track_hashes && manifest.library_track_hashes.length > 0
-        ? manifest.library_track_hashes
-        : manifest.tracks.map((track) => track.file_hash)),
-  );
+  const libraryTrackHashes = new Set(manifest.tracks.map((track) => track.file_hash));
   const preparedTracksByHash = new Map<string, PreparedImportTrack>();
   const trackIdsByHash: Record<string, number> = { ...existingTrackIdsByHash };
   const trackIdsToMarkInLibrary = new Set<number>();
@@ -106,7 +98,7 @@ export async function prepareImportTracks(
       filePath: destinationUri,
       fileSize: info.exists && typeof info.size === 'number' ? info.size : null,
       format: audioFormatFromExtension(ext),
-      inLibrary: libraryTrackHashes.has(entry.file_hash),
+      inLibrary: true,
       metadata: entry.metadata,
     };
 
@@ -234,7 +226,7 @@ export async function insertImportedLibraryAsync(
           null,
           null,
           null,
-          track.inLibrary ? 1 : 0,
+          1,
         ],
       );
 

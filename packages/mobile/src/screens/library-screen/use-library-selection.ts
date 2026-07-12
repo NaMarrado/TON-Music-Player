@@ -41,6 +41,7 @@ export function useLibrarySelection(displayTracks: Track[]) {
     removePromptTitle: removeActions.removePromptTitle,
     removePromptVisible: removeActions.removePromptVisible,
     selectedTrackIds: selectionState.selectedTrackIds,
+    selectedTrackIdSet: selectionState.selectedTrackIdSet,
     selectedTracks: selectionState.selectedTracks,
     selectionActive: selectionState.selectionActive,
     setPlaylistPickerTrackIds: selectionState.setPlaylistPickerTrackIds,

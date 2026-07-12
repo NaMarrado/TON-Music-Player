@@ -1,7 +1,4 @@
-import fs from 'fs';
-import path from 'path';
 import { getDb } from '../database';
-import { findNonCollidingFileAsync, getPlaylistDir } from '../library-paths';
 
 type ImportAssignment = { importItemIds: number[]; value: number };
 
@@ -73,28 +70,6 @@ export function assignDesktopPlaylistImportQueues(
   })();
 }
 
-async function copyTrackForPlaylist(
-  playlistId: number,
-  sourcePath: string | null,
-): Promise<string | null> {
-  if (!sourcePath) {
-    return null;
-  }
-  try {
-    await fs.promises.access(sourcePath);
-    const playlistDir = getPlaylistDir(playlistId);
-    await fs.promises.mkdir(playlistDir, { recursive: true });
-    const destination = await findNonCollidingFileAsync(
-      playlistDir,
-      path.basename(sourcePath),
-    );
-    await fs.promises.copyFile(sourcePath, destination);
-    return destination;
-  } catch {
-    return null;
-  }
-}
-
 async function materializeImportSourceOnce(importSourceId: number): Promise<void> {
   const db = getDb();
   const source = db.prepare(
@@ -128,20 +103,13 @@ async function materializeImportSourceOnce(importSourceId: number): Promise<void
       continue;
     }
 
-    const playlistFilePath = await copyTrackForPlaylist(
-      source.playlist_id,
-      item.source_file_path,
-    );
     try {
       db.prepare(
         `INSERT INTO playlist_tracks (
            playlist_id, track_id, position, file_path, import_item_id
-         ) VALUES (?, ?, 0, ?, ?)`,
-      ).run(source.playlist_id, item.track_id, playlistFilePath, item.id);
+         ) VALUES (?, ?, 0, NULL, ?)`,
+      ).run(source.playlist_id, item.track_id, item.id);
     } catch (error) {
-      if (playlistFilePath) {
-        await fs.promises.unlink(playlistFilePath).catch(() => {});
-      }
       const existing = db.prepare(
         'SELECT id FROM playlist_tracks WHERE import_item_id = ?',
       ).get(item.id);

@@ -21,7 +21,10 @@ export interface PlaylistTrack {
 }
 
 /** Track data extended with the playlist_tracks row ID for unique identification. */
-export type PlaylistTrackEntry = import('./track').Track & { playlist_track_id: number };
+export type PlaylistTrackEntry = import('./track').Track & {
+  playlist_track_id: number;
+  position?: number;
+};
 
 export type SmartRuleOperator =
   | 'equals'

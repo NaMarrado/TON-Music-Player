@@ -30,7 +30,7 @@ export type {
   YouTubePlaylistTrack,
 } from './download';
 export type { SearchResult, SearchSource, SearchQuery } from './search';
-export type { SettingsMap, SettingKey } from './settings';
+export type { DownloadQualityProfile, SettingsMap, SettingKey } from './settings';
 export { PERSISTED_SETTING_DEFAULTS, SETTING_DEFAULTS } from './settings';
 export type {
   CloudLibraryManifestV1,

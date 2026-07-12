@@ -46,6 +46,7 @@ export function hydrateQueueItem(row: QueueRow): QueueItem {
       coverUrl: row.cover_url,
       sourceUrl: row.url || '',
       playlistId: row.playlist_id,
+      qualityProfile: row.quality_profile === 'best_compatible' ? 'best_compatible' : 'normal',
     },
     status: normalizedStatus,
     progress: Math.max(

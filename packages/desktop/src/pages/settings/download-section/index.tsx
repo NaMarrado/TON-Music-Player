@@ -1,4 +1,4 @@
-import { SectionHeader } from '../helpers';
+import { SectionHeader, ToggleSwitch } from '../helpers';
 import { BinaryStatusPanel } from './binary-status-panel';
 import { useDownloadSection } from './use-download-section';
 import type { SettingsLayout } from '../use-settings-layout';
@@ -17,6 +17,8 @@ export function DownloadSection({
     isLoadingBinaryStatuses,
     isRepairingBinaries,
     repairBinaries,
+    qualityProfile,
+    setQualityProfile,
     sortedBinaryStatuses,
   } = useDownloadSection();
 
@@ -52,8 +54,33 @@ export function DownloadSection({
               fontWeight: 500,
             }}
           >
-            MP3 320 kbps
+            {qualityProfile === 'best_compatible'
+              ? t('downloadQualityBestValue')
+              : t('downloadQualityNormalValue')}
           </span>
+        </div>
+
+        <div
+          className="flex justify-between gap-3"
+          style={{
+            alignItems: layout.compact ? 'flex-start' : 'center',
+            flexDirection: layout.compact ? 'column' : 'row',
+          }}
+        >
+          <div>
+            <div style={{ fontSize: '0.78rem', color: 'var(--text-primary)', fontWeight: 500 }}>
+              {t('downloadQualityBest')}
+            </div>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: 3 }}>
+              {t('downloadQualityWarning')}
+            </div>
+          </div>
+          <ToggleSwitch
+            enabled={qualityProfile === 'best_compatible'}
+            onClick={() => void setQualityProfile(
+              qualityProfile === 'best_compatible' ? 'normal' : 'best_compatible',
+            )}
+          />
         </div>
 
         <div>

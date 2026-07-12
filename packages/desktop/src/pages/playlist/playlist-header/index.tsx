@@ -9,7 +9,6 @@ import type { PlaylistLayout } from '../playlist-page/use-playlist-layout';
 export function PlaylistHeader({
   filterQuery,
   isSmart,
-  onAddToLibrary,
   onDelete,
   onEdit,
   onExport,
@@ -119,7 +118,6 @@ export function PlaylistHeader({
             isSmart={isSmart}
             t={t}
             tracksCount={tracks.length}
-            onAddToLibrary={onAddToLibrary}
             onDelete={onDelete}
             onEdit={onEdit}
             onExport={onExport}

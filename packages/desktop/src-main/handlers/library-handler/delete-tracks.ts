@@ -14,7 +14,7 @@ async function deleteFilesBestEffort(paths: Array<string | null | undefined>): P
 
 export async function handleLibraryDeleteTracks(
   trackIds: number[],
-  mode: LibraryDeleteMode = 'everywhere',
+  _mode: LibraryDeleteMode = 'everywhere',
 ): Promise<LibraryDeleteTracksResult> {
   const uniqueTrackIds = Array.from(new Set(trackIds));
   if (uniqueTrackIds.length === 0) {
@@ -26,30 +26,6 @@ export async function handleLibraryDeleteTracks(
   const tracks = db
     .prepare(`SELECT id, file_path, cover_art_path FROM tracks WHERE id IN (${placeholders})`)
     .all(...uniqueTrackIds) as Array<{ id: number; file_path: string; cover_art_path: string | null }>;
-
-  if (mode === 'library-only') {
-    db.prepare(`UPDATE tracks SET in_library = 0 WHERE id IN (${placeholders})`).run(...uniqueTrackIds);
-
-    const refsStmt = db.prepare('SELECT COUNT(*) as c FROM playlist_tracks WHERE track_id = ?');
-    const orphanedTrackIds: number[] = [];
-    const orphanedPaths: Array<string | null> = [];
-
-    for (const track of tracks) {
-      const refs = refsStmt.get(track.id) as { c: number };
-      if (refs.c === 0) {
-        orphanedTrackIds.push(track.id);
-        orphanedPaths.push(track.file_path, track.cover_art_path);
-      }
-    }
-
-    if (orphanedTrackIds.length > 0) {
-      const orphanPlaceholders = orphanedTrackIds.map(() => '?').join(',');
-      db.prepare(`DELETE FROM tracks WHERE id IN (${orphanPlaceholders})`).run(...orphanedTrackIds);
-      await deleteFilesBestEffort(orphanedPaths);
-    }
-
-    return { deleted: uniqueTrackIds.length };
-  }
 
   const playlistCopies = db.prepare(
     `SELECT file_path FROM playlist_tracks WHERE track_id IN (${placeholders}) AND file_path IS NOT NULL`,

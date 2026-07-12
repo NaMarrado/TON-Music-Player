@@ -21,7 +21,7 @@ export async function downloadItem(
       kind: 'download-resolve',
       lane: 'network',
       priority: 'user-visible',
-      run: () => resolveDownloadUrl(item, callbacks),
+      run: () => resolveDownloadUrl(item, callbacks, abortSignal),
     });
     if (abortSignal.aborted) {
       return;

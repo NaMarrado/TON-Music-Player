@@ -19,9 +19,6 @@ export type SmokeSummary = {
   scanResult: { imported: number; skipped: number };
   rescanResult: { imported: number; skipped: number };
   duplicateStatus: { total: number; existing: number } | null;
-  playlistStatusBefore: { total: number; alreadyInLibrary: number; newTracks: number };
-  addToLibraryResult: { added: number; skipped: number };
-  playlistStatusAfter: { total: number; alreadyInLibrary: number; newTracks: number };
   folderExportResult: { trackCount: number; playlistCount: number; sizeBytes: number };
   folderImportResult: { importedTracks: number; skippedTracks: number; importedPlaylists: number };
   loudnessStats: { total: number; analyzed: number; missing: number };

@@ -10,7 +10,7 @@ import { clearProgressTracking } from './progress';
 import type { QueueRuntimeState } from './runtime';
 import { replaceQueueItem, updateQueueItem } from './mutations';
 import { upsertTrackById, useLibraryStore } from '../../stores/library-store';
-import { refreshPlaylistsById } from '../../stores/playlist-store';
+import { mergeCompletedTrackIntoPlaylists } from '../../stores/playlist-store';
 import { getTrackById } from '../db-queries';
 import type { DownloadFormat } from '../downloader';
 import { settlePlaylistImportQueueItem } from '../playlist-import/targets';
@@ -63,7 +63,7 @@ export async function completeQueueItem(
   await updateQueueItemStatus(itemId, 'completed');
 
   const affectedPlaylistIds = await settlePlaylistImportQueueItem(itemId, trackId);
-  await refreshPlaylistsById(affectedPlaylistIds);
+  await mergeCompletedTrackIntoPlaylists(trackId, affectedPlaylistIds);
 
   if (useLibraryStore.getState().hasLoaded) {
     await upsertTrackById(trackId);

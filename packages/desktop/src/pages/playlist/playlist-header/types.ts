@@ -14,5 +14,4 @@ export interface PlaylistHeaderProps {
   onExport: () => void;
   onDelete: () => void;
   onRemoveSelected: () => void;
-  onAddToLibrary: () => void;
 }

@@ -6,7 +6,7 @@ import {
   getAudioUrlViaIos,
   getAudioUrlViaMweb,
 } from './audio-strategies';
-import { isIosCompatibleAudioMimeType } from './audio-strategies/format-helpers';
+import { isAacM4aAudioMimeType } from './audio-strategies/format-helpers';
 import { validateIosAudioCandidate } from './audio-strategies/validation';
 import {
   getAndroidCandidateViolation,
@@ -74,8 +74,8 @@ function ensurePlatformCompatibleAudio(
     return resolved;
   }
 
-  if (!isIosCompatibleAudioMimeType(resolved.mimeType)) {
-    throw new Error(`${strategy}: incompatible iOS audio format (${resolved.mimeType})`);
+  if (!isAacM4aAudioMimeType(resolved.mimeType)) {
+    throw new Error(`${strategy}: incompatible AAC/M4A audio format (${resolved.mimeType})`);
   }
 
   return resolved;

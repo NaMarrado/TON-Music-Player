@@ -1,11 +1,17 @@
 import path from 'path';
+import fs from 'fs';
 import Database from 'better-sqlite3';
 import { migrateSchema } from '../../services/database/migrations';
 import { createSchema } from '../../services/database/schema';
+import { migrateCanonicalLibraryStorage } from '../../services/database/canonical-library-migration';
 import { assert } from './assert';
 
 export function runLegacyDatabaseMigrationCheck(rootDir: string): void {
-  const db = new Database(path.join(rootDir, 'legacy-migration.db'));
+  const databasePath = path.join(rootDir, 'legacy-migration.db');
+  fs.rmSync(databasePath, { force: true });
+  fs.rmSync(`${databasePath}-wal`, { force: true });
+  fs.rmSync(`${databasePath}-shm`, { force: true });
+  const db = new Database(databasePath);
   db.pragma('foreign_keys = ON');
   db.exec(`
     CREATE TABLE tracks (
@@ -85,13 +91,25 @@ export function runLegacyDatabaseMigrationCheck(rootDir: string): void {
       FOREIGN KEY (playlist_id) REFERENCES playlists(id) ON DELETE SET NULL
     );
 
-    INSERT INTO tracks (file_path, title) VALUES ('legacy.mp3', 'Legacy track');
-    INSERT INTO playlists (name) VALUES ('Legacy playlist');
-    INSERT INTO playlist_tracks (playlist_id, track_id, position) VALUES (1, 1, 0);
   `);
+
+  const libraryDir = path.join(rootDir, 'canonical-library');
+  const playlistDir = path.join(libraryDir, 'Playlists', '1');
+  fs.mkdirSync(playlistDir, { recursive: true });
+  const playlistOnlyFile = path.join(playlistDir, 'legacy.mp3');
+  const playlistCopy = path.join(playlistDir, 'legacy-copy.mp3');
+  fs.writeFileSync(playlistOnlyFile, 'legacy-audio');
+  fs.writeFileSync(playlistCopy, 'legacy-audio');
+  db.prepare('INSERT INTO tracks (file_path, title, in_library) VALUES (?, ?, 0)')
+    .run(playlistOnlyFile, 'Legacy track');
+  db.prepare("INSERT INTO playlists (name) VALUES ('Legacy playlist')").run();
+  db.prepare(
+    'INSERT INTO playlist_tracks (playlist_id, track_id, position, file_path) VALUES (1, 1, 0, ?)',
+  ).run(playlistCopy);
 
   createSchema(db);
   migrateSchema(db);
+  migrateCanonicalLibraryStorage(db, libraryDir);
 
   const trackColumns = new Set(
     (db.prepare("PRAGMA table_info('tracks')").all() as Array<{ name: string }>)
@@ -105,6 +123,10 @@ export function runLegacyDatabaseMigrationCheck(rootDir: string): void {
     (db.prepare("PRAGMA table_info('playlist_tracks')").all() as Array<{ name: string }>)
       .map((column) => column.name),
   );
+  const downloadColumns = new Set(
+    (db.prepare("PRAGMA table_info('download_queue')").all() as Array<{ name: string }>)
+      .map((column) => column.name),
+  );
   const integrity = db.prepare('PRAGMA integrity_check').get() as {
     integrity_check: string;
   };
@@ -112,11 +134,23 @@ export function runLegacyDatabaseMigrationCheck(rootDir: string): void {
   assert(trackColumns.has('content_hash_sha256'), 'Expected cloud hash migration');
   assert(playlistColumns.has('cloud_id'), 'Expected playlist cloud ID migration');
   assert(playlistTrackColumns.has('import_item_id'), 'Expected playlist import migration');
+  assert(downloadColumns.has('quality_profile'), 'Expected queue quality profile migration');
   assert(integrity.integrity_check === 'ok', 'Expected migrated database integrity');
   assert(
     (db.prepare('SELECT COUNT(*) AS count FROM tracks').get() as { count: number }).count === 1,
     'Expected legacy track to survive migration',
   );
+  const migratedTrack = db.prepare(
+    'SELECT file_path, in_library FROM tracks WHERE id = 1',
+  ).get() as { file_path: string; in_library: number };
+  const migratedMembership = db.prepare(
+    'SELECT file_path FROM playlist_tracks WHERE id = 1',
+  ).get() as { file_path: string | null };
+  assert(migratedTrack.in_library === 1, 'Expected canonical track in Library');
+  assert(!migratedTrack.file_path.includes(`${path.sep}Playlists${path.sep}`), 'Expected canonical Library path');
+  assert(fs.existsSync(migratedTrack.file_path), 'Expected promoted canonical audio file');
+  assert(migratedMembership.file_path === null, 'Expected reference-only playlist membership');
+  assert(!fs.existsSync(playlistCopy), 'Expected legacy playlist copy cleanup');
   assert(
     (db.prepare('SELECT COUNT(*) AS count FROM playlist_tracks').get() as { count: number }).count === 1,
     'Expected legacy playlist membership to survive migration',

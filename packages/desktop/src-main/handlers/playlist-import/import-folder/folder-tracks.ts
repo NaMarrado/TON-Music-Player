@@ -1,9 +1,7 @@
-import fs from 'fs';
-import path from 'path';
 import type { Playlist } from '@ton/core';
 import { getDb } from '../../../services/database';
 import { getFileStatsAsync } from '../../../services/file-scanner';
-import { findNonCollidingFileAsync, getPlaylistDir } from '../../../services/library-paths';
+import { ensureInLibraryAsync, getLibraryDir } from '../../../services/library-paths';
 import { readTrackMetadata } from '../../../services/metadata-reader';
 import type { TrackMetaEntry } from '../../playlist-helpers';
 import { getExistingLibraryHashes } from '../hashes';
@@ -34,8 +32,7 @@ export async function importFolderTracks(
     .run(playlistName, coverPath || null);
   const playlistId = Number(playlistResult.lastInsertRowid);
 
-  const playlistDir = getPlaylistDir(playlistId);
-  await fs.promises.mkdir(playlistDir, { recursive: true });
+  const libraryDir = getLibraryDir();
 
   const insertStmt = db.prepare(`
     INSERT OR IGNORE INTO tracks (
@@ -44,15 +41,12 @@ export async function importFolderTracks(
       track_number, disc_number, duration_ms,
       genre, year, bitrate, sample_rate, format,
       cover_art_path, in_library
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
   `);
 
   const imported: ImportedPlaylistTrack[] = [];
 
   for (const sourceFile of sourceFiles) {
-    const playlistPath = await findNonCollidingFileAsync(playlistDir, path.basename(sourceFile));
-    await fs.promises.copyFile(sourceFile, playlistPath);
-
     const stats = await getFileStatsAsync(sourceFile);
     if (!stats) {
       continue;
@@ -60,19 +54,20 @@ export async function importFolderTracks(
 
     const meta = await readTrackMetadata(sourceFile, stats.size);
     await applySavedMetadata(meta, sourceFile, tracksMeta, artworkMap);
+    const libraryPath = await ensureInLibraryAsync(sourceFile, libraryDir);
 
     if (skipExisting && meta.file_hash && existingHashes.has(meta.file_hash)) {
       const existing = db
         .prepare('SELECT id FROM tracks WHERE file_hash = ? LIMIT 1')
         .get(meta.file_hash) as { id: number } | undefined;
       if (existing) {
-        imported.push({ trackId: existing.id, playlistPath });
+        imported.push({ trackId: existing.id });
       }
       continue;
     }
 
     const result = insertStmt.run(
-      playlistPath,
+      libraryPath,
       meta.file_hash,
       stats.size,
       stats.mtimeMs,
@@ -100,14 +95,14 @@ export async function importFolderTracks(
     } else {
       const existing = db
         .prepare('SELECT id FROM tracks WHERE file_path = ?')
-        .get(playlistPath) as { id: number } | undefined;
+        .get(libraryPath) as { id: number } | undefined;
       if (!existing) {
         continue;
       }
       trackId = existing.id;
     }
 
-    imported.push({ trackId, playlistPath });
+    imported.push({ trackId });
   }
 
   attachImportedTracks(db, playlistId, imported);

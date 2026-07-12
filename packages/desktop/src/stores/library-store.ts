@@ -123,10 +123,6 @@ export async function deleteTracks(
   return result.deleted;
 }
 
-export async function removeTracksFromLibraryOnly(trackIds: number[]): Promise<number> {
-  return deleteTracks(trackIds, 'library-only');
-}
-
 export async function deleteTracksEverywhere(trackIds: number[]): Promise<number> {
   return deleteTracks(trackIds, 'everywhere');
 }

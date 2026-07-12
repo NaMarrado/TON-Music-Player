@@ -4,7 +4,6 @@ import { getFilteredTracks } from '@ton/core';
 import { getAllTracks, getTrackById } from '../services/db-queries';
 import {
   deleteTracksEverywhere as deleteTrackRowsEverywhere,
-  removeTracksFromLibraryOnly as unsetTracksFromLibrary,
 } from '../services/track-removal';
 import { clearDeletedTracksFromPlayback } from '../services/playback-deletion-cleanup';
 
@@ -96,25 +95,6 @@ export function markTrackPlayed(trackId: number): void {
         : t,
     ),
   });
-}
-
-export async function removeTracksFromLibrary(trackIds: number[]): Promise<void> {
-  if (trackIds.length === 0) {
-    return;
-  }
-
-  const uniqueTrackIds = Array.from(new Set(trackIds));
-  const prevTracks = useLibraryStore.getState().tracks;
-  useLibraryStore.setState({
-    tracks: prevTracks.filter((track) => !uniqueTrackIds.includes(track.id)),
-  });
-
-  try {
-    await unsetTracksFromLibrary(uniqueTrackIds);
-  } catch (error) {
-    useLibraryStore.setState({ tracks: prevTracks });
-    throw error;
-  }
 }
 
 export async function deleteTracksEverywhere(trackIds: number[]): Promise<void> {

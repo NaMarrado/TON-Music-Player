@@ -3,10 +3,14 @@ import type { PlaylistTrackEntry } from '@ton/core';
 
 export function usePlaylistSelection(tracks: PlaylistTrackEntry[]) {
   const [selectedPlaylistTrackIds, setSelectedPlaylistTrackIds] = useState<number[]>([]);
+  const selectedPlaylistTrackIdSet = useMemo(
+    () => new Set(selectedPlaylistTrackIds),
+    [selectedPlaylistTrackIds],
+  );
 
   const selectedTracks = useMemo(
-    () => tracks.filter((track) => selectedPlaylistTrackIds.includes(track.playlist_track_id)),
-    [selectedPlaylistTrackIds, tracks],
+    () => tracks.filter((track) => selectedPlaylistTrackIdSet.has(track.playlist_track_id)),
+    [selectedPlaylistTrackIdSet, tracks],
   );
 
   const selectionActive = selectedPlaylistTrackIds.length > 0;
@@ -26,6 +30,7 @@ export function usePlaylistSelection(tracks: PlaylistTrackEntry[]) {
   return {
     clearSelection,
     selectedPlaylistTrackIds,
+    selectedPlaylistTrackIdSet,
     selectedTracks,
     selectionActive,
     toggleSelection,

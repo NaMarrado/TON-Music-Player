@@ -3,7 +3,6 @@ import type { Playlist, PlaylistTrackEntry, SmartPlaylistConfig, Track } from '@
 import { buildSmartPlaylistQuery } from '@ton/core';
 import { getDb } from '../../services/database';
 import { normalizePlaylistCover, normalizePlaylistCovers } from './cover-paths';
-import { getPlaylistLibraryStatus, addPlaylistTracksToLibrary } from '../playlist-library-status';
 
 export function registerPlaylistQueryHandlers(): void {
   ipcMain.handle('playlist:list', async () => {
@@ -33,8 +32,7 @@ export function registerPlaylistQueryHandlers(): void {
     }
 
     const tracks = db.prepare(
-      `SELECT t.*, pt.id as playlist_track_id, pt.position,
-              COALESCE(pt.file_path, t.file_path) as file_path
+      `SELECT t.*, pt.id as playlist_track_id, pt.position
        FROM tracks t
        JOIN playlist_tracks pt ON pt.track_id = t.id
        WHERE pt.playlist_id = ?
@@ -50,11 +48,20 @@ export function registerPlaylistQueryHandlers(): void {
     return db.prepare(sql).all(...params) as Track[];
   });
 
-  ipcMain.handle('playlist:library-status', (_event, playlistId: number) => (
-    getPlaylistLibraryStatus(playlistId)
-  ));
+  ipcMain.handle(
+    'playlist:get-track-memberships',
+    (_event, trackId: number, playlistIds: number[]) => {
+      if (playlistIds.length === 0) return [];
+      const db = getDb();
+      const placeholders = playlistIds.map(() => '?').join(',');
+      return db.prepare(
+        `SELECT t.*, pt.id AS playlist_track_id, pt.playlist_id, pt.position
+         FROM playlist_tracks pt
+         JOIN tracks t ON t.id = pt.track_id
+         WHERE pt.track_id = ? AND pt.playlist_id IN (${placeholders})
+         ORDER BY pt.playlist_id, pt.position`,
+      ).all(trackId, ...playlistIds);
+    },
+  );
 
-  ipcMain.handle('playlist:add-to-library', async (_event, playlistId: number, forceAll?: boolean) => (
-    addPlaylistTracksToLibrary(playlistId, forceAll)
-  ));
 }

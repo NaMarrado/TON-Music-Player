@@ -43,6 +43,7 @@ export async function downloadTrack(
   const { isCancelled, onCancelable, onProgress, onResolved } = options;
   let cancelRequested = false;
   let nativeCancel: (() => Promise<void>) | null = null;
+  let postprocessCancel: (() => Promise<void>) | null = null;
   let resolveController: AbortController | null = null;
 
   onCancelable?.(async () => {
@@ -51,6 +52,9 @@ export async function downloadTrack(
     const cancel = nativeCancel;
     nativeCancel = null;
     await cancel?.().catch(() => {});
+    const cancelPostprocess = postprocessCancel;
+    postprocessCancel = null;
+    await cancelPostprocess?.().catch(() => {});
   });
 
   await ensureMusicDir();
@@ -135,7 +139,13 @@ export async function downloadTrack(
       return finalizeDownloadedTrack(
         resolved as DownloadFinalizeInput,
         input,
-        { isCancelled: () => cancelRequested || isCancelled?.() === true },
+        {
+          isCancelled: () => cancelRequested || isCancelled?.() === true,
+          onCancelable: (cancel) => {
+            postprocessCancel = cancel;
+            if (cancelRequested || isCancelled?.()) void cancel().catch(() => {});
+          },
+        },
       );
     }
 

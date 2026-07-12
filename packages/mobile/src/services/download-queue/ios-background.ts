@@ -297,6 +297,9 @@ async function recoverInvalidCompletedBackgroundItem(
     queueItem.input,
     {
       isCancelled: () => queue.runtime.cancellingIds.has(item.itemId),
+      onCancelable: (cancel) => {
+        queue.runtime.activeDownloads.set(item.itemId, { cancel });
+      },
     },
   );
 
@@ -341,6 +344,9 @@ async function finalizeCompletedBackgroundItem(
     queueItem.input,
     {
       isCancelled: () => queue.runtime.cancellingIds.has(item.itemId),
+      onCancelable: (cancel) => {
+        queue.runtime.activeDownloads.set(item.itemId, { cancel });
+      },
     },
   );
 

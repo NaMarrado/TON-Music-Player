@@ -30,17 +30,6 @@ export type ScenarioScanResults = {
 export type ScenarioPlaylistResults = {
   importedPlaylistId: number;
   importedPlaylistName: string;
-  playlistStatusBefore: {
-    total: number;
-    alreadyInLibrary: number;
-    newTracks: number;
-  };
-  addToLibraryResult: { added: number; skipped: number };
-  playlistStatusAfter: {
-    total: number;
-    alreadyInLibrary: number;
-    newTracks: number;
-  };
 };
 
 export type ScenarioExportImportResults = {

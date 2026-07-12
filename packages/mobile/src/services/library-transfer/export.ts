@@ -111,9 +111,7 @@ async function buildExportPayload(
 
   const preparedTracks = [...preparedByHash.values()];
   const trackEntries = preparedTracks.map((prepared) => prepared.trackEntry);
-  const libraryTrackHashes = [...libraryTrackIds]
-    .map((trackId) => preparedByTrackId.get(trackId)?.fileHash)
-    .filter((value): value is string => Boolean(value));
+  const libraryTrackHashes = preparedTracks.map((prepared) => prepared.fileHash);
   const sizeBytes = preparedTracks.reduce(
     (sum, prepared) => sum + prepared.sizeBytes,
     0,

@@ -8,7 +8,8 @@ export interface DownloadRuntimeMeta {
 }
 
 export interface DownloadState {
-  items: DownloadItem[];
+  itemsById: Record<number, DownloadItem>;
+  orderedIds: number[];
   activeCount: number;
   isLoading: boolean;
   runtimeMetaById: Record<number, DownloadRuntimeMeta>;

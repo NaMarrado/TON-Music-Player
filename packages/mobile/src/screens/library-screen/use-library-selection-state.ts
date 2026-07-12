@@ -4,10 +4,11 @@ import type { Track } from '@ton/core';
 export function useLibrarySelectionState(displayTracks: Track[]) {
   const [selectedTrackIds, setSelectedTrackIds] = useState<number[]>([]);
   const [playlistPickerTrackIds, setPlaylistPickerTrackIds] = useState<number[] | null>(null);
+  const selectedTrackIdSet = useMemo(() => new Set(selectedTrackIds), [selectedTrackIds]);
 
   const selectedTracks = useMemo(
-    () => displayTracks.filter((track) => selectedTrackIds.includes(track.id)),
-    [displayTracks, selectedTrackIds],
+    () => displayTracks.filter((track) => selectedTrackIdSet.has(track.id)),
+    [displayTracks, selectedTrackIdSet],
   );
 
   const selectionActive = selectedTrackIds.length > 0;
@@ -28,6 +29,7 @@ export function useLibrarySelectionState(displayTracks: Track[]) {
     clearSelection,
     playlistPickerTrackIds,
     selectedTrackIds,
+    selectedTrackIdSet,
     selectedTracks,
     selectionActive,
     setPlaylistPickerTrackIds,

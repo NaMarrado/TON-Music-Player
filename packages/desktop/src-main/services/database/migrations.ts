@@ -70,6 +70,10 @@ export function migrateSchema(db: Database.Database): void {
     db.exec('ALTER TABLE download_queue ADD COLUMN resolved_cover_url TEXT');
   }
 
+  if (!downloadColumnNames.has('quality_profile')) {
+    db.exec("ALTER TABLE download_queue ADD COLUMN quality_profile TEXT NOT NULL DEFAULT 'normal'");
+  }
+
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_tracks_content_hash_sha256 ON tracks(content_hash_sha256);
     DROP INDEX IF EXISTS idx_playlists_cloud_id;
@@ -77,5 +81,6 @@ export function migrateSchema(db: Database.Database): void {
     CREATE UNIQUE INDEX IF NOT EXISTS idx_playlist_tracks_import_item ON playlist_tracks(import_item_id);
     CREATE INDEX IF NOT EXISTS idx_playlist_import_items_queue ON playlist_import_items(queue_id);
     CREATE INDEX IF NOT EXISTS idx_playlist_import_items_track ON playlist_import_items(track_id);
+    CREATE INDEX IF NOT EXISTS idx_playlist_tracks_track_playlist_position ON playlist_tracks(track_id, playlist_id, position);
   `);
 }

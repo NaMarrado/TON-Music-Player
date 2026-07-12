@@ -28,8 +28,9 @@ async function getClient(): Promise<Innertube> {
 export async function searchYouTube(
   query: string,
   limit = SEARCH_RESULTS_LIMIT,
+  signal?: AbortSignal,
 ): Promise<SearchResult[]> {
-  const response = await searchYouTubePage(query, limit, 0);
+  const response = await searchYouTubePage(query, limit, 0, signal);
   return response.results;
 }
 
@@ -37,6 +38,7 @@ export async function searchYouTubePage(
   query: string,
   limit = SEARCH_RESULTS_LIMIT,
   offset = 0,
+  signal?: AbortSignal,
 ): Promise<{ results: SearchResult[]; hasMore: boolean }> {
   const normalizedQuery = query.trim();
   if (!normalizedQuery) {
@@ -46,19 +48,20 @@ export async function searchYouTubePage(
   const sessionKey = normalizedQuery.toLowerCase();
 
   try {
+    throwIfSearchAborted(signal);
     const yt = await getClient();
     let session = offset > 0 ? youtubeSearchSessions.get(sessionKey) : null;
 
     if (!session) {
       session = {
-        search: await yt.search(normalizedQuery, { type: 'video' }),
+        search: await raceSearchAbort(yt.search(normalizedQuery, { type: 'video' }), signal),
         results: [],
       };
       youtubeSearchSessions.set(sessionKey, session);
       trimYouTubeSearchSessions();
     }
 
-    await fillYouTubeSearchSession(session, offset + limit);
+    await raceSearchAbort(fillYouTubeSearchSession(session, offset + limit), signal);
     if (offset === 0 && session.results.length === 0) {
       throw new Error('YouTube.js returned no search results');
     }
@@ -69,14 +72,29 @@ export async function searchYouTubePage(
     };
   } catch (primaryError) {
     youtubeSearchSessions.delete(sessionKey);
+    throwIfSearchAborted(signal);
     try {
-      return await searchYouTubeWithYtDlp(normalizedQuery, limit, offset);
+      return await searchYouTubeWithYtDlp(normalizedQuery, limit, offset, signal);
     } catch (fallbackError) {
       throw new Error(
         `YouTube search failed (${getErrorMessage(primaryError)}); yt-dlp fallback failed (${getErrorMessage(fallbackError)})`,
       );
     }
   }
+}
+
+function throwIfSearchAborted(signal?: AbortSignal): void {
+  if (signal?.aborted) throw new Error('Cancelled');
+}
+
+function raceSearchAbort<T>(promise: Promise<T>, signal?: AbortSignal): Promise<T> {
+  if (!signal) return promise;
+  throwIfSearchAborted(signal);
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = () => reject(new Error('Cancelled'));
+    signal.addEventListener('abort', onAbort, { once: true });
+    promise.then(resolve, reject).finally(() => signal.removeEventListener('abort', onAbort));
+  });
 }
 
 function getErrorMessage(error: unknown): string {

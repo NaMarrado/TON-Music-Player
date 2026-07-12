@@ -13,7 +13,9 @@ export interface ResolvedDesktopDownload {
 export async function resolveDownloadUrl(
   item: DownloadItem,
   callbacks: DownloadCallbacks,
+  signal?: AbortSignal,
 ): Promise<ResolvedDesktopDownload> {
+  throwIfAborted(signal);
   if (item.source !== 'spotify') {
     if (!item.url) {
       throw new Error('No download URL');
@@ -44,7 +46,8 @@ export async function resolveDownloadUrl(
   });
 
   const searchQuery = `${item.artist || ''} - ${item.title || ''}`.trim();
-  const youtubeResults = await searchYouTube(searchQuery, 10);
+  const youtubeResults = await searchYouTube(searchQuery, 10, signal);
+  throwIfAborted(signal);
   const candidates: MatchCandidate[] = youtubeResults.map((result) => ({
     id: result.id,
     title: result.title,
@@ -74,4 +77,8 @@ export async function resolveDownloadUrl(
   };
   persistResolvedDownload(item.id, resolved);
   return resolved;
+}
+
+function throwIfAborted(signal?: AbortSignal): void {
+  if (signal?.aborted) throw new Error('Cancelled');
 }

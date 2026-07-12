@@ -32,6 +32,7 @@ export function LibraryScreen() {
     removePromptTitle,
     removePromptVisible,
     selectedTrackIds,
+    selectedTrackIdSet,
     setPlaylistPickerTrackIds,
     setShowCreatePlaylist,
     setShowSortMenu,
@@ -73,7 +74,7 @@ export function LibraryScreen() {
         renderItem={({ item, index }) => (
           <TrackRow
             track={item}
-            selected={selectedTrackIds.includes(item.id)}
+            selected={selectedTrackIdSet.has(item.id)}
             selectionMode={selectionActive}
             onPress={() => handleTrackPress(item, index)}
             onLongPress={() => handleTrackLongPress(item)}

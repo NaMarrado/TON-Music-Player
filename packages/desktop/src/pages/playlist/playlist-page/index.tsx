@@ -9,26 +9,21 @@ export function PlaylistPage() {
   const layout = usePlaylistLayout();
   const {
     actions: {
-      doAddToLibrary,
       handleDelete,
       handleExport,
       handleImport,
       handlePlayAll,
       handlePlayTrack,
       handleRemoveSelected,
-      libraryCounts,
-      openAddToLibrary,
     },
     dnd: { handleDragEnd, sensors },
     pageData: {
       isLoading,
       playingPtId,
       playlist,
-      setShowAddToLibrary,
       setShowDeleteConfirm,
       setShowEditDialog,
       setShowRemoveConfirm,
-      showAddToLibrary,
       showDeleteConfirm,
       showEditDialog,
       showRemoveConfirm,
@@ -76,10 +71,6 @@ export function PlaylistPage() {
         onExport={handleExport}
         onDelete={() => setShowDeleteConfirm(true)}
         onRemoveSelected={() => setShowRemoveConfirm(true)}
-        onAddToLibrary={async () => {
-          await openAddToLibrary();
-          setShowAddToLibrary(true);
-        }}
       />
 
       <PlaylistDialogSection
@@ -87,25 +78,14 @@ export function PlaylistPage() {
         t={t}
         showDeleteConfirm={showDeleteConfirm}
         showRemoveConfirm={showRemoveConfirm}
-        showAddToLibrary={showAddToLibrary}
         showEditDialog={showEditDialog}
-        libraryCounts={libraryCounts}
         onCloseDelete={() => setShowDeleteConfirm(false)}
         onCloseRemove={() => setShowRemoveConfirm(false)}
-        onCloseAddToLibrary={() => setShowAddToLibrary(false)}
         onCloseEdit={() => setShowEditDialog(false)}
         onConfirmDelete={handleDelete}
         onConfirmRemove={async () => {
           setShowRemoveConfirm(false);
           await handleRemoveSelected();
-        }}
-        onAddOnlyNew={async () => {
-          setShowAddToLibrary(false);
-          await doAddToLibrary(false);
-        }}
-        onAddAll={async () => {
-          setShowAddToLibrary(false);
-          await doAddToLibrary(true);
         }}
       />
 

@@ -3,7 +3,6 @@ import {
   deleteTracks,
   getPlaylistReferenceCounts,
   getTrackAssetRowsByIds,
-  updateTracksInLibrary,
 } from './db-queries';
 
 async function deleteFilesBestEffort(paths: Array<string | null | undefined>): Promise<void> {
@@ -18,15 +17,6 @@ async function deleteFilesBestEffort(paths: Array<string | null | undefined>): P
 
 export async function getTrackPlaylistReferenceCounts(trackIds: number[]): Promise<Record<number, number>> {
   return getPlaylistReferenceCounts(Array.from(new Set(trackIds)));
-}
-
-export async function removeTracksFromLibraryOnly(trackIds: number[]): Promise<void> {
-  const uniqueTrackIds = Array.from(new Set(trackIds));
-  if (uniqueTrackIds.length === 0) {
-    return;
-  }
-
-  await updateTracksInLibrary(uniqueTrackIds, 0);
 }
 
 export async function deleteTracksEverywhere(trackIds: number[]): Promise<void> {

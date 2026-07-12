@@ -56,11 +56,11 @@ export function attachImportedTracks(
   }
 
   const addStmt = db.prepare(
-    'INSERT INTO playlist_tracks (playlist_id, track_id, position, file_path) VALUES (?, ?, ?, ?)',
+    'INSERT INTO playlist_tracks (playlist_id, track_id, position, file_path) VALUES (?, ?, ?, NULL)',
   );
   db.transaction(() => {
     for (let index = 0; index < imported.length; index += 1) {
-      addStmt.run(playlistId, imported[index].trackId, index, imported[index].playlistPath);
+      addStmt.run(playlistId, imported[index].trackId, index);
     }
   })();
 }

@@ -200,12 +200,7 @@ export function mergeCloudLibraryManifests(
     updated_at: Math.max(remote.updated_at, local.updated_at),
     device_id: local.device_id,
     revision: local.revision,
-    library_track_hashes: [
-      ...new Set([
-        ...remote.library_track_hashes,
-        ...local.library_track_hashes,
-      ]),
-    ].filter((hash) => tracks.has(hash)),
+    library_track_hashes: [...tracks.keys()],
     tracks: [...tracks.values()].sort((left, right) => right.added_at - left.added_at),
     playlists: [...playlists.values()].sort((left, right) => (
       left.sort_order - right.sort_order || right.updated_at - left.updated_at

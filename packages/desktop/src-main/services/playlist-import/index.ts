@@ -46,14 +46,13 @@ function getExistingTrackIds(playlist: LoadedPlaylistImport): Map<string, number
 function toDownloadRequest(
   playlist: LoadedPlaylistImport,
   track: PlaylistImportTrack,
-  format: 'mp3' | 'opus',
 ): DownloadRequest {
   return {
     album: track.album ?? undefined,
     artist: track.artist,
     cover_url: playlist.source === 'spotify' ? undefined : track.coverUrl ?? undefined,
     duration_ms: track.durationMs,
-    format,
+    format: 'm4a',
     source: playlist.source,
     source_id: track.sourceTrackId,
     title: track.title,
@@ -77,7 +76,6 @@ function findActiveDuplicate(
 
 export async function importDesktopPlaylistToDownloads(
   playlist: LoadedPlaylistImport,
-  format: 'mp3' | 'opus',
 ): Promise<PlaylistImportResult> {
   const snapshot = await replaceDesktopPlaylistImportSnapshot(playlist);
   const queue = getDownloadQueue();
@@ -118,7 +116,7 @@ export async function importDesktopPlaylistToDownloads(
     } else {
       pendingBySource.set(key, {
         importItemIds: [item.id],
-        request: toDownloadRequest(playlist, track, format),
+        request: toDownloadRequest(playlist, track),
       });
     }
   }

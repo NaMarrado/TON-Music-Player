@@ -78,46 +78,6 @@ export async function runPlaylistLibraryChecks(
   );
   assert(importedPlaylist && !('empty' in importedPlaylist), 'Expected playlist import to create a playlist');
 
-  const playlistStatusBefore = await invoke<{
-    total: number;
-    alreadyInLibrary: number;
-    newTracks: number;
-  }>('playlist:library-status', importedPlaylist.id);
-  assert(playlistStatusBefore.total === 1, `Expected playlist total=1, got ${playlistStatusBefore.total}`);
-  assert(
-    playlistStatusBefore.alreadyInLibrary === 0,
-    `Expected alreadyInLibrary=0, got ${playlistStatusBefore.alreadyInLibrary}`,
-  );
-  assert(
-    playlistStatusBefore.newTracks === 1,
-    `Expected newTracks=1, got ${playlistStatusBefore.newTracks}`,
-  );
-
-  const addToLibraryResult = await invoke<{ added: number; skipped: number }>(
-    'playlist:add-to-library',
-    importedPlaylist.id,
-    false,
-  );
-  assert(addToLibraryResult.added === 1, `Expected add-to-library added=1, got ${addToLibraryResult.added}`);
-  assert(
-    addToLibraryResult.skipped === 0,
-    `Expected add-to-library skipped=0, got ${addToLibraryResult.skipped}`,
-  );
-
-  const playlistStatusAfter = await invoke<{
-    total: number;
-    alreadyInLibrary: number;
-    newTracks: number;
-  }>('playlist:library-status', importedPlaylist.id);
-  assert(
-    playlistStatusAfter.alreadyInLibrary === 1,
-    `Expected alreadyInLibrary=1 after add, got ${playlistStatusAfter.alreadyInLibrary}`,
-  );
-  assert(
-    playlistStatusAfter.newTracks === 0,
-    `Expected newTracks=0 after add, got ${playlistStatusAfter.newTracks}`,
-  );
-
   const db = getDb();
   const importedTrack = db
     .prepare(`
@@ -138,9 +98,6 @@ export async function runPlaylistLibraryChecks(
   return {
     importedPlaylistId: importedPlaylist.id,
     importedPlaylistName: importedPlaylist.name ?? 'Imported playlist',
-    playlistStatusBefore,
-    addToLibraryResult,
-    playlistStatusAfter,
   };
 }
 

@@ -1,7 +1,6 @@
 import type { Playlist } from '@ton/core';
 import type { TFunction } from 'i18next';
 import { EditPlaylistDialog } from '../../edit-dialog';
-import { AddToLibraryDialog } from './add-to-library-dialog';
 import { ConfirmDialog } from './confirm-dialog';
 
 type PlaylistDialogsProps = {
@@ -9,17 +8,12 @@ type PlaylistDialogsProps = {
   t: TFunction<'pages/playlist'>;
   showDeleteConfirm: boolean;
   showRemoveConfirm: boolean;
-  showAddToLibrary: boolean;
   showEditDialog: boolean;
-  libraryCounts: { total: number; alreadyInLibrary: number; newTracks: number } | null;
   onCloseDelete: () => void;
   onCloseRemove: () => void;
-  onCloseAddToLibrary: () => void;
   onCloseEdit: () => void;
   onConfirmDelete: () => void;
   onConfirmRemove: () => void;
-  onAddOnlyNew: () => void;
-  onAddAll: () => void;
 };
 
 export function PlaylistDialogs({
@@ -27,17 +21,12 @@ export function PlaylistDialogs({
   t,
   showDeleteConfirm,
   showRemoveConfirm,
-  showAddToLibrary,
   showEditDialog,
-  libraryCounts,
   onCloseDelete,
   onCloseRemove,
-  onCloseAddToLibrary,
   onCloseEdit,
   onConfirmDelete,
   onConfirmRemove,
-  onAddOnlyNew,
-  onAddAll,
 }: PlaylistDialogsProps) {
   return (
     <>
@@ -57,16 +46,6 @@ export function PlaylistDialogs({
           onCancel={onCloseRemove}
           onConfirm={onConfirmRemove}
           title={t('confirmRemove')}
-          t={t}
-        />
-      )}
-
-      {showAddToLibrary && libraryCounts && (
-        <AddToLibraryDialog
-          libraryCounts={libraryCounts}
-          onAddAll={onAddAll}
-          onAddOnlyNew={onAddOnlyNew}
-          onClose={onCloseAddToLibrary}
           t={t}
         />
       )}

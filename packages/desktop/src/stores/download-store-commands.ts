@@ -29,8 +29,13 @@ export async function loadDownloads(): Promise<void> {
 
 export async function startDownload(request: DownloadRequest): Promise<number> {
   try {
-    const id = (await ipc('download:start', request)) as number;
-    appendDownloadItem(createPendingDownloadItem(id, request));
+    const storedProfile = request.quality_profile
+      ?? (await ipc('settings:get', 'download_quality_profile') === 'best_compatible'
+        ? 'best_compatible'
+        : 'normal');
+    const persistedRequest = { ...request, quality_profile: storedProfile };
+    const id = (await ipc('download:start', persistedRequest)) as number;
+    appendDownloadItem(createPendingDownloadItem(id, persistedRequest));
     return id;
   } catch (error) {
     showToast(error instanceof Error ? error.message : 'Failed to start download', 'error');
@@ -51,7 +56,8 @@ export async function cancelDownload(id: number): Promise<void> {
 
 export async function cancelAllDownloads(): Promise<void> {
   await ipc('download:cancel-all');
-  const { items } = useDownloadStore.getState();
+  const state = useDownloadStore.getState();
+  const items = state.orderedIds.map((id) => state.itemsById[id]).filter(Boolean);
   const cancellableStatuses = new Set(['pending', 'downloading', 'resolving', 'converting']);
 
   for (const item of items) {

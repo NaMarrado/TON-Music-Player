@@ -24,12 +24,29 @@ export async function getPlaylistTracks(
 ): Promise<PlaylistTrackEntry[]> {
   const db = getDb();
   return db.getAllAsync<PlaylistTrackEntry>(
-    `SELECT t.*, pt.id as playlist_track_id
+    `SELECT t.*, pt.id as playlist_track_id, pt.position
      FROM playlist_tracks pt
      JOIN tracks t ON t.id = pt.track_id
      WHERE pt.playlist_id = ?
      ORDER BY pt.position ASC`,
     [playlistId],
+  );
+}
+
+export async function getPlaylistMembershipsForTrack(
+  trackId: number,
+  playlistIds: number[],
+): Promise<Array<PlaylistTrackEntry & { playlist_id: number; position: number }>> {
+  if (playlistIds.length === 0) return [];
+  const db = getDb();
+  const placeholders = playlistIds.map(() => '?').join(',');
+  return db.getAllAsync<PlaylistTrackEntry & { playlist_id: number; position: number }>(
+    `SELECT t.*, pt.id AS playlist_track_id, pt.playlist_id, pt.position
+     FROM playlist_tracks pt
+     JOIN tracks t ON t.id = pt.track_id
+     WHERE pt.track_id = ? AND pt.playlist_id IN (${placeholders})
+     ORDER BY pt.playlist_id, pt.position`,
+    [trackId, ...playlistIds],
   );
 }
 

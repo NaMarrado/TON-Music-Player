@@ -8,7 +8,7 @@ import { getPlayerClient, resetPlayerClient } from '../client';
 import { MWEB_ANDROID_UA, MWEB_IOS_UA } from '../constants';
 import { YouTubeResolverError, isYouTubeResolverError } from '../errors';
 import type { ResolvedAudioUrl } from '../types';
-import { isIosCompatibleAudioMimeType, toContentLength } from './format-helpers';
+import { isAacM4aAudioMimeType, toContentLength } from './format-helpers';
 import { validateAndroidMwebCandidate } from './validation';
 
 type StreamingFormat = {
@@ -99,7 +99,7 @@ async function resolveMwebCandidate(
   parsedUrl.searchParams.set('pot', videoToken.poToken);
 
   const mimeType = format.mime_type || 'audio/mp4';
-  if (!isIosCompatibleAudioMimeType(mimeType)) {
+  if (!isAacM4aAudioMimeType(mimeType)) {
     throw new YouTubeResolverError({
       message: `MWEB returned incompatible audio format (${mimeType})`,
       stage: 'candidate',

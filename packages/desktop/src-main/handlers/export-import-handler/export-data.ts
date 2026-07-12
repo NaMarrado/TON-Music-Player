@@ -124,12 +124,9 @@ export async function loadExportBundleData(selection?: ExportSelection): Promise
     .map((trackId) => exportableTrackById.get(trackId) ?? null)
     .filter((track): track is ExportableTrackRow => Boolean(track));
 
-  const libraryTrackHashes = includeLibrary
-    ? tracks
-      .filter((track) => track.in_library === 1)
-      .map((track) => track.file_hash)
-      .filter((value): value is string => Boolean(value))
-    : [];
+  const libraryTrackHashes = tracks
+    .map((track) => track.file_hash)
+    .filter((value): value is string => Boolean(value));
 
   const trackEntries: ExportBundleData['trackEntries'] = [];
   const trackFiles: ExportBundleData['trackFiles'] = [];

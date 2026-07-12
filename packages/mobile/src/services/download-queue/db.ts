@@ -5,8 +5,8 @@ import type { QueueRow } from './types';
 export async function insertQueueItemRecord(input: DownloadInput): Promise<number> {
   const db = getDb();
   const result = await db.runAsync(
-    `INSERT INTO download_queue (url, source, source_id, title, artist, album, cover_url, playlist_id, duration_ms, format, status)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'webm', 'pending')`,
+    `INSERT INTO download_queue (url, source, source_id, title, artist, album, cover_url, playlist_id, duration_ms, format, quality_profile, status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'm4a', ?, 'pending')`,
     [
       input.sourceUrl,
       input.source,
@@ -17,6 +17,7 @@ export async function insertQueueItemRecord(input: DownloadInput): Promise<numbe
       input.coverUrl,
       input.playlistId,
       input.durationMs,
+      input.qualityProfile ?? 'normal',
     ],
   );
   return result.lastInsertRowId;
@@ -35,8 +36,8 @@ export async function insertQueueItemRecords(
   await db.withExclusiveTransactionAsync(async (txn) => {
     for (const input of inputs) {
       const result = await txn.runAsync(
-        `INSERT INTO download_queue (url, source, source_id, title, artist, album, cover_url, playlist_id, duration_ms, format, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'webm', 'pending')`,
+        `INSERT INTO download_queue (url, source, source_id, title, artist, album, cover_url, playlist_id, duration_ms, format, quality_profile, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'm4a', ?, 'pending')`,
         [
           input.sourceUrl,
           input.source,
@@ -47,6 +48,7 @@ export async function insertQueueItemRecords(
           input.coverUrl,
           input.playlistId,
           input.durationMs,
+          input.qualityProfile ?? 'normal',
         ],
       );
 

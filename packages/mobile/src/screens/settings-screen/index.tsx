@@ -19,6 +19,7 @@ import { SettingsGroup } from './primitives';
 import { SpotifyCard } from './spotify-card';
 import { CloudCard } from './cloud-card';
 import { CommunityCard } from './community-card';
+import { DownloadQualityCard } from './download-quality-card';
 import { UpdateCard } from './update-card';
 import { useSettingsScreen } from './use-settings-screen';
 import { usePlaylistStore } from '../../stores/playlist-store';
@@ -84,6 +85,8 @@ export function SettingsScreen() {
     spotifySecret,
     transferProgress,
     updateResult,
+    downloadQualityProfile,
+    setDownloadQualityProfile,
   } = useSettingsScreen();
 
   const updateStatusText =
@@ -162,6 +165,18 @@ export function SettingsScreen() {
           isImporting={isImportingLibrary}
           onExport={() => void openExportPicker()}
           onImport={() => void importLibrary()}
+        />
+      </SettingsGroup>
+
+      <SettingsGroup label={t('downloadGroup')}>
+        <DownloadQualityCard
+          profile={downloadQualityProfile}
+          title={t('downloadQualityTitle')}
+          description={t('downloadQualityDescription')}
+          normalLabel={t('downloadQualityNormalValue')}
+          bestLabel={t('downloadQualityBestValue')}
+          warning={t('downloadQualityWarning')}
+          onChange={setDownloadQualityProfile}
         />
       </SettingsGroup>
 

@@ -15,20 +15,7 @@ export function insertImportedLibrary(
   sendProgress: (data: ProgressPayload) => void,
 ): InsertImportedLibraryResult {
   const db = getDb();
-  const bundleType = manifest.bundle_type === 'playlist'
-    ? 'playlist'
-    : (manifest.bundle_type === 'library'
-      ? 'library'
-      : (manifest.library_track_hashes !== undefined && manifest.library_track_hashes.length === 0 && manifest.playlists.length > 0
-        ? 'playlist'
-        : 'library'));
-  const libraryTrackHashes = new Set(
-    bundleType === 'playlist'
-      ? (manifest.library_track_hashes ?? [])
-      : (manifest.library_track_hashes && manifest.library_track_hashes.length > 0
-        ? manifest.library_track_hashes
-        : manifest.tracks.map((track) => track.file_hash)),
-  );
+  const libraryTrackHashes = new Set(manifest.tracks.map((track) => track.file_hash));
   const insertTrack = db.prepare(`
     INSERT INTO tracks (
       file_path, file_hash, title, artist, album,
@@ -61,7 +48,7 @@ export function insertImportedLibrary(
         file.meta.duration_ms,
         file.meta.loudness_lufs,
         file.meta.loudness_gain,
-        libraryTrackHashes.has(file.hash) ? 1 : 0,
+        1,
       );
     }
 

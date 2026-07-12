@@ -17,7 +17,6 @@ type PlaylistHeaderSectionProps = {
   onExport: () => void;
   onDelete: () => void;
   onRemoveSelected: () => void;
-  onAddToLibrary: () => Promise<void>;
 };
 
 export function PlaylistHeaderSection({
@@ -34,7 +33,6 @@ export function PlaylistHeaderSection({
   onExport,
   onDelete,
   onRemoveSelected,
-  onAddToLibrary,
 }: PlaylistHeaderSectionProps) {
   return (
     <PlaylistHeader
@@ -52,7 +50,6 @@ export function PlaylistHeaderSection({
       onExport={onExport}
       onDelete={onDelete}
       onRemoveSelected={onRemoveSelected}
-      onAddToLibrary={onAddToLibrary}
     />
   );
 }

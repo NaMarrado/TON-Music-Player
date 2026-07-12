@@ -55,10 +55,6 @@ export function PlaylistTrackList({
   }
 
   return (
-    <div
-      className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden"
-      style={{ padding: `8px ${layout.contentPaddingX}px 120px` }}
-    >
       <SortablePlaylistTrackList
         layout={layout}
         t={t}
@@ -76,6 +72,5 @@ export function PlaylistTrackList({
         onPlayTrack={onPlayTrack}
         onToggleSelect={onToggleSelect}
       />
-    </div>
   );
 }

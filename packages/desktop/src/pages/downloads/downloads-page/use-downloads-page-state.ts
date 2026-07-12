@@ -11,7 +11,9 @@ import {
 import { showToast } from '../../../stores/toast-store';
 
 export function useDownloadsPageState() {
-  const items = useDownloadStore((state) => state.items);
+  const orderedIds = useDownloadStore((state) => state.orderedIds);
+  const itemsById = useDownloadStore((state) => state.itemsById);
+  const items = orderedIds.map((id) => itemsById[id]).filter(Boolean);
   const [showClearMenu, setShowClearMenu] = useState(false);
   const [showCancelAllDialog, setShowCancelAllDialog] = useState(false);
   const [isCancellingAll, setIsCancellingAll] = useState(false);

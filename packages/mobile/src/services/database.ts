@@ -40,15 +40,10 @@ export async function closeDatabase(): Promise<void> {
 }
 
 async function seedDefaults(database: SQLiteDatabase): Promise<void> {
-  const row = await database.getFirstAsync<{ c: number }>(
-    'SELECT COUNT(*) as c FROM settings',
-  );
-  if (row && row.c > 0) return;
-
   await database.withExclusiveTransactionAsync(async (txn) => {
     for (const [key, value] of Object.entries(PERSISTED_SETTING_DEFAULTS)) {
       await txn.runAsync(
-        'INSERT INTO settings (key, value) VALUES (?, ?)',
+        'INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)',
         [key, String(value)],
       );
     }

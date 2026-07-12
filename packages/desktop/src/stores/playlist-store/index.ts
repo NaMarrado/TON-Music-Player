@@ -1,5 +1,10 @@
 export { usePlaylistStore } from './store';
-export { loadPlaylist, loadPlaylists, loadSmartPlaylistTracks } from './loaders';
+export {
+  loadPlaylist,
+  loadPlaylists,
+  loadSmartPlaylistTracks,
+  mergeCompletedTrackIntoPlaylists,
+} from './loaders';
 export {
   addTracksToPlaylist,
   createPlaylist,
@@ -10,9 +15,7 @@ export {
   updatePlaylist,
 } from './mutations';
 export {
-  addPlaylistToLibrary,
   checkDuplicates,
-  checkLibraryStatus,
   exportPlaylist,
   importFilesToPlaylist,
   importFolderAsPlaylist,

@@ -34,12 +34,8 @@ function throwIfCancelled(signal?: AbortSignal): void {
 
 function getFileExtension(mimeType: string): string {
   const normalized = mimeType.toLowerCase();
-  if (normalized.includes('webm')) return '.webm';
   if (normalized.includes('mp4') || normalized.includes('x-m4a')) return '.m4a';
-  if (normalized.includes('aac')) return '.aac';
-  if (normalized.includes('mpeg') || normalized.includes('mp3')) return '.mp3';
-  if (normalized.includes('ogg') || normalized.includes('opus')) return '.opus';
-  return '.opus';
+  throw new Error(`incompatible_download_mime:${mimeType}`);
 }
 
 export async function resolveVideoMatch(

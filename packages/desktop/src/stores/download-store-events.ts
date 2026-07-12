@@ -18,7 +18,7 @@ import {
 } from './download-store-state';
 import { loadDownloads } from './download-store-commands';
 import { countPerfEvent } from '../utils/perf';
-import { loadPlaylist, loadPlaylists, usePlaylistStore } from './playlist-store';
+import { mergeCompletedTrackIntoPlaylists } from './playlist-store';
 
 export function subscribeToDownloadEvents(): () => void {
   const handleProgress = (data: unknown) => {
@@ -44,7 +44,7 @@ export function subscribeToDownloadEvents(): () => void {
     countPerfEvent('downloads:complete-event');
     const event = data as DownloadCompleteEvent;
     clearRuntimeMeta(event.id);
-    const item = useDownloadStore.getState().items.find((entry) => entry.id === event.id);
+    const item = useDownloadStore.getState().itemsById[event.id];
     const title = item?.title || 'Download';
     showToast(`${title} — completed`, 'success');
     const wasPatched = patchDownloadItem(event.id, (entry) => ({
@@ -59,11 +59,7 @@ export function subscribeToDownloadEvents(): () => void {
     }
 
     if (event.playlistIds?.length) {
-      void loadPlaylists({ force: true });
-      const currentPlaylistId = usePlaylistStore.getState().currentPlaylist?.id;
-      if (currentPlaylistId != null && event.playlistIds.includes(currentPlaylistId)) {
-        void loadPlaylist(currentPlaylistId);
-      }
+      void mergeCompletedTrackIntoPlaylists(event.trackId, event.playlistIds);
     }
 
     if (!useLibraryStore.getState().hasLoaded) {
@@ -80,7 +76,7 @@ export function subscribeToDownloadEvents(): () => void {
     countPerfEvent('downloads:error-event');
     const event = data as DownloadErrorEvent;
     clearRuntimeMeta(event.id);
-    const item = useDownloadStore.getState().items.find((entry) => entry.id === event.id);
+    const item = useDownloadStore.getState().itemsById[event.id];
     const title = item?.title || 'Download';
     showToast(`${title} — failed`, 'error', 5000);
     const wasPatched = patchDownloadItem(event.id, (entry) => ({

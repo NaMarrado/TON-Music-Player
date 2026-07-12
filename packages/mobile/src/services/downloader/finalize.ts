@@ -17,6 +17,7 @@ export interface DownloadFinalizeInput {
 
 export interface DownloadFinalizeOptions {
   isCancelled?: () => boolean;
+  onCancelable?: (cancel: () => Promise<void>) => void;
 }
 
 export async function finalizeDownloadedTrack(
@@ -24,7 +25,7 @@ export async function finalizeDownloadedTrack(
   input: DownloadInput,
   options: DownloadFinalizeOptions = {},
 ): Promise<DownloadResult> {
-  const { isCancelled } = options;
+  const { isCancelled, onCancelable } = options;
 
   if (isCancelled?.()) {
     await cleanupFailedDownload(prepared.filePath);
@@ -34,6 +35,9 @@ export async function finalizeDownloadedTrack(
   const normalized = await normalizeDownloadedAudioForPlayback({
     filePath: prepared.filePath,
     format: prepared.format,
+  }, {
+    qualityProfile: input.qualityProfile ?? 'normal',
+    onCancelable,
   });
 
   if (isCancelled?.()) {

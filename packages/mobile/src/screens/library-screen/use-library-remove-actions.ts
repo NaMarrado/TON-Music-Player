@@ -1,7 +1,6 @@
 import { useCallback, useState } from 'react';
 import {
   deleteTracksEverywhere,
-  removeTracksFromLibrary,
 } from '../../stores/library-store';
 import { showToast } from '../../stores/toast-store';
 import { getTrackPlaylistReferenceCounts } from '../../services/track-removal';
@@ -19,24 +18,7 @@ export function useLibraryRemoveActions(
 ) {
   const [removePrompt, setRemovePrompt] = useState<RemovePromptState | null>(null);
 
-  const removeSelectedTracks = useCallback(async (
-    trackIds: number[],
-    playlistReferenceCounts: Record<number, number>,
-    mode: 'library-only' | 'everywhere',
-  ) => {
-    if (mode === 'library-only') {
-      const libraryOnlyTrackIds = trackIds.filter(
-        (trackId) => (playlistReferenceCounts[trackId] ?? 0) > 0,
-      );
-      const deleteEverywhereTrackIds = trackIds.filter(
-        (trackId) => (playlistReferenceCounts[trackId] ?? 0) === 0,
-      );
-
-      await removeTracksFromLibrary(libraryOnlyTrackIds);
-      await deleteTracksEverywhere(deleteEverywhereTrackIds);
-      return;
-    }
-
+  const removeSelectedTracks = useCallback(async (trackIds: number[]) => {
     await deleteTracksEverywhere(trackIds);
   }, []);
 
@@ -53,7 +35,7 @@ export function useLibraryRemoveActions(
       );
 
       if (!hasPlaylistReferences) {
-        await removeSelectedTracks(selectedIds, playlistReferenceCounts, 'everywhere');
+        await removeSelectedTracks(selectedIds);
         showToast(
           selectedIds.length === 1 ? t('trackRemoved') : t('tracksRemoved'),
           'success',
@@ -75,15 +57,15 @@ export function useLibraryRemoveActions(
     setRemovePrompt(null);
   }, []);
 
-  const completePromptRemoval = useCallback(async (mode: 'library-only' | 'everywhere') => {
+  const completePromptRemoval = useCallback(async () => {
     if (!removePrompt) {
       return;
     }
 
-    const { trackIds, playlistReferenceCounts } = removePrompt;
+    const { trackIds } = removePrompt;
 
     try {
-      await removeSelectedTracks(trackIds, playlistReferenceCounts, mode);
+      await removeSelectedTracks(trackIds);
       showToast(
         trackIds.length === 1 ? t('trackRemoved') : t('tracksRemoved'),
         'success',
@@ -97,18 +79,11 @@ export function useLibraryRemoveActions(
 
   const removePromptOptions: ActionSheetOption[] = removePrompt ? [
     {
-      label: t('removeOnlyFromLibrary'),
-      icon: 'minus-circle',
-      onPress: () => {
-        void completePromptRemoval('library-only');
-      },
-    },
-    {
       label: t('deleteEverywhere'),
       icon: 'trash-2',
       destructive: true,
       onPress: () => {
-        void completePromptRemoval('everywhere');
+        void completePromptRemoval();
       },
     },
   ] : [];

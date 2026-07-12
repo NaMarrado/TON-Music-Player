@@ -4,6 +4,7 @@ import { BINARY_ORDER, isRequiredBinary, type DesktopBinaryStatus } from './type
 
 export function useDownloadSection() {
   const directory = useSetting('download_directory');
+  const qualityProfile = useSetting('download_quality_profile');
   const [downloadDir, setDownloadDir] = useState('');
   const [binaryStatuses, setBinaryStatuses] = useState<DesktopBinaryStatus[]>([]);
   const [isLoadingBinaryStatuses, setIsLoadingBinaryStatuses] = useState(false);
@@ -86,6 +87,8 @@ export function useDownloadSection() {
     isLoadingBinaryStatuses,
     isRepairingBinaries,
     repairBinaries,
+    qualityProfile: qualityProfile.value === 'best_compatible' ? 'best_compatible' as const : 'normal' as const,
+    setQualityProfile: qualityProfile.save,
     sortedBinaryStatuses,
   };
 }

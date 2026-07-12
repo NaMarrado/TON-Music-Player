@@ -2,7 +2,7 @@ import { IOS_UA, IOS_VERSION } from '../constants';
 import type { ResolvedAudioUrl } from '../types';
 import {
   getAudioFormats,
-  isIosCompatibleAudioMimeType,
+  isAacM4aAudioMimeType,
   sortFormatsByBitrateDescending,
   toContentLength,
 } from './format-helpers';
@@ -62,8 +62,10 @@ export async function getAudioUrlViaIos(
   }
 
   audioFormats.sort(sortFormatsByBitrateDescending);
-  const best = audioFormats.find((format) => isIosCompatibleAudioMimeType(format.mimeType))
-    ?? audioFormats[0];
+  const best = audioFormats.find((format) => isAacM4aAudioMimeType(format.mimeType));
+  if (!best) {
+    throw new Error('IOS player: no compatible AAC/M4A audio format');
+  }
 
   let finalUrl = best.url;
   if (!finalUrl && (best.signatureCipher || best.cipher)) {

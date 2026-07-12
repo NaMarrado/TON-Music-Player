@@ -1,5 +1,12 @@
 import type { RawAdaptiveFormat, RawStreamingData } from './types';
 
+function isAacM4aAudioMimeType(mimeType: string | undefined): boolean {
+  if (!mimeType) return false;
+  const normalized = mimeType.toLowerCase();
+  return normalized.startsWith('audio/mp4')
+    || normalized.startsWith('audio/x-m4a');
+}
+
 // Versions newer than 1.65 currently return SABR-only responses for this client.
 export const ANDROID_VR_CLIENT = Object.freeze({
   apiBaseUrl: 'https://youtubei.googleapis.com/youtubei/v1',
@@ -77,7 +84,7 @@ export function selectBestAndroidVrAudioFormat(
   streamingData: RawStreamingData,
 ): RawAdaptiveFormat | null {
   const candidates = (streamingData.adaptiveFormats ?? []).filter((format) => (
-    format.mimeType?.toLowerCase().startsWith('audio/')
+    isAacM4aAudioMimeType(format.mimeType)
     && Boolean(format.url || format.signatureCipher || format.cipher)
   ));
 

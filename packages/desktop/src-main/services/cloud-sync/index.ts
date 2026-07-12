@@ -17,7 +17,6 @@ import {
   buildCloudLibraryArtworkObjectKey,
   buildCloudLibraryAudioObjectKey,
   buildCloudManifestObjectKey,
-  buildCloudPlaylistAudioObjectKey,
   buildCloudPlaylistCoverObjectKey,
   buildCloudPlaylistFolderName,
   buildCloudRevision,
@@ -247,9 +246,7 @@ async function buildLocalManifest(
   }
 
   const contentHashByTrackId = new Map(localTracks.map((entry) => [entry.track.id, entry.contentHash]));
-  const libraryTrackHashes = localTracks
-    .filter((entry) => entry.track.in_library === 1)
-    .map((entry) => entry.contentHash);
+  const libraryTrackHashes = localTracks.map((entry) => entry.contentHash);
   const playlists = db.prepare('SELECT * FROM playlists ORDER BY sort_order ASC, updated_at DESC').all() as Playlist[];
   const playlistEntries: CloudPlaylistEntry[] = [];
 
@@ -406,7 +403,6 @@ export async function uploadMissingLocalToCloud(
       uploadTargetsByKey.set(target.key, target);
     }
   };
-  const localTrackByHash = new Map(localTracks.map((entry) => [entry.contentHash, entry]));
   const managedPlaylistKeys: ManagedPlaylistKeys = new Map();
   const cloudRoot = normalizeCloudPrefix(config.prefix);
 
@@ -422,33 +418,8 @@ export async function uploadMissingLocalToCloud(
     const playlistFolder = buildCloudPlaylistFolderName({ name: playlist.name, cloudId: playlist.cloud_id });
     const playlistTracksPrefix = `${cloudRoot}/playlists/${playlistFolder}/tracks/`;
     const playlistArtworkPrefix = `${cloudRoot}/playlists/${playlistFolder}/artwork/`;
+    managedPlaylistKeys.set(playlistTracksPrefix, new Set());
     addManagedPlaylistKey(managedPlaylistKeys, playlistArtworkPrefix, playlist.cover_object_key);
-    playlist.track_hashes.forEach((hash, index) => {
-      const entry = localTrackByHash.get(hash);
-      if (!entry) {
-        return;
-      }
-      const ext = extensionForTrack(entry.track.file_path, entry.track.format);
-      const playlistAudioObjectKey = buildCloudPlaylistAudioObjectKey(
-        config.prefix,
-        { name: playlist.name, cloudId: playlist.cloud_id },
-        index,
-        entry.contentHash,
-        ext,
-        {
-          title: entry.track.title,
-          artist: entry.track.artist,
-          fileName: path.basename(entry.track.file_path),
-        },
-      );
-      addManagedPlaylistKey(managedPlaylistKeys, playlistTracksPrefix, playlistAudioObjectKey);
-      addUploadTarget({
-        key: playlistAudioObjectKey,
-        filePath: entry.track.file_path,
-        contentType: contentTypeForExtension(ext),
-        hash: entry.contentHash,
-      });
-    });
   }
   for (const artwork of localArtworks) {
     addUploadTarget(artwork);
@@ -507,7 +478,6 @@ export async function fetchCloudLibraryToDesktop(
     ORDER BY id ASC
   `).all() as Array<{ id: number; content_hash_sha256: string }>;
   const trackIdByHash = new Map(existingRows.map((row) => [row.content_hash_sha256, row.id]));
-  const libraryHashes = new Set(manifest.library_track_hashes);
   const libraryDir = getLibraryDir();
   await fs.promises.mkdir(libraryDir, { recursive: true });
 
@@ -572,7 +542,7 @@ export async function fetchCloudLibraryToDesktop(
       track.soundcloud_id,
       track.source_url,
       track.metadata.rating,
-      libraryHashes.has(track.content_hash_sha256) ? 1 : 0,
+      1,
     );
     trackIdByHash.set(track.content_hash_sha256, Number(insertResult.lastInsertRowid));
     result.downloaded += 1;

@@ -6,6 +6,12 @@ export interface AndroidAudioCandidate {
 
 export type AndroidAudioStrategy = 'ANDROID_VR' | 'MWEB';
 
+function isAacAudio(mimeType: string): boolean {
+  const normalized = mimeType.toLowerCase();
+  return normalized.startsWith('audio/mp4')
+    || normalized.startsWith('audio/x-m4a');
+}
+
 function getHeader(headers: Record<string, string>, name: string): string {
   const entry = Object.entries(headers).find(
     ([key]) => key.toLowerCase() === name.toLowerCase(),
@@ -17,8 +23,8 @@ export function getAndroidCandidateViolation(
   strategy: AndroidAudioStrategy,
   candidate: AndroidAudioCandidate,
 ): string | null {
-  if (!candidate.mimeType.toLowerCase().startsWith('audio/')) {
-    return `${strategy} returned a non-audio format (${candidate.mimeType})`;
+  if (!isAacAudio(candidate.mimeType)) {
+    return `${strategy} returned non-AAC audio (${candidate.mimeType})`;
   }
 
   const userAgent = getHeader(candidate.headers, 'user-agent');

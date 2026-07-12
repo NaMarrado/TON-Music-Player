@@ -30,6 +30,7 @@ export {
   getPlaylistReferenceCounts,
   getPlaylistTrackCount,
   getPlaylistTracks,
+  getPlaylistMembershipsForTrack,
   removeTrackFromPlaylist,
   reorderPlaylistTracks,
   updatePlaylist,

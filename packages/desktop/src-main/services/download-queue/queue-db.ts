@@ -1,6 +1,17 @@
 import type { DownloadItem, DownloadRequest } from '@ton/core';
 import { getDb } from '../database';
 
+function resolveQualityProfile(request: DownloadRequest): DownloadItem['quality_profile'] {
+  if (request.quality_profile === 'best_compatible') {
+    return request.quality_profile;
+  }
+
+  const row = getDb().prepare(
+    "SELECT value FROM settings WHERE key = 'download_quality_profile'",
+  ).get() as { value: string } | undefined;
+  return row?.value === 'best_compatible' ? 'best_compatible' : 'normal';
+}
+
 export function resumeInterruptedDownloads(): void {
   getDb().prepare(
     `UPDATE download_queue SET status = 'pending', progress = 0
@@ -12,8 +23,8 @@ export function insertDownloadRequest(request: DownloadRequest): number {
   const result = getDb().prepare(
     `INSERT INTO download_queue (
       url, source, source_id, title, artist, album,
-      cover_url, playlist_id, duration_ms, format, status, priority
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
+      cover_url, playlist_id, duration_ms, format, quality_profile, status, priority
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
   ).run(
     request.url || null,
     request.source,
@@ -24,7 +35,8 @@ export function insertDownloadRequest(request: DownloadRequest): number {
     request.cover_url || null,
     request.playlist_id || null,
     request.duration_ms ?? null,
-    request.format || 'opus',
+    'm4a',
+    resolveQualityProfile(request),
     0,
   );
 

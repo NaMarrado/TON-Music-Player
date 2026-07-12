@@ -10,7 +10,7 @@
     "./i18n": "./src/i18n/setup.ts"
   },
   "dependencies": {
-    "@noble/hashes": "^1.8.0",
+    "@noble/hashes": "^2.2.0",
     "i18next": "^24.0.0"
   },
   "devDependencies": {

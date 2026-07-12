@@ -4,6 +4,7 @@ import { closeDatabase as closeDatabaseConnection, openDatabase } from './connec
 import { seedDefaults } from './defaults';
 import { migrateSchema } from './migrations';
 import { createSchema } from './schema';
+import { migrateCanonicalLibraryStorage } from './canonical-library-migration';
 
 export { getDb } from './connection';
 
@@ -14,6 +15,7 @@ export function initDatabase(): void {
   createSchema(db);
   migrateSchema(db);
   seedDefaults(db);
+  migrateCanonicalLibraryStorage(db, path.join(app.getPath('music'), 'TON'));
 }
 
 export function closeDatabase(): void {

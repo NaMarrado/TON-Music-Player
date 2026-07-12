@@ -17,10 +17,9 @@ export async function handleExportPlaylist(playlistId: number): Promise<string |
     .get(playlistId) as Playlist | undefined;
   if (!playlist) return null;
 
-  // Use COALESCE so we export the playlist's own file copies when available
   const tracks = db
     .prepare(
-      `SELECT t.*, COALESCE(pt.file_path, t.file_path) as file_path
+      `SELECT t.*
        FROM tracks t
        JOIN playlist_tracks pt ON pt.track_id = t.id
        WHERE pt.playlist_id = ?

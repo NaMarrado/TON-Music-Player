@@ -142,7 +142,7 @@ export async function getAudioUrlViaAndroidVR(
 
     return {
       url: parsedUrl.toString(),
-      mimeType: best.mimeType || 'audio/webm',
+      mimeType: best.mimeType || 'audio/mp4',
       contentLength: toContentLength(best.contentLength),
       headers: {
         Accept: '*/*',

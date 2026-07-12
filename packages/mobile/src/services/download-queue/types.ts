@@ -1,5 +1,6 @@
 import type { DownloadInput } from '../downloader';
 import type { DownloadFormat } from '../downloader';
+import type { DownloadQualityProfile } from '@ton/core';
 
 export type QueueStatus =
   | 'pending'
@@ -34,6 +35,7 @@ export interface QueueRow {
   retry_count: number;
   duration_ms: number | null;
   format: DownloadFormat;
+  quality_profile: DownloadQualityProfile;
   status: string;
   progress: number;
   error_message: string | null;

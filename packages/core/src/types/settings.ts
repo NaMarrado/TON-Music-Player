@@ -16,7 +16,7 @@ export interface SettingsMap {
   eq_preset: string;
   eq_bands: string;
   frequency_hz: number;
-  download_format: 'opus' | 'mp3';
+  download_quality_profile: DownloadQualityProfile;
   download_directory: string;
   concurrent_downloads: number;
   library_directories: string;
@@ -27,6 +27,8 @@ export interface SettingsMap {
   cloud_r2_last_revision: string;
   schema_version: string;
 }
+
+export type DownloadQualityProfile = 'normal' | 'best_compatible';
 
 export type SettingKey = keyof SettingsMap;
 
@@ -40,7 +42,7 @@ export const SETTING_DEFAULTS: SettingsMap = {
   eq_preset: 'flat',
   eq_bands: JSON.stringify(EQ_PRESETS.flat),
   frequency_hz: DEFAULT_FREQUENCY_HZ,
-  download_format: 'opus',
+  download_quality_profile: 'normal',
   download_directory: '',
   concurrent_downloads: 4,
   library_directories: '[]',
@@ -61,7 +63,7 @@ export const PERSISTED_SETTING_DEFAULTS = {
   eq_preset: 'flat',
   eq_bands: JSON.stringify(EQ_PRESETS.flat),
   frequency_hz: DEFAULT_FREQUENCY_HZ,
-  download_format: 'opus',
+  download_quality_profile: 'normal',
   download_directory: '',
   concurrent_downloads: 4,
   library_directories: '[]',

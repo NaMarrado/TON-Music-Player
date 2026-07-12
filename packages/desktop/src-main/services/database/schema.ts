@@ -84,7 +84,8 @@ export function createSchema(db: Database.Database): void {
       duration_ms     INTEGER,
       resolved_source_id TEXT,
       resolved_cover_url TEXT,
-      format          TEXT NOT NULL DEFAULT 'opus',
+      format          TEXT NOT NULL DEFAULT 'm4a',
+      quality_profile TEXT NOT NULL DEFAULT 'normal',
       status          TEXT NOT NULL DEFAULT 'pending',
       progress        REAL NOT NULL DEFAULT 0,
       error_message   TEXT,
@@ -168,6 +169,7 @@ export function createSchema(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_playlist_tracks_pos ON playlist_tracks(playlist_id, position);
     CREATE INDEX IF NOT EXISTS idx_playlist_tracks_track_id ON playlist_tracks(track_id);
     CREATE INDEX IF NOT EXISTS idx_playlist_tracks_playlist_track ON playlist_tracks(playlist_id, track_id);
+    CREATE INDEX IF NOT EXISTS idx_playlist_tracks_track_playlist_position ON playlist_tracks(track_id, playlist_id, position);
     CREATE INDEX IF NOT EXISTS idx_play_history_track ON play_history(track_id);
     CREATE INDEX IF NOT EXISTS idx_play_history_time ON play_history(played_at);
     CREATE INDEX IF NOT EXISTS idx_download_queue_status ON download_queue(status);

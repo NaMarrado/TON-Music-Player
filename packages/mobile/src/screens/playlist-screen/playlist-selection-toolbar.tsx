@@ -5,13 +5,11 @@ import { useScreenTopPadding } from '../../hooks/use-screen-top-padding';
 export function PlaylistSelectionToolbar({
   selectedCountLabel,
   onPlaySelection,
-  onAddSelectionToLibrary,
   onRemoveSelection,
   onClearSelection,
 }: {
   selectedCountLabel: string;
   onPlaySelection: () => void;
-  onAddSelectionToLibrary: () => void;
   onRemoveSelection: () => void;
   onClearSelection: () => void;
 }) {
@@ -28,9 +26,6 @@ export function PlaylistSelectionToolbar({
       <View className="flex-row items-center">
         <Pressable onPress={onPlaySelection} hitSlop={8} className="ml-4">
           <Feather name="play" size={20} color="#e8e8e8" />
-        </Pressable>
-        <Pressable onPress={onAddSelectionToLibrary} hitSlop={8} className="ml-4">
-          <Feather name="plus-circle" size={20} color="#e8e8e8" />
         </Pressable>
         <Pressable onPress={onRemoveSelection} hitSlop={8} className="ml-4">
           <Feather name="trash-2" size={20} color="#ef4444" />

@@ -4,6 +4,7 @@ export {
   getPlaylistReferenceCounts,
   getPlaylistTrackCount,
   getPlaylistTracks,
+  getPlaylistMembershipsForTrack,
 } from './playlist-reads';
 export {
   addTracksToPlaylist,

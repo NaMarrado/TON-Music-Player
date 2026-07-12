@@ -31,7 +31,7 @@ test('keeps server visitorData in both context and request headers', () => {
   assert.equal(headers['X-YouTube-Client-Version'], '1.65.10');
 });
 
-test('selects only the highest-bitrate resolvable audio format', () => {
+test('selects only the highest-bitrate resolvable AAC audio format', () => {
   const selected = selectBestAndroidVrAudioFormat({
     adaptiveFormats: [
       {
@@ -41,9 +41,16 @@ test('selects only the highest-bitrate resolvable audio format', () => {
         url: 'https://example.test/video',
       },
       {
-        bitrate: 320_000,
+        bitrate: 128_000,
         itag: 141,
         mimeType: 'audio/mp4; codecs="mp4a.40.2"',
+        url: 'https://example.test/audio-aac',
+      },
+      {
+        bitrate: 256_000,
+        itag: 256,
+        mimeType: 'audio/aac',
+        url: 'https://example.test/raw-aac',
       },
       {
         bitrate: 136_000,
@@ -60,8 +67,8 @@ test('selects only the highest-bitrate resolvable audio format', () => {
     ],
   });
 
-  assert.equal(selected?.itag, 250);
-  assert.match(selected?.mimeType ?? '', /^audio\//);
+  assert.equal(selected?.itag, 141);
+  assert.match(selected?.mimeType ?? '', /^audio\/mp4/);
 });
 
 test('rejects SABR-only audio metadata without a direct URL or cipher', () => {
@@ -81,14 +88,21 @@ test('rejects SABR-only audio metadata without a direct URL or cipher', () => {
 test('rejects video, Apple, foreign-client, and foreign-token Android candidates', () => {
   const validVr = {
     headers: { 'User-Agent': 'Firefox Android media client' },
-    mimeType: 'audio/webm; codecs="opus"',
+    mimeType: 'audio/mp4; codecs="mp4a.40.2"',
     url: 'https://rr.example.googlevideo.com/videoplayback?c=ANDROID_VR',
   };
 
   assert.equal(getAndroidCandidateViolation('ANDROID_VR', validVr), null);
   assert.match(
     getAndroidCandidateViolation('ANDROID_VR', { ...validVr, mimeType: 'video/mp4' }) ?? '',
-    /non-audio/,
+    /non-AAC/,
+  );
+  assert.match(
+    getAndroidCandidateViolation('ANDROID_VR', {
+      ...validVr,
+      mimeType: 'audio/webm; codecs="opus"',
+    }) ?? '',
+    /non-AAC/,
   );
   assert.match(
     getAndroidCandidateViolation('ANDROID_VR', {

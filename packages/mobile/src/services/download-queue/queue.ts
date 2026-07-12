@@ -14,6 +14,7 @@ import {
   requeueQueueItem,
   updateQueueItemRetry,
 } from './db';
+import { getSetting } from '../db-queries/settings';
 import {
   createPendingQueueItem,
   hydrateQueueItem,
@@ -55,9 +56,14 @@ export class MobileDownloadQueue {
   }
 
   async enqueue(input: DownloadInput): Promise<number> {
-    const id = await insertQueueItemRecord(input);
+    const qualityProfile = input.qualityProfile
+      ?? (await getSetting('download_quality_profile') === 'best_compatible'
+        ? 'best_compatible'
+        : 'normal');
+    const persistedInput = { ...input, qualityProfile };
+    const id = await insertQueueItemRecord(persistedInput);
     this.runtime.cancellingIds.delete(id);
-    this.runtime.items.push(createPendingQueueItem(id, input));
+    this.runtime.items.push(createPendingQueueItem(id, persistedInput));
     this.notify();
     this.processNext();
     void maybeStartDownloadBackgroundWork('resume', id);
@@ -79,7 +85,13 @@ export class MobileDownloadQueue {
     }
 
     const { notifyEvery = 20, onInserted, onProgress } = options;
-    const inserted = await insertQueueItemRecords(inputs);
+    const storedProfile = await getSetting('download_quality_profile');
+    const qualityProfile = storedProfile === 'best_compatible' ? 'best_compatible' : 'normal';
+    const persistedInputs = inputs.map((input) => ({
+      ...input,
+      qualityProfile: input.qualityProfile ?? qualityProfile,
+    }));
+    const inserted = await insertQueueItemRecords(persistedInputs);
     try {
       await onInserted?.(inserted);
     } catch (error) {

@@ -5,7 +5,6 @@ import { loadSoundCloudPlaylist, loadSpotifyPlaylist, loadYouTubePlaylist } from
 
 type PlaylistImportOptions = {
   url: string;
-  format?: 'opus' | 'mp3';
 };
 
 export function registerDownloadPlaylistImportHandler(): void {
@@ -14,8 +13,6 @@ export function registerDownloadPlaylistImportHandler(): void {
     if (!detected) {
       throw new Error('Unsupported playlist URL. Use Spotify, YouTube, or SoundCloud.');
     }
-
-    const format = options.format || 'opus';
 
     if (detected.source === 'spotify') {
       const result = await loadSpotifyPlaylist(detected.id);
@@ -39,7 +36,7 @@ export function registerDownloadPlaylistImportHandler(): void {
           title: track.title,
         })),
       };
-      return importDesktopPlaylistToDownloads(playlist, format);
+      return importDesktopPlaylistToDownloads(playlist);
     }
 
     if (detected.source === 'youtube') {
@@ -64,7 +61,7 @@ export function registerDownloadPlaylistImportHandler(): void {
           title: track.title,
         })),
       };
-      return importDesktopPlaylistToDownloads(playlist, format);
+      return importDesktopPlaylistToDownloads(playlist);
     }
 
     const result = await loadSoundCloudPlaylist(detected.id);
@@ -88,6 +85,6 @@ export function registerDownloadPlaylistImportHandler(): void {
         title: track.title,
       })),
     };
-    return importDesktopPlaylistToDownloads(playlist, format);
+    return importDesktopPlaylistToDownloads(playlist);
   });
 }

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router';
 import { TrackContextMenu } from '../context-menu';
 import { LibraryHeader } from '../library-header';
 import { TrackListView } from '../track-list-view';
-import { LibraryDeleteModeDialog } from './library-delete-mode-dialog';
 import { EmptyFilterState, EmptyLibraryState } from './empty-states';
 import { useLibraryPageActions } from './use-library-page-actions';
 import { useLibraryPageData } from './use-library-page-data';
@@ -48,17 +47,12 @@ export function LibraryPage() {
     handleBulkAddToPlaylist,
     handleContextMenu,
     handleDelete,
-    handleDeleteEverywhere,
     handleDeleteFromMenu,
-    handleDeleteLibraryOnly,
-    handleDismissDeleteModePrompt,
     handleExportLibrary,
     handleImport,
     handleOpenPlaylistPicker,
     handlePlayAll,
     handlePlayTrack,
-    deleteModePromptCount,
-    deleteModePromptOpen,
   } = useLibraryPageActions({
     contextMenu,
     filteredTracksRef,
@@ -132,19 +126,6 @@ export function LibraryPage() {
         />
       )}
 
-      {deleteModePromptOpen && (
-        <LibraryDeleteModeDialog
-          count={deleteModePromptCount}
-          onCancel={handleDismissDeleteModePrompt}
-          onDeleteEverywhere={() => {
-            void handleDeleteEverywhere();
-          }}
-          onRemoveFromLibraryOnly={() => {
-            void handleDeleteLibraryOnly();
-          }}
-          t={t}
-        />
-      )}
     </div>
   );
 }

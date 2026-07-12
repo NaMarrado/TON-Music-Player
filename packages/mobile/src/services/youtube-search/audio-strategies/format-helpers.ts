@@ -8,6 +8,13 @@ const IOS_COMPATIBLE_AUDIO_MIME_MARKERS = [
   'video/mp4',
 ];
 
+export function isAacM4aAudioMimeType(mimeType: string | undefined): boolean {
+  if (!mimeType) return false;
+  const normalized = mimeType.toLowerCase();
+  return normalized.startsWith('audio/mp4')
+    || normalized.startsWith('audio/x-m4a');
+}
+
 export function getAudioFormats(
   streamingData: RawStreamingData,
   allowCipheredFormats: boolean,

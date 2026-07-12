@@ -28,8 +28,6 @@ export function PlaylistScreen({ route }: Props) {
   const {
     clearSelection,
     cancelTransfer,
-    handleAddPlaylistToLibrary,
-    handleAddSelectionToLibrary,
     handleDelete,
     handleExportBundle,
     handleImportBundle,
@@ -43,6 +41,7 @@ export function PlaylistScreen({ route }: Props) {
     loadError,
     playlist,
     selectedPlaylistTrackIds,
+    selectedPlaylistTrackIdSet,
     setShowEditModal,
     showEditModal,
     selectionActive,
@@ -68,11 +67,6 @@ export function PlaylistScreen({ route }: Props) {
       onPress: () => setReorderMode(true),
     },
     {
-      label: t('addToLibrary'),
-      icon: 'plus-circle',
-      onPress: () => { void handleAddPlaylistToLibrary(); },
-    },
-    {
       label: t('importBundle'),
       icon: 'download',
       onPress: () => { void handleImportBundle(); },
@@ -95,7 +89,6 @@ export function PlaylistScreen({ route }: Props) {
       onPress: handleDelete,
     },
   ], [
-    handleAddPlaylistToLibrary,
     handleDelete,
     handleExportBundle,
     handleImportBundle,
@@ -127,7 +120,6 @@ export function PlaylistScreen({ route }: Props) {
         <PlaylistSelectionToolbar
           selectedCountLabel={t('selectedCount', { count: selectedPlaylistTrackIds.length })}
           onPlaySelection={handlePlaySelection}
-          onAddSelectionToLibrary={() => { void handleAddSelectionToLibrary(); }}
           onRemoveSelection={() => { void handleRemoveSelection(); }}
           onClearSelection={clearSelection}
         />
@@ -164,7 +156,7 @@ export function PlaylistScreen({ route }: Props) {
         renderItem={({ item, index }) => (
           <TrackRow
             track={item}
-            selected={selectedPlaylistTrackIds.includes(item.playlist_track_id)}
+            selected={selectedPlaylistTrackIdSet.has(item.playlist_track_id)}
             selectionMode={selectionActive && !reorderMode}
             disabled={reorderMode}
             leadingAccessory={reorderMode ? <PlaylistTrackNumber index={index} /> : undefined}

@@ -1,4 +1,5 @@
 import * as FileSystem from 'expo-file-system';
+import { Platform } from 'react-native';
 import type {
   CloudLibraryManifestV1,
   CloudPlaylistEntry,
@@ -15,7 +16,6 @@ import {
   buildCloudLibraryArtworkObjectKey,
   buildCloudLibraryAudioObjectKey,
   buildCloudManifestObjectKey,
-  buildCloudPlaylistAudioObjectKey,
   buildCloudPlaylistCoverObjectKey,
   buildCloudPlaylistFolderName,
   buildCloudRevision,
@@ -139,12 +139,18 @@ async function normalizeCloudAudioForPlayback(
   format: AudioFormat | null,
 ): Promise<{ filePath: string; format: AudioFormat | null }> {
   if (format !== 'm4a') {
+    if (Platform.OS === 'ios') {
+      await FileSystem.deleteAsync(filePath, { idempotent: true }).catch(() => {});
+      throw new Error(`cloud_audio_incompatible:${format ?? 'unknown'}`);
+    }
     return { filePath, format };
   }
 
   const normalized = await normalizeDownloadedAudioForPlayback({
     filePath,
     format: 'm4a',
+  }, {
+    qualityProfile: 'best_compatible',
   });
   return {
     filePath: normalized.filePath,
@@ -326,11 +332,7 @@ async function buildLocalManifest(
       updated_at: now,
       device_id: deviceId,
       revision,
-      library_track_hashes: [
-        ...new Set(localTracks
-          .filter((entry) => entry.track.in_library === 1)
-          .map((entry) => entry.contentHash)),
-      ],
+      library_track_hashes: [...new Set(localTracks.map((entry) => entry.contentHash))],
       tracks: trackEntries,
       playlists: playlistEntries,
     },
@@ -435,7 +437,6 @@ export async function uploadMissingLocalToCloud(
           uploadTargetsByKey.set(target.key, target);
         }
       };
-      const localTrackByHash = new Map(localTracks.map((entry) => [entry.contentHash, entry]));
       const managedPlaylistKeys: ManagedPlaylistKeys = new Map();
       const cloudRoot = normalizeCloudPrefix(config.prefix);
       for (const entry of localTracks) {
@@ -450,33 +451,8 @@ export async function uploadMissingLocalToCloud(
         const playlistFolder = buildCloudPlaylistFolderName({ name: playlist.name, cloudId: playlist.cloud_id });
         const playlistTracksPrefix = `${cloudRoot}/playlists/${playlistFolder}/tracks/`;
         const playlistArtworkPrefix = `${cloudRoot}/playlists/${playlistFolder}/artwork/`;
+        managedPlaylistKeys.set(playlistTracksPrefix, new Set());
         addManagedPlaylistKey(managedPlaylistKeys, playlistArtworkPrefix, playlist.cover_object_key);
-        playlist.track_hashes.forEach((hash, index) => {
-          const entry = localTrackByHash.get(hash);
-          if (!entry) {
-            return;
-          }
-          const ext = getFileExtension(entry.track.file_path, entry.track.format);
-          const playlistAudioObjectKey = buildCloudPlaylistAudioObjectKey(
-            config.prefix,
-            { name: playlist.name, cloudId: playlist.cloud_id },
-            index,
-            entry.contentHash,
-            ext,
-            {
-              title: entry.track.title,
-              artist: entry.track.artist,
-              fileName: getFileName(entry.track.file_path),
-            },
-          );
-          addManagedPlaylistKey(managedPlaylistKeys, playlistTracksPrefix, playlistAudioObjectKey);
-          addUploadTarget({
-            key: playlistAudioObjectKey,
-            filePath: entry.track.file_path,
-            contentType: contentTypeForExtension(ext),
-            hash: entry.contentHash,
-          });
-        });
       }
       for (const artwork of localArtworks) {
         addUploadTarget(artwork);
@@ -541,7 +517,6 @@ export async function fetchCloudLibrary(
          ORDER BY id ASC`,
       );
       const trackIdByHash = new Map(existingRows.map((row) => [row.content_hash_sha256, row.id]));
-      const libraryHashes = new Set(manifest.library_track_hashes);
       await ensureMusicDir();
       await ensureArtworkDir();
 
@@ -607,7 +582,7 @@ export async function fetchCloudLibrary(
           source_url: track.source_url,
           last_played_at: null,
           rating: track.metadata.rating,
-          in_library: libraryHashes.has(track.content_hash_sha256) ? 1 : 0,
+          in_library: 1,
         });
         trackIdByHash.set(track.content_hash_sha256, trackId);
         result.downloaded += 1;

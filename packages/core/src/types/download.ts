@@ -12,6 +12,7 @@ export interface DownloadItem {
   resolved_cover_url?: string | null;
   resolved_source_id?: string | null;
   format: string;
+  quality_profile: DownloadQualityProfile;
   status: DownloadStatus;
   progress: number;
   error_message: string | null;
@@ -42,8 +43,11 @@ export interface DownloadRequest {
   cover_url?: string;
   playlist_id?: number;
   format?: string;
+  quality_profile?: DownloadQualityProfile;
   duration_ms?: number;
 }
+
+import type { DownloadQualityProfile } from './settings';
 
 export interface DownloadProgressEvent {
   id: number;

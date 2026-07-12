@@ -14,7 +14,6 @@ export function usePlaylistPageData() {
   const queueIndex = useQueueStore((state) => state.currentIndex);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
-  const [showAddToLibrary, setShowAddToLibrary] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
 
   useEffect(() => {
@@ -34,11 +33,9 @@ export function usePlaylistPageData() {
     playingPtId,
     playlist,
     playlistId,
-    setShowAddToLibrary,
     setShowDeleteConfirm,
     setShowEditDialog,
     setShowRemoveConfirm,
-    showAddToLibrary,
     showDeleteConfirm,
     showEditDialog,
     showRemoveConfirm,

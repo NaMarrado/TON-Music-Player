@@ -4,6 +4,7 @@ import { useSpotifySettings } from './use-spotify-settings';
 import { useUpdateSettings } from './use-update-settings';
 import { useLibraryTransferActions } from './use-library-transfer-actions';
 import { useCloudSyncSettings } from './use-cloud-sync-settings';
+import { useDownloadQuality } from './use-download-quality';
 
 export function useSettingsScreen() {
   const languageSettings = useLanguageSettings();
@@ -12,6 +13,7 @@ export function useSettingsScreen() {
   const updateSettings = useUpdateSettings();
   const libraryTransferActions = useLibraryTransferActions();
   const cloudSyncSettings = useCloudSyncSettings();
+  const downloadQuality = useDownloadQuality();
 
   return {
     ...languageSettings,
@@ -20,5 +22,6 @@ export function useSettingsScreen() {
     ...updateSettings,
     ...libraryTransferActions,
     ...cloudSyncSettings,
+    ...downloadQuality,
   };
 }

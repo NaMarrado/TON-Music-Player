@@ -9,7 +9,6 @@ import {
 } from '../../stores/playlist-store';
 import { usePlaylistSelection } from './use-playlist-selection';
 import { usePlaylistPlaybackActions } from './use-playlist-playback-actions';
-import { usePlaylistLibraryActions } from './use-playlist-library-actions';
 import { usePlaylistTransferActions } from './use-playlist-transfer-actions';
 import { usePlaylistMutationActions } from './use-playlist-mutation-actions';
 
@@ -32,12 +31,6 @@ export function usePlaylistScreen(
     tracks,
     selection.selectedTracks,
     selection.clearSelection,
-  );
-  const libraryActions = usePlaylistLibraryActions(
-    tracks,
-    selection.selectedTracks,
-    selection.clearSelection,
-    t,
   );
   const transferActions = usePlaylistTransferActions(id, navigation, t);
   const mutationActions = usePlaylistMutationActions(
@@ -62,8 +55,6 @@ export function usePlaylistScreen(
     handleExportBundle: transferActions.handleExportBundle,
     handleImportBundle: transferActions.handleImportBundle,
     hasLoaded,
-    handleAddPlaylistToLibrary: libraryActions.handleAddPlaylistToLibrary,
-    handleAddSelectionToLibrary: libraryActions.handleAddSelectionToLibrary,
     handlePlay: playbackActions.handlePlay,
     handlePlaySelection: playbackActions.handlePlaySelection,
     handlePlayAll: playbackActions.handlePlayAll,
@@ -83,6 +74,7 @@ export function usePlaylistScreen(
     loadError: error === 'load-failed',
     playlist,
     selectedPlaylistTrackIds: selection.selectedPlaylistTrackIds,
+    selectedPlaylistTrackIdSet: selection.selectedPlaylistTrackIdSet,
     selectedTracks: selection.selectedTracks,
     selectionActive: selection.selectionActive,
     clearSelection: selection.clearSelection,

@@ -71,3 +71,30 @@ export async function loadSmartPlaylistTracks(
 ): Promise<PlaylistTrackEntry[]> {
   return (await invokeIpc('playlist:smart-query', config)) as PlaylistTrackEntry[];
 }
+
+export async function mergeCompletedTrackIntoPlaylists(
+  trackId: number,
+  playlistIds: number[],
+): Promise<void> {
+  const uniqueIds = [...new Set(playlistIds)];
+  if (uniqueIds.length === 0) return;
+  const memberships = await invokeIpc(
+    'playlist:get-track-memberships',
+    trackId,
+    uniqueIds,
+  ) as Array<PlaylistTrackEntry & { playlist_id: number; position: number }>;
+  const currentPlaylistId = usePlaylistStore.getState().currentPlaylist?.id;
+  if (currentPlaylistId == null || !uniqueIds.includes(currentPlaylistId)) return;
+  const incoming = memberships.filter((row) => row.playlist_id === currentPlaylistId);
+  if (incoming.length === 0) return;
+  const incomingIds = new Set(incoming.map((row) => row.playlist_track_id));
+  usePlaylistStore.setState((state) => ({
+    currentTracks: [
+      ...state.currentTracks.filter((row) => !incomingIds.has(row.playlist_track_id)),
+      ...incoming,
+    ].sort((left, right) => (
+      ((left as PlaylistTrackEntry & { position?: number }).position ?? Number.MAX_SAFE_INTEGER)
+      - ((right as PlaylistTrackEntry & { position?: number }).position ?? Number.MAX_SAFE_INTEGER)
+    )),
+  }));
+}
