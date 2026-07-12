@@ -12,7 +12,7 @@ const config: ExpoConfig = {
   android: {
     package: 'com.ton.player',
     versionCode: 1000012,
-    icon: './assets/icon.png',
+    icon: './assets/android-icon.png',
     permissions: [
       'android.permission.FOREGROUND_SERVICE',
       'android.permission.FOREGROUND_SERVICE_DATA_SYNC',

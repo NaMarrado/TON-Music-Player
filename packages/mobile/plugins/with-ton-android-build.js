@@ -174,44 +174,33 @@ function loadDownloadsModuleTemplate(fileName, packageName) {
 function patchAdaptiveIconResources(platformRoot) {
   const resRoot = path.join(platformRoot, 'app', 'src', 'main', 'res');
   const colorsPath = path.join(resRoot, 'values', 'colors.xml');
-  const adaptiveIconPaths = [
-    path.join(resRoot, 'mipmap-anydpi-v33', 'ic_launcher.xml'),
-    path.join(resRoot, 'mipmap-anydpi-v33', 'ic_launcher_round.xml'),
-  ];
+  const adaptiveIconXml = `<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+  <background android:drawable="@color/iconBackground" />
+  <foreground android:drawable="@mipmap/ic_launcher_foreground" />
+</adaptive-icon>
+`;
 
   if (fs.existsSync(colorsPath)) {
     const colorsContents = fs.readFileSync(colorsPath, 'utf8');
-    const nextColorsContents = colorsContents.replace(
-      '<color name="ic_launcher_bg">#00000000</color>',
-      '<color name="ic_launcher_bg">#000000</color>',
-    );
+    const nextColorsContents = colorsContents
+      .replace(
+        /(<color name="ic_launcher_bg">)[^<]*(<\/color>)/,
+        '$1#000000$2',
+      )
+      .replace(
+        /(<color name="iconBackground">)[^<]*(<\/color>)/,
+        '$1#000000$2',
+      );
     writeFileIfChanged(colorsPath, nextColorsContents);
   }
 
-  for (const iconPath of adaptiveIconPaths) {
-    if (!fs.existsSync(iconPath)) {
-      continue;
-    }
-
-    const iconContents = fs.readFileSync(iconPath, 'utf8');
-    const nextIconContents = iconContents
-      .replace('@color/ic_launcher_bg', '@color/iconBackground')
-      .replace(/\s*<monochrome android:drawable="@drawable\/ic_launcher_monochrome" \/>\n?/g, '\n');
-    writeFileIfChanged(iconPath, nextIconContents);
-  }
-}
-
-function removeDuplicateLegacyLauncherIcons(platformRoot) {
-  const resRoot = path.join(platformRoot, 'app', 'src', 'main', 'res');
-  const densities = ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi'];
-  const duplicateNames = ['ic_launcher.webp', 'ic_launcher_round.webp'];
-
-  for (const density of densities) {
-    for (const fileName of duplicateNames) {
-      const duplicatePath = path.join(resRoot, `mipmap-${density}`, fileName);
-      if (fs.existsSync(duplicatePath)) {
-        fs.rmSync(duplicatePath);
-      }
+  for (const apiLevel of ['v26', 'v33']) {
+    for (const iconName of ['ic_launcher.xml', 'ic_launcher_round.xml']) {
+      writeFileIfChanged(
+        path.join(resRoot, `mipmap-anydpi-${apiLevel}`, iconName),
+        adaptiveIconXml,
+      );
     }
   }
 }
@@ -448,7 +437,6 @@ module.exports = function withTonAndroidBuild(config) {
         getDownloadTaskServiceSource(packageName),
       );
       patchAdaptiveIconResources(platformRoot);
-      removeDuplicateLegacyLauncherIcons(platformRoot);
       patchDebugManifest(platformRoot);
 
       return androidConfig;
