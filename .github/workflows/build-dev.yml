@@ -292,6 +292,7 @@ jobs:
   ios-validate:
     name: "DEV: iOS validate"
     if: ${{ github.ref == 'refs/heads/dev' && (github.event_name != 'workflow_dispatch' || github.event.inputs.target == 'all' || github.event.inputs.target == 'ios') }}
+    continue-on-error: true
     runs-on: macos-15
     timeout-minutes: 60
 

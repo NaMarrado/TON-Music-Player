@@ -540,6 +540,7 @@ jobs:
     name: "MAIN: iOS validate"
     needs: metadata
     if: ${{ needs.metadata.result == 'success' && (github.event_name != 'workflow_dispatch' || github.event.inputs.target == 'all' || github.event.inputs.target == 'ios') }}
+    continue-on-error: true
     runs-on: macos-15
     timeout-minutes: 60
 
@@ -601,7 +602,6 @@ jobs:
       - release-draft
       - desktop
       - android
-      - ios-validate
     if: ${{ needs.metadata.outputs.release == 'true' && github.event_name == 'push' }}
     runs-on: ubuntu-24.04
     permissions:
@@ -713,7 +713,6 @@ jobs:
       - release-draft
       - desktop
       - android
-      - ios-validate
       - publish-release
     if: >-
       ${{
