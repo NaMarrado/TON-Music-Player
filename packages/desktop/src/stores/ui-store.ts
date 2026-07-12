@@ -15,6 +15,7 @@ interface UIState {
 const savedQueue = localStorage.getItem('ui:queueOpen');
 const savedSidebarCollapsed = localStorage.getItem('ui:sidebarCollapsed');
 const savedSidebarPreference = localStorage.getItem('ui:sidebarPreference');
+let sidebarPersistenceTimer: number | undefined;
 
 function getInitialSidebarPreference(): SidebarPreference {
   if (savedSidebarPreference === 'expanded' || savedSidebarPreference === 'collapsed') {
@@ -49,8 +50,12 @@ export function toggleQueue(): void {
 
 export function setSidebarPreference(nextPreference: SidebarPreference): void {
   useUIStore.setState({ sidebarPreference: nextPreference });
-  localStorage.setItem('ui:sidebarPreference', nextPreference);
-  localStorage.setItem('ui:sidebarCollapsed', String(nextPreference === 'collapsed'));
+
+  window.clearTimeout(sidebarPersistenceTimer);
+  sidebarPersistenceTimer = window.setTimeout(() => {
+    localStorage.setItem('ui:sidebarPreference', nextPreference);
+    localStorage.setItem('ui:sidebarCollapsed', String(nextPreference === 'collapsed'));
+  }, 0);
 }
 
 export function toggleSidebarPreference(): void {

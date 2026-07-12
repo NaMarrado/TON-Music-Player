@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Outlet } from 'react-router';
 import { useLocation } from 'react-router';
 import { Sidebar } from './sidebar';
@@ -11,7 +11,7 @@ import { useKeyboardShortcuts } from '../../hooks/use-keyboard-shortcuts';
 import { loadDownloads, subscribeToDownloadEvents } from '../../stores/download-store';
 import {
   setSidebarOverlayOpen,
-  toggleSidebarPreference,
+  setSidebarPreference,
   useSidebarInlineCollapsed,
   useSidebarOverlayEnabled,
   useUIStore,
@@ -37,6 +37,7 @@ export function MainLayout() {
   const sidebarOverlayOpen = useUIStore((s) => s.sidebarOverlayOpen);
   const sidebarPreference = useUIStore((s) => s.sidebarPreference);
   const queueOpen = useUIStore((s) => s.queueOpen);
+  const shellRef = useRef<HTMLDivElement>(null);
   const sidebarColumnWidth = isSidebarOverlayViewport
     ? DESKTOP_SIDEBAR_COLLAPSED_WIDTH
     : sidebarInlineCollapsed
@@ -90,7 +91,13 @@ export function MainLayout() {
       return;
     }
 
-    toggleSidebarPreference();
+    const nextPreference = sidebarPreference === 'collapsed' ? 'expanded' : 'collapsed';
+    const nextWidth = nextPreference === 'collapsed'
+      ? DESKTOP_SIDEBAR_COLLAPSED_WIDTH
+      : DESKTOP_SIDEBAR_EXPANDED_WIDTH;
+
+    shellRef.current?.style.setProperty('grid-template-columns', `${nextWidth}px 1fr`);
+    setSidebarPreference(nextPreference);
   };
 
   const handleOverlaySidebarClose = () => {
@@ -99,6 +106,7 @@ export function MainLayout() {
 
   return (
     <div
+      ref={shellRef}
       className="grid h-screen relative"
       style={{
         gridTemplateColumns: `${sidebarColumnWidth}px 1fr`,
