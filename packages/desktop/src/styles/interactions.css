@@ -1,0 +1,86 @@
+.sidebar-nav-item:hover {
+  color: var(--text-primary) !important;
+  background: var(--glow) !important;
+}
+.sidebar-nav-item:hover .nav-icon { opacity: 1 !important; }
+.create-playlist-btn:hover {
+  border-color: var(--text-secondary) !important;
+  color: var(--text-primary) !important;
+  background: var(--glow) !important;
+}
+.sidebar-playlist-item:hover {
+  background: var(--glow) !important;
+  color: var(--text-primary) !important;
+}
+
+.ctrl-btn:hover { color: var(--white) !important; }
+.play-btn:hover {
+  transform: scale(1.06);
+  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.12);
+}
+.play-btn:active { transform: scale(0.96); }
+.player-right-btn:hover,
+.player-heart-btn:hover {
+  color: var(--white) !important;
+  background: var(--glow);
+}
+.freq-badge:hover {
+  color: var(--text-secondary) !important;
+  border-color: var(--bg-hover) !important;
+}
+
+.seek-track:hover .seek-progress::after {
+  content: '';
+  position: absolute;
+  right: -5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 10px;
+  background: var(--white);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+}
+.volume-track:hover { height: 5px; }
+.volume-track:hover .volume-fill::after {
+  content: '';
+  position: absolute;
+  right: -4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 10px;
+  background: var(--white);
+  border-radius: 50%;
+}
+
+.album-card:hover {
+  background: var(--glow-strong);
+  transform: translateY(-2px);
+}
+.album-card:hover .album-play-overlay { opacity: 1 !important; }
+.track-row:hover { background: var(--glow-strong); }
+.search-tab:hover {
+  background: var(--glow-strong) !important;
+  color: var(--text-primary) !important;
+}
+.play-all-btn:hover { background: #d4d4d4 !important; }
+.play-all-btn:active { background: #bbb !important; }
+.download-btn:hover {
+  background: var(--bg-elevated) !important;
+  border-color: var(--bg-active) !important;
+}
+.clear-menu-item:hover { background: var(--glow-strong); }
+
+input.search-input:focus,
+input:focus {
+  border-color: var(--bg-active) !important;
+  background: var(--bg-elevated) !important;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.02);
+}
+
+.track-card-overlay {
+  opacity: 0;
+  transition: all var(--transition);
+}
+.album-card:hover .track-card-overlay { opacity: 1; }

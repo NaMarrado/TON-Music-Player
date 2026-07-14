@@ -1,4 +1,4 @@
-import { BrowserWindow, net } from 'electron';
+import { net } from 'electron';
 import {
   CloudAutoSyncCoordinator,
   normalizeCloudStorageErrorKey,
@@ -12,7 +12,6 @@ import {
   getActiveDesktopCloudScope,
   getDesktopCloudGeneration,
   readDesktopCloudAutoSyncStatus,
-  readDesktopCloudOutbox,
   readDesktopCloudSyncState,
   updateDesktopCloudSyncState,
 } from './auto-sync-store';
@@ -22,37 +21,13 @@ import {
   setDesktopCloudAutoSyncEnabled,
 } from './config';
 import { syncCloudLibraryV2ForDesktop } from './index';
+import {
+  broadcastCloudEvent,
+  classifyDesktopCloudError,
+  getDesktopCloudPendingCount,
+} from './auto-sync-runtime-support';
 
 type ManualProgressListener = (progress: CloudSyncProgress) => void;
-
-function broadcast(channel: 'cloud:state' | 'cloud:applied' | 'cloud:progress', payload: unknown): void {
-  for (const window of BrowserWindow.getAllWindows()) {
-    if (!window.isDestroyed()) {
-      window.webContents.send(channel, payload);
-    }
-  }
-}
-
-function pendingCount(): number {
-  const scopeId = getActiveDesktopCloudScope();
-  return scopeId ? readDesktopCloudOutbox(scopeId).length : 0;
-}
-
-function classifyError(error: unknown): 'transient' | 'permanent' | 'cancelled' {
-  if (error instanceof Error) {
-    if (error.message === 'cloud_sync_cancelled' || error.name === 'AbortError') {
-      return 'cancelled';
-    }
-    const normalized = normalizeCloudStorageErrorKey(error.message);
-    if (
-      (normalized != null && normalized !== 'cloudStorageErrorConnectionFailed')
-      || /not configured|secure storage|invalid manifest|cloud_sync_invalid_v2_manifest|cloud_sync_v2_manifest_missing/i.test(error.message)
-    ) {
-      return 'permanent';
-    }
-  }
-  return 'transient';
-}
 
 class DesktopCloudAutoSyncRuntime {
   private readonly coordinator: CloudAutoSyncCoordinator;
@@ -95,7 +70,7 @@ class DesktopCloudAutoSyncRuntime {
         nextRetryAt: persisted.nextRetryAt,
       },
       initialPermanentError: persisted.lastErrorKey != null
-        && classifyError(new Error(persisted.lastErrorKey)) === 'permanent',
+        && classifyDesktopCloudError(new Error(persisted.lastErrorKey)) === 'permanent',
       pollIntervalMs: 10_000,
       debounceMs: 2_000,
       maxDebounceMs: 10_000,
@@ -120,15 +95,15 @@ class DesktopCloudAutoSyncRuntime {
               mode,
               force: origin === 'manual',
               onProgress: (progress) => {
-                broadcast('cloud:progress', progress);
+                broadcastCloudEvent('cloud:progress', progress);
                 this.progressListeners.forEach((listener) => listener(progress));
               },
             }),
           });
           this.lastResult = result;
-          const remaining = pendingCount();
+          const remaining = getDesktopCloudPendingCount();
           if (mode !== 'upload' && result.revision != null && result.revision !== beforeRevision) {
-            broadcast('cloud:applied', {
+            broadcastCloudEvent('cloud:applied', {
               revision: result.revision,
               importedTracks: result.importedTracks,
               importedPlaylists: result.importedPlaylists,
@@ -142,7 +117,7 @@ class DesktopCloudAutoSyncRuntime {
         }
       },
       cancelActive: () => this.activeAbortController?.abort(new Error('cloud_sync_cancelled')),
-      classifyError,
+      classifyError: classifyDesktopCloudError,
       getErrorKey: (error) => {
         if (!(error instanceof Error)) return 'cloudFailed';
         return normalizeCloudStorageErrorKey(error.message) ?? error.message;
@@ -167,7 +142,7 @@ class DesktopCloudAutoSyncRuntime {
       const generation = getDesktopCloudGeneration();
       if (generation === this.lastObservedGeneration) return;
       this.lastObservedGeneration = generation;
-      this.coordinator.markLocalChange(pendingCount());
+      this.coordinator.markLocalChange(getDesktopCloudPendingCount());
     }, 500);
     this.networkTimer = setInterval(() => this.coordinator.setOnline(net.online), 5_000);
   }
@@ -201,7 +176,7 @@ class DesktopCloudAutoSyncRuntime {
     // apply its remote state after the active scope has switched.
     this.activeAbortController?.abort(new Error('cloud_sync_cancelled'));
     this.coordinator.notifyConfigurationChanged(configured);
-    this.coordinator.setPendingCounts(pendingCount());
+    this.coordinator.setPendingCounts(getDesktopCloudPendingCount());
   }
 
   getStatus(): CloudAutoSyncStatus {
@@ -210,7 +185,7 @@ class DesktopCloudAutoSyncRuntime {
     return {
       ...persisted,
       ...runtime,
-      pendingChanges: pendingCount(),
+      pendingChanges: getDesktopCloudPendingCount(),
       lastSuccessAt: runtime.lastSuccessAt ?? persisted.lastSuccessAt,
       lastErrorKey: runtime.lastErrorKey ?? persisted.lastErrorKey,
       nextRetryAt: runtime.nextRetryAt ?? persisted.nextRetryAt,
@@ -222,7 +197,7 @@ class DesktopCloudAutoSyncRuntime {
     if (enabled && this.started) this.startWatchers();
     if (!enabled) this.stopWatchers();
     this.coordinator.setEnabled(enabled);
-    this.coordinator.setPendingCounts(pendingCount());
+    this.coordinator.setPendingCounts(getDesktopCloudPendingCount());
     return this.getStatus();
   }
 
@@ -279,7 +254,7 @@ class DesktopCloudAutoSyncRuntime {
         next_retry_at: status.nextRetryAt,
       });
     }
-    broadcast('cloud:state', this.getStatus());
+    broadcastCloudEvent('cloud:state', this.getStatus());
   }
 }
 

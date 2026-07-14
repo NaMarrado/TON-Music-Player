@@ -1,0 +1,59 @@
+.settings-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  transition: border-color var(--transition);
+}
+.settings-card:hover { border-color: var(--border); }
+.community-card {
+  border-color: rgba(255, 68, 68, 0.72);
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.09), var(--bg-surface) 58%);
+  box-shadow: inset 0 0 28px rgba(255, 68, 68, 0.035);
+}
+.community-card:hover { border-color: #ff4444; }
+.community-discord-button {
+  min-height: 38px;
+  padding: 8px 18px;
+  border: 1px solid #ff4444;
+  border-radius: 9px;
+  background: var(--white);
+  color: var(--bg-deep);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 650;
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+.community-discord-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 18px rgba(255, 68, 68, 0.2);
+}
+.preset-btn:hover {
+  background: var(--glow-strong) !important;
+  border-color: var(--bg-active) !important;
+  color: var(--text-primary) !important;
+}
+.toggle-switch:hover { filter: brightness(1.1); }
+
+.range-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--bg-hover);
+  outline: none;
+  cursor: pointer;
+}
+.range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--white);
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  transition: transform var(--transition);
+}
+.range-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }

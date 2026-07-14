@@ -1,23 +1,14 @@
-import { Platform } from 'react-native';
 import type { DownloadInput } from '../downloader';
 import {
   maybeStartDownloadBackgroundWork,
 } from '../download-runtime';
 import {
-  backfillCompletedQueueItemFormats,
-  getStoredQueueRows,
-  deleteCancelledQueueItemRecords,
   deleteQueueItemRecords,
-  insertQueueItemRecords,
-  insertQueueItemRecord,
   markQueueItemRecordsCancelled,
   requeueQueueItem,
   updateQueueItemRetry,
 } from './db';
-import { getSetting } from '../db-queries/settings';
 import {
-  createPendingQueueItem,
-  hydrateQueueItem,
   isQueueItemActive,
 } from './items';
 import type { QueueItem, QueueListener, QueueStatus } from './types';
@@ -27,9 +18,10 @@ import {
   type QueueRuntimeState,
 } from './runtime';
 import { clearQueueStatuses, replaceQueueItem, updateQueueItem } from './mutations';
-import { restoreIosBackgroundQueueItems } from './ios-background';
 import { notifyQueueListeners } from './progress';
 import { processNextInQueue, resolveIdleWaiters } from './runner';
+import { enqueueQueueItem, enqueueQueueItems } from './queue-enqueue';
+import { resumeQueueOnStartup } from './queue-startup';
 
 export class MobileDownloadQueue {
   readonly runtime: QueueRuntimeState = createQueueRuntimeState();
@@ -56,18 +48,7 @@ export class MobileDownloadQueue {
   }
 
   async enqueue(input: DownloadInput): Promise<number> {
-    const qualityProfile = input.qualityProfile
-      ?? (await getSetting('download_quality_profile') === 'best_compatible'
-        ? 'best_compatible'
-        : 'normal');
-    const persistedInput = { ...input, qualityProfile };
-    const id = await insertQueueItemRecord(persistedInput);
-    this.runtime.cancellingIds.delete(id);
-    this.runtime.items.push(createPendingQueueItem(id, persistedInput));
-    this.notify();
-    this.processNext();
-    void maybeStartDownloadBackgroundWork('resume', id);
-    return id;
+    return enqueueQueueItem(this, input);
   }
 
   async enqueueBatch(
@@ -80,42 +61,7 @@ export class MobileDownloadQueue {
       onProgress?: (current: number, total: number) => void;
     } = {},
   ): Promise<number[]> {
-    if (inputs.length === 0) {
-      return [];
-    }
-
-    const { notifyEvery = 20, onInserted, onProgress } = options;
-    const storedProfile = await getSetting('download_quality_profile');
-    const qualityProfile = storedProfile === 'best_compatible' ? 'best_compatible' : 'normal';
-    const persistedInputs = inputs.map((input) => ({
-      ...input,
-      qualityProfile: input.qualityProfile ?? qualityProfile,
-    }));
-    const inserted = await insertQueueItemRecords(persistedInputs);
-    try {
-      await onInserted?.(inserted);
-    } catch (error) {
-      await deleteQueueItemRecords(inserted.map((item) => item.id));
-      throw error;
-    }
-    const ids: number[] = [];
-
-    for (let index = 0; index < inserted.length; index += 1) {
-      const item = inserted[index];
-      this.runtime.cancellingIds.delete(item.id);
-      ids.push(item.id);
-      this.runtime.items.push(createPendingQueueItem(item.id, item.input));
-      onProgress?.(index + 1, inserted.length);
-
-      if ((index + 1) % notifyEvery === 0) {
-        this.notify();
-      }
-    }
-
-    this.notify();
-    this.processNext();
-    void maybeStartDownloadBackgroundWork('resume', ids[0] ?? null);
-    return ids;
+    return enqueueQueueItems(this, inputs, options);
   }
 
   async cancel(id: number): Promise<void> {
@@ -264,59 +210,7 @@ export class MobileDownloadQueue {
   }
 
   async resumeOnStartup(): Promise<void> {
-    if (this.runtime.resumePromise) {
-      return this.runtime.resumePromise;
-    }
-
-    this.runtime.resumePromise = (async () => {
-      await deleteCancelledQueueItemRecords();
-      await backfillCompletedQueueItemFormats();
-      const rows = await getStoredQueueRows();
-      const knownIds = new Set(this.runtime.items.map((item) => item.id));
-      const interruptedAndroidItemIds: number[] = [];
-      let changed = false;
-
-      for (const row of rows) {
-        if (knownIds.has(row.id)) {
-          continue;
-        }
-
-        const hydratedItem = hydrateQueueItem(row);
-        const wasInterruptedOnAndroid = Platform.OS === 'android'
-          && (hydratedItem.status === 'downloading' || hydratedItem.status === 'retrying');
-
-        if (wasInterruptedOnAndroid) {
-          interruptedAndroidItemIds.push(row.id);
-          this.runtime.items.push({
-            ...hydratedItem,
-            status: 'pending',
-            progress: 0,
-            error: null,
-          });
-          this.runtime.persistedProgress.set(row.id, 0);
-        } else {
-          this.runtime.items.push(hydratedItem);
-          this.runtime.persistedProgress.set(row.id, row.progress ?? 0);
-        }
-        changed = true;
-      }
-
-      await Promise.all(interruptedAndroidItemIds.map(requeueQueueItem));
-
-      await restoreIosBackgroundQueueItems(this);
-
-      if (changed) {
-        this.notify();
-      }
-      if (!changed) {
-        this.notify();
-      }
-      this.processNext();
-    })().finally(() => {
-      this.runtime.resumePromise = null;
-    });
-
-    await this.runtime.resumePromise;
+    await resumeQueueOnStartup(this);
   }
 
   waitUntilIdle(): Promise<void> {
