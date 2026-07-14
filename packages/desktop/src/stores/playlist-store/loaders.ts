@@ -66,6 +66,15 @@ export async function loadPlaylist(id: number): Promise<void> {
   }
 }
 
+/** Refresh both the sidebar and the currently open playlist after a DB-level apply. */
+export async function reloadPlaylistViews(): Promise<void> {
+  const currentPlaylistId = usePlaylistStore.getState().currentPlaylist?.id;
+  await Promise.all([
+    loadPlaylists({ force: true }),
+    currentPlaylistId == null ? Promise.resolve() : loadPlaylist(currentPlaylistId),
+  ]);
+}
+
 export async function loadSmartPlaylistTracks(
   config: PlaylistSmartConfig,
 ): Promise<PlaylistTrackEntry[]> {

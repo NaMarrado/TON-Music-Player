@@ -11,6 +11,7 @@ import { createAppMenu } from '../menu';
 import { updateTrayDownloads } from '../tray';
 import { applyDockIcon, applyPlatformAppIdentity } from './app-icon';
 import { disposeDiscordPresenceService } from '../services/discord-presence';
+import { getDesktopCloudAutoSyncRuntime } from '../services/cloud-sync/auto-sync-runtime';
 
 prepareSmokeMode();
 
@@ -18,7 +19,22 @@ export function startMainProcess(): void {
   app.setName('TON');
   let mainWindow: BrowserWindow | null = null;
   let forceQuit = false;
+  let quitAfterCloudShutdown = false;
   let cleanupBackgroundServices: (() => void) | null = null;
+  const hasSingleInstanceLock = app.requestSingleInstanceLock();
+  if (!hasSingleInstanceLock) {
+    app.quit();
+    return;
+  }
+
+  // Re-launching TON is an explicit user action. Auto Sync itself never calls
+  // this path and therefore cannot show or focus a hidden gaming-session window.
+  app.on('second-instance', () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.show();
+    mainWindow.focus();
+  });
 
   void app.whenReady().then(async () => {
     applyPlatformAppIdentity();
@@ -30,6 +46,10 @@ export function startMainProcess(): void {
         await runHandlerSmokeMode();
       } finally {
         closeDatabase();
+        // The smoke harness removes its temporary userData directory before
+        // Electron exits. Release Chromium's lockfile first so Windows can
+        // delete that directory deterministically.
+        app.releaseSingleInstanceLock();
         cleanupSmokeMode();
         app.quit();
       }
@@ -55,14 +75,21 @@ export function startMainProcess(): void {
     });
   });
 
-  app.on('before-quit', () => {
+  app.on('before-quit', (event) => {
     forceQuit = true;
+    if (cleanupBackgroundServices && !quitAfterCloudShutdown) {
+      event.preventDefault();
+      void getDesktopCloudAutoSyncRuntime().shutdownForQuit().finally(() => {
+        quitAfterCloudShutdown = true;
+        app.quit();
+      });
+    }
   });
 
   app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
       const queue = getDownloadQueue();
-      if (!queue.hasActive()) {
+      if (!queue.hasActive() && !getDesktopCloudAutoSyncRuntime().shouldKeepApplicationAlive()) {
         app.quit();
       }
     }

@@ -4,13 +4,14 @@ import type {
   CloudStorageJurisdiction,
   CloudStoragePublicConfig,
 } from '@ton/core';
-import { normalizeCloudPrefix } from '@ton/core';
+import { normalizeCloudPrefix, sha256Hex } from '@ton/core';
 import { getSetting, setSetting } from '../db-queries';
 
 const CONFIG_KEY = 'cloud_r2_config';
 const SECRET_KEY = 'cloud_r2_secret_access_key';
 const DEVICE_ID_KEY = 'cloud_r2_device_id';
 const LAST_REVISION_KEY = 'cloud_r2_last_revision';
+const AUTO_SYNC_ENABLED_KEY = 'cloud_auto_sync_enabled';
 
 function normalizeJurisdiction(value: unknown): CloudStorageJurisdiction {
   return value === 'eu' || value === 'fedramp' ? value : 'default';
@@ -32,6 +33,28 @@ export async function getMobileCloudLastRevision(): Promise<string> {
 
 export async function setMobileCloudLastRevision(revision: string): Promise<void> {
   await setSetting(LAST_REVISION_KEY, revision);
+}
+
+export async function getMobileCloudAutoSyncEnabled(): Promise<boolean> {
+  // Missing is intentionally enabled so existing installations receive the
+  // same default as a fresh install without a destructive settings migration.
+  return (await getSetting(AUTO_SYNC_ENABLED_KEY)) !== 'false';
+}
+
+export async function setMobileCloudAutoSyncEnabled(enabled: boolean): Promise<void> {
+  await setSetting(AUTO_SYNC_ENABLED_KEY, enabled ? 'true' : 'false');
+}
+
+export function buildMobileCloudScopeId(config: Pick<
+  CloudStorageConfig,
+  'accountId' | 'bucket' | 'jurisdiction' | 'prefix'
+>): string {
+  return sha256Hex(JSON.stringify([
+    config.accountId.trim().toLowerCase(),
+    normalizeJurisdiction(config.jurisdiction),
+    config.bucket.trim(),
+    normalizeCloudPrefix(config.prefix),
+  ]));
 }
 
 export async function getMobileCloudConfig(): Promise<CloudStorageConfig | null> {

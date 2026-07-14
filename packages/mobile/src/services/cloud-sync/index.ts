@@ -1,5 +1,4 @@
 import * as FileSystem from 'expo-file-system';
-import { Platform } from 'react-native';
 import type {
   CloudLibraryManifestV1,
   CloudPlaylistEntry,
@@ -37,9 +36,8 @@ import { ensureArtworkDir } from '../cover-art';
 import { ensureUniqueLocalFilePathAsync } from '../library-transfer/file-helpers';
 import { audioFormatFromExtension } from '../library-transfer/media';
 import { scheduleMobileJob } from '../job-scheduler';
-import { normalizeDownloadedAudioForPlayback } from '../audio-normalization';
 import { MobileR2Client } from './r2-client';
-import { hashFileSha256 } from './hash';
+import { hashCloudArtworkCached, hashFileSha256 } from './hash';
 import { contentTypeForExtension, getFileExtension, getFileName } from './media';
 import {
   getMobileCloudConfig,
@@ -49,11 +47,20 @@ import {
   saveMobileCloudConfig,
   setMobileCloudLastRevision,
 } from './config';
+import {
+  getMobileCloudProtectedEntities,
+  withMobileCloudOutboxSuppressed,
+} from './local-state';
 
 type ProgressCallback = (progress: CloudSyncProgress) => void;
 type CancelSignal = () => boolean;
 
-type LocalCloudTrack = {
+export interface CloudFetchApplyProtection {
+  scopeId: string;
+  afterGeneration: number;
+}
+
+export type LocalCloudTrack = {
   track: Track;
   contentHash: string;
   audioObjectKey: string;
@@ -62,7 +69,7 @@ type LocalCloudTrack = {
   artworkPath: string | null;
 };
 
-type LocalCloudArtwork = {
+export type LocalCloudArtwork = {
   key: string;
   filePath: string;
   hash: string;
@@ -120,6 +127,26 @@ async function fileExists(fileUri: string | null | undefined): Promise<boolean> 
   return info.exists;
 }
 
+async function downloadVerifiedCloudFile(
+  client: MobileR2Client,
+  objectKey: string,
+  destinationUri: string,
+  expectedHash: string,
+  signal?: AbortSignal,
+): Promise<void> {
+  const temporaryUri = `${destinationUri}.part-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  try {
+    await client.downloadFile(objectKey, temporaryUri, signal);
+    const actualHash = await hashFileSha256(temporaryUri);
+    if (actualHash.toLowerCase() !== expectedHash.toLowerCase()) {
+      throw new Error('cloud_sync_hash_mismatch');
+    }
+    await FileSystem.moveAsync({ from: temporaryUri, to: destinationUri });
+  } finally {
+    await FileSystem.deleteAsync(temporaryUri, { idempotent: true }).catch(() => {});
+  }
+}
+
 function buildImportedFileName(track: CloudTrackEntry): string {
   const ext = getFileExtension(track.file_name, track.format);
   const title = track.metadata.title || 'Unknown Track';
@@ -144,24 +171,12 @@ async function normalizeCloudAudioForPlayback(
   filePath: string,
   format: AudioFormat | null,
 ): Promise<{ filePath: string; format: AudioFormat | null }> {
-  if (format !== 'm4a') {
-    if (Platform.OS === 'ios') {
-      await FileSystem.deleteAsync(filePath, { idempotent: true }).catch(() => {});
-      throw new Error(`cloud_audio_incompatible:${format ?? 'unknown'}`);
-    }
-    return { filePath, format };
-  }
-
-  const normalized = await normalizeDownloadedAudioForPlayback({
-    filePath,
-    format: 'm4a',
-  }, {
-    qualityProfile: 'best_compatible',
-  });
-  return {
-    filePath: normalized.filePath,
-    format: normalized.format,
-  };
+  // Cloud identity is the SHA-256 of the exact downloaded bytes. Running the
+  // downloader's device normalizer here can remux a file and silently make the
+  // stored content hash (and every playlist reference to it) false. Keep the
+  // original cloud asset byte-for-byte; both native engines handle the common
+  // Library formats directly.
+  return { filePath, format };
 }
 
 async function ensureTrackContentHash(track: Track): Promise<string | null> {
@@ -172,7 +187,9 @@ async function ensureTrackContentHash(track: Track): Promise<string | null> {
     return track.content_hash_sha256;
   }
   const contentHash = await hashFileSha256(track.file_path);
-  await updateTrack(track.id, { content_hash_sha256: contentHash });
+  await withMobileCloudOutboxSuppressed((db) => (
+    updateTrack(track.id, { content_hash_sha256: contentHash }, db)
+  ));
   return contentHash;
 }
 
@@ -181,12 +198,13 @@ async function ensurePlaylistCloudId(id: number, existing: string | null): Promi
     return existing;
   }
   const cloudId = `playlist-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-  const db = getDb();
-  await db.runAsync('UPDATE playlists SET cloud_id = ? WHERE id = ?', [cloudId, id]);
+  await withMobileCloudOutboxSuppressed(async (db) => {
+    await db.runAsync('UPDATE playlists SET cloud_id = ? WHERE id = ?', [cloudId, id]);
+  });
   return cloudId;
 }
 
-async function buildLocalManifest(
+export async function buildLocalManifest(
   config: CloudStorageConfig,
   onProgress?: ProgressCallback,
   shouldCancel?: CancelSignal,
@@ -230,7 +248,7 @@ async function buildLocalManifest(
     let artworkObjectKey: string | null = null;
     let artworkFileName: string | null = null;
     if (track.cover_art_path && await fileExists(track.cover_art_path)) {
-      artworkHash = await hashFileSha256(track.cover_art_path);
+      artworkHash = await hashCloudArtworkCached(track.cover_art_path);
       const artworkExt = getFileExtension(track.cover_art_path, null);
       artworkObjectKey = buildCloudLibraryArtworkObjectKey(config.prefix, artworkHash, artworkExt, trackObjectName);
       artworkFileName = getFileName(track.cover_art_path);
@@ -296,7 +314,7 @@ async function buildLocalManifest(
     let coverHash: string | null = null;
     let coverObjectKey: string | null = null;
     if (playlist.cover_path && await fileExists(playlist.cover_path)) {
-      coverHash = await hashFileSha256(playlist.cover_path);
+      coverHash = await hashCloudArtworkCached(playlist.cover_path);
       const coverExt = getFileExtension(playlist.cover_path, null);
       coverObjectKey = buildCloudPlaylistCoverObjectKey(
         config.prefix,
@@ -498,15 +516,19 @@ export async function uploadMissingLocalToCloud(
 export async function fetchCloudLibrary(
   onProgress?: ProgressCallback,
   shouldCancel?: CancelSignal,
+  manifestOverride?: CloudLibraryManifestV1,
+  abortSignal?: AbortSignal,
+  applyProtection?: CloudFetchApplyProtection,
+  priority: 'user-visible' | 'background' = 'user-visible',
+  alreadyScheduled = false,
 ): Promise<CloudSyncResult> {
-  return scheduleMobileJob({
-    kind: 'cloud-sync',
-    lane: 'network',
-    priority: 'user-visible',
-    run: async () => {
+  const run = async (): Promise<CloudSyncResult> => {
+      throwIfCancelled(shouldCancel);
       const config = await requireConfig();
+      throwIfCancelled(shouldCancel);
       const client = new MobileR2Client(config);
-      const manifest = await readRemoteManifest(client, config);
+      const manifest = manifestOverride ?? await readRemoteManifest(client, config);
+      throwIfCancelled(shouldCancel);
       if (!manifest) {
         return { ...EMPTY_RESULT };
       }
@@ -517,12 +539,14 @@ export async function fetchCloudLibrary(
         content_hash_sha256: string;
         downloaded_at: number | null;
         in_library: number;
+        cover_art_path: string | null;
       }>(
-        `SELECT id, content_hash_sha256, downloaded_at, in_library
+        `SELECT id, content_hash_sha256, downloaded_at, in_library, cover_art_path
          FROM tracks
          WHERE content_hash_sha256 IS NOT NULL AND content_hash_sha256 != ''
          ORDER BY id ASC`,
       );
+      throwIfCancelled(shouldCancel);
       const existingTrackByHash = new Map(
         existingRows.map((row) => [row.content_hash_sha256, row] as const),
       );
@@ -530,7 +554,9 @@ export async function fetchCloudLibrary(
         existingRows.map((row) => [row.content_hash_sha256, row.id] as const),
       );
       await ensureMusicDir();
+      throwIfCancelled(shouldCancel);
       await ensureArtworkDir();
+      throwIfCancelled(shouldCancel);
 
       emitProgress(onProgress, { phase: 'downloading', total: manifest.tracks.length });
       for (let index = 0; index < manifest.tracks.length; index += 1) {
@@ -540,21 +566,79 @@ export async function fetchCloudLibrary(
         const existingTrack = existingTrackByHash.get(track.content_hash_sha256);
         if (existingTrack) {
           const existingDownloadedAt = normalizeDownloadedAt(existingTrack.downloaded_at);
-          const reconciledDownloadedAt = existingDownloadedAt ?? downloadedAt;
-          if (
-            reconciledDownloadedAt !== existingTrack.downloaded_at
-            || existingTrack.in_library !== 1
-          ) {
-            await db.runAsync(
-              `UPDATE tracks
-               SET downloaded_at = ?,
-                   in_library = 1
-               WHERE id = ?`,
-              [reconciledDownloadedAt, existingTrack.id],
+          const reconciledDownloadedAt = existingDownloadedAt && downloadedAt
+            ? Math.min(existingDownloadedAt, downloadedAt)
+            : existingDownloadedAt ?? downloadedAt;
+          let reconciledCoverPath = track.artwork_object_key && track.artwork_hash_sha256
+            ? existingTrack.cover_art_path
+            : null;
+          if (track.artwork_object_key && track.artwork_hash_sha256) {
+            reconciledCoverPath = await ensureUniqueLocalFilePathAsync(
+              ARTWORK_DIR,
+              track.artwork_file_name || `${track.artwork_hash_sha256}.jpg`,
+              track.artwork_hash_sha256,
             );
-            existingTrack.downloaded_at = reconciledDownloadedAt;
-            existingTrack.in_library = 1;
+            throwIfCancelled(shouldCancel);
+            if (!(await fileExists(reconciledCoverPath))) {
+              throwIfCancelled(shouldCancel);
+              await downloadVerifiedCloudFile(
+                client,
+                track.artwork_object_key,
+                reconciledCoverPath,
+                track.artwork_hash_sha256,
+                abortSignal,
+              );
+              throwIfCancelled(shouldCancel);
+            }
           }
+          throwIfCancelled(shouldCancel);
+          const applied = await withMobileCloudOutboxSuppressed(async (suppressedDb) => {
+            throwIfCancelled(shouldCancel);
+            if (applyProtection) {
+              const protectedEntities = await getMobileCloudProtectedEntities(
+                applyProtection.scopeId,
+                applyProtection.afterGeneration,
+                suppressedDb,
+              );
+              throwIfCancelled(shouldCancel);
+              if (protectedEntities.trackHashes.has(track.content_hash_sha256)) {
+                return false;
+              }
+            }
+            await suppressedDb.runAsync(
+              `UPDATE tracks
+               SET title = ?, artist = ?, album = ?, album_artist = ?,
+                   track_number = ?, disc_number = ?, duration_ms = ?, genre = ?,
+                   year = ?, bitrate = ?, sample_rate = ?, file_size = ?, format = ?,
+                   cover_art_path = ?,
+                   loudness_lufs = ?, loudness_gain = ?, youtube_id = ?,
+                   spotify_id = ?, soundcloud_id = ?, source_url = ?, rating = ?,
+                   downloaded_at = ?, in_library = 1
+               WHERE id = ?`,
+              [
+                track.metadata.title, track.metadata.artist, track.metadata.album,
+                track.metadata.album_artist, track.metadata.track_number,
+                track.metadata.disc_number, track.metadata.duration_ms,
+                track.metadata.genre, track.metadata.year, track.metadata.bitrate,
+                track.metadata.sample_rate, track.file_size, track.format,
+                reconciledCoverPath,
+                track.metadata.loudness_lufs, track.metadata.loudness_gain,
+                track.youtube_id, track.spotify_id, track.soundcloud_id,
+                track.source_url, track.metadata.rating, reconciledDownloadedAt,
+                existingTrack.id,
+              ],
+            );
+            throwIfCancelled(shouldCancel);
+            return true;
+          });
+          throwIfCancelled(shouldCancel);
+          if (!applied) {
+            result.skipped += 1;
+            continue;
+          }
+          existingTrack.downloaded_at = reconciledDownloadedAt;
+          existingTrack.in_library = 1;
+          existingTrack.cover_art_path = reconciledCoverPath;
           result.skipped += 1;
           emitProgress(onProgress, {
             phase: 'downloading',
@@ -570,9 +654,18 @@ export async function fetchCloudLibrary(
           buildImportedFileName(track),
           track.content_hash_sha256,
         );
-        await client.downloadFile(track.object_key, destinationUri);
+        throwIfCancelled(shouldCancel);
+        await downloadVerifiedCloudFile(
+          client,
+          track.object_key,
+          destinationUri,
+          track.content_hash_sha256,
+          abortSignal,
+        );
+        throwIfCancelled(shouldCancel);
         const requestedFormat = track.format ?? audioFormatFromExtension(getFileExtension(destinationUri, null));
         const normalizedAudio = await normalizeCloudAudioForPlayback(destinationUri, requestedFormat);
+        throwIfCancelled(shouldCancel);
         let coverPath: string | null = null;
         if (track.artwork_object_key && track.artwork_hash_sha256) {
           coverPath = await ensureUniqueLocalFilePathAsync(
@@ -580,12 +673,43 @@ export async function fetchCloudLibrary(
             track.artwork_file_name || `${track.artwork_hash_sha256}.jpg`,
             track.artwork_hash_sha256,
           );
+          throwIfCancelled(shouldCancel);
           if (!(await fileExists(coverPath))) {
-            await client.downloadFile(track.artwork_object_key, coverPath);
+            throwIfCancelled(shouldCancel);
+            await downloadVerifiedCloudFile(
+              client,
+              track.artwork_object_key,
+              coverPath,
+              track.artwork_hash_sha256,
+              abortSignal,
+            );
+            throwIfCancelled(shouldCancel);
           }
         }
         const info = await FileSystem.getInfoAsync(normalizedAudio.filePath, { size: true });
-        const trackId = await insertTrack({
+        throwIfCancelled(shouldCancel);
+        const trackId = await withMobileCloudOutboxSuppressed(async (suppressedDb) => {
+          throwIfCancelled(shouldCancel);
+          if (applyProtection) {
+            const protectedEntities = await getMobileCloudProtectedEntities(
+              applyProtection.scopeId,
+              applyProtection.afterGeneration,
+              suppressedDb,
+            );
+            throwIfCancelled(shouldCancel);
+            if (protectedEntities.trackHashes.has(track.content_hash_sha256)) {
+              return null;
+            }
+          }
+          const concurrent = await suppressedDb.getFirstAsync<{ id: number }>(
+            'SELECT id FROM tracks WHERE content_hash_sha256 = ?',
+            [track.content_hash_sha256],
+          );
+          throwIfCancelled(shouldCancel);
+          if (concurrent) {
+            return null;
+          }
+          const insertedTrackId = await insertTrack({
           file_path: normalizedAudio.filePath,
           file_hash: null,
           content_hash_sha256: track.content_hash_sha256,
@@ -612,15 +736,27 @@ export async function fetchCloudLibrary(
           source_url: track.source_url,
           last_played_at: null,
           rating: track.metadata.rating,
-          downloaded_at: downloadedAt,
-          in_library: 1,
+            downloaded_at: downloadedAt,
+            in_library: 1,
+          }, suppressedDb);
+          throwIfCancelled(shouldCancel);
+          return insertedTrackId;
         });
+        throwIfCancelled(shouldCancel);
+        if (trackId == null) {
+          // Do not unlink here: a concurrent local download may have adopted
+          // this deterministic destination after our transaction checked the
+          // outbox. Leaving a rare orphan is safer than deleting user audio.
+          result.skipped += 1;
+          continue;
+        }
         trackIdByHash.set(track.content_hash_sha256, trackId);
         existingTrackByHash.set(track.content_hash_sha256, {
           id: trackId,
           content_hash_sha256: track.content_hash_sha256,
           downloaded_at: downloadedAt,
           in_library: 1,
+          cover_art_path: coverPath,
         });
         result.downloaded += 1;
         result.importedTracks += 1;
@@ -642,15 +778,36 @@ export async function fetchCloudLibrary(
           const coverExt = getFileExtension(playlist.cover_object_key, null);
           playlistCoverPath = `${ARTWORK_DIR}${playlist.cover_hash_sha256}${coverExt}`;
           if (!(await fileExists(playlistCoverPath))) {
-            await client.downloadFile(playlist.cover_object_key, playlistCoverPath);
+            throwIfCancelled(shouldCancel);
+            await downloadVerifiedCloudFile(
+              client,
+              playlist.cover_object_key,
+              playlistCoverPath,
+              playlist.cover_hash_sha256,
+              abortSignal,
+            );
+            throwIfCancelled(shouldCancel);
           }
         }
         playlistCoverPathByCloudId.set(playlist.cloud_id, playlistCoverPath);
       }
-      await db.withExclusiveTransactionAsync(async (txn) => {
-        for (const playlist of manifest.playlists) {
+      throwIfCancelled(shouldCancel);
+      await withMobileCloudOutboxSuppressed(async (txn) => {
           throwIfCancelled(shouldCancel);
-          await txn.runAsync(
+          const protectedEntities = applyProtection
+            ? await getMobileCloudProtectedEntities(
+              applyProtection.scopeId,
+              applyProtection.afterGeneration,
+              txn,
+            )
+            : null;
+          throwIfCancelled(shouldCancel);
+          for (const playlist of manifest.playlists) {
+            throwIfCancelled(shouldCancel);
+            if (protectedEntities?.playlistCloudIds.has(playlist.cloud_id)) {
+              continue;
+            }
+            await txn.runAsync(
             `INSERT INTO playlists (cloud_id, name, description, cover_path, is_smart, smart_rules, sort_order, created_at, updated_at)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
              ON CONFLICT(cloud_id) DO UPDATE SET
@@ -673,33 +830,48 @@ export async function fetchCloudLibrary(
               playlist.updated_at,
             ],
           );
-          const row = await txn.getFirstAsync<{ id: number }>(
-            'SELECT id FROM playlists WHERE cloud_id = ?',
-            [playlist.cloud_id],
-          );
-          if (!row) {
-            continue;
-          }
-          await txn.runAsync('DELETE FROM playlist_tracks WHERE playlist_id = ?', [row.id]);
-          let position = 0;
-          for (const hash of playlist.track_hashes) {
-            const trackId = trackIdByHash.get(hash);
-            if (!trackId) {
+            throwIfCancelled(shouldCancel);
+            const row = await txn.getFirstAsync<{ id: number }>(
+              'SELECT id FROM playlists WHERE cloud_id = ?',
+              [playlist.cloud_id],
+            );
+            throwIfCancelled(shouldCancel);
+            if (!row) {
               continue;
             }
-            await txn.runAsync(
-              'INSERT INTO playlist_tracks (playlist_id, track_id, position) VALUES (?, ?, ?)',
-              [row.id, trackId, position],
-            );
-            position += 1;
+            await txn.runAsync('DELETE FROM playlist_tracks WHERE playlist_id = ?', [row.id]);
+            throwIfCancelled(shouldCancel);
+            let position = 0;
+            for (const hash of playlist.track_hashes) {
+              const trackId = trackIdByHash.get(hash);
+              if (!trackId) {
+                continue;
+              }
+              await txn.runAsync(
+                'INSERT INTO playlist_tracks (playlist_id, track_id, position) VALUES (?, ?, ?)',
+                [row.id, trackId, position],
+              );
+              throwIfCancelled(shouldCancel);
+              position += 1;
+            }
+            result.importedPlaylists += 1;
           }
-          result.importedPlaylists += 1;
-        }
+          throwIfCancelled(shouldCancel);
       });
+      throwIfCancelled(shouldCancel);
       await setMobileCloudLastRevision(manifest.revision);
+      throwIfCancelled(shouldCancel);
       emitProgress(onProgress, { phase: 'done', current: 1, total: 1, downloaded: result.downloaded, skipped: result.skipped });
       return result;
-    },
+  };
+  if (alreadyScheduled) {
+    return run();
+  }
+  return scheduleMobileJob({
+    kind: 'cloud-sync',
+    lane: 'network',
+    priority,
+    run,
   });
 }
 

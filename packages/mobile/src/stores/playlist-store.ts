@@ -157,6 +157,14 @@ export async function loadPlaylist(id: number): Promise<void> {
   }
 }
 
+export async function reloadLoadedPlaylistDetails(): Promise<void> {
+  const detailIds = Object.entries(usePlaylistStore.getState().playlistDetails)
+    .filter(([, detail]) => detail.hasLoaded)
+    .map(([id]) => Number(id))
+    .filter(Number.isFinite);
+  await Promise.all(detailIds.map((id) => loadPlaylist(id)));
+}
+
 export async function refreshPlaylistsById(ids: number[]): Promise<void> {
   const playlistIds = [...new Set(ids)];
   if (playlistIds.length === 0) {

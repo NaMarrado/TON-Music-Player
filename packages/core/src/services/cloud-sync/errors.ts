@@ -21,6 +21,26 @@ const ERROR_KEYS = new Set<CloudStorageErrorKey>([
   'cloudStorageErrorSignatureMismatch',
 ]);
 
+/** Internal CAS conflict. Callers should re-read and merge, not show this as an auth error. */
+export class CloudStoragePreconditionFailedError extends Error {
+  readonly status = 412;
+
+  readonly etag: string | null;
+
+  constructor(etag: string | null = null) {
+    super('cloudStoragePreconditionFailed');
+    this.name = 'CloudStoragePreconditionFailedError';
+    this.etag = etag;
+  }
+}
+
+export function isCloudStoragePreconditionFailedError(
+  error: unknown,
+): error is CloudStoragePreconditionFailedError {
+  return error instanceof CloudStoragePreconditionFailedError
+    || (error instanceof Error && error.message === 'cloudStoragePreconditionFailed');
+}
+
 function decodeXml(value: string): string {
   return value
     .replace(/&lt;/g, '<')

@@ -1,4 +1,5 @@
 import './src/polyfills';
+import './src/services/cloud-sync/background-task';
 import { registerRootComponent } from 'expo';
 import { AppRegistry, Platform } from 'react-native';
 import App from './src/app';

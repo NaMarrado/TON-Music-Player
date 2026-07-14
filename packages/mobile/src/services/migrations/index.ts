@@ -7,6 +7,8 @@ import { migrate005 } from './005-playlist-imports';
 import { migrate006 } from './006-download-quality';
 import { migrate007 } from './007-canonical-library';
 import { migrate008 } from './008-downloaded-at';
+import { migrate009 } from './009-cloud-auto-sync';
+import { migrate010 } from './010-cloud-v2-activation';
 
 interface Migration {
   version: number;
@@ -22,6 +24,8 @@ const MIGRATIONS: Migration[] = [
   { version: 6, run: migrate006 },
   { version: 7, run: migrate007 },
   { version: 8, run: migrate008 },
+  { version: 9, run: migrate009 },
+  { version: 10, run: migrate010 },
 ];
 
 export async function runMigrations(db: SQLiteDatabase): Promise<void> {

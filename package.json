@@ -17,6 +17,7 @@
     "locales:validate": "node scripts/validate-locales.mjs",
     "test:android-resolver": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test scripts/tests/android-youtube-resolver.test.ts",
     "test:app-update": "tsx --test scripts/tests/app-update.test.ts",
+    "test:cloud-sync": "tsx --test scripts/tests/cloud-sync-v2.test.ts scripts/tests/cloud-r2-conditional.test.ts && node scripts/run-electron-tsx-test.mjs scripts/tests/cloud-auto-sync-outbox.test.ts",
     "test:discord-presence": "tsx --test scripts/tests/discord-presence.test.ts",
     "test:frequency": "tsx --test scripts/tests/frequency-tuning.test.ts",
     "test:library-migrations": "tsx --test scripts/tests/mobile-downloaded-at-migration.test.ts",

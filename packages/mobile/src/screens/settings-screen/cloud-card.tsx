@@ -4,6 +4,7 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   useWindowDimensions,
@@ -160,6 +161,11 @@ function Pill({
 }
 
 export function CloudCard({
+  autoSyncDescription,
+  autoSyncDetailsLabel,
+  autoSyncEnabled,
+  autoSyncLabel,
+  autoSyncStatusLabel,
   canRun,
   connectedLabel,
   description,
@@ -181,10 +187,16 @@ export function CloudCard({
   onLoad,
   onSaveTest,
   onSync,
+  onToggleAutoSync,
   onUpdate,
   onUpload,
   title,
 }: {
+  autoSyncDescription: string;
+  autoSyncDetailsLabel: string;
+  autoSyncEnabled: boolean;
+  autoSyncLabel: string;
+  autoSyncStatusLabel: string;
   canRun: boolean;
   connectedLabel: string | null;
   description: string;
@@ -206,6 +218,7 @@ export function CloudCard({
   onLoad: () => void;
   onSaveTest: () => void;
   onSync: () => void;
+  onToggleAutoSync: (enabled: boolean) => void;
   onUpdate: (patch: Partial<CloudForm>) => void;
   onUpload: () => void;
   title: string;
@@ -228,6 +241,25 @@ export function CloudCard({
         >
           <Text className="text-text-primary text-sm font-bold">?</Text>
         </Pressable>
+      </View>
+      <View
+        className="flex-row items-center justify-between border border-border bg-bg-deep mb-3"
+        style={{ borderRadius: 14, paddingHorizontal: 12, paddingVertical: 10 }}
+      >
+        <View style={{ flex: 1, paddingRight: 12 }}>
+          <Text className="text-text-primary text-sm font-semibold">{autoSyncLabel}</Text>
+          <Text className="text-text-secondary text-xs mt-1">{autoSyncDescription}</Text>
+          <Text className="text-text-muted text-[11px] mt-1">{autoSyncStatusLabel}</Text>
+          <Text className="text-text-muted text-[11px] mt-0.5">{autoSyncDetailsLabel}</Text>
+        </View>
+        <Switch
+          accessibilityLabel={autoSyncLabel}
+          value={autoSyncEnabled}
+          onValueChange={onToggleAutoSync}
+          trackColor={{ false: '#2f2f2f', true: '#d8d8d8' }}
+          thumbColor={autoSyncEnabled ? '#ffffff' : '#777777'}
+          ios_backgroundColor="#2f2f2f"
+        />
       </View>
       {!loaded ? (
         <View className="flex-row items-center">

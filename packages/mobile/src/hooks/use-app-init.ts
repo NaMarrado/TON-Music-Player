@@ -15,6 +15,10 @@ import {
   type DownloadNetworkMonitor,
 } from '../services/download-queue/network-monitor';
 import { repairIosSandboxPaths } from '../services/ios-sandbox-path-repair';
+import {
+  startMobileCloudAutoSync,
+  stopMobileCloudAutoSync,
+} from '../services/cloud-sync/auto-sync';
 import { markPerf, measurePerfAsync } from '../services/perf';
 import { subscribeToDownloads } from '../stores/download-store';
 import { loadTracks } from '../stores/library-store';
@@ -31,6 +35,7 @@ export function useAppInit() {
     postReadyTaskRef.current = null;
     downloadNetworkMonitorRef.current?.stop();
     downloadNetworkMonitorRef.current = null;
+    stopMobileCloudAutoSync();
     setError(null);
     setReady(false);
     try {
@@ -55,6 +60,7 @@ export function useAppInit() {
           void ensureDownloadRuntimePermission(false).catch(() => {});
         }
         subscribeToDownloads();
+        void startMobileCloudAutoSync().catch(() => {});
         const networkMonitor = startDownloadNetworkMonitor();
         downloadNetworkMonitorRef.current = networkMonitor;
         void networkMonitor.ready.then(() => {
@@ -77,6 +83,7 @@ export function useAppInit() {
       postReadyTaskRef.current = null;
       downloadNetworkMonitorRef.current?.stop();
       downloadNetworkMonitorRef.current = null;
+      stopMobileCloudAutoSync();
     };
   }, [init]);
 

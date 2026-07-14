@@ -78,6 +78,120 @@ export interface CloudLibraryManifestV1 {
   playlists: CloudPlaylistEntry[];
 }
 
+/**
+ * Deterministic last-writer-wins version used by the V2 cloud manifest.
+ *
+ * `counter` is a Lamport clock. A device must advance it beyond every version
+ * it has observed before publishing a local mutation. `device_id` breaks ties
+ * when two offline devices independently choose the same counter.
+ */
+export interface CloudEntityVersionV2 {
+  counter: number;
+  device_id: string;
+}
+
+interface CloudRecordV2Base {
+  version: CloudEntityVersionV2;
+}
+
+export interface CloudLiveTrackRecordV2 extends CloudRecordV2Base {
+  content_hash_sha256: string;
+  deleted: false;
+  entry: CloudTrackEntry;
+}
+
+export interface CloudDeletedTrackRecordV2 extends CloudRecordV2Base {
+  content_hash_sha256: string;
+  deleted: true;
+  deleted_at: number;
+}
+
+export type CloudTrackRecordV2 = CloudLiveTrackRecordV2 | CloudDeletedTrackRecordV2;
+
+export interface CloudLivePlaylistRecordV2 extends CloudRecordV2Base {
+  cloud_id: string;
+  deleted: false;
+  entry: CloudPlaylistEntry;
+}
+
+export interface CloudDeletedPlaylistRecordV2 extends CloudRecordV2Base {
+  cloud_id: string;
+  deleted: true;
+  deleted_at: number;
+}
+
+export type CloudPlaylistRecordV2 =
+  | CloudLivePlaylistRecordV2
+  | CloudDeletedPlaylistRecordV2;
+
+/**
+ * Conflict-safe cloud manifest. The current V1 object remains readable during
+ * bootstrap, while all automatic synchronization is published under the V2
+ * key so an older client cannot erase tombstones it does not understand.
+ */
+export interface CloudLibraryManifestV2 {
+  schema_version: 2;
+  app: 'TON';
+  created_at: number;
+  updated_at: number;
+  writer_device_id: string;
+  revision: string;
+  max_counter: number;
+  tracks: CloudTrackRecordV2[];
+  playlists: CloudPlaylistRecordV2[];
+}
+
+export type CloudSyncOrigin = 'auto' | 'manual' | 'background';
+
+export type CloudAutoSyncState =
+  | 'disabled'
+  | 'unconfigured'
+  | 'idle'
+  | 'syncing'
+  | 'offline'
+  | 'waiting-for-wifi'
+  | 'backing-off'
+  | 'error';
+
+export interface CloudAutoSyncStatus {
+  enabled: boolean;
+  configured: boolean;
+  state: CloudAutoSyncState;
+  pendingChanges: number;
+  pendingDownloads: number;
+  lastSuccessAt: number | null;
+  lastErrorKey: string | null;
+  nextRetryAt: number | null;
+}
+
+export type CloudConditionalJsonReadResult<T> =
+  | { status: 'ok'; value: T; etag: string }
+  | { status: 'not-modified'; etag: string | null }
+  | { status: 'missing'; etag: null };
+
+/** Minimal cross-runtime shape accepted by desktop and React Native signals. */
+export interface CloudAbortSignal {
+  readonly aborted: boolean;
+  readonly reason?: unknown;
+  addEventListener(type: 'abort', listener: () => void, options?: { once?: boolean }): void;
+  removeEventListener(type: 'abort', listener: () => void): void;
+}
+
+export interface CloudConditionalReadOptions {
+  ifNoneMatch?: string | null;
+  signal?: CloudAbortSignal;
+}
+
+export interface CloudConditionalWriteOptions {
+  ifMatch?: string | null;
+  ifNoneMatch?: '*';
+  signal?: CloudAbortSignal;
+}
+
+export type CloudConditionalWriteResult =
+  | { status: 'ok'; etag: string | null }
+  | { status: 'precondition-failed'; etag: string | null };
+
 export type CloudSyncPhase =
   | 'idle'
   | 'testing'

@@ -33,6 +33,7 @@ const config: ExpoConfig = {
     icon: './assets/icon.png',
     infoPlist: {
       NSSupportsLiveActivities: true,
+      UIBackgroundModes: ['audio', 'processing'],
     },
   },
   androidStatusBar: {
@@ -43,6 +44,7 @@ const config: ExpoConfig = {
     'expo-sqlite',
     'expo-localization',
     'expo-notifications',
+    'expo-background-task',
     ['expo-system-ui', { backgroundColor: '#050505' }],
     ['expo-splash-screen', {
       backgroundColor: '#050505',

@@ -71,6 +71,20 @@ export function createSha256Hasher(): {
   };
 }
 
+/**
+ * React Native's HTTP stack may expose a strong R2 object ETag with a weak
+ * `W/` prefix after transparent response decoding. R2 conditional writes
+ * require the original strong entity tag, so strip only that transport-added
+ * weakness marker while preserving the quoted opaque tag.
+ */
+export function normalizeCloudObjectEtag(value: string | null | undefined): string | null {
+  const trimmed = value?.trim();
+  if (!trimmed) {
+    return null;
+  }
+  return trimmed.replace(/^W\/\s*/i, '');
+}
+
 function hmacSha256(key: string | Uint8Array, data: string): Uint8Array {
   return hmac(sha256, typeof key === 'string' ? utf8ToBytes(key) : key, utf8ToBytes(data));
 }

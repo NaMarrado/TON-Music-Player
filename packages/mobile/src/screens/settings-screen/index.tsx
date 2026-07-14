@@ -54,6 +54,9 @@ export function SettingsScreen() {
     isImportingLibrary,
     isPreparingUpdate,
     cloudBusy,
+    cloudAutoSyncDetailsLabel,
+    cloudAutoSyncEnabled,
+    cloudAutoSyncStatusLabel,
     cloudCanRun,
     cloudConnectedLabel,
     cloudError,
@@ -76,6 +79,7 @@ export function SettingsScreen() {
     setSpotifyId,
     setSpotifySecret,
     syncCloud,
+    toggleCloudAutoSync,
     updateCloudForm,
     uploadCloudMissing,
     fetchCloud,
@@ -244,6 +248,13 @@ export function SettingsScreen() {
           onSpotifySecretChange={setSpotifySecret}
         />
         <CloudCard
+          autoSyncDescription={cloudAutoSyncEnabled
+            ? t('cloudAutoSyncEnabledDescription')
+            : t('cloudAutoSyncDisabledDescription')}
+          autoSyncDetailsLabel={cloudAutoSyncDetailsLabel}
+          autoSyncEnabled={cloudAutoSyncEnabled}
+          autoSyncLabel={t('cloudAutoSync')}
+          autoSyncStatusLabel={cloudAutoSyncStatusLabel}
           canRun={cloudCanRun}
           connectedLabel={cloudConnectedLabel}
           description={t('cloudDescription')}
@@ -293,6 +304,7 @@ export function SettingsScreen() {
           onLoad={loadCloudConfig}
           onSaveTest={saveAndTestCloud}
           onSync={syncCloud}
+          onToggleAutoSync={(enabled) => { void toggleCloudAutoSync(enabled); }}
           onUpdate={updateCloudForm}
           onUpload={uploadCloudMissing}
           title={t('cloudSection')}

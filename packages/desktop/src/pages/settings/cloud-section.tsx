@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type {
+  CloudAutoSyncStatus,
   CloudStorageConfig,
   CloudStorageJurisdiction,
   CloudStoragePublicConfig,
@@ -9,8 +10,8 @@ import type {
 import { normalizeCloudStorageErrorKey } from '@ton/core';
 import { Dialog } from '../../components/ui/dialog';
 import { reconcileLibraryTracks } from '../../stores/library-store';
-import { loadPlaylists } from '../../stores/playlist-store';
-import { SectionHeader } from './helpers';
+import { reloadPlaylistViews } from '../../stores/playlist-store';
+import { SectionHeader, ToggleSwitch } from './helpers';
 import type { SettingsLayout } from './use-settings-layout';
 
 type Translator = (key: string, opts?: Record<string, unknown>) => string;
@@ -259,6 +260,21 @@ function formatCloudError(error: unknown, t: Translator): string {
   return error.message || t('cloudFailed');
 }
 
+function formatCloudAutoSyncTime(value: number | null): string | null {
+  if (value == null || !Number.isFinite(value) || value <= 0) {
+    return null;
+  }
+  const milliseconds = value < 10_000_000_000 ? value * 1_000 : value;
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(new Date(milliseconds));
+}
+
+function cloudAutoSyncStateKey(state: CloudAutoSyncStatus['state']): string {
+  return `cloudAutoSyncState_${state}`;
+}
+
 export function CloudSection({ layout, t }: CloudSectionProps) {
   const [form, setForm] = useState<CloudFormState>(EMPTY_FORM);
   const [hasSecret, setHasSecret] = useState(false);
@@ -267,11 +283,17 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
   const [status, setStatus] = useState<string | null>(null);
   const [progress, setProgress] = useState<CloudSyncProgress | null>(null);
   const [result, setResult] = useState<CloudSyncResult | null>(null);
+  const [autoSyncStatus, setAutoSyncStatus] = useState<CloudAutoSyncStatus | null>(null);
+  const [autoSyncBusy, setAutoSyncBusy] = useState(false);
 
   useEffect(() => {
-    void window.api.invoke('cloud:get-config').then((config) => {
+    void Promise.all([
+      window.api.invoke('cloud:get-config'),
+      window.api.invoke('cloud:get-auto-sync-status'),
+    ]).then(([config, syncStatus]) => {
       setForm(toForm(config));
       setHasSecret(Boolean(config?.hasSecretAccessKey));
+      setAutoSyncStatus(syncStatus);
     });
   }, []);
 
@@ -281,6 +303,14 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
     };
     window.api.on('cloud:progress', handler);
     return () => window.api.off('cloud:progress', handler);
+  }, []);
+
+  useEffect(() => {
+    const handler = (payload: unknown) => {
+      setAutoSyncStatus(payload as CloudAutoSyncStatus);
+    };
+    window.api.on('cloud:state', handler);
+    return () => window.api.off('cloud:state', handler);
   }, []);
 
   const canRun = useMemo(() => (
@@ -306,6 +336,7 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
       setHasSecret(saved.hasSecretAccessKey);
       setForm(toForm(saved));
       await window.api.invoke('cloud:test-config');
+      setAutoSyncStatus(await window.api.invoke('cloud:get-auto-sync-status'));
       setStatus(t('cloudConnected'));
       setProgress(null);
     } catch (error) {
@@ -315,6 +346,24 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
       setBusy(false);
     }
   }, [buildConfig, t]);
+
+  const toggleAutoSync = useCallback(async () => {
+    if (!autoSyncStatus || autoSyncBusy) {
+      return;
+    }
+    setAutoSyncBusy(true);
+    try {
+      const nextStatus = await window.api.invoke(
+        'cloud:set-auto-sync-enabled',
+        !autoSyncStatus.enabled,
+      );
+      setAutoSyncStatus(nextStatus);
+    } catch (error) {
+      setStatus(formatCloudError(error, t));
+    } finally {
+      setAutoSyncBusy(false);
+    }
+  }, [autoSyncBusy, autoSyncStatus, t]);
 
   const runTask = useCallback(async (
     task: 'cloud:upload-missing' | 'cloud:fetch-library' | 'cloud:sync-now',
@@ -328,7 +377,7 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
       if (taskResult && task !== 'cloud:upload-missing') {
         await Promise.all([
           reconcileLibraryTracks({ immediate: true, loadIfUninitialized: true }),
-          loadPlaylists({ force: true }),
+          reloadPlaylistViews(),
         ]);
       }
       setResult(taskResult as CloudSyncResult | null);
@@ -342,6 +391,8 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
   }, [t]);
 
   const progressText = formatProgress(progress, result, t);
+  const lastSuccessText = formatCloudAutoSyncTime(autoSyncStatus?.lastSuccessAt ?? null);
+  const nextRetryText = formatCloudAutoSyncTime(autoSyncStatus?.nextRetryAt ?? null);
 
   return (
     <div>
@@ -355,9 +406,67 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
           </span>
         }
         description={t('cloudDescription')}
+        right={(
+          <div className="flex items-center gap-2">
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.76rem' }}>
+              {t('cloudAutoSync')}
+            </span>
+            <ToggleSwitch
+              disabled={!autoSyncStatus || autoSyncBusy}
+              enabled={autoSyncStatus?.enabled ?? true}
+              onClick={() => void toggleAutoSync()}
+            />
+          </div>
+        )}
       />
       {showHelp && <CloudHelpDialog t={t} onClose={() => setShowHelp(false)} />}
       <div className="flex flex-col gap-3" style={{ paddingLeft: layout.sectionIndent }}>
+        {autoSyncStatus && (
+          <div
+            style={{
+              border: '1px solid var(--border-subtle)',
+              borderRadius: 'var(--radius)',
+              padding: '10px 12px',
+              background: 'var(--bg-deep)',
+            }}
+          >
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.76rem', lineHeight: 1.5 }}>
+              {t(autoSyncStatus.enabled
+                ? 'cloudAutoSyncEnabledDescription'
+                : 'cloudAutoSyncDisabledDescription')}
+            </p>
+            <div className="flex flex-wrap gap-x-3 gap-y-1" style={{ marginTop: '7px' }}>
+              <span style={{ color: 'var(--white)', fontSize: '0.74rem' }}>
+                {t(cloudAutoSyncStateKey(autoSyncStatus.state))}
+              </span>
+              {autoSyncStatus.pendingChanges > 0 && (
+                <span style={{ color: 'var(--text-secondary)', fontSize: '0.74rem' }}>
+                  {t('cloudAutoSyncPendingChanges', { count: autoSyncStatus.pendingChanges })}
+                </span>
+              )}
+              {autoSyncStatus.pendingDownloads > 0 && (
+                <span style={{ color: 'var(--text-secondary)', fontSize: '0.74rem' }}>
+                  {t('cloudAutoSyncPendingDownloads', { count: autoSyncStatus.pendingDownloads })}
+                </span>
+              )}
+              {lastSuccessText && (
+                <span style={{ color: 'var(--text-secondary)', fontSize: '0.74rem' }}>
+                  {t('cloudAutoSyncLastSuccess', { time: lastSuccessText })}
+                </span>
+              )}
+              {nextRetryText && (
+                <span style={{ color: 'var(--text-secondary)', fontSize: '0.74rem' }}>
+                  {t('cloudAutoSyncNextRetry', { time: nextRetryText })}
+                </span>
+              )}
+              {autoSyncStatus.lastErrorKey && autoSyncStatus.state === 'error' && (
+                <span style={{ color: 'var(--text-secondary)', fontSize: '0.74rem' }}>
+                  {t(autoSyncStatus.lastErrorKey)}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
         <div
           className="grid gap-3"
           style={{ gridTemplateColumns: layout.compact ? '1fr' : 'repeat(2, minmax(0, 1fr))' }}

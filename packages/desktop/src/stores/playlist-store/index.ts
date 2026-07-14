@@ -2,6 +2,7 @@ export { usePlaylistStore } from './store';
 export {
   loadPlaylist,
   loadPlaylists,
+  reloadPlaylistViews,
   loadSmartPlaylistTracks,
   mergeCompletedTrackIntoPlaylists,
 } from './loaders';
