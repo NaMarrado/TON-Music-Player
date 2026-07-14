@@ -10,6 +10,7 @@ type TrackListHeaderProps = {
   dense: boolean;
   onSelectAll: () => void;
   showArtist: boolean;
+  showDownloaded: boolean;
   showPlaylist: boolean;
   sortBy: SortField;
   sortOrder: 'asc' | 'desc';
@@ -21,6 +22,7 @@ export function TrackListHeader({
   dense,
   onSelectAll,
   showArtist,
+  showDownloaded,
   showPlaylist,
   sortBy,
   sortOrder,
@@ -44,7 +46,7 @@ export function TrackListHeader({
   return (
     <div
       style={{
-        ...getLibraryTrackGridStyle({ dense, showArtist, showPlaylist }),
+        ...getLibraryTrackGridStyle({ dense, showArtist, showDownloaded, showPlaylist }),
         paddingRight: 'calc(var(--track-grid-inline-padding) + var(--desktop-scrollbar-width))',
         paddingBottom: 'var(--track-list-header-padding-bottom)',
         marginBottom: 'var(--track-list-row-gap)',
@@ -58,6 +60,7 @@ export function TrackListHeader({
     >
       <LibraryTrackGridShell
         showArtist={showArtist}
+        showDownloaded={showDownloaded}
         showPlaylist={showPlaylist}
         coverSlot={null}
         titleSlot={
@@ -81,6 +84,17 @@ export function TrackListHeader({
             <span className="inline-flex items-center cursor-pointer" onClick={() => handleSort('playlist')}>
               {t('colPlaylist')}
               <SortArrow active={sortBy === 'playlist'} ascending={sortOrder === 'asc'} />
+            </span>
+          </div>
+        ) : undefined}
+        downloadedSlot={showDownloaded ? (
+          <div style={textHeaderCellStyle}>
+            <span
+              className="inline-flex items-center cursor-pointer"
+              onClick={() => handleSort('downloaded_at')}
+            >
+              {t('colDownloaded')}
+              <SortArrow active={sortBy === 'downloaded_at'} ascending={sortOrder === 'asc'} />
             </span>
           </div>
         ) : undefined}

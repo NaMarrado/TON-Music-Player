@@ -29,6 +29,14 @@ export function sortTracks(
         const bValue = (b.artist || '').toLowerCase();
         return aValue < bValue ? -dir : aValue > bValue ? dir : 0;
       }
+      case 'downloaded_at': {
+        const aValue = a.downloaded_at;
+        const bValue = b.downloaded_at;
+        if (aValue == null && bValue == null) return 0;
+        if (aValue == null) return 1;
+        if (bValue == null) return -1;
+        return (aValue - bValue) * dir;
+      }
       case 'time':
         return ((a.duration_ms || 0) - (b.duration_ms || 0)) * dir;
       default:

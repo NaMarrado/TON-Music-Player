@@ -31,6 +31,7 @@
   "toastSaved": "播放列表已更新",
   "colTitle": "标题",
   "colArtist": "艺术家",
+  "colDownloaded": "下载日期",
   "colTime": "时间",
   "searchPlaceholder": "搜索...",
   "noResults": "没有匹配的曲目。",

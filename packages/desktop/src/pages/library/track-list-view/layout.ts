@@ -3,12 +3,14 @@ import type { CSSProperties } from 'react';
 type LibraryTrackGridOptions = {
   dense: boolean;
   showArtist: boolean;
+  showDownloaded: boolean;
   showPlaylist: boolean;
 };
 
 export function getLibraryTrackGridStyle({
   dense,
   showArtist,
+  showDownloaded,
   showPlaylist,
 }: LibraryTrackGridOptions): CSSProperties {
   const columns: string[] = [
@@ -22,6 +24,10 @@ export function getLibraryTrackGridStyle({
 
   if (showPlaylist) {
     columns.push('minmax(0, 1fr)');
+  }
+
+  if (showDownloaded) {
+    columns.push('128px');
   }
 
   columns.push(dense ? '52px' : '50px');

@@ -5,10 +5,7 @@ import type {
 } from '@ton/core';
 import { showToast } from './toast-store';
 import {
-  invalidateTracks,
-  loadTracks,
-  refreshTrackSummariesByIds,
-  useLibraryStore,
+  reconcileLibraryTracks,
 } from './library-store';
 import {
   clearRuntimeMeta,
@@ -62,14 +59,7 @@ export function subscribeToDownloadEvents(): () => void {
       void mergeCompletedTrackIntoPlaylists(event.trackId, event.playlistIds);
     }
 
-    if (!useLibraryStore.getState().hasLoaded) {
-      invalidateTracks();
-      return;
-    }
-
-    void refreshTrackSummariesByIds([event.trackId]).catch(() => {
-      void loadTracks({ force: true });
-    });
+    void reconcileLibraryTracks().catch(() => {});
   };
 
   const handleError = (data: unknown) => {

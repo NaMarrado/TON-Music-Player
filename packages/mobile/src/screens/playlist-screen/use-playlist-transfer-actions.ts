@@ -9,7 +9,7 @@ import {
   type LibraryTransferProgress,
 } from '../../services/library-transfer';
 import { loadPlaylists, loadPlaylist } from '../../stores/playlist-store';
-import { loadTracks } from '../../stores/library-store';
+import { reconcileLibraryTracks } from '../../stores/library-store';
 import { showToast } from '../../stores/toast-store';
 
 export function usePlaylistTransferActions(
@@ -88,7 +88,10 @@ export function usePlaylistTransferActions(
         return;
       }
 
-      await Promise.all([loadTracks(), loadPlaylists()]);
+      await Promise.all([
+        reconcileLibraryTracks({ immediate: true, loadIfUninitialized: true }),
+        loadPlaylists(),
+      ]);
 
       if (result.bundleType === 'playlist' && result.playlistIds.length > 0) {
         navigation.navigate('Playlist', { id: result.playlistIds[0] });

@@ -8,6 +8,7 @@ type TrackListHeaderProps = {
   onSelectAll: () => void;
   onSort: (col: SortColumn) => void;
   showArtist: boolean;
+  showDownloaded: boolean;
   showDrag: boolean;
   sortBy: SortColumn;
   sortDir: SortDir;
@@ -20,6 +21,7 @@ export function TrackListHeader({
   onSelectAll,
   onSort,
   showArtist,
+  showDownloaded,
   showDrag,
   sortBy,
   sortDir,
@@ -36,7 +38,7 @@ export function TrackListHeader({
   return (
     <div
       style={{
-        ...getPlaylistTrackGridStyle({ dense, showArtist, showDrag }),
+        ...getPlaylistTrackGridStyle({ dense, showArtist, showDownloaded, showDrag }),
         paddingBottom: 'var(--track-list-header-padding-bottom)',
         marginBottom: 'var(--track-list-row-gap)',
         fontSize: '0.7rem',
@@ -49,6 +51,7 @@ export function TrackListHeader({
     >
       <PlaylistTrackGridShell
         showArtist={showArtist}
+        showDownloaded={showDownloaded}
         showDrag={showDrag}
         dragSlot={null}
         indexSlot={
@@ -81,6 +84,18 @@ export function TrackListHeader({
             >
               {t('colArtist')}
               <SortArrow dir={sortBy === 'artist' ? sortDir : null} />
+            </span>
+          </div>
+        ) : undefined}
+        downloadedSlot={showDownloaded ? (
+          <div style={textHeaderCellStyle}>
+            <span
+              onClick={() => onSort('downloaded_at')}
+              className="inline-flex items-center"
+              style={{ ...headerStyle, borderRadius: '3px' }}
+            >
+              {t('colDownloaded')}
+              <SortArrow dir={sortBy === 'downloaded_at' ? sortDir : null} />
             </span>
           </div>
         ) : undefined}

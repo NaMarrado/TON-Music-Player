@@ -21,7 +21,7 @@ export function ArtistPage() {
       return;
     }
     if ((!hasLoaded || isStale) && !isLoading) {
-      void loadTracks();
+      void loadTracks().catch(() => {});
     }
   }, [artistName, hasLoaded, isLoading, isStale]);
 

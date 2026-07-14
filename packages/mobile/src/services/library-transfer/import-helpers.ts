@@ -19,12 +19,33 @@ import { resolveArchiveEntryName } from './import-archive';
 
 export interface PreparedImportTrack {
   contentHashSha256: string | null;
+  downloadedAt: number | null;
   fileHash: string;
   filePath: string;
   fileSize: number | null;
   format: ReturnType<typeof audioFormatFromExtension>;
   inLibrary: boolean;
   metadata: ExportManifest['tracks'][number]['metadata'];
+}
+
+export interface ExistingImportTrackReconciliation {
+  downloadedAt: number | null;
+  trackId: number;
+}
+
+export function normalizeImportedDownloadedAt(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0
+    ? Math.floor(value)
+    : null;
+}
+
+function earliestDownloadedAt(
+  current: number | null,
+  incoming: number | null,
+): number | null {
+  if (current == null) return incoming;
+  if (incoming == null) return current;
+  return Math.min(current, incoming);
 }
 
 export async function prepareImportTracks(
@@ -36,13 +57,13 @@ export async function prepareImportTracks(
   shouldCancel?: (() => boolean) | null,
 ): Promise<{
   preparedTracks: PreparedImportTrack[];
-  trackIdsToMarkInLibrary: number[];
+  existingTracksToReconcile: ExistingImportTrackReconciliation[];
   trackIdsByHash: Record<string, number>;
   skippedTracks: number;
 }> {
   const preparedTracksByHash = new Map<string, PreparedImportTrack>();
   const trackIdsByHash: Record<string, number> = { ...existingTrackIdsByHash };
-  const trackIdsToMarkInLibrary = new Set<number>();
+  const existingTracksToReconcile = new Map<number, ExistingImportTrackReconciliation>();
   let skippedTracks = 0;
 
   onProgress?.({ phase: 'tracks', current: 0, total: manifest.tracks.length });
@@ -50,15 +71,22 @@ export async function prepareImportTracks(
   for (let index = 0; index < manifest.tracks.length; index += 1) {
     throwIfLibraryTransferCancelled(shouldCancel);
     const entry = manifest.tracks[index];
+    const downloadedAt = normalizeImportedDownloadedAt(entry.downloaded_at);
     const existingTrackId = existingTrackIdsByHash[entry.file_hash];
     if (existingTrackId) {
-      trackIdsToMarkInLibrary.add(existingTrackId);
+      const current = existingTracksToReconcile.get(existingTrackId);
+      existingTracksToReconcile.set(existingTrackId, {
+        trackId: existingTrackId,
+        downloadedAt: earliestDownloadedAt(current?.downloadedAt ?? null, downloadedAt),
+      });
       skippedTracks += 1;
       onProgress?.({ phase: 'tracks', current: index + 1, total: manifest.tracks.length });
       continue;
     }
 
-    if (preparedTracksByHash.has(entry.file_hash)) {
+    const duplicate = preparedTracksByHash.get(entry.file_hash);
+    if (duplicate) {
+      duplicate.downloadedAt = earliestDownloadedAt(duplicate.downloadedAt, downloadedAt);
       skippedTracks += 1;
       onProgress?.({ phase: 'tracks', current: index + 1, total: manifest.tracks.length });
       continue;
@@ -93,6 +121,7 @@ export async function prepareImportTracks(
     const info = await FileSystem.getInfoAsync(destinationUri, { size: true });
     const preparedTrack: PreparedImportTrack = {
       contentHashSha256: entry.content_hash_sha256 ?? null,
+      downloadedAt,
       fileHash: entry.file_hash,
       filePath: destinationUri,
       fileSize: info.exists && typeof info.size === 'number' ? info.size : null,
@@ -107,7 +136,7 @@ export async function prepareImportTracks(
 
   return {
     preparedTracks: [...preparedTracksByHash.values()],
-    trackIdsToMarkInLibrary: [...trackIdsToMarkInLibrary],
+    existingTracksToReconcile: [...existingTracksToReconcile.values()],
     trackIdsByHash,
     skippedTracks,
   };
@@ -161,14 +190,24 @@ export async function prepareImportPlaylistCovers(
 export async function insertImportedLibraryAsync(
   manifest: ExportManifest,
   preparedTracks: PreparedImportTrack[],
-  trackIdsToMarkInLibrary: number[],
+  existingTracksToReconcile: ExistingImportTrackReconciliation[],
   trackIdsByHash: Record<string, number>,
   playlistCoverPaths: Record<string, string>,
   onProgress?: (progress: LibraryTransferProgress) => void,
   shouldCancel?: (() => boolean) | null,
 ): Promise<number[]> {
   const db = getDb();
-  const uniqueTrackIdsToMark = [...new Set(trackIdsToMarkInLibrary)];
+  const reconciliationsByTrackId = new Map<number, ExistingImportTrackReconciliation>();
+  for (const reconciliation of existingTracksToReconcile) {
+    const current = reconciliationsByTrackId.get(reconciliation.trackId);
+    reconciliationsByTrackId.set(reconciliation.trackId, {
+      trackId: reconciliation.trackId,
+      downloadedAt: earliestDownloadedAt(
+        current?.downloadedAt ?? null,
+        reconciliation.downloadedAt,
+      ),
+    });
+  }
   const maxOrderRow = await db.getFirstAsync<{ m: number }>(
     'SELECT COALESCE(MAX(sort_order), 0) as m FROM playlists',
   );
@@ -181,9 +220,21 @@ export async function insertImportedLibraryAsync(
   await db.withExclusiveTransactionAsync(async (txn) => {
     let insertedTrackCount = 0;
 
-    for (const trackId of uniqueTrackIdsToMark) {
+    for (const reconciliation of reconciliationsByTrackId.values()) {
       throwIfLibraryTransferCancelled(shouldCancel);
-      await txn.runAsync('UPDATE tracks SET in_library = 1 WHERE id = ?', [trackId]);
+      await txn.runAsync(
+        `UPDATE tracks
+         SET in_library = 1,
+             downloaded_at = CASE
+               WHEN downloaded_at IS NULL OR downloaded_at <= 0 THEN ?
+               ELSE downloaded_at
+             END
+         WHERE id = ?`,
+        [
+          reconciliation.downloadedAt,
+          reconciliation.trackId,
+        ],
+      );
     }
 
     for (const track of preparedTracks) {
@@ -196,8 +247,8 @@ export async function insertImportedLibraryAsync(
           bitrate, sample_rate, format, cover_art_path,
           loudness_lufs, loudness_gain,
           youtube_id, spotify_id, soundcloud_id, source_url,
-          last_played_at, rating, in_library
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          last_played_at, rating, downloaded_at, in_library
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           track.filePath,
           track.fileHash,
@@ -225,6 +276,7 @@ export async function insertImportedLibraryAsync(
           null,
           null,
           null,
+          track.downloadedAt,
           1,
         ],
       );

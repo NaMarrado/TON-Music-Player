@@ -6,6 +6,7 @@ export interface LibraryHeaderProps {
   exportableTrackCount: number;
   totalTrackCount: number;
   totalDuration: number;
+  totalSizeLabel: string;
   filterQuery: string;
   selectedIds: Set<number>;
   deleteConfirm: boolean;

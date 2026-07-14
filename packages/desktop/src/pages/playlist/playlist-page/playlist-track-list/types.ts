@@ -6,6 +6,7 @@ import type { PlaylistLayout } from '../use-playlist-layout';
 
 export type PlaylistTrackListProps = {
   layout: PlaylistLayout;
+  locale: string;
   t: TFunction<'pages/playlist'>;
   tracks: PlaylistTrackEntry[];
   displayTracks: PlaylistTrackEntry[];

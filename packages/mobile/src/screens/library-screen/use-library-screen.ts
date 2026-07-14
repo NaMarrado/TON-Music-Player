@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { getFilteredTracks } from '@ton/core';
 import { useTranslation } from 'react-i18next';
 import {
   setFilterQuery,
   setSortBy,
   useLibraryStore,
-  loadTracks,
+  reconcileLibraryTracks,
 } from '../../stores/library-store';
 import { createPlaylist, loadPlaylists, usePlaylistStore } from '../../stores/playlist-store';
 import { playTracks } from '../../services/playback-bridge';
@@ -17,7 +18,6 @@ import { useLibrarySelection } from './use-library-selection';
 export function useLibraryScreen() {
   const { t } = useTranslation('library');
   const tracks = useLibraryStore((state) => state.tracks);
-  const hasLibraryLoaded = useLibraryStore((state) => state.hasLoaded);
   const sortBy = useLibraryStore((state) => state.sortBy);
   const sortOrder = useLibraryStore((state) => state.sortOrder);
   const filterQuery = useLibraryStore((state) => state.filterQuery);
@@ -29,14 +29,17 @@ export function useLibraryScreen() {
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
 
+  useFocusEffect(
+    useCallback(() => {
+      void reconcileLibraryTracks({ immediate: true, loadIfUninitialized: true }).catch(() => {});
+    }, []),
+  );
+
   useEffect(() => {
-    if (!hasLibraryLoaded && !isLoading) {
-      loadTracks().catch(() => {});
-    }
     if (!hasPlaylistsLoaded && !isPlaylistLoading) {
       loadPlaylists().catch(() => {});
     }
-  }, [hasLibraryLoaded, hasPlaylistsLoaded, isLoading, isPlaylistLoading]);
+  }, [hasPlaylistsLoaded, isPlaylistLoading]);
 
   const displayTracks = useMemo(
     () => getFilteredTracks(tracks, filterQuery, sortBy, sortOrder),

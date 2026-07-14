@@ -31,6 +31,7 @@
   "toastSaved": "プレイリストが更新されました",
   "colTitle": "タイトル",
   "colArtist": "アーティスト",
+  "colDownloaded": "ダウンロード日",
   "colTime": "時間",
   "searchPlaceholder": "検索...",
   "noResults": "一致するトラックはありません。",

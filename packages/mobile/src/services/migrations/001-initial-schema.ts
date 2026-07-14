@@ -33,6 +33,7 @@ export async function migrate001(db: SQLiteDatabase): Promise<void> {
       last_played_at  INTEGER,
       rating          INTEGER,
       added_at        INTEGER NOT NULL DEFAULT (strftime('%s','now')),
+      downloaded_at   INTEGER,
       scanned_at      INTEGER NOT NULL DEFAULT (strftime('%s','now')),
       in_library      INTEGER NOT NULL DEFAULT 1
     );
@@ -84,6 +85,7 @@ export async function migrate001(db: SQLiteDatabase): Promise<void> {
       cover_url       TEXT,
       playlist_id     INTEGER,
       duration_ms     INTEGER,
+      resolved_source_id TEXT,
       format          TEXT NOT NULL DEFAULT 'm4a',
       quality_profile TEXT NOT NULL DEFAULT 'normal',
       status          TEXT NOT NULL DEFAULT 'pending',
@@ -121,7 +123,8 @@ export async function migrate001(db: SQLiteDatabase): Promise<void> {
       VALUES('delete', old.id, old.title, old.artist, old.album, old.album_artist, old.genre);
     END;
 
-    CREATE TRIGGER IF NOT EXISTS tracks_fts_update AFTER UPDATE ON tracks BEGIN
+    CREATE TRIGGER IF NOT EXISTS tracks_fts_update
+    AFTER UPDATE OF title, artist, album, album_artist, genre ON tracks BEGIN
       INSERT INTO tracks_fts(tracks_fts, rowid, title, artist, album, album_artist, genre)
       VALUES('delete', old.id, old.title, old.artist, old.album, old.album_artist, old.genre);
       INSERT INTO tracks_fts(rowid, title, artist, album, album_artist, genre)

@@ -33,7 +33,31 @@ export const useLibraryStore = create<LibraryState>()(() => ({
 }));
 
 /** Load all tracks from DB into the store (with playlist names). */
+const LIBRARY_RECONCILE_DELAY_MS = 100;
+const LIBRARY_RETRY_DELAY_MS = 500;
+const LIBRARY_RETRY_MAX_ATTEMPTS = 3;
 let loadTracksPromise: Promise<void> | null = null;
+let libraryRevision = 0;
+let lastAppliedRevision = -1;
+let reconcileTimer: ReturnType<typeof setTimeout> | null = null;
+let reconcileRetryTimer: ReturnType<typeof setTimeout> | null = null;
+let reconcileRetryAttempt = 0;
+let reconcileWaiters: Array<{
+  resolve: () => void;
+  reject: (error: unknown) => void;
+}> = [];
+
+async function waitForLibraryRevisionToSettle(): Promise<void> {
+  while (true) {
+    const revisionAtStart = libraryRevision;
+    await new Promise<void>((resolve) => {
+      setTimeout(resolve, LIBRARY_RECONCILE_DELAY_MS);
+    });
+    if (revisionAtStart === libraryRevision) {
+      return;
+    }
+  }
+}
 
 export async function loadTracks(options: { force?: boolean } = {}): Promise<void> {
   const { force = false } = options;
@@ -49,16 +73,30 @@ export async function loadTracks(options: { force?: boolean } = {}): Promise<voi
   useLibraryStore.setState({ isLoading: true });
   loadTracksPromise = (async () => {
     try {
-      const rows = await window.api.invoke('library:list-summary');
-      useLibraryStore.setState({
-        tracks: rows as LibraryTrack[],
-        isLoading: false,
-        hasLoaded: true,
-        isStale: false,
-      });
-    } catch {
+      // Re-run the snapshot if a mutation landed while IPC was in flight. This
+      // prevents an older full-library response from replacing newer DB state.
+      while (true) {
+        const revisionAtRequest = libraryRevision;
+        const rows = await window.api.invoke('library:list-summary');
+        if (revisionAtRequest !== libraryRevision) {
+          await waitForLibraryRevisionToSettle();
+          continue;
+        }
+
+        lastAppliedRevision = revisionAtRequest;
+        useLibraryStore.setState({
+          tracks: rows as LibraryTrack[],
+          isLoading: false,
+          hasLoaded: true,
+          isStale: false,
+        });
+        cancelLibraryRetry();
+        break;
+      }
+    } catch (error) {
       // query failed — keep existing tracks
-      useLibraryStore.setState({ isLoading: false });
+      useLibraryStore.setState({ isLoading: false, isStale: true });
+      throw error;
     } finally {
       loadTracksPromise = null;
     }
@@ -68,34 +106,99 @@ export async function loadTracks(options: { force?: boolean } = {}): Promise<voi
 }
 
 export function invalidateTracks(): void {
+  libraryRevision += 1;
   useLibraryStore.setState({ isStale: true });
 }
 
-export async function refreshTrackSummariesByIds(trackIds: number[]): Promise<void> {
-  if (trackIds.length === 0) {
-    return;
+function cancelLibraryRetry(): void {
+  if (reconcileRetryTimer) {
+    clearTimeout(reconcileRetryTimer);
+    reconcileRetryTimer = null;
   }
-
-  const rows = await window.api.invoke('library:list-summary-by-ids', trackIds);
-  upsertTrackSummaries(rows as LibraryTrack[]);
+  reconcileRetryAttempt = 0;
 }
 
-export function upsertTrackSummaries(rows: LibraryTrack[]): void {
-  if (rows.length === 0) {
+async function flushLibraryReconcile(): Promise<void> {
+  if (reconcileTimer) {
+    clearTimeout(reconcileTimer);
+    reconcileTimer = null;
+  }
+  if (reconcileRetryTimer) {
+    clearTimeout(reconcileRetryTimer);
+    reconcileRetryTimer = null;
+  }
+
+  try {
+    await loadTracks({ force: true });
+    if (lastAppliedRevision === libraryRevision && reconcileTimer) {
+      clearTimeout(reconcileTimer);
+      reconcileTimer = null;
+    }
+
+    const waiters = reconcileWaiters;
+    reconcileWaiters = [];
+    waiters.forEach(({ resolve }) => resolve());
+  } catch (error) {
+    const waiters = reconcileWaiters;
+    reconcileWaiters = [];
+    waiters.forEach(({ reject }) => reject(error));
+    scheduleLibraryRetry();
+    throw error;
+  }
+}
+
+function scheduleLibraryRetry(): void {
+  if (
+    reconcileRetryTimer
+    || !useLibraryStore.getState().isStale
+    || reconcileRetryAttempt >= LIBRARY_RETRY_MAX_ATTEMPTS
+  ) {
     return;
   }
 
-  const { tracks } = useLibraryStore.getState();
-  const tracksById = new Map(tracks.map((track) => [track.id, track]));
-  for (const row of rows) {
-    tracksById.set(row.id, row);
+  const delay = LIBRARY_RETRY_DELAY_MS * (2 ** reconcileRetryAttempt);
+  reconcileRetryAttempt += 1;
+  reconcileRetryTimer = setTimeout(() => {
+    reconcileRetryTimer = null;
+    if (!useLibraryStore.getState().isStale) {
+      reconcileRetryAttempt = 0;
+      return;
+    }
+    void flushLibraryReconcile().catch(() => {});
+  }, delay);
+}
+
+function scheduleLibraryReconcile(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    reconcileWaiters.push({ resolve, reject });
+    if (reconcileTimer) {
+      clearTimeout(reconcileTimer);
+    }
+    reconcileTimer = setTimeout(() => {
+      reconcileTimer = null;
+      void flushLibraryReconcile().catch(() => {});
+    }, LIBRARY_RECONCILE_DELAY_MS);
+  });
+}
+
+export async function reconcileLibraryTracks(
+  options: { immediate?: boolean; loadIfUninitialized?: boolean } = {},
+): Promise<void> {
+  invalidateTracks();
+  const { immediate = false, loadIfUninitialized = false } = options;
+  if (!loadIfUninitialized && !useLibraryStore.getState().hasLoaded && !loadTracksPromise) {
+    // An initial authoritative load may already have failed and scheduled a
+    // retry. A passive invalidation must not cancel that only recovery path.
+    return;
   }
 
-  useLibraryStore.setState({
-    tracks: Array.from(tracksById.values()).sort((left, right) => right.added_at - left.added_at),
-    hasLoaded: true,
-    isStale: false,
-  });
+  cancelLibraryRetry();
+  if (immediate) {
+    await flushLibraryReconcile();
+    return;
+  }
+
+  await scheduleLibraryReconcile();
 }
 
 /** Mark a track as played in the in-memory store (keeps recently-played section fresh). */
@@ -116,11 +219,18 @@ export async function deleteTracks(
   mode: LibraryDeleteMode = 'everywhere',
 ): Promise<number> {
   const ipc = window.api.invoke as (...args: unknown[]) => Promise<unknown>;
-  const result = (await ipc('library:delete-tracks', trackIds, mode)) as { deleted: number };
-  const current = useLibraryStore.getState().tracks;
-  const idSet = new Set(trackIds);
-  useLibraryStore.setState({ tracks: current.filter((t) => !idSet.has(t.id)) });
-  return result.deleted;
+  invalidateTracks();
+  try {
+    const result = (await ipc('library:delete-tracks', trackIds, mode)) as { deleted: number };
+    const current = useLibraryStore.getState().tracks;
+    const idSet = new Set(trackIds);
+    useLibraryStore.setState({ tracks: current.filter((t) => !idSet.has(t.id)) });
+    await reconcileLibraryTracks({ immediate: true }).catch(() => {});
+    return result.deleted;
+  } catch (error) {
+    await reconcileLibraryTracks({ immediate: true }).catch(() => {});
+    throw error;
+  }
 }
 
 export async function deleteTracksEverywhere(trackIds: number[]): Promise<number> {

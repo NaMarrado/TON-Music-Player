@@ -12,6 +12,7 @@ export function LibraryHeader({
   exportableTrackCount,
   totalTrackCount,
   totalDuration,
+  totalSizeLabel,
   filterQuery,
   selectedIds,
   deleteConfirm,
@@ -53,6 +54,7 @@ export function LibraryHeader({
           filterQuery={filterQuery}
           filteredCount={filteredTracks.length}
           totalDuration={totalDuration}
+          totalSizeLabel={totalSizeLabel}
           totalTrackCount={totalTrackCount}
           title={t('title')}
         />

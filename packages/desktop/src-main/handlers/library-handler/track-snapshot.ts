@@ -32,6 +32,7 @@ const TRACK_SNAPSHOT_SELECT = `
   NULL AS rating,
   t.in_library AS in_library,
   t.added_at AS added_at,
+  t.downloaded_at AS downloaded_at,
   0 AS scanned_at
 `;
 
@@ -57,7 +58,7 @@ export function queryTrackSnapshots(options: QueryTrackSnapshotsOptions = {}): T
     SELECT
       ${TRACK_SNAPSHOT_SELECT}
     FROM tracks t
-    WHERE t.in_library = 1
+    WHERE 1 = 1
     ${whereClause}
     ${orderBy}
     ${limitClause}

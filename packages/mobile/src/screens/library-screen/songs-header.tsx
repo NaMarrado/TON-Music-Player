@@ -10,7 +10,7 @@ export function SongsHeader({
   filterPlaceholder,
   showPlayAll,
   playAllLabel,
-  trackCountLabel,
+  summaryLabel,
   onPlayAll,
 }: {
   sectionLabel: string;
@@ -18,7 +18,7 @@ export function SongsHeader({
   filterPlaceholder: string;
   showPlayAll: boolean;
   playAllLabel: string;
-  trackCountLabel: string;
+  summaryLabel: string;
   onPlayAll: () => void;
 }) {
   return (
@@ -32,8 +32,8 @@ export function SongsHeader({
         />
       </View>
 
-      {showPlayAll && (
-        <View className="flex-row items-center justify-between px-4 mt-2 mb-2">
+      <View className="flex-row flex-wrap items-center justify-between px-4 mt-2 mb-2">
+        {showPlayAll && (
           <Pressable
             onPress={onPlayAll}
             className="flex-row items-center px-4 py-1.5 bg-white rounded-full"
@@ -41,11 +41,20 @@ export function SongsHeader({
             <Feather name="play" size={14} color="#050505" />
             <Text className="text-black text-[13px] font-semibold ml-1.5">{playAllLabel}</Text>
           </Pressable>
-          <Text className="text-text-secondary text-xs" style={{ fontVariant: ['tabular-nums'] }}>
-            {trackCountLabel}
-          </Text>
-        </View>
-      )}
+        )}
+        <Text
+          className="text-text-secondary text-xs text-right"
+          style={{
+            flexGrow: 1,
+            flexShrink: 1,
+            fontVariant: ['tabular-nums'],
+            marginLeft: showPlayAll ? 12 : 0,
+            minWidth: 160,
+          }}
+        >
+          {summaryLabel}
+        </Text>
+      </View>
     </>
   );
 }

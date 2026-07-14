@@ -130,6 +130,14 @@ interface ElectronAPI {
     tracks: import('@ton/core').Track[];
   } | null>;
   invoke(
+    channel: 'playlist:get-track-memberships',
+    trackId: number,
+    playlistIds: number[],
+  ): Promise<Array<import('@ton/core').PlaylistTrackEntry & {
+    playlist_id: number;
+    position: number;
+  }>>;
+  invoke(
     channel: 'playlist:create',
     data: { name: string; description?: string; is_smart?: boolean; smart_rules?: string },
   ): Promise<import('@ton/core').Playlist>;

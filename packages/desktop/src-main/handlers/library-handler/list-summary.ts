@@ -34,7 +34,7 @@ function queryLibrarySummary(whereClause = '', params: unknown[] = []): LibraryS
       JOIN playlists p ON p.id = pt.playlist_id
       GROUP BY pt.track_id
     ) AS playlist_summary ON playlist_summary.track_id = t.id
-    WHERE t.in_library = 1
+    WHERE 1 = 1
     ${whereClause}
     ORDER BY t.added_at DESC
   `).all(...params) as LibrarySummaryTrack[];

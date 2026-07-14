@@ -10,7 +10,7 @@ import { useLibraryLayout } from './use-library-layout';
 import { useLibraryViewState } from './use-library-view-state';
 
 export function LibraryPage() {
-  const { t } = useTranslation('pages/library');
+  const { i18n, t } = useTranslation('pages/library');
   const navigate = useNavigate();
   const layout = useLibraryLayout();
   const {
@@ -40,6 +40,7 @@ export function LibraryPage() {
     setPlaylistPickerPos,
     setSelectedIds,
     totalDuration,
+    totalSizeLabel,
   } = useLibraryViewState(tracks, filterQuery, sortBy, sortOrder);
 
   const {
@@ -72,6 +73,7 @@ export function LibraryPage() {
         filteredTracks={filteredTracks}
         totalTrackCount={tracks.length}
         totalDuration={totalDuration}
+        totalSizeLabel={totalSizeLabel}
         filterQuery={filterQuery}
         selectedIds={selectedIds}
         deleteConfirm={deleteConfirm}
@@ -104,6 +106,7 @@ export function LibraryPage() {
         ) : (
           <TrackListView
             layout={layout}
+            locale={i18n.resolvedLanguage || i18n.language}
             tracks={filteredTracks}
             selectedIds={selectedIds}
             t={t}

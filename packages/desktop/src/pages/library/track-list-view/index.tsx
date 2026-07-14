@@ -9,6 +9,7 @@ import { TrackRow } from './track-row';
 
 interface TrackListViewProps {
   layout: LibraryLayout;
+  locale: string;
   tracks: LibraryTrack[];
   onPlayTrack: (index: number) => void;
   onContextMenu: (trackId: number, event: React.MouseEvent) => void;
@@ -20,6 +21,7 @@ interface TrackListViewProps {
 
 export function TrackListView({
   layout,
+  locale,
   tracks,
   onPlayTrack,
   onContextMenu,
@@ -40,6 +42,7 @@ export function TrackListView({
         dense={layout.dense}
         onSelectAll={onSelectAll}
         showArtist={layout.showArtistColumn}
+        showDownloaded={layout.showDownloadedColumn}
         showPlaylist={layout.showPlaylistColumn}
         sortBy={sortBy}
         sortOrder={sortOrder}
@@ -59,7 +62,9 @@ export function TrackListView({
             <TrackRow
               dense={layout.dense}
               showArtist={layout.showArtistColumn}
+              showDownloaded={layout.showDownloadedColumn}
               showPlaylist={layout.showPlaylistColumn}
+              locale={locale}
               track={track}
               isPlaying={track.id === currentTrackId}
               isSelected={selectedIds.has(track.id)}

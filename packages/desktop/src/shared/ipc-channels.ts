@@ -16,6 +16,7 @@ export const ALLOWED_INVOKE_CHANNELS = [
   'search:spotify-playlist',
   'playlist:list',
   'playlist:get',
+  'playlist:get-track-memberships',
   'playlist:create',
   'playlist:update',
   'playlist:delete',

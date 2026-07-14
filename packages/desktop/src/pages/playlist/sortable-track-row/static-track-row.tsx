@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { formatTime } from '@ton/core';
+import { formatDownloadedDate, formatTime } from '@ton/core';
 import type { PlaylistTrackEntry } from '@ton/core';
 import { CoverArt } from './cover-art';
 import { PlaylistTrackGridShell, getPlaylistTrackGridStyle } from './grid-shell';
@@ -11,8 +11,10 @@ export const StaticTrackRow = memo(function StaticTrackRow({
   index,
   isPlaying,
   isSelected,
+  locale,
   onClick,
   showArtist,
+  showDownloaded,
   onToggleSelect,
   showDragSpacer,
   track,
@@ -22,8 +24,10 @@ export const StaticTrackRow = memo(function StaticTrackRow({
   index: number;
   isPlaying: boolean;
   isSelected: boolean;
+  locale: string;
   showDragSpacer?: boolean;
   showArtist: boolean;
+  showDownloaded: boolean;
   onClick: () => void;
   onToggleSelect: (shiftKey: boolean) => void;
 }) {
@@ -36,6 +40,7 @@ export const StaticTrackRow = memo(function StaticTrackRow({
         ...getPlaylistTrackGridStyle({
           dense,
           showArtist,
+          showDownloaded,
           showDrag: Boolean(showDragSpacer),
         }),
         borderRadius: '6px',
@@ -46,6 +51,7 @@ export const StaticTrackRow = memo(function StaticTrackRow({
     >
       <PlaylistTrackGridShell
         showArtist={showArtist}
+        showDownloaded={showDownloaded}
         showDrag={Boolean(showDragSpacer)}
         dragSlot={null}
         indexSlot={
@@ -83,6 +89,12 @@ export const StaticTrackRow = memo(function StaticTrackRow({
             style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}
           />
         ) : undefined}
+        downloadedSlot={showDownloaded ? (
+          <HoverMarqueeText
+            text={formatDownloadedDate(track.downloaded_at, locale)}
+            style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}
+          />
+        ) : undefined}
         timeSlot={
           <HoverMarqueeText
             text={formatTime(track.duration_ms)}
@@ -99,6 +111,8 @@ export const StaticTrackRow = memo(function StaticTrackRow({
   prev.index === next.index &&
   prev.isPlaying === next.isPlaying &&
   prev.isSelected === next.isSelected &&
+  prev.locale === next.locale &&
   prev.showArtist === next.showArtist &&
+  prev.showDownloaded === next.showDownloaded &&
   prev.showDragSpacer === next.showDragSpacer,
 );

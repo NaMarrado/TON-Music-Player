@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { loadTracks } from '../../../../stores/library-store';
+import { reconcileLibraryTracks } from '../../../../stores/library-store';
 import { dismissToast, showToast } from '../../../../stores/toast-store';
 import type { LibraryPageActionsArgs } from './types';
 
@@ -26,7 +26,7 @@ export function useLibraryTransferActions(
       dismissToast(loadingId);
       const count = result?.imported ?? 0;
       if (count > 0) {
-        await loadTracks({ force: true });
+        await reconcileLibraryTracks({ immediate: true, loadIfUninitialized: true });
         showToast(t('scanComplete', { count }), 'success');
       }
     } catch {

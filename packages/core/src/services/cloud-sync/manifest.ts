@@ -175,9 +175,11 @@ export function mergeCloudLibraryManifests(
   }
   for (const track of local.tracks) {
     const previous = tracks.get(track.content_hash_sha256);
+    const preferred = !previous || track.updated_at >= previous.updated_at ? track : previous;
+    const downloadedAt = earliestDownloadedAt(previous?.downloaded_at, track.downloaded_at);
     tracks.set(
       track.content_hash_sha256,
-      !previous || track.updated_at >= previous.updated_at ? track : previous,
+      { ...preferred, downloaded_at: downloadedAt },
     );
   }
 
@@ -206,4 +208,14 @@ export function mergeCloudLibraryManifests(
       left.sort_order - right.sort_order || right.updated_at - left.updated_at
     )),
   };
+}
+
+function earliestDownloadedAt(
+  left: number | null | undefined,
+  right: number | null | undefined,
+): number | null {
+  const values = [left, right].filter(
+    (value): value is number => value != null && Number.isFinite(value) && value > 0,
+  );
+  return values.length > 0 ? Math.min(...values) : null;
 }

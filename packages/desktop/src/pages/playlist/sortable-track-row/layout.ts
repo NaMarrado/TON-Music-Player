@@ -3,12 +3,14 @@ import type { CSSProperties } from 'react';
 type PlaylistTrackGridOptions = {
   dense: boolean;
   showArtist: boolean;
+  showDownloaded: boolean;
   showDrag: boolean;
 };
 
 export function getPlaylistTrackGridStyle({
   dense,
   showArtist,
+  showDownloaded,
   showDrag,
 }: PlaylistTrackGridOptions): CSSProperties {
   const columns: string[] = [];
@@ -23,6 +25,10 @@ export function getPlaylistTrackGridStyle({
 
   if (showArtist) {
     columns.push('minmax(0, 1fr)');
+  }
+
+  if (showDownloaded) {
+    columns.push('128px');
   }
 
   columns.push(dense ? '52px' : '50px');

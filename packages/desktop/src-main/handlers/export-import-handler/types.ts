@@ -44,6 +44,7 @@ export type ExportTrackRow = {
   file_path: string;
   file_hash: string | null;
   content_hash_sha256: string | null;
+  downloaded_at: number | null;
   title: string | null;
   artist: string | null;
   album: string | null;
@@ -87,5 +88,7 @@ export type ImportPreparedFile = {
   destPath: string;
   hash: string;
   contentHashSha256: string | null;
+  downloadedAt: number | null;
+  fileSize: number;
   meta: ExportTrackEntry['metadata'];
 };

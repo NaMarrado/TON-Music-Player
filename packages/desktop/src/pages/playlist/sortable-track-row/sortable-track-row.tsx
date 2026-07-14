@@ -1,4 +1,4 @@
-import { formatTime } from '@ton/core';
+import { formatDownloadedDate, formatTime } from '@ton/core';
 import type { PlaylistTrackEntry } from '@ton/core';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -12,8 +12,10 @@ export function SortableTrackRow({
   index,
   isPlaying,
   isSelected,
+  locale,
   onClick,
   showArtist,
+  showDownloaded,
   onToggleSelect,
   sortId,
   track,
@@ -24,7 +26,9 @@ export function SortableTrackRow({
   sortId: string;
   isPlaying: boolean;
   isSelected: boolean;
+  locale: string;
   showArtist: boolean;
+  showDownloaded: boolean;
   onClick: () => void;
   onToggleSelect: (shiftKey: boolean) => void;
 }) {
@@ -46,6 +50,7 @@ export function SortableTrackRow({
         ...getPlaylistTrackGridStyle({
           dense,
           showArtist,
+          showDownloaded,
           showDrag: true,
         }),
         borderRadius: '6px',
@@ -61,6 +66,7 @@ export function SortableTrackRow({
     >
       <PlaylistTrackGridShell
         showArtist={showArtist}
+        showDownloaded={showDownloaded}
         showDrag
         dragSlot={
           <button
@@ -118,6 +124,12 @@ export function SortableTrackRow({
           <HoverMarqueeText
             text={track.artist || 'Unknown'}
             style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}
+          />
+        ) : undefined}
+        downloadedSlot={showDownloaded ? (
+          <HoverMarqueeText
+            text={formatDownloadedDate(track.downloaded_at, locale)}
+            style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}
           />
         ) : undefined}
         timeSlot={

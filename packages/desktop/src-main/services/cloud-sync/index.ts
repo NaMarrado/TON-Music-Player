@@ -127,6 +127,12 @@ function parseManifest(value: CloudLibraryManifestV1 | null): CloudLibraryManife
   return value;
 }
 
+function normalizeDownloadedAt(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0
+    ? Math.floor(value)
+    : null;
+}
+
 async function ensureTrackContentHash(track: Track): Promise<string | null> {
   if (!(await pathExists(track.file_path))) {
     return null;
@@ -161,8 +167,6 @@ async function buildLocalManifest(
   const tracks = db.prepare(`
     SELECT DISTINCT t.*
     FROM tracks t
-    WHERE t.in_library = 1
-       OR EXISTS (SELECT 1 FROM playlist_tracks pt WHERE pt.track_id = t.id)
     ORDER BY t.added_at DESC, t.id DESC
   `).all() as Track[];
   const localTracks: LocalCloudTrack[] = [];
@@ -223,6 +227,7 @@ async function buildLocalManifest(
       spotify_id: track.spotify_id,
       soundcloud_id: track.soundcloud_id,
       source_url: track.source_url,
+      downloaded_at: track.downloaded_at,
       added_at: track.added_at,
       updated_at: track.scanned_at || track.added_at,
       metadata: {
@@ -478,6 +483,11 @@ export async function fetchCloudLibraryToDesktop(
     ORDER BY id ASC
   `).all() as Array<{ id: number; content_hash_sha256: string }>;
   const trackIdByHash = new Map(existingRows.map((row) => [row.content_hash_sha256, row.id]));
+  const fillMissingDownloadedAt = db.prepare(`
+    UPDATE tracks
+    SET downloaded_at = ?
+    WHERE id = ? AND downloaded_at IS NULL
+  `);
   const libraryDir = getLibraryDir();
   await fs.promises.mkdir(libraryDir, { recursive: true });
 
@@ -485,7 +495,12 @@ export async function fetchCloudLibraryToDesktop(
   for (let index = 0; index < manifest.tracks.length; index += 1) {
     throwIfCancelled(shouldCancel);
     const track = manifest.tracks[index];
-    if (trackIdByHash.has(track.content_hash_sha256)) {
+    const existingTrackId = trackIdByHash.get(track.content_hash_sha256);
+    if (existingTrackId != null) {
+      const downloadedAt = normalizeDownloadedAt(track.downloaded_at);
+      if (downloadedAt != null) {
+        fillMissingDownloadedAt.run(downloadedAt, existingTrackId);
+      }
       result.skipped += 1;
       emitProgress(onProgress, {
         phase: 'downloading',
@@ -499,6 +514,7 @@ export async function fetchCloudLibraryToDesktop(
 
     const destinationPath = await findNonCollidingFileAsync(libraryDir, buildImportedFileName(track));
     await client.downloadFile(track.object_key, destinationPath);
+    const destinationStats = await fs.promises.stat(destinationPath);
     let coverPath: string | null = null;
     if (track.artwork_object_key && track.artwork_hash_sha256) {
       await ensureArtworkDir(getArtworkDir());
@@ -514,13 +530,13 @@ export async function fetchCloudLibraryToDesktop(
         title, artist, album, album_artist, track_number, disc_number,
         duration_ms, genre, year, bitrate, sample_rate, format, cover_art_path,
         loudness_lufs, loudness_gain, youtube_id, spotify_id, soundcloud_id, source_url,
-        rating, in_library
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        rating, downloaded_at, in_library
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       destinationPath,
       null,
       track.content_hash_sha256,
-      track.file_size,
+      destinationStats.size,
       null,
       track.metadata.title,
       track.metadata.artist,
@@ -542,6 +558,7 @@ export async function fetchCloudLibraryToDesktop(
       track.soundcloud_id,
       track.source_url,
       track.metadata.rating,
+      normalizeDownloadedAt(track.downloaded_at),
       1,
     );
     trackIdByHash.set(track.content_hash_sha256, Number(insertResult.lastInsertRowid));

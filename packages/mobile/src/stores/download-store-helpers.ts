@@ -1,7 +1,7 @@
 import type { QueueItem, QueueStatus } from '../services/download-queue';
 import type { DownloadInput } from '../services/downloader';
 import { getTrackIdsBySourceIdentity } from '../services/db-queries';
-import { upsertTrackById, useLibraryStore } from './library-store';
+import { reconcileLibraryTracks, useLibraryStore } from './library-store';
 
 export type DownloadQueueItem = QueueItem;
 
@@ -53,7 +53,7 @@ export async function syncCompletedLibraryTracks(
     return;
   }
 
-  await Promise.all(trackIds.map((trackId) => upsertTrackById(trackId)));
+  await reconcileLibraryTracks().catch(() => {});
 }
 
 export async function getExistingLibraryTrackId(input: DownloadInput): Promise<number | null> {

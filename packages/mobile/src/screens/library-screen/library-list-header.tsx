@@ -1,7 +1,13 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
-import type { Playlist } from '@ton/core';
+import {
+  formatTime,
+  formatTrackFileSizeSummary,
+  summarizeTrackFileSizes,
+  type Playlist,
+  type Track,
+} from '@ton/core';
 import type { LibraryStackParamList } from '../../types/navigation';
 import { PlaylistStrip } from './playlist-strip';
 import { SongsHeader } from './songs-header';
@@ -9,19 +15,25 @@ import { SongsHeader } from './songs-header';
 export function LibraryListHeader({
   playlists,
   filterQuery,
-  trackCount,
+  tracks,
   onCreatePlaylist,
   onPlayAll,
 }: {
   playlists: Playlist[];
   filterQuery: string;
-  trackCount: number;
+  tracks: Track[];
   onCreatePlaylist: () => void;
   onPlayAll: () => void;
 }) {
   const { t } = useTranslation('library');
   const { t: tc } = useTranslation('common');
   const navigation = useNavigation<NativeStackNavigationProp<LibraryStackParamList>>();
+  const totalDuration = tracks.reduce((sum, track) => sum + (track.duration_ms ?? 0), 0);
+  const summaryLabel = [
+    tc('track', { count: tracks.length }),
+    formatTime(totalDuration),
+    formatTrackFileSizeSummary(summarizeTrackFileSizes(tracks)),
+  ].join(' · ');
 
   return (
     <>
@@ -36,9 +48,9 @@ export function LibraryListHeader({
         sectionLabel={t('songsSection')}
         filterValue={filterQuery}
         filterPlaceholder={t('filterPlaceholder')}
-        showPlayAll={trackCount > 0}
+        showPlayAll={tracks.length > 0}
         playAllLabel={t('playAll')}
-        trackCountLabel={tc('track', { count: trackCount })}
+        summaryLabel={summaryLabel}
         onPlayAll={onPlayAll}
       />
     </>

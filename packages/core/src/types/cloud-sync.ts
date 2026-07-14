@@ -45,6 +45,8 @@ export interface CloudTrackEntry {
   spotify_id: string | null;
   soundcloud_id: string | null;
   source_url: string | null;
+  /** Original TON download completion time in Unix seconds. */
+  downloaded_at?: number | null;
   added_at: number;
   updated_at: number;
   metadata: CloudTrackMetadata;

@@ -10,7 +10,7 @@ import {
   type LibraryExportSelection,
 } from '../../services/library-transfer';
 import { loadPlaylists } from '../../stores/playlist-store';
-import { loadTracks } from '../../stores/library-store';
+import { reconcileLibraryTracks } from '../../stores/library-store';
 import { showToast } from '../../stores/toast-store';
 
 export function useLibraryTransferActions() {
@@ -142,7 +142,10 @@ export function useLibraryTransferActions() {
         return;
       }
 
-      await Promise.all([loadTracks(), loadPlaylists()]);
+      await Promise.all([
+        reconcileLibraryTracks({ immediate: true, loadIfUninitialized: true }),
+        loadPlaylists(),
+      ]);
 
       showToast(
         t('importLibrarySuccessToast', {

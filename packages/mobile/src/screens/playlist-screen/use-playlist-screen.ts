@@ -1,5 +1,9 @@
-import { useEffect, useState } from 'react';
-import { formatTime } from '@ton/core';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  formatTime,
+  formatTrackFileSizeSummary,
+  summarizeTrackFileSizes,
+} from '@ton/core';
 import type { PlaylistTrackEntry } from '@ton/core';
 import { useTranslation } from 'react-i18next';
 import {
@@ -44,11 +48,17 @@ export function usePlaylistScreen(
     tc,
   );
 
-  const totalDurationLabel = tracks.length > 0
-    ? `${tc('track', { count: tracks.length })}${tracks.reduce((sum, track) => sum + (track.duration_ms ?? 0), 0) > 0
-      ? ` · ${formatTime(tracks.reduce((sum, track) => sum + (track.duration_ms ?? 0), 0))}`
-      : ''}`
-    : tc('track', { count: tracks.length });
+  const totalDurationLabel = useMemo(() => {
+    const totalDuration = tracks.reduce(
+      (sum, track) => sum + (track.duration_ms ?? 0),
+      0,
+    );
+    return [
+      tc('track', { count: tracks.length }),
+      formatTime(totalDuration),
+      formatTrackFileSizeSummary(summarizeTrackFileSizes(tracks)),
+    ].join(' · ');
+  }, [tc, tracks]);
 
   return {
     handleDelete: mutationActions.handleDelete,

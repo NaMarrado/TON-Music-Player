@@ -180,6 +180,53 @@ export async function updateQueueItemStatus(
   }
 }
 
+export async function completeQueueItemRecord(
+  id: number,
+  trackId: number,
+): Promise<boolean> {
+  const db = getDb();
+  const completedAt = Math.floor(Date.now() / 1000);
+  let completed = false;
+
+  await db.withExclusiveTransactionAsync(async (txn) => {
+    const queueResult = await txn.runAsync(
+      `UPDATE download_queue
+       SET status = 'completed',
+           error_message = NULL,
+           progress = 1,
+           completed_at = ?,
+           resolved_source_id = (
+             SELECT youtube_id FROM tracks WHERE id = ?
+           )
+       WHERE id = ?
+         AND status IN ('pending', 'downloading', 'retrying')
+         AND completed_at IS NULL
+         AND COALESCE(error_message, '') != 'download_cancelled'`,
+      [completedAt, trackId, id],
+    );
+    if (queueResult.changes !== 1) {
+      return;
+    }
+
+    const trackResult = await txn.runAsync(
+      `UPDATE tracks
+       SET downloaded_at = CASE
+             WHEN downloaded_at IS NULL OR downloaded_at <= 0 THEN ?
+             ELSE downloaded_at
+           END,
+           in_library = 1
+       WHERE id = ?`,
+      [completedAt, trackId],
+    );
+    if (trackResult.changes !== 1) {
+      throw new Error('download_track_missing');
+    }
+    completed = true;
+  });
+
+  return completed;
+}
+
 export async function updateQueueItemProgress(
   id: number,
   progress: number,

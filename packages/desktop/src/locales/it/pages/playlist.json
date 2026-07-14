@@ -31,6 +31,7 @@
   "toastSaved": "Playlist aggiornata",
   "colTitle": "Titolo",
   "colArtist": "Artista",
+  "colDownloaded": "Scaricato",
   "colTime": "Durata",
   "searchPlaceholder": "Cerca...",
   "noResults": "Nessun brano corrispondente.",

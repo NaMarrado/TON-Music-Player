@@ -30,11 +30,40 @@ export function persistResolvedDownload(
   ).run(resolved.url, resolved.youtubeId, resolved.coverUrl, id);
 }
 
-export function markDownloadDone(id: number): boolean {
-  return getDb().prepare(
-    `UPDATE download_queue SET status = ?, progress = 1, completed_at = ?
-     WHERE id = ? AND status != 'cancelled'`,
-  ).run('done', Math.floor(Date.now() / 1000), id).changes > 0;
+export function markDownloadDone(id: number, trackId: number): boolean {
+  const db = getDb();
+  return db.transaction((downloadId: number, importedTrackId: number) => {
+    if (!Number.isInteger(importedTrackId) || importedTrackId <= 0) {
+      return false;
+    }
+
+    const trackExists = db.prepare('SELECT 1 FROM tracks WHERE id = ?').get(importedTrackId);
+    if (!trackExists) {
+      return false;
+    }
+
+    const completedAt = Math.floor(Date.now() / 1000);
+    const completed = db.prepare(
+      `UPDATE download_queue SET status = ?, progress = 1, completed_at = ?
+       WHERE id = ?
+         AND status IN ('pending', 'resolving', 'downloading', 'converting')
+         AND completed_at IS NULL`,
+    ).run('done', completedAt, downloadId);
+    if (completed.changes === 0) {
+      return false;
+    }
+
+    db.prepare(
+      `UPDATE tracks
+       SET downloaded_at = CASE
+             WHEN downloaded_at IS NULL OR downloaded_at <= 0 THEN ?
+             ELSE downloaded_at
+           END,
+           in_library = 1
+       WHERE id = ?`,
+    ).run(completedAt, importedTrackId);
+    return true;
+  })(id, trackId);
 }
 
 export function markDownloadError(id: number, message: string): void {

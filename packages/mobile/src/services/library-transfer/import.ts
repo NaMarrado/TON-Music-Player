@@ -19,8 +19,10 @@ import { resolveImportBundleType } from './bundle-type';
 import { loadArchiveBundleAsync } from './import-archive';
 import {
   insertImportedLibraryAsync,
+  normalizeImportedDownloadedAt,
   prepareImportPlaylistCovers,
   prepareImportTracks,
+  type ExistingImportTrackReconciliation,
   type PreparedImportTrack,
 } from './import-helpers';
 import { cleanupImportedSourceUriAsync } from './import-source-cleanup';
@@ -112,10 +114,27 @@ async function finalizeAndroidImportResult(
   const manifestTracksByHash = new Map(
     manifest.tracks.map((track) => [track.file_hash, track] as const),
   );
-  const trackIdsToMarkInLibrary = stagedResult.trackHashesToMarkInLibrary
-    .map((hash) => stagedResult.existingTrackAliases?.[hash] ?? hash)
-    .map((identity) => existingTrackIdsByHash[identity])
-    .filter((value): value is number => typeof value === 'number');
+  const existingTracksToReconcileById = new Map<number, ExistingImportTrackReconciliation>();
+  for (const hash of stagedResult.trackHashesToMarkInLibrary) {
+    const identity = stagedResult.existingTrackAliases?.[hash] ?? hash;
+    const trackId = existingTrackIdsByHash[identity];
+    if (trackId == null) {
+      continue;
+    }
+
+    const downloadedAt = normalizeImportedDownloadedAt(
+      manifestTracksByHash.get(hash)?.downloaded_at,
+    );
+    const current = existingTracksToReconcileById.get(trackId);
+    existingTracksToReconcileById.set(trackId, {
+      trackId,
+      downloadedAt: current?.downloadedAt == null
+        ? downloadedAt
+        : downloadedAt == null
+          ? current.downloadedAt
+          : Math.min(current.downloadedAt, downloadedAt),
+    });
+  }
   const trackIdsByHash = { ...existingTrackIdsByHash };
   for (const [manifestHash, existingIdentity] of Object.entries(
     stagedResult.existingTrackAliases ?? {},
@@ -177,6 +196,7 @@ async function finalizeAndroidImportResult(
         contentHashSha256: track.contentHashSha256
           ?? manifestTrack.content_hash_sha256
           ?? null,
+        downloadedAt: normalizeImportedDownloadedAt(manifestTrack.downloaded_at),
         fileHash: track.fileHash,
         filePath: destinationUri,
         fileSize: track.fileSize,
@@ -217,7 +237,7 @@ async function finalizeAndroidImportResult(
     const playlistIds = await insertImportedLibraryAsync(
       manifest,
       preparedTracks,
-      trackIdsToMarkInLibrary,
+      [...existingTracksToReconcileById.values()],
       trackIdsByHash,
       playlistCoverPaths,
     );
@@ -362,7 +382,7 @@ async function importMobileLibraryJs(
 
     const {
       preparedTracks,
-      trackIdsToMarkInLibrary,
+      existingTracksToReconcile,
       trackIdsByHash,
       skippedTracks,
     } = await prepareImportTracks(
@@ -388,7 +408,7 @@ async function importMobileLibraryJs(
     const playlistIds = await insertImportedLibraryAsync(
       manifest,
       preparedTracks,
-      trackIdsToMarkInLibrary,
+      existingTracksToReconcile,
       trackIdsByHash,
       playlistCoverPaths,
       onProgress,

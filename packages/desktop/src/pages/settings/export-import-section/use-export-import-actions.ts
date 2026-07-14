@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
+import { reconcileLibraryTracks } from '../../../stores/library-store';
+import { loadPlaylists } from '../../../stores/playlist-store';
 import { dismissToast, showToast } from '../../../stores/toast-store';
 import type { ExportImportProgress } from './constants';
 
@@ -92,6 +94,10 @@ export function useExportImportActions(
       const result = await window.api.invoke('import:start');
       dismissToast(loadingId);
       if (result.importedTracks > 0 || result.importedPlaylists > 0) {
+        await Promise.all([
+          reconcileLibraryTracks({ immediate: true, loadIfUninitialized: true }),
+          loadPlaylists({ force: true }),
+        ]);
         let status = t('importSuccess', {
           tracks: result.importedTracks,
           playlists: result.importedPlaylists,
@@ -131,7 +137,7 @@ export function useExportImportActions(
       window.api.off('menu:import', onMenuImport);
       window.api.off('menu:export', onMenuExport);
     };
-  }, [busy, handleExport, handleImport]);
+  }, [busy, canExport, handleExport, handleImport]);
 
   return {
     busy,
