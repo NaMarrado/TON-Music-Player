@@ -1,6 +1,6 @@
 import { SpotifyApi } from '@spotify/web-api-ts-sdk';
 import type { SearchResult, SpotifyPlaylistTrack } from '@ton/core';
-import { SEARCH_RESULTS_LIMIT } from '@ton/core';
+import { SEARCH_PAGE_LIMITS, executeSpotifySearchPage } from '@ton/core';
 import { getSetting } from './db-queries';
 
 let client: SpotifyApi | null = null;
@@ -23,23 +23,38 @@ export function resetSpotifyClient(): void {
 
 export async function searchSpotify(
   query: string,
-  limit = SEARCH_RESULTS_LIMIT,
+  limit = SEARCH_PAGE_LIMITS.spotify,
   offset = 0,
 ): Promise<SearchResult[]> {
-  const api = await getClient();
-  const results = await api.search(query, ['track'], undefined, limit as 0 & number, offset);
+  return (await searchSpotifyPage(query, limit, offset)).results;
+}
 
-  return results.tracks.items.map((track) => ({
-    id: track.id,
-    source: 'spotify' as const,
-    title: track.name,
-    artist: track.artists.map((a) => a.name).join(', '),
-    album: track.album.name,
-    duration_ms: track.duration_ms,
-    thumbnail_url: track.album.images[0]?.url || null,
-    url: track.external_urls.spotify,
-    is_downloaded: false,
-  }));
+export async function searchSpotifyPage(
+  query: string,
+  limit = SEARCH_PAGE_LIMITS.spotify,
+  offset = 0,
+  signal?: AbortSignal,
+): Promise<{ results: SearchResult[]; hasMore: boolean }> {
+  const api = await getClient();
+  return executeSpotifySearchPage(
+    (effectiveQuery, pageLimit, pageOffset) => raceSearchAbort(
+      api.search(effectiveQuery, ['track'], undefined, pageLimit as 0 & number, pageOffset),
+      signal,
+    ),
+    query,
+    limit,
+    offset,
+  );
+}
+
+function raceSearchAbort<T>(promise: Promise<T>, signal?: AbortSignal): Promise<T> {
+  if (!signal) return promise;
+  if (signal.aborted) return Promise.reject(new Error('Search aborted'));
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = () => reject(new Error('Search aborted'));
+    signal.addEventListener('abort', onAbort, { once: true });
+    promise.then(resolve, reject).finally(() => signal.removeEventListener('abort', onAbort));
+  });
 }
 
 function mapTrack(track: {

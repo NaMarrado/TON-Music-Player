@@ -1,35 +1,10 @@
-import type { SearchResult } from '@ton/core';
+import type { SearchSourceEvent } from '@ton/core';
 
-export type SearchSourceResultsEvent = {
-  source: SearchResult['source'];
-  results: SearchResult[];
-  query: string;
-  requestId?: number;
-  offset: number;
-  hasMore: boolean;
-};
-
-export function sendSearchSourceResults(
+export function sendSearchSourceEvent(
   target: Electron.WebContents,
-  source: SearchResult['source'],
-  results: SearchResult[],
-  query: string,
-  requestId?: number,
-  offset = 0,
-  hasMore = false,
+  payload: SearchSourceEvent,
 ): void {
-  if (target.isDestroyed()) {
-    return;
+  if (!target.isDestroyed()) {
+    target.send('search:source-results', payload);
   }
-
-  const payload: SearchSourceResultsEvent = {
-    source,
-    results,
-    query,
-    requestId,
-    offset,
-    hasMore,
-  };
-
-  target.send('search:source-results', payload);
 }

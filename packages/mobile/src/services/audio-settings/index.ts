@@ -5,7 +5,7 @@ export {
   setEqPresetByName,
   toggleEq,
 } from './equalizer';
-export { setFrequency } from './frequency';
+export { setFrequency, setFrequencyEnabled } from './frequency';
 export {
   supportsEqualizerEffects,
   supportsLoudnessAnalysis,

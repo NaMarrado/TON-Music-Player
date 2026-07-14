@@ -1,5 +1,6 @@
 import {
   EQ_PRESETS,
+  resolveStoredFrequencyEnabled,
   resolveStoredFrequencyHz,
   resolveStoredVolumePercent,
 } from '@ton/core';
@@ -19,8 +20,10 @@ export interface StoredAudioSettings {
   eqBands: number[];
   eqEnabled: boolean;
   eqPreset: string;
+  frequencyEnabled: boolean;
   frequencyHz: number;
   loudnessNormEnabled: boolean;
+  shouldPersistFrequencyEnabled: boolean;
   shouldPersistVolumePercent: boolean;
   volumePercent: number;
 }
@@ -89,10 +92,20 @@ function resolveEqState(
 }
 
 export async function readStoredAudioSettings(): Promise<StoredAudioSettings> {
-  const [volumePercentStr, volumeStr, freqStr, eqEnabledStr, eqBandsStr, eqPresetStr, loudnessNormStr] =
+  const [
+    volumePercentStr,
+    volumeStr,
+    frequencyEnabledStr,
+    freqStr,
+    eqEnabledStr,
+    eqBandsStr,
+    eqPresetStr,
+    loudnessNormStr,
+  ] =
     await Promise.all([
       getSetting('volume_percent'),
       getSetting('volume'),
+      getSetting('frequency_enabled'),
       getSetting('frequency_hz'),
       getSetting('eq_enabled'),
       getSetting('eq_bands'),
@@ -101,6 +114,7 @@ export async function readStoredAudioSettings(): Promise<StoredAudioSettings> {
     ]);
 
   const resolvedVolume = resolveStoredVolumePercent(volumePercentStr, volumeStr);
+  const resolvedFrequencyEnabled = resolveStoredFrequencyEnabled(frequencyEnabledStr);
   const resolvedFrequency = resolveStoredFrequencyHz(freqStr);
   const {
     didNormalizeEqState,
@@ -114,8 +128,10 @@ export async function readStoredAudioSettings(): Promise<StoredAudioSettings> {
     eqBands,
     eqEnabled: eqEnabledStr === 'true',
     eqPreset,
+    frequencyEnabled: resolvedFrequencyEnabled.frequencyEnabled,
     frequencyHz: resolvedFrequency.frequencyHz,
     loudnessNormEnabled: loudnessNormStr === 'true',
+    shouldPersistFrequencyEnabled: resolvedFrequencyEnabled.shouldPersist,
     shouldPersistVolumePercent: resolvedVolume.shouldPersist,
     volumePercent: resolvedVolume.volumePercent,
   };

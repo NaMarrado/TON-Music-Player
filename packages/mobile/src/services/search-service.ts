@@ -1,14 +1,38 @@
-import type { SearchResult, SearchSource } from '@ton/core';
-import { SEARCH_RESULTS_LIMIT } from '@ton/core';
-import { searchYouTube } from './youtube-search';
-import { searchSpotify } from './spotify-client';
+import {
+  SearchProviderQueryAliases,
+  buildSearchFtsQuery,
+  canonicalizeSearchQuery,
+  createSearchPageRequest,
+  relaxSearchQuery,
+  type SearchResult,
+  type SearchSource,
+  type SearchSourceStatus,
+} from '@ton/core';
+import { searchYouTubePage } from './youtube-search';
+import { searchSpotifyPage } from './spotify-client';
 import { getTrackIdsBySourceIdentity, searchTracksFts } from './db-queries';
 import { getDb } from './database';
-import { DEFAULT_SEARCH_SOURCES, createEmptySearchResults } from './search-plan';
+import {
+  DEFAULT_SEARCH_SOURCES,
+  createEmptySearchMoreState,
+  createEmptySearchResults,
+} from './search-plan';
+
+const PROVIDER_DEADLINE_MS = 15_000;
+const providerQueryAliases = new SearchProviderQueryAliases();
 
 export interface SearchResponse {
   results: Record<SearchSource, SearchResult[]>;
   sourceErrors: Record<string, string>;
+  hasMoreBySource: Record<SearchSource, boolean>;
+}
+
+export interface MobileSearchSourceEvent {
+  source: SearchSource;
+  status: SearchSourceStatus;
+  results: SearchResult[];
+  hasMore: boolean;
+  error?: string;
 }
 
 export interface SearchExecutionOptions {
@@ -17,159 +41,257 @@ export interface SearchExecutionOptions {
   limitBySource?: Partial<Record<SearchSource, number>>;
   offsetBySource?: Partial<Record<SearchSource, number>>;
   signal?: AbortSignal;
+  onSourceSettled?: (event: MobileSearchSourceEvent) => void;
 }
 
+type SearchPage = { results: SearchResult[]; hasMore: boolean };
+
 export async function executeSearch(
-  query: string,
+  rawQuery: string,
   options: SearchExecutionOptions = {},
 ): Promise<SearchResponse> {
+  const query = canonicalizeSearchQuery(rawQuery);
   const {
     sources = DEFAULT_SEARCH_SOURCES,
-    limit = SEARCH_RESULTS_LIMIT,
+    limit,
     limitBySource,
     offsetBySource,
     signal,
+    onSourceSettled,
   } = options;
   const results = createEmptySearchResults();
   const sourceErrors: Record<string, string> = {};
+  const hasMoreBySource = createEmptySearchMoreState();
 
-  const guardAbort = () => {
-    if (signal?.aborted) {
-      throw new Error('Search aborted');
-    }
-  };
+  if (!query || sources.length === 0) return { results, sourceErrors, hasMoreBySource };
 
-  if (sources.length === 0) {
-    return { results, sourceErrors };
-  }
+  const tasks = Array.from(new Set(sources)).map(async (source) => {
+    const { limit: sourceLimit, offset: sourceOffset } = createSearchPageRequest(
+      source,
+      limitBySource?.[source] ?? limit,
+      offsetBySource?.[source],
+    );
 
-  const tasks = sources.map(async (source) => {
-    const sourceLimit = limitBySource?.[source] ?? limit;
-    const sourceOffset = offsetBySource?.[source] ?? 0;
-
-    switch (source) {
-      case 'youtube':
-        return {
-          source,
-          results: await enrichRemoteResults(
-            'youtube',
-            await searchYouTube(query, sourceLimit, sourceOffset),
-          ),
-        };
-      case 'spotify':
-        return {
-          source,
-          results: await enrichRemoteResults(
-            'spotify',
-            await searchSpotify(query, sourceLimit, sourceOffset),
-          ),
-        };
-      case 'local': {
-        const tracks = await searchTracksFts(query, sourceLimit, sourceOffset);
-        return {
-          source,
-          results: tracks.map((t) => ({
-            id: String(t.id),
-            source: 'local' as const,
-            library_track_id: t.id,
-            title: t.title || '',
-            artist: t.artist || '',
-            album: t.album,
-            duration_ms: t.duration_ms,
-            thumbnail_url: t.cover_art_path,
-            url: t.file_path,
-            is_downloaded: true,
-          })),
-        };
+    try {
+      throwIfAborted(signal);
+      const page = await getSourcePage(source, query, sourceLimit, sourceOffset, signal);
+      throwIfAborted(signal);
+      const sourceResults = source === 'youtube' || source === 'spotify' || source === 'soundcloud'
+        ? await enrichRemoteResults(source, page.results)
+        : page.results;
+      results[source] = sourceResults;
+      hasMoreBySource[source] = page.hasMore;
+      onSourceSettled?.({
+        source,
+        status: 'success',
+        results: sourceResults,
+        hasMore: page.hasMore,
+      });
+    } catch (error) {
+      if (signal?.aborted) {
+        onSourceSettled?.({ source, status: 'cancelled', results: [], hasMore: false });
+        throw error;
       }
-      case 'playlist':
-        return {
-          source,
-          results: await searchPlaylists(query, sourceLimit, sourceOffset),
-        };
-      default:
-        return {
-          source,
-          results: [],
-        };
+      const message = error instanceof Error ? error.message : String(error);
+      sourceErrors[source] = message;
+      onSourceSettled?.({
+        source,
+        status: 'error',
+        results: [],
+        hasMore: false,
+        error: message,
+      });
     }
   });
 
-  const settledTasks = await Promise.allSettled(tasks);
-  guardAbort();
+  await Promise.allSettled(tasks);
+  throwIfAborted(signal);
+  return { results, sourceErrors, hasMoreBySource };
+}
 
-  for (const [index, settledTask] of settledTasks.entries()) {
-    if (settledTask.status === 'fulfilled') {
-      results[settledTask.value.source] = settledTask.value.results;
-      continue;
+async function getSourcePage(
+  source: SearchSource,
+  query: string,
+  limit: number,
+  offset: number,
+  signal?: AbortSignal,
+): Promise<SearchPage> {
+  switch (source) {
+    case 'youtube':
+      return withProviderDeadline(signal, (providerSignal) => searchRemoteWithRelaxedRetry(
+        source,
+        query,
+        offset,
+        providerSignal,
+        (effectiveQuery, retrySignal) => searchYouTubePage(
+          effectiveQuery,
+          limit,
+          offset,
+          retrySignal,
+        ),
+      ));
+    case 'spotify':
+      return withProviderDeadline(signal, (providerSignal) => searchRemoteWithRelaxedRetry(
+        source,
+        query,
+        offset,
+        providerSignal,
+        (effectiveQuery, retrySignal) => searchSpotifyPage(
+          effectiveQuery,
+          limit,
+          offset,
+          retrySignal,
+        ),
+      ));
+    case 'local': {
+      const tracks = await searchTracksFts(query, limit + 1, offset);
+      return {
+        results: tracks.slice(0, limit).map((track) => ({
+          id: String(track.id),
+          source: 'local' as const,
+          library_track_id: track.id,
+          title: track.title || '',
+          artist: track.artist || '',
+          album: track.album,
+          duration_ms: track.duration_ms,
+          thumbnail_url: track.cover_art_path,
+          url: track.file_path,
+          is_downloaded: true,
+        })),
+        hasMore: tracks.length > limit,
+      };
     }
+    case 'playlist':
+      return searchPlaylists(query, limit, offset);
+    case 'soundcloud':
+      return { results: [], hasMore: false };
+  }
+}
 
-    if (signal?.aborted) {
-      throw settledTask.reason;
-    }
-
-    const failedSource = sources[index];
-    sourceErrors[failedSource] = String(settledTask.reason);
+async function searchRemoteWithRelaxedRetry(
+  source: Extract<SearchSource, 'youtube' | 'spotify'>,
+  query: string,
+  offset: number,
+  signal: AbortSignal,
+  search: (query: string, signal: AbortSignal) => Promise<SearchPage>,
+): Promise<SearchPage> {
+  if (offset > 0) {
+    return search(providerQueryAliases.resolve(source, query), signal);
   }
 
-  guardAbort();
-  return { results, sourceErrors };
+  providerQueryAliases.forget(source, query);
+  const firstPage = await search(query, signal);
+  if (firstPage.results.length > 0) {
+    providerQueryAliases.remember(source, query, query);
+    return firstPage;
+  }
+  const relaxedQuery = relaxSearchQuery(query);
+  if (!relaxedQuery || relaxedQuery === query) return firstPage;
+  throwIfAborted(signal);
+  const relaxedPage = await search(relaxedQuery, signal);
+  if (relaxedPage.results.length > 0 || relaxedPage.hasMore) {
+    providerQueryAliases.remember(source, query, relaxedQuery);
+  }
+  return relaxedPage;
+}
+
+export function resetMobileSearchProviderQueryAliases(): void {
+  providerQueryAliases.clear();
 }
 
 async function enrichRemoteResults(
   source: 'youtube' | 'spotify' | 'soundcloud',
-  results: SearchResult[],
+  sourceResults: SearchResult[],
 ): Promise<SearchResult[]> {
-  const ids = results.map((result) => result.id).filter(Boolean);
+  const ids = sourceResults.map((result) => result.id).filter(Boolean);
   const localTrackIds = await getTrackIdsBySourceIdentity(source, ids);
 
-  return results.map((result) => {
+  return sourceResults.map((result) => {
     const libraryTrackId = localTrackIds[result.id];
-    if (!libraryTrackId) {
-      return result;
-    }
-
-    return {
-      ...result,
-      library_track_id: libraryTrackId,
-      is_downloaded: true,
-    };
+    return libraryTrackId
+      ? { ...result, library_track_id: libraryTrackId, is_downloaded: true }
+      : result;
   });
 }
 
 async function searchPlaylists(
   query: string,
-  limit = SEARCH_RESULTS_LIMIT,
-  offset = 0,
-): Promise<SearchResult[]> {
+  limit: number,
+  offset: number,
+): Promise<SearchPage> {
+  const ftsQuery = buildSearchFtsQuery(query);
+  if (!ftsQuery) return { results: [], hasMore: false };
   const db = getDb();
-  const q = `%${query}%`;
   const rows = await db.getAllAsync<{
-    track_id: number; title: string; artist: string; album: string | null;
-    duration_ms: number | null; cover_art_path: string | null; file_path: string;
+    track_id: number;
+    title: string;
+    artist: string;
+    album: string | null;
+    duration_ms: number | null;
+    cover_art_path: string | null;
+    file_path: string;
     playlist_name: string;
   }>(
     `SELECT t.id as track_id, t.title, t.artist, t.album, t.duration_ms,
             t.cover_art_path, t.file_path, p.name as playlist_name
      FROM playlist_tracks pt
      JOIN tracks t ON t.id = pt.track_id
+     JOIN tracks_fts fts ON fts.rowid = t.id
      JOIN playlists p ON p.id = pt.playlist_id
-     WHERE t.title LIKE ? OR t.artist LIKE ? OR p.name LIKE ?
+     WHERE tracks_fts MATCH ?
+     ORDER BY bm25(tracks_fts, 10.0, 6.0, 3.0, 4.0, 1.0), t.id
      LIMIT ? OFFSET ?`,
-    [q, q, q, limit, offset],
+    [ftsQuery, limit + 1, offset],
   );
 
-  return rows.map((r) => ({
-    id: `pl-${r.track_id}`,
-    source: 'playlist' as const,
-    library_track_id: r.track_id,
-    title: r.title || '',
-    artist: r.artist || '',
-    album: r.album,
-    duration_ms: r.duration_ms,
-    thumbnail_url: r.cover_art_path,
-    url: r.file_path,
-    is_downloaded: true,
-    playlist_name: r.playlist_name,
-  }));
+  return {
+    results: rows.slice(0, limit).map((row) => ({
+      id: `pl-${row.track_id}`,
+      source: 'playlist' as const,
+      library_track_id: row.track_id,
+      title: row.title || '',
+      artist: row.artist || '',
+      album: row.album,
+      duration_ms: row.duration_ms,
+      thumbnail_url: row.cover_art_path,
+      url: row.file_path,
+      is_downloaded: true,
+      playlist_name: row.playlist_name,
+    })),
+    hasMore: rows.length > limit,
+  };
+}
+
+function withProviderDeadline<T>(
+  parentSignal: AbortSignal | undefined,
+  run: (signal: AbortSignal) => Promise<T>,
+): Promise<T> {
+  const controller = new AbortController();
+  const onParentAbort = () => controller.abort();
+  parentSignal?.addEventListener('abort', onParentAbort, { once: true });
+
+  return new Promise<T>((resolve, reject) => {
+    let settled = false;
+    const finish = (callback: () => void) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      parentSignal?.removeEventListener('abort', onParentAbort);
+      callback();
+    };
+    const timer = setTimeout(() => {
+      controller.abort();
+      finish(() => reject(new Error('Search provider timed out')));
+    }, PROVIDER_DEADLINE_MS);
+
+    if (parentSignal?.aborted) controller.abort();
+    run(controller.signal).then(
+      (value) => finish(() => resolve(value)),
+      (error) => finish(() => reject(error)),
+    );
+  });
+}
+
+function throwIfAborted(signal?: AbortSignal): void {
+  if (signal?.aborted) throw new Error('Search aborted');
 }

@@ -95,14 +95,13 @@ export function appendSearchResults(
 
 export function mergeSearchMoreState(
   currentState: Record<SearchSource, boolean>,
-  nextResults: Record<SearchSource, SearchResult[]>,
+  nextStateBySource: Record<SearchSource, boolean>,
   updatedSources: SearchSource[],
-  pageSize: number,
 ): Record<SearchSource, boolean> {
   const nextState = { ...currentState };
 
   for (const source of updatedSources) {
-    nextState[source] = (nextResults[source] ?? []).length >= pageSize;
+    nextState[source] = nextStateBySource[source] ?? false;
   }
 
   return nextState;

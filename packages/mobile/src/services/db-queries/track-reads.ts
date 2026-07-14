@@ -1,4 +1,4 @@
-import { SEARCH_RESULTS_LIMIT, type Track } from '@ton/core';
+import { SEARCH_RESULTS_LIMIT, buildSearchFtsQuery, type Track } from '@ton/core';
 import { getDb } from '../database';
 
 type LibraryListTrackRow = Pick<
@@ -164,22 +164,18 @@ export async function searchTracksFts(
   limit = SEARCH_RESULTS_LIMIT,
   offset = 0,
 ): Promise<Track[]> {
-  if (!query.trim()) {
+  const ftsQuery = buildSearchFtsQuery(query);
+  if (!ftsQuery) {
     return [];
   }
 
   const db = getDb();
-  const ftsQuery = query
-    .trim()
-    .split(/\s+/)
-    .map((word) => `"${word.replace(/"/g, '')}"*`)
-    .join(' ');
 
   return db.getAllAsync<Track>(
     `SELECT t.* FROM tracks t
      JOIN tracks_fts fts ON fts.rowid = t.id
      WHERE tracks_fts MATCH ? AND t.in_library = 1
-     ORDER BY rank
+     ORDER BY bm25(tracks_fts, 10.0, 6.0, 3.0, 4.0, 1.0), t.id
      LIMIT ? OFFSET ?`,
     [ftsQuery, limit, offset],
   );

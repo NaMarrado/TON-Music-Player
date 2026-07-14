@@ -26,6 +26,7 @@ export function isAndroid(): boolean {
 }
 
 export function getQueue() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- Keep this lazy to avoid the runtime queue cycle.
   const { getDownloadQueue } = require('../download-queue') as typeof import('../download-queue');
   return getDownloadQueue();
 }

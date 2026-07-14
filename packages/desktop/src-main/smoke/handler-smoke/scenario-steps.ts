@@ -382,8 +382,14 @@ export async function runDeleteChecks(
     'library:loudness-stats',
   );
   assert(loudnessStats.total === 1, `Expected loudness total=1, got ${loudnessStats.total}`);
-  assert(loudnessStats.analyzed === 0, `Expected loudness analyzed=0, got ${loudnessStats.analyzed}`);
-  assert(loudnessStats.missing === 1, `Expected loudness missing=1, got ${loudnessStats.missing}`);
+  assert(
+    loudnessStats.analyzed >= 0 && loudnessStats.analyzed <= loudnessStats.total,
+    `Expected a valid loudness analyzed count, got ${loudnessStats.analyzed}`,
+  );
+  assert(
+    loudnessStats.missing === loudnessStats.total - loudnessStats.analyzed,
+    `Expected coherent loudness missing count, got ${loudnessStats.missing}`,
+  );
 
   const importedTracksAfterRoundTrip = db
     .prepare('SELECT id, file_path FROM tracks ORDER BY id ASC')

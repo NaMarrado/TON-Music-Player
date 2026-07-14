@@ -17,6 +17,7 @@ export {
   subscribePosition,
   toggle,
   toggleEq,
+  toggleFrequencyTuning,
   toggleLoudnessNorm,
   toggleMute,
   toggleRepeat,

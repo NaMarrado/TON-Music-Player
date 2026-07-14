@@ -12,6 +12,8 @@ export const MOBILE_VOLUME_BUTTON_STEP_PERCENT = 1;
 const VOLUME_PERCENT_PRECISION = 10;
 const LEGACY_DESKTOP_MAX_SCALAR = 5;
 const LEGACY_DESKTOP_THRESHOLD = 1;
+const NORMAL_GAIN_CURVE_BASE = 100;
+const NORMAL_GAIN_CURVE_DENOMINATOR = NORMAL_GAIN_CURVE_BASE - 1;
 
 export interface ResolvedStoredVolumePercent {
   source: 'volume_percent' | 'legacy_volume' | 'default';
@@ -80,8 +82,8 @@ export function volumePercentToNormalGain(volumePercent: number): number {
     return 1;
   }
 
-  const db = MIN_NORMAL_DB * (1 - clamped / NORMAL_VOLUME_PERCENT);
-  return dbToGain(db);
+  const normalized = clamped / NORMAL_VOLUME_PERCENT;
+  return Math.expm1(Math.log(NORMAL_GAIN_CURVE_BASE) * normalized) / NORMAL_GAIN_CURVE_DENOMINATOR;
 }
 
 export function volumePercentToDesktopGain(volumePercent: number): number {
@@ -90,8 +92,7 @@ export function volumePercentToDesktopGain(volumePercent: number): number {
     return volumePercentToNormalGain(clamped);
   }
 
-  const boostDb =
-    MAX_BOOST_DB * ((clamped - NORMAL_VOLUME_PERCENT) / NORMAL_VOLUME_PERCENT);
+  const boostDb = MAX_BOOST_DB * ((clamped - NORMAL_VOLUME_PERCENT) / NORMAL_VOLUME_PERCENT);
   return dbToGain(boostDb);
 }
 
@@ -111,8 +112,7 @@ export function volumePercentToAndroidBoostMb(volumePercent: number): number {
   }
 
   return Math.round(
-    (MAX_BOOST_DB * 100) *
-      ((clamped - NORMAL_VOLUME_PERCENT) / NORMAL_VOLUME_PERCENT),
+    MAX_BOOST_DB * 100 * ((clamped - NORMAL_VOLUME_PERCENT) / NORMAL_VOLUME_PERCENT),
   );
 }
 
@@ -188,16 +188,15 @@ function gainToVolumePercent(gain: number): number {
   }
 
   if (gain <= 1) {
-    const db = gainToDb(gain);
     return clampVolumePercent(
-      NORMAL_VOLUME_PERCENT * (1 - db / MIN_NORMAL_DB),
+      NORMAL_VOLUME_PERCENT *
+        (Math.log1p(gain * NORMAL_GAIN_CURVE_DENOMINATOR) / Math.log(NORMAL_GAIN_CURVE_BASE)),
     );
   }
 
   const boostDb = gainToDb(gain);
   return clampVolumePercent(
-    NORMAL_VOLUME_PERCENT +
-      (boostDb / MAX_BOOST_DB) * NORMAL_VOLUME_PERCENT,
+    NORMAL_VOLUME_PERCENT + (boostDb / MAX_BOOST_DB) * NORMAL_VOLUME_PERCENT,
   );
 }
 

@@ -1,14 +1,9 @@
 import { memo } from 'react';
-import {
-  formatVolumePercentLabel,
-  isVolumeBoosted,
-} from '@ton/core';
+import { isVolumeBoosted } from '@ton/core';
 import { useTranslation } from 'react-i18next';
 import { toggleMute } from '../../../audio/playback-service';
-import {
-  NORMAL_ZONE,
-} from './constants';
-import { volumeToPosition } from './math';
+import { NORMAL_ZONE } from './constants';
+import { formatDesktopVolumePercentLabel, volumeToPosition } from './math';
 import { useVerticalVolumeSlider } from './use-vertical-volume-slider';
 import { VolumeIcon } from './volume-icon';
 
@@ -17,10 +12,7 @@ interface PopupPanelProps {
   volumePercent: number;
 }
 
-export const PopupPanel = memo(function PopupPanel({
-  isMuted,
-  volumePercent,
-}: PopupPanelProps) {
+export const PopupPanel = memo(function PopupPanel({ isMuted, volumePercent }: PopupPanelProps) {
   const { t } = useTranslation('components/player/volume-slider');
   const { handleMouseDown, trackRef } = useVerticalVolumeSlider(volumePercent);
   const fillPct = volumeToPosition(volumePercent) * 100;
@@ -51,7 +43,7 @@ export const PopupPanel = memo(function PopupPanel({
           whiteSpace: 'nowrap',
         }}
       >
-        {formatVolumePercentLabel(volumePercent)}
+        {formatDesktopVolumePercentLabel(volumePercent)}
       </span>
 
       <div
@@ -94,7 +86,7 @@ export const PopupPanel = memo(function PopupPanel({
           className="absolute pointer-events-none"
           style={{
             left: '50%',
-            bottom: `calc(${fillPct}% - 7px)`,
+            bottom: `calc(${fillPct}% - 8px)`,
             width: '16px',
             height: '16px',
             borderRadius: '999px',

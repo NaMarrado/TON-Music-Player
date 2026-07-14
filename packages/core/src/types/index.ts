@@ -29,7 +29,13 @@ export type {
   SpotifyPlaylistTrack,
   YouTubePlaylistTrack,
 } from './download';
-export type { SearchResult, SearchSource, SearchQuery } from './search';
+export type {
+  SearchQuery,
+  SearchResult,
+  SearchSource,
+  SearchSourceEvent,
+  SearchSourceStatus,
+} from './search';
 export type { DownloadQualityProfile, SettingsMap, SettingKey } from './settings';
 export { PERSISTED_SETTING_DEFAULTS, SETTING_DEFAULTS } from './settings';
 export type {
@@ -57,9 +63,14 @@ export {
   EQ_GAIN_MAX,
   EQ_PRESETS,
   normalizeFrequencyHz,
+  getEffectiveFrequencyPitchRatio,
+  resolveStoredFrequencyEnabled,
   resolveStoredFrequencyHz,
 } from './audio';
-export type { ResolvedStoredFrequencyHz } from './audio';
+export type {
+  ResolvedStoredFrequencyEnabled,
+  ResolvedStoredFrequencyHz,
+} from './audio';
 export type {
   ExportManifest,
   ExportTrackEntry,

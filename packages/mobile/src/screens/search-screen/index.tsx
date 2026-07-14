@@ -4,7 +4,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import { SEARCH_RESULTS_LIMIT, type SearchSource } from '@ton/core';
+import { getSearchPageLimit, type SearchSource } from '@ton/core';
 import { FlashList } from '@shopify/flash-list';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -124,7 +124,7 @@ export function SearchScreen() {
                 disabled={!loadMoreSource}
                 loading={isLoadingMore}
                 label={t('loadMore', {
-                  count: SEARCH_RESULTS_LIMIT,
+                  count: loadMoreSource ? getSearchPageLimit(loadMoreSource) : 0,
                   source: loadMoreSource ? getSearchSourceLabel(loadMoreSource, tc) : '',
                 })}
                 loadingLabel={t('loadingMore')}

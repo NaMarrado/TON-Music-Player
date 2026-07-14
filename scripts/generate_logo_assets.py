@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import struct
+from math import ceil, floor
 from pathlib import Path
 
 from crop_ton_logo import read_png_rgba, write_png_rgba
 
 ROOT = Path(__file__).resolve().parents[1]
 TRANSPARENT_LOGO = ROOT / "public/TONlogo.png"
+WINDOWS_ICON_SIZES = (16, 20, 24, 32, 40, 48, 64, 128, 256)
+WINDOWS_LOGO_SCALE = 1.0
 
 
 def blank_canvas(width: int, height: int, rgba: tuple[int, int, int, int]) -> bytearray:
@@ -80,6 +83,91 @@ def resize_rgba(
                 x,
                 y,
                 (channels[0], channels[1], channels[2], channels[3]),
+            )
+
+    return dst_pixels
+
+
+def _area_contributions(src_size: int, dst_size: int) -> list[list[tuple[int, float]]]:
+    """Return exact source-pixel coverage for every destination pixel."""
+    if src_size <= 0 or dst_size <= 0:
+        raise ValueError("Image dimensions must be positive")
+    if dst_size > src_size:
+        raise ValueError("Area resampling only supports downsampling")
+
+    scale = src_size / dst_size
+    contributions: list[list[tuple[int, float]]] = []
+    for dst_index in range(dst_size):
+        start = dst_index * scale
+        end = (dst_index + 1) * scale
+        covered: list[tuple[int, float]] = []
+        first_source = max(0, floor(start))
+        last_source = min(src_size, ceil(end))
+        for src_index in range(first_source, last_source):
+            weight = min(end, src_index + 1) - max(start, src_index)
+            if weight > 0:
+                covered.append((src_index, weight))
+        contributions.append(covered)
+    return contributions
+
+
+def resize_rgba_area_premultiplied(
+    src_width: int,
+    src_height: int,
+    src_pixels: bytearray,
+    dst_width: int,
+    dst_height: int,
+) -> bytearray:
+    """Area-downsample RGBA without leaking RGB from transparent pixels.
+
+    RGB channels are accumulated after premultiplication by alpha, then
+    unpremultiplied only once for the destination pixel. This is important for
+    the thin white rings in the TON logo at Windows shell icon sizes.
+    """
+    if src_width == dst_width and src_height == dst_height:
+        return bytearray(src_pixels)
+    if len(src_pixels) != src_width * src_height * 4:
+        raise ValueError("RGBA buffer length does not match its dimensions")
+
+    x_contributions = _area_contributions(src_width, dst_width)
+    y_contributions = _area_contributions(src_height, dst_height)
+    pixel_area = (src_width / dst_width) * (src_height / dst_height)
+    dst_pixels = bytearray(dst_width * dst_height * 4)
+
+    for dst_y, source_rows in enumerate(y_contributions):
+        for dst_x, source_columns in enumerate(x_contributions):
+            alpha_sum = 0.0
+            red_sum = 0.0
+            green_sum = 0.0
+            blue_sum = 0.0
+
+            for src_y, y_weight in source_rows:
+                row_offset = src_y * src_width * 4
+                for src_x, x_weight in source_columns:
+                    weight = x_weight * y_weight
+                    offset = row_offset + src_x * 4
+                    alpha = src_pixels[offset + 3]
+                    if alpha == 0:
+                        continue
+                    weighted_alpha = alpha * weight
+                    alpha_sum += weighted_alpha
+                    red_sum += src_pixels[offset] * weighted_alpha
+                    green_sum += src_pixels[offset + 1] * weighted_alpha
+                    blue_sum += src_pixels[offset + 2] * weighted_alpha
+
+            if alpha_sum <= 0:
+                continue
+
+            destination = (dst_y * dst_width + dst_x) * 4
+            dst_pixels[destination] = max(0, min(255, round(red_sum / alpha_sum)))
+            dst_pixels[destination + 1] = max(
+                0, min(255, round(green_sum / alpha_sum))
+            )
+            dst_pixels[destination + 2] = max(
+                0, min(255, round(blue_sum / alpha_sum))
+            )
+            dst_pixels[destination + 3] = max(
+                0, min(255, round(alpha_sum / pixel_area))
             )
 
     return dst_pixels
@@ -164,9 +252,11 @@ def write_icon(
     source_height: int,
     source_pixels: bytearray,
     background: tuple[int, int, int, int],
+    *,
+    resizer=resize_rgba,
 ) -> None:
     ensure_parent(path)
-    scaled = resize_rgba(source_width, source_height, source_pixels, logo_size, logo_size)
+    scaled = resizer(source_width, source_height, source_pixels, logo_size, logo_size)
     canvas = blank_canvas(size, size, background)
     composite_center(size, size, canvas, logo_size, logo_size, scaled)
     write_png_rgba(path, size, size, canvas)
@@ -175,21 +265,39 @@ def write_icon(
 def write_ico_from_png(png_paths: list[Path], dst: Path) -> None:
     ensure_parent(dst)
     count = len(png_paths)
+    if count == 0:
+        raise ValueError("An ICO must contain at least one PNG frame")
+
+    frames: list[tuple[bytes, int]] = []
+    seen_sizes: set[int] = set()
+    for png_path in png_paths:
+        png_bytes = png_path.read_bytes()
+        width, height, pixels = read_png_rgba(png_path)
+        if width != height:
+            raise ValueError(
+                f"ICO frame must be square, got {width}x{height}: {png_path}"
+            )
+        if width < 1 or width > 256:
+            raise ValueError(f"ICO frame must be between 1 and 256 px: {png_path}")
+        if width in seen_sizes:
+            raise ValueError(f"Duplicate {width}px ICO frame: {png_path}")
+        if len(pixels) != width * height * 4:
+            raise ValueError(f"Invalid RGBA data for ICO frame: {png_path}")
+        seen_sizes.add(width)
+        frames.append((png_bytes, width))
+
     header = struct.pack("<HHH", 0, 1, count)
     entries = bytearray()
     images = bytearray()
     image_offset = 6 + 16 * count
 
-    for png_path in png_paths:
-        png_bytes = png_path.read_bytes()
-        width, height, _ = read_png_rgba(png_path)
-        width_byte = 0 if width >= 256 else width
-        height_byte = 0 if height >= 256 else height
+    for png_bytes, size in frames:
+        dimension_byte = 0 if size == 256 else size
         entries.extend(
             struct.pack(
                 "<BBBBHHII",
-                width_byte,
-                height_byte,
+                dimension_byte,
+                dimension_byte,
                 0,
                 0,
                 1,
@@ -201,6 +309,51 @@ def write_ico_from_png(png_paths: list[Path], dst: Path) -> None:
         images.extend(png_bytes)
 
     dst.write_bytes(header + entries + images)
+
+
+def write_windows_icon_assets(
+    desktop_build: Path,
+    source_width: int,
+    source_height: int,
+    source_pixels: bytearray,
+) -> None:
+    """Create every Windows representation directly from the master logo."""
+    transparent_bg = (0, 0, 0, 0)
+    frame_dir = desktop_build / "windows-icons"
+    frame_dir.mkdir(parents=True, exist_ok=True)
+    expected_names = {f"icon-{size}.png" for size in WINDOWS_ICON_SIZES}
+    for stale_path in frame_dir.glob("icon-*.png"):
+        if stale_path.name not in expected_names:
+            stale_path.unlink()
+
+    frame_paths: list[Path] = []
+    for size in WINDOWS_ICON_SIZES:
+        frame_path = frame_dir / f"icon-{size}.png"
+        write_icon(
+            frame_path,
+            size,
+            round(size * WINDOWS_LOGO_SCALE),
+            source_width,
+            source_height,
+            source_pixels,
+            transparent_bg,
+            resizer=resize_rgba_area_premultiplied,
+        )
+        frame_paths.append(frame_path)
+
+    for size in (16, 32):
+        write_icon(
+            desktop_build / f"tray-icon-{size}.png",
+            size,
+            round(size * WINDOWS_LOGO_SCALE),
+            source_width,
+            source_height,
+            source_pixels,
+            transparent_bg,
+            resizer=resize_rgba_area_premultiplied,
+        )
+
+    write_ico_from_png(frame_paths, desktop_build / "icon.ico")
 
 
 def main() -> int:
@@ -274,7 +427,7 @@ def main() -> int:
     write_icon(
         desktop_build / "icon.png",
         1024,
-        820,
+        round(1024 * WINDOWS_LOGO_SCALE),
         transparent_w,
         transparent_h,
         transparent_pixels,
@@ -409,7 +562,12 @@ def main() -> int:
         [desktop_public / "favicon-16x16.png", desktop_public / "favicon-32x32.png"],
         desktop_public / "favicon.ico",
     )
-    write_ico_from_png([desktop_build / "icon.png"], desktop_build / "icon.ico")
+    write_windows_icon_assets(
+        desktop_build,
+        transparent_w,
+        transparent_h,
+        transparent_pixels,
+    )
 
     print("Generated TON logo assets for desktop, web, and mobile.")
     return 0

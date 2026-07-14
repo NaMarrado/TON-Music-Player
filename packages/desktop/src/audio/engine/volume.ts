@@ -1,6 +1,8 @@
 import { volumePercentToDesktopGain } from '@ton/core';
 import { getEngineState } from './state';
 
+export const VOLUME_RAMP_SECONDS = 0.03;
+
 export function setVolume(value: number): void {
   applyVolumeGain(value, false);
 }
@@ -17,12 +19,21 @@ function applyVolumeGain(value: number, immediate: boolean): void {
 
   const gain = volumePercentToDesktopGain(value);
   const now = state.ctx.currentTime;
-  state.volumeGain.gain.cancelScheduledValues(now);
-  if (immediate) {
-    state.volumeGain.gain.setValueAtTime(gain, now);
+  scheduleVolumeGain(state.volumeGain.gain, gain, now, immediate);
+}
+
+export function scheduleVolumeGain(
+  param: AudioParam,
+  targetGain: number,
+  now: number,
+  immediate = false,
+): void {
+  if (immediate || targetGain <= 0) {
+    param.cancelScheduledValues(now);
+    param.setValueAtTime(Math.max(0, targetGain), now);
     return;
   }
 
-  state.volumeGain.gain.setValueAtTime(state.volumeGain.gain.value, now);
-  state.volumeGain.gain.linearRampToValueAtTime(gain, now + 0.08);
+  param.cancelAndHoldAtTime(now);
+  param.linearRampToValueAtTime(targetGain, now + VOLUME_RAMP_SECONDS);
 }

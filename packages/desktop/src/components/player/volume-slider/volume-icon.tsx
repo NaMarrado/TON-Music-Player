@@ -1,10 +1,5 @@
 import { isVolumeBoosted } from '@ton/core';
-import {
-  VolumeBoostIcon,
-  VolumeHighIcon,
-  VolumeLowIcon,
-  VolumeMuteIcon,
-} from './icons';
+import { VolumeBoostIcon, VolumeHighIcon, VolumeLowIcon, VolumeMuteIcon } from './icons';
 
 interface VolumeIconProps {
   isMuted: boolean;
@@ -12,7 +7,7 @@ interface VolumeIconProps {
 }
 
 export function VolumeIcon({ isMuted, volumePercent }: VolumeIconProps) {
-  if (isMuted) {
+  if (isMuted || volumePercent === 0) {
     return <VolumeMuteIcon />;
   }
 

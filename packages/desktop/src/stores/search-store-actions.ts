@@ -1,7 +1,15 @@
-import type { SearchQuery, SearchSource } from '@ton/core';
-import { SEARCH_DEBOUNCE_MS, SEARCH_RESULTS_LIMIT } from '@ton/core';
+import {
+  SEARCH_DEBOUNCE_MS,
+  canonicalizeSearchQuery,
+  createSearchRequestIdGenerator,
+  getSearchPageLimit,
+  isCurrentSearchRequest,
+  type SearchQuery,
+  type SearchSource,
+  type SearchSourceEvent,
+} from '@ton/core';
 import { countPerfEvent, markPerf } from '../utils/perf';
-import type { ActiveTab, SearchSourceResultsEvent } from './search-store-types';
+import type { ActiveTab } from './search-store-types';
 import {
   EMPTY_HAS_MORE,
   EMPTY_LOADED_SOURCES,
@@ -12,83 +20,158 @@ import { getRequestedSources, mergeResults } from './search-store-helpers';
 
 const ipc = window.api.invoke as (...args: unknown[]) => Promise<unknown>;
 const ipcOn = window.api.on as (channel: string, cb: (...args: unknown[]) => void) => void;
-const ipcOff = window.api.off as (channel: string, cb: (...args: unknown[]) => void) => void;
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+const nextRequestId = createSearchRequestIdGenerator(Date.now());
+let listenerRegistered = false;
 
-export function setSearchQuery(query: string): void {
-  useSearchStore.setState({
-    query,
-    loadedSources: EMPTY_LOADED_SOURCES(),
-    hasMoreBySource: EMPTY_HAS_MORE(),
+function cancelRequest(requestId: number): void {
+  if (requestId > 0) void ipc('search:cancel', requestId).catch(() => {});
+}
+
+function handleSourceEvent(...args: unknown[]): void {
+  const event = args[0] as SearchSourceEvent;
+  const state = useSearchStore.getState();
+  if (!event || !isCurrentSearchRequest(state.activeRequestId, event.requestId)) return;
+
+  useSearchStore.setState((previous) => {
+    const pendingSources = previous.pendingSources.filter((source) => source !== event.source);
+    const sourceErrors = { ...previous.sourceErrors };
+    if (event.status === 'error' && event.error) sourceErrors[event.source] = event.error;
+    else delete sourceErrors[event.source];
+
+    return {
+      results: event.status === 'success'
+        ? {
+            ...previous.results,
+            [event.source]: mergeResults(
+              previous.results[event.source],
+              event.results,
+              event.offset,
+            ),
+          }
+        : previous.results,
+      sourceErrors,
+      hasMoreBySource: {
+        ...previous.hasMoreBySource,
+        [event.source]: event.status === 'success' && event.hasMore,
+      },
+      loadedSources: {
+        ...previous.loadedSources,
+        [event.source]: event.status !== 'cancelled',
+      },
+      pendingSources,
+      isSearching: pendingSources.length > 0,
+    };
   });
+
+  if (useSearchStore.getState().pendingSources.length === 0) {
+    markPerf('search:finish', String(event.requestId));
+  }
+}
+
+function ensureSearchListener(): void {
+  if (listenerRegistered) return;
+  listenerRegistered = true;
+  ipcOn('search:source-results', handleSourceEvent);
+}
+
+ensureSearchListener();
+
+export function setSearchQuery(rawQuery: string): void {
+  const previousRequestId = useSearchStore.getState().activeRequestId;
+  const requestId = nextRequestId();
+  const effectiveQuery = canonicalizeSearchQuery(rawQuery);
+  cancelRequest(previousRequestId);
   countPerfEvent('search:query-change');
+
   if (debounceTimer) {
     clearTimeout(debounceTimer);
+    debounceTimer = null;
   }
 
-  if (!query.trim()) {
+  if (!effectiveQuery) {
     useSearchStore.setState({
+      query: rawQuery,
+      effectiveQuery,
+      activeRequestId: requestId,
       results: EMPTY_RESULTS(),
       sourceErrors: {},
       isSearching: false,
+      loadedSources: EMPTY_LOADED_SOURCES(),
       hasMoreBySource: EMPTY_HAS_MORE(),
+      pendingSources: [],
     });
     return;
   }
 
-  debounceTimer = setTimeout(
-    () =>
-      void executeSearch(query.trim(), useSearchStore.getState().activeSource, {
-        resetResults: true,
-        sources: getRequestedSources(useSearchStore.getState().activeSource),
-        offsetBySource: {},
-      }),
-    SEARCH_DEBOUNCE_MS,
-  );
+  const activeSource = useSearchStore.getState().activeSource;
+  const sources = getRequestedSources(activeSource);
+  useSearchStore.setState({
+    query: rawQuery,
+    effectiveQuery,
+    activeRequestId: requestId,
+    results: EMPTY_RESULTS(),
+    sourceErrors: {},
+    isSearching: true,
+    loadedSources: EMPTY_LOADED_SOURCES(),
+    hasMoreBySource: EMPTY_HAS_MORE(),
+    pendingSources: sources,
+  });
+
+  debounceTimer = setTimeout(() => {
+    debounceTimer = null;
+    void executeSearch(effectiveQuery, activeSource, requestId, {
+      resetResults: true,
+      sources,
+      offsetBySource: {},
+    });
+  }, SEARCH_DEBOUNCE_MS);
 }
 
 export function setActiveSource(source: ActiveTab): void {
-  useSearchStore.setState({ activeSource: source });
   const state = useSearchStore.getState();
-  const query = state.query.trim();
-  if (!query) {
-    return;
-  }
+  const requestId = nextRequestId();
+  cancelRequest(state.activeRequestId);
+  useSearchStore.setState({ activeSource: source, activeRequestId: requestId });
+  if (!state.effectiveQuery) return;
 
   if (debounceTimer) {
     clearTimeout(debounceTimer);
+    debounceTimer = null;
   }
 
-  const requestedSources = getRequestedSources(source);
-  const hasCachedResults = requestedSources.every((requestedSource) => state.loadedSources[requestedSource]);
-  if (hasCachedResults) {
+  const sources = getRequestedSources(source).filter(
+    (requestedSource) => !state.loadedSources[requestedSource],
+  );
+  if (sources.length === 0) {
+    useSearchStore.setState({ isSearching: false, pendingSources: [] });
     return;
   }
 
-  void executeSearch(query, source, {
+  void executeSearch(state.effectiveQuery, source, requestId, {
     resetResults: false,
-    sources: requestedSources,
+    sources,
     offsetBySource: {},
   });
 }
 
 export function loadMore(): void {
-  const { query, isSearching, activeSource, hasMoreBySource, results } = useSearchStore.getState();
-  if (!query.trim() || isSearching) {
-    return;
-  }
+  const state = useSearchStore.getState();
+  if (!state.effectiveQuery || state.isSearching) return;
 
-  const requestedSources = getRequestedSources(activeSource).filter((source) => hasMoreBySource[source]);
-  if (requestedSources.length === 0) {
-    return;
-  }
+  const sources = getRequestedSources(state.activeSource).filter(
+    (source) => state.hasMoreBySource[source],
+  );
+  if (sources.length === 0) return;
 
-  void executeSearch(query.trim(), activeSource, {
+  const requestId = nextRequestId();
+  cancelRequest(state.activeRequestId);
+  void executeSearch(state.effectiveQuery, state.activeSource, requestId, {
     resetResults: false,
-    sources: requestedSources,
+    sources,
     offsetBySource: Object.fromEntries(
-      requestedSources.map((source) => [source, results[source].length]),
+      sources.map((source) => [source, state.results[source].length]),
     ) as Partial<Record<SearchSource, number>>,
   });
 }
@@ -96,13 +179,14 @@ export function loadMore(): void {
 async function executeSearch(
   query: string,
   activeSource: ActiveTab,
+  requestId: number,
   options: {
     resetResults: boolean;
     sources: SearchSource[];
     offsetBySource: Partial<Record<SearchSource, number>>;
   },
 ): Promise<void> {
-  const requestId = Date.now() + Math.random();
+  ensureSearchListener();
   markPerf('search:start', `${requestId}:${activeSource}:${query}`);
   const { resetResults, sources, offsetBySource } = options;
   const clearedErrors = Object.fromEntries(
@@ -110,70 +194,39 @@ async function executeSearch(
       .filter(([source]) => !sources.includes(source as SearchSource)),
   );
 
-  useSearchStore.setState((prev) => ({
-    isSearching: true,
-    sourceErrors: clearedErrors,
-    results: resetResults ? EMPTY_RESULTS() : prev.results,
+  useSearchStore.setState((previous) => ({
     activeRequestId: requestId,
-    hasMoreBySource: resetResults ? EMPTY_HAS_MORE() : prev.hasMoreBySource,
+    isSearching: true,
+    pendingSources: sources,
+    sourceErrors: clearedErrors,
+    results: resetResults ? EMPTY_RESULTS() : previous.results,
+    hasMoreBySource: resetResults ? EMPTY_HAS_MORE() : previous.hasMoreBySource,
     loadedSources: resetResults
       ? EMPTY_LOADED_SOURCES()
       : {
-          ...prev.loadedSources,
+          ...previous.loadedSources,
           ...Object.fromEntries(sources.map((source) => [source, false])),
         },
   }));
 
-  const onSourceResults = (...args: unknown[]) => {
-    const data = args[0] as SearchSourceResultsEvent;
-    const state = useSearchStore.getState();
-    if (data.query === state.query && data.requestId === state.activeRequestId) {
-      useSearchStore.setState((prev) => ({
-        results: {
-          ...prev.results,
-          [data.source]: mergeResults(prev.results[data.source], data.results, data.offset),
-        },
-        hasMoreBySource: {
-          ...prev.hasMoreBySource,
-          [data.source]: data.hasMore,
-        },
-      }));
-    }
+  const searchQuery: SearchQuery = {
+    query,
+    sources,
+    limitBySource: Object.fromEntries(
+      sources.map((source) => [source, getSearchPageLimit(source)]),
+    ),
+    offsetBySource,
+    requestId,
   };
 
-  ipcOn('search:source-results', onSourceResults);
-
   try {
-    const searchQuery: SearchQuery = {
-      query,
-      sources,
-      limitBySource: Object.fromEntries(sources.map((source) => [source, SEARCH_RESULTS_LIMIT])),
-      offsetBySource,
-      requestId,
-    };
-    const response = (await ipc('search:query', searchQuery)) as {
-      sourceErrors: Record<string, string>;
-    };
-    const state = useSearchStore.getState();
-    if (state.query === query && state.activeRequestId === requestId) {
-      markPerf('search:finish', `${requestId}:${activeSource}`);
-      useSearchStore.setState((prev) => ({
-        sourceErrors: {
-          ...clearedErrors,
-          ...response.sourceErrors,
-        },
-        isSearching: false,
-        loadedSources: {
-          ...prev.loadedSources,
-          ...Object.fromEntries(sources.map((source) => [source, true])),
-        },
-      }));
+    await ipc('search:query', searchQuery);
+    if (useSearchStore.getState().activeRequestId === requestId) {
+      useSearchStore.setState({ isSearching: false, pendingSources: [] });
     }
   } catch {
     if (useSearchStore.getState().activeRequestId === requestId) {
-      useSearchStore.setState({ isSearching: false });
+      useSearchStore.setState({ isSearching: false, pendingSources: [] });
     }
-  } finally {
-    ipcOff('search:source-results', onSourceResults);
   }
 }

@@ -15,11 +15,23 @@ export interface SearchResult {
 
 export type SearchSource = 'youtube' | 'spotify' | 'soundcloud' | 'local' | 'playlist';
 
+export type SearchSourceStatus = 'success' | 'error' | 'cancelled';
+
+export interface SearchSourceEvent {
+  requestId: number;
+  source: SearchSource;
+  status: SearchSourceStatus;
+  results: SearchResult[];
+  offset: number;
+  hasMore: boolean;
+  error?: string;
+}
+
 export interface SearchQuery {
   query: string;
   sources: SearchSource[];
   limit?: number;
   limitBySource?: Partial<Record<SearchSource, number>>;
   offsetBySource?: Partial<Record<SearchSource, number>>;
-  requestId?: number;
+  requestId: number;
 }

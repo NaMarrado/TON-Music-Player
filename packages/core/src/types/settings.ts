@@ -15,6 +15,7 @@ export interface SettingsMap {
   eq_enabled: boolean;
   eq_preset: string;
   eq_bands: string;
+  frequency_enabled: boolean;
   frequency_hz: number;
   download_quality_profile: DownloadQualityProfile;
   download_directory: string;
@@ -41,6 +42,7 @@ export const SETTING_DEFAULTS: SettingsMap = {
   eq_enabled: false,
   eq_preset: 'flat',
   eq_bands: JSON.stringify(EQ_PRESETS.flat),
+  frequency_enabled: false,
   frequency_hz: DEFAULT_FREQUENCY_HZ,
   download_quality_profile: 'normal',
   download_directory: '',
@@ -62,6 +64,7 @@ export const PERSISTED_SETTING_DEFAULTS = {
   eq_enabled: false,
   eq_preset: 'flat',
   eq_bands: JSON.stringify(EQ_PRESETS.flat),
+  frequency_enabled: false,
   frequency_hz: DEFAULT_FREQUENCY_HZ,
   download_quality_profile: 'normal',
   download_directory: '',

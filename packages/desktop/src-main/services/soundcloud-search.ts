@@ -47,17 +47,18 @@ export async function searchSoundCloudPage(
   query: string,
   limit = 10,
   offset = 0,
+  signal?: AbortSignal,
 ): Promise<{ results: SearchResult[]; hasMore: boolean }> {
   const ytDlpPath = await getYtDlpPathAsync();
-  const effectiveLimit = offset + limit;
-  const searchQuery = `scsearch${effectiveLimit}:${query}`;
+  const requestedCount = offset + limit + 1;
+  const searchQuery = `scsearch${requestedCount}:${query}`;
 
   const result = await runYtDlp(ytDlpPath, [
     searchQuery,
     '--dump-single-json',
     '--flat-playlist',
     '--no-warnings',
-  ]);
+  ], signal);
 
   const entries = result.entries || [];
 
@@ -75,7 +76,7 @@ export async function searchSoundCloudPage(
 
   return {
     results: results.slice(offset, offset + limit),
-    hasMore: results.length >= effectiveLimit,
+    hasMore: results.length > offset + limit,
   };
 }
 
@@ -112,9 +113,17 @@ export async function getSoundCloudPlaylistTracks(url: string): Promise<{
   return { name, tracks };
 }
 
-function runYtDlp(binPath: string, args: string[]): Promise<YtDlpPlaylistResult> {
+function runYtDlp(
+  binPath: string,
+  args: string[],
+  signal?: AbortSignal,
+): Promise<YtDlpPlaylistResult> {
   return new Promise((resolve, reject) => {
-    execFile(binPath, args, { timeout: 30000, maxBuffer: 10 * 1024 * 1024 }, (err, stdout, stderr) => {
+    execFile(binPath, args, {
+      timeout: 15_000,
+      maxBuffer: 10 * 1024 * 1024,
+      signal,
+    }, (err, stdout, stderr) => {
       if (err) {
         const detail = stderr.trim() || err.message || 'SoundCloud search failed';
         reject(new Error(detail));

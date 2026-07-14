@@ -12,6 +12,7 @@ export const ALLOWED_INVOKE_CHANNELS = [
   'download:get-all',
   'download:import-playlist',
   'search:query',
+  'search:cancel',
   'search:spotify-playlist',
   'playlist:list',
   'playlist:get',

@@ -1,4 +1,4 @@
-import { EQ_PRESETS, PITCH_REFERENCE_FREQUENCY_HZ } from '@ton/core';
+import { EQ_PRESETS, getEffectiveFrequencyPitchRatio } from '@ton/core';
 import { usePlaybackStore } from '../../stores/playback-store';
 import { supportsEqualizerEffects, supportsPitchAdjustment } from './capabilities';
 import { getAudioSessionId, setPitch } from '../native-pitch';
@@ -121,10 +121,10 @@ export async function toggleEq(): Promise<void> {
 }
 
 async function applyCurrentAudioEffects(): Promise<void> {
-  const { frequencyHz } = usePlaybackStore.getState();
+  const { frequencyEnabled, frequencyHz } = usePlaybackStore.getState();
 
   try {
-    await setPitch(frequencyHz / PITCH_REFERENCE_FREQUENCY_HZ);
+    await setPitch(getEffectiveFrequencyPitchRatio(frequencyHz, frequencyEnabled));
   } catch {
     // Pitch can lag behind until the player is fully ready.
   }

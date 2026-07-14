@@ -17,6 +17,7 @@ interface PlaybackState {
   loudnessNormEnabled: boolean;
   repeat: RepeatMode;
   shuffle: boolean;
+  frequencyEnabled: boolean;
   frequencyHz: number;
   eqEnabled: boolean;
   eqBands: number[];
@@ -33,6 +34,7 @@ export const usePlaybackStore = create<PlaybackState>()(() => ({
   loudnessNormEnabled: false,
   repeat: 'all',
   shuffle: false,
+  frequencyEnabled: false,
   frequencyHz: DEFAULT_FREQUENCY_HZ,
   eqEnabled: false,
   eqBands: [...EQ_PRESETS.flat],
