@@ -32,6 +32,7 @@ export function createSchema(db: Database.Database): void {
       last_played_at  INTEGER,
       rating          INTEGER,
       added_at        INTEGER NOT NULL DEFAULT (strftime('%s','now')),
+      downloaded_at   INTEGER,
       scanned_at      INTEGER NOT NULL DEFAULT (strftime('%s','now')),
       in_library      INTEGER NOT NULL DEFAULT 1
     );
@@ -144,11 +145,26 @@ export function createSchema(db: Database.Database): void {
       VALUES('delete', old.id, old.title, old.artist, old.album, old.album_artist, old.genre);
     END;
 
-    CREATE TRIGGER IF NOT EXISTS tracks_fts_update AFTER UPDATE ON tracks BEGIN
+    CREATE TRIGGER IF NOT EXISTS tracks_fts_update
+    AFTER UPDATE OF title, artist, album, album_artist, genre ON tracks BEGIN
       INSERT INTO tracks_fts(tracks_fts, rowid, title, artist, album, album_artist, genre)
       VALUES('delete', old.id, old.title, old.artist, old.album, old.album_artist, old.genre);
       INSERT INTO tracks_fts(rowid, title, artist, album, album_artist, genre)
       VALUES (new.id, new.title, new.artist, new.album, new.album_artist, new.genre);
+    END;
+
+    CREATE TRIGGER IF NOT EXISTS tracks_force_library_insert
+    AFTER INSERT ON tracks
+    WHEN new.in_library != 1 BEGIN
+      UPDATE tracks SET in_library = 1
+      WHERE id = new.id;
+    END;
+
+    CREATE TRIGGER IF NOT EXISTS tracks_force_library_update
+    AFTER UPDATE OF in_library ON tracks
+    WHEN new.in_library != 1 BEGIN
+      UPDATE tracks SET in_library = 1
+      WHERE id = new.id;
     END;
 
     CREATE INDEX IF NOT EXISTS idx_tracks_in_library ON tracks(in_library);

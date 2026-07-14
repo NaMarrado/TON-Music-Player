@@ -17,6 +17,7 @@ import type { PlaylistLayout } from '../use-playlist-layout';
 type SortablePlaylistTrackListProps = Pick<
   PlaylistTrackListProps,
   | 't'
+  | 'locale'
   | 'allSelected'
   | 'onSelectAll'
   | 'sortBy'
@@ -37,6 +38,7 @@ type SortablePlaylistTrackListProps = Pick<
 export function SortablePlaylistTrackList({
   layout,
   t,
+  locale,
   allSelected,
   onSelectAll,
   sortBy,
@@ -88,6 +90,7 @@ export function SortablePlaylistTrackList({
               <TrackListHeader
                 dense={layout.dense}
                 showArtist={layout.showArtistColumn}
+                showDownloaded={layout.showDownloadedColumn}
                 t={t}
                 showDrag
                 allSelected={allSelected}
@@ -101,7 +104,9 @@ export function SortablePlaylistTrackList({
               <div style={{ paddingBottom: index === tracks.length - 1 ? 0 : 'var(--track-list-row-gap)' }}>
                 <SortableTrackRow
                   dense={layout.dense}
+                  locale={locale}
                   showArtist={layout.showArtistColumn}
+                  showDownloaded={layout.showDownloadedColumn}
                   key={track.playlist_track_id}
                   track={track}
                   index={index}
@@ -121,7 +126,9 @@ export function SortablePlaylistTrackList({
           {activeTrack ? (
             <StaticTrackRow
               dense={layout.dense}
+              locale={locale}
               showArtist={layout.showArtistColumn}
+              showDownloaded={layout.showDownloadedColumn}
               track={activeTrack}
               index={activeIndex}
               isPlaying={activeTrack.playlist_track_id === playingPtId}

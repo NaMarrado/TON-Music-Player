@@ -6,7 +6,7 @@ import { usePlaylistPageData } from './use-playlist-page-data';
 import { usePlaylistViewState } from './use-playlist-view-state';
 
 export function usePlaylistPageModel() {
-  const { t } = useTranslation('pages/playlist');
+  const { i18n, t } = useTranslation('pages/playlist');
   const navigate = useNavigate();
   const pageData = usePlaylistPageData();
   const viewState = usePlaylistViewState(pageData.tracks);
@@ -23,6 +23,7 @@ export function usePlaylistPageModel() {
   return {
     actions,
     dnd,
+    locale: i18n.resolvedLanguage || i18n.language,
     pageData,
     t,
     viewState,

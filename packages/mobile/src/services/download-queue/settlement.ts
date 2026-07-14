@@ -1,5 +1,6 @@
 import { DOWNLOAD_RETRY_MAX } from '@ton/core';
 import {
+  completeQueueItemRecord,
   requeueQueueItem,
   updateQueueItemFormat,
   updateQueueItemRetry,
@@ -9,7 +10,7 @@ import { shouldRetryQueueFailure } from './failure-policy';
 import { clearProgressTracking } from './progress';
 import type { QueueRuntimeState } from './runtime';
 import { replaceQueueItem, updateQueueItem } from './mutations';
-import { upsertTrackById, useLibraryStore } from '../../stores/library-store';
+import { reconcileLibraryTracks } from '../../stores/library-store';
 import { mergeCompletedTrackIntoPlaylists } from '../../stores/playlist-store';
 import { getTrackById } from '../db-queries';
 import type { DownloadFormat } from '../downloader';
@@ -46,8 +47,20 @@ export async function completeQueueItem(
   const format = asDownloadFormat(track?.format);
 
   console.log('[DL-QUEUE] Download completed item:', itemId);
+  if (runtime.cancellingIds.has(itemId)) {
+    clearProgressTracking(runtime, itemId);
+    runtime.activeDownloads.delete(itemId);
+    return;
+  }
+  if (format) {
+    await updateQueueItemFormat(itemId, format);
+  }
+  const completed = await completeQueueItemRecord(itemId, trackId);
   clearProgressTracking(runtime, itemId);
   runtime.activeDownloads.delete(itemId);
+  if (!completed) {
+    return;
+  }
   updateQueueItem(runtime, itemId, (current) => ({
     ...current,
     status: 'completed',
@@ -57,17 +70,11 @@ export async function completeQueueItem(
     trackId,
   }));
   runtime.consecutiveErrors = 0;
-  if (format) {
-    await updateQueueItemFormat(itemId, format);
-  }
-  await updateQueueItemStatus(itemId, 'completed');
 
   const affectedPlaylistIds = await settlePlaylistImportQueueItem(itemId, trackId);
   await mergeCompletedTrackIntoPlaylists(trackId, affectedPlaylistIds);
 
-  if (useLibraryStore.getState().hasLoaded) {
-    await upsertTrackById(trackId);
-  }
+  await reconcileLibraryTracks().catch(() => {});
 }
 
 export async function failQueueItem(

@@ -72,9 +72,7 @@ async function buildExportPayload(
 
   if (selection.includeLibrary) {
     for (const track of allTracks) {
-      if (track.in_library === 1) {
-        selectedTrackMap.set(track.id, track);
-      }
+      selectedTrackMap.set(track.id, track);
     }
   }
 

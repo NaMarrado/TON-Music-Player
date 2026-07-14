@@ -8,6 +8,8 @@ import type {
 } from '@ton/core';
 import { normalizeCloudStorageErrorKey } from '@ton/core';
 import { Dialog } from '../../components/ui/dialog';
+import { reconcileLibraryTracks } from '../../stores/library-store';
+import { loadPlaylists } from '../../stores/playlist-store';
 import { SectionHeader } from './helpers';
 import type { SettingsLayout } from './use-settings-layout';
 
@@ -323,6 +325,12 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
     setProgress(null);
     try {
       const taskResult = await window.api.invoke(task);
+      if (taskResult && task !== 'cloud:upload-missing') {
+        await Promise.all([
+          reconcileLibraryTracks({ immediate: true, loadIfUninitialized: true }),
+          loadPlaylists({ force: true }),
+        ]);
+      }
       setResult(taskResult as CloudSyncResult | null);
       setStatus(taskResult ? t('cloudDone') : t('cloudCancelled'));
     } catch (error) {

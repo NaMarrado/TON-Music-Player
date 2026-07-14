@@ -33,6 +33,7 @@ export interface Track {
   rating: number | null;
   in_library: number;
   added_at: number;
+  downloaded_at: number | null;
   scanned_at: number;
 }
 

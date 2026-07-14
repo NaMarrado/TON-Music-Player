@@ -46,7 +46,7 @@ export function LibraryScreen() {
     <LibraryListHeader
       playlists={playlists}
       filterQuery={filterQuery}
-      trackCount={displayTracks.length}
+      tracks={displayTracks}
       onCreatePlaylist={() => setShowCreatePlaylist(true)}
       onPlayAll={handlePlayAll}
     />

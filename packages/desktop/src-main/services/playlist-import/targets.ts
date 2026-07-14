@@ -79,6 +79,17 @@ async function materializeImportSourceOnce(importSourceId: number): Promise<void
     return;
   }
 
+  db.prepare(
+    `UPDATE tracks
+     SET in_library = 1
+     WHERE in_library = 0
+       AND id IN (
+         SELECT track_id
+         FROM playlist_import_items
+         WHERE import_source_id = ? AND track_id IS NOT NULL
+       )`,
+  ).run(importSourceId);
+
   const items = db.prepare(
     `SELECT pii.id, pii.source_position, pii.track_id,
             t.file_path AS source_file_path,

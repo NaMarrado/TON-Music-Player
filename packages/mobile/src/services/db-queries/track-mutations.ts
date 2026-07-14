@@ -8,12 +8,13 @@ const TRACK_COLUMNS = new Set([
   'bitrate', 'sample_rate', 'format', 'cover_art_path',
   'loudness_lufs', 'loudness_gain',
   'youtube_id', 'spotify_id', 'soundcloud_id', 'source_url',
-  'last_played_at', 'rating', 'in_library',
+  'last_played_at', 'rating', 'downloaded_at', 'in_library',
 ]);
 
 export async function insertTrack(
-  track: Omit<Track, 'id' | 'play_count' | 'added_at' | 'scanned_at' | 'content_hash_sha256'> & {
+  track: Omit<Track, 'id' | 'play_count' | 'added_at' | 'downloaded_at' | 'scanned_at' | 'content_hash_sha256'> & {
     content_hash_sha256?: string | null;
+    downloaded_at?: number | null;
   },
 ): Promise<number> {
   const db = getDb();
@@ -26,8 +27,8 @@ export async function insertTrack(
       bitrate, sample_rate, format, cover_art_path,
       loudness_lufs, loudness_gain,
       youtube_id, spotify_id, soundcloud_id, source_url,
-      last_played_at, rating, in_library
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      last_played_at, rating, downloaded_at, in_library
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       track.file_path,
       track.file_hash ?? null,
@@ -55,7 +56,8 @@ export async function insertTrack(
       track.source_url ?? null,
       track.last_played_at ?? null,
       track.rating ?? null,
-      track.in_library ?? 1,
+      track.downloaded_at ?? null,
+      1,
     ],
   );
   return result.lastInsertRowId;
@@ -89,7 +91,7 @@ export async function updateTrackLoudness(
   );
 }
 
-export async function updateTracksInLibrary(ids: number[], inLibrary: 0 | 1): Promise<void> {
+export async function updateTracksInLibrary(ids: number[], _inLibrary: 0 | 1): Promise<void> {
   if (ids.length === 0) {
     return;
   }
@@ -98,9 +100,9 @@ export async function updateTracksInLibrary(ids: number[], inLibrary: 0 | 1): Pr
   const placeholders = ids.map(() => '?').join(',');
   await db.runAsync(
     `UPDATE tracks
-     SET in_library = ?
+     SET in_library = 1
      WHERE id IN (${placeholders})`,
-    [inLibrary, ...ids],
+    ids,
   );
 }
 

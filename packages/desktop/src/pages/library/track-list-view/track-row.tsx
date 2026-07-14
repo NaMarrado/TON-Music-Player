@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { formatTime } from '@ton/core';
+import { formatDownloadedDate, formatTime } from '@ton/core';
 import type { LibraryTrack } from '../../../stores/library-store';
 import { LibraryTrackGridShell, getLibraryTrackGridStyle } from './grid-shell';
 import { SelectionCheckbox } from './selection-checkbox';
@@ -10,9 +10,11 @@ type TrackRowProps = {
   dense: boolean;
   isPlaying: boolean;
   isSelected: boolean;
+  locale: string;
   onClick: () => void;
   onContextMenu: (event: React.MouseEvent) => void;
   showArtist: boolean;
+  showDownloaded: boolean;
   showPlaylist: boolean;
   onToggleSelect: (shiftKey: boolean) => void;
   track: LibraryTrack;
@@ -22,9 +24,11 @@ export const TrackRow = memo(function TrackRow({
   dense,
   isPlaying,
   isSelected,
+  locale,
   onClick,
   onContextMenu,
   showArtist,
+  showDownloaded,
   showPlaylist,
   onToggleSelect,
   track,
@@ -36,7 +40,7 @@ export const TrackRow = memo(function TrackRow({
       onContextMenu={onContextMenu}
       style={{
         paddingBlock: 'var(--track-row-block-padding)',
-        ...getLibraryTrackGridStyle({ dense, showArtist, showPlaylist }),
+        ...getLibraryTrackGridStyle({ dense, showArtist, showDownloaded, showPlaylist }),
         borderRadius: '6px',
         transition: 'background var(--transition)',
         userSelect: 'none',
@@ -49,6 +53,7 @@ export const TrackRow = memo(function TrackRow({
     >
       <LibraryTrackGridShell
         showArtist={showArtist}
+        showDownloaded={showDownloaded}
         showPlaylist={showPlaylist}
         coverSlot={<TrackRowCoverArt track={track} isPlaying={isPlaying} />}
         titleSlot={
@@ -84,6 +89,12 @@ export const TrackRow = memo(function TrackRow({
             style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}
           />
         ) : undefined}
+        downloadedSlot={showDownloaded ? (
+          <HoverMarqueeText
+            text={formatDownloadedDate(track.downloaded_at, locale)}
+            style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}
+          />
+        ) : undefined}
         timeSlot={
           <HoverMarqueeText
             text={formatTime(track.duration_ms)}
@@ -107,6 +118,8 @@ export const TrackRow = memo(function TrackRow({
   prev.track === next.track &&
   prev.isPlaying === next.isPlaying &&
   prev.isSelected === next.isSelected &&
+  prev.locale === next.locale &&
   prev.showArtist === next.showArtist &&
+  prev.showDownloaded === next.showDownloaded &&
   prev.showPlaylist === next.showPlaylist,
 );

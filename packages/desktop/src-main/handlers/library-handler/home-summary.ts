@@ -11,7 +11,7 @@ export type LibraryHomeSummary = {
 export function handleLibraryHomeSummary(): LibraryHomeSummary {
   const db = getDb();
   const libraryCount = (
-    db.prepare('SELECT COUNT(*) as count FROM tracks WHERE in_library = 1').get() as { count: number }
+    db.prepare('SELECT COUNT(*) as count FROM tracks').get() as { count: number }
   ).count;
 
   const recentTracks = queryTrackSnapshots({

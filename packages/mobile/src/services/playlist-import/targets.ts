@@ -1,5 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 import { getDb } from '../database';
+import { reconcileLibraryTracks } from '../../stores/library-store';
 
 export interface PlaylistImportTargetAssignments {
   queue: Array<{ importItemIds: number[]; queueId: number }>;
@@ -17,6 +18,17 @@ async function reconcileImportedPlaylist(
   if (!source) {
     return null;
   }
+
+  await db.runAsync(
+    `UPDATE tracks
+     SET in_library = 1
+     WHERE id IN (
+       SELECT track_id
+       FROM playlist_import_items
+       WHERE import_source_id = ? AND track_id IS NOT NULL
+     )`,
+    [importSourceId],
+  );
 
   const importedItems = await db.getAllAsync<{
     id: number;
@@ -91,9 +103,13 @@ export async function assignPlaylistImportTargets(
 ): Promise<number[]> {
   const db = getDb();
   const affectedPlaylistIds = new Set<number>();
+  const trackIdsToRevalidate = new Set(
+    assignments.tracks.map((assignment) => assignment.trackId),
+  );
 
   await db.withExclusiveTransactionAsync(async (txn) => {
     for (const assignment of assignments.tracks) {
+      await txn.runAsync('UPDATE tracks SET in_library = 1 WHERE id = ?', [assignment.trackId]);
       await updateImportItemIds(txn, assignment.importItemIds, 'track_id', assignment.trackId);
     }
     for (const assignment of assignments.queue) {
@@ -120,6 +136,7 @@ export async function assignPlaylistImportTargets(
       if (!track) {
         continue;
       }
+      trackIdsToRevalidate.add(track.id);
       const sources = await txn.getAllAsync<{ import_source_id: number }>(
         'SELECT DISTINCT import_source_id FROM playlist_import_items WHERE queue_id = ?',
         [queueId],
@@ -138,6 +155,10 @@ export async function assignPlaylistImportTargets(
       }
     }
   });
+
+  if (trackIdsToRevalidate.size > 0) {
+    await reconcileLibraryTracks().catch(() => {});
+  }
 
   return [...affectedPlaylistIds];
 }

@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { formatTrackFileSizeSummary, summarizeTrackFileSizes } from '@ton/core';
 import {
   getFilteredTracks,
-  loadTracks,
-  useLibraryStore,
+  reconcileLibraryTracks,
 } from '../../../stores/library-store';
 import type { LibraryTrack, SortField } from '../../../stores/library-store';
 import type { ContextMenuState } from './types';
@@ -24,6 +24,10 @@ export function useLibraryViewState(
     () => filteredTracks.reduce((sum, track) => sum + (track.duration_ms || 0), 0),
     [filteredTracks],
   );
+  const totalSizeLabel = useMemo(
+    () => formatTrackFileSizeSummary(summarizeTrackFileSizes(filteredTracks)),
+    [filteredTracks],
+  );
 
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -32,15 +36,15 @@ export function useLibraryViewState(
     null,
   );
   const anchorIndexRef = useRef<number | null>(null);
-  const hasLoaded = useLibraryStore((state) => state.hasLoaded);
-  const isLoading = useLibraryStore((state) => state.isLoading);
-  const isStale = useLibraryStore((state) => state.isStale);
+  const routeRevalidationRequestedRef = useRef(false);
 
   useEffect(() => {
-    if ((!hasLoaded || isStale) && !isLoading) {
-      void loadTracks();
+    if (routeRevalidationRequestedRef.current) {
+      return;
     }
-  }, [hasLoaded, isLoading, isStale]);
+    routeRevalidationRequestedRef.current = true;
+    void reconcileLibraryTracks({ immediate: true, loadIfUninitialized: true }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!contextMenu) return;
@@ -125,5 +129,6 @@ export function useLibraryViewState(
     setPlaylistPickerPos,
     setSelectedIds,
     totalDuration,
+    totalSizeLabel,
   };
 }

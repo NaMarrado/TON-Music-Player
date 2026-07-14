@@ -1,4 +1,8 @@
-import { formatDuration } from '@ton/core';
+import {
+  formatDuration,
+  formatTrackFileSizeSummary,
+  summarizeTrackFileSizes,
+} from '@ton/core';
 import { PlaylistActions } from './playlist-actions';
 import { SelectionRail } from './playlist-actions/selection-rail';
 import { PlaylistCover } from './playlist-cover';
@@ -23,6 +27,7 @@ export function PlaylistHeader({
   layout,
 }: PlaylistHeaderProps & { layout: PlaylistLayout }) {
   const totalDuration = tracks.reduce((sum, track) => sum + (track.duration_ms || 0), 0);
+  const totalSizeLabel = formatTrackFileSizeSummary(summarizeTrackFileSizes(tracks));
 
   return (
     <div
@@ -72,6 +77,8 @@ export function PlaylistHeader({
           </span>
           <span style={{ color: 'var(--text-secondary)' }}>·</span>
           <span>{formatDuration(totalDuration)}</span>
+          <span style={{ color: 'var(--text-secondary)' }}>·</span>
+          <span>{totalSizeLabel}</span>
         </div>
 
         {!layout.compact && <div className="flex-1" />}

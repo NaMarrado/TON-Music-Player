@@ -16,7 +16,7 @@ import {
   testMobileCloudConnection,
   uploadMissingLocalToCloud,
 } from '../../services/cloud-sync';
-import { loadTracks } from '../../stores/library-store';
+import { reconcileLibraryTracks } from '../../stores/library-store';
 import { loadPlaylists } from '../../stores/playlist-store';
 
 type CloudForm = {
@@ -143,7 +143,10 @@ export function useCloudSyncSettings() {
         setCloudProgress({ phase: 'cancelled', current: 0, total: 0, uploaded: 0, downloaded: 0, skipped: 0, failed: 0 });
       }
       if (result && task !== 'upload') {
-        await Promise.all([loadTracks(), loadPlaylists()]);
+        await Promise.all([
+          reconcileLibraryTracks({ immediate: true, loadIfUninitialized: true }),
+          loadPlaylists(),
+        ]);
       }
     } catch (error) {
       if (error instanceof Error && error.message === 'cloud_sync_cancelled') {

@@ -6,6 +6,7 @@ export interface PlaylistLayout {
   coverSize: number;
   dense: boolean;
   showArtistColumn: boolean;
+  showDownloadedColumn: boolean;
 }
 
 export function usePlaylistLayout(): PlaylistLayout {
@@ -20,5 +21,6 @@ export function usePlaylistLayout(): PlaylistLayout {
     contentPaddingX: compact ? 12 : medium ? 24 : 32,
     coverSize: compact ? 84 : 180,
     showArtistColumn: !dense,
+    showDownloadedColumn: !compact,
   };
 }

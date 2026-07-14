@@ -2,6 +2,7 @@ import type { DownloadItem, DownloadRequest, PlaylistImportResult } from '@ton/c
 import { showToast } from './toast-store';
 import { countPerfEvent, measurePerfAsync } from '../utils/perf';
 import { loadPlaylists } from './playlist-store';
+import { reconcileLibraryTracks } from './library-store';
 import {
   appendDownloadItem,
   clearRuntimeMeta,
@@ -114,5 +115,6 @@ export async function importPlaylist(
   const result = (await ipc('download:import-playlist', { url })) as PlaylistImportResult;
   await loadDownloads();
   await loadPlaylists({ force: true });
+  await reconcileLibraryTracks().catch(() => {});
   return result;
 }

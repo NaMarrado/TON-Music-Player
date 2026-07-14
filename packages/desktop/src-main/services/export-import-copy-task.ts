@@ -22,6 +22,12 @@ function sanitizeArtworkStem(relativePath: string, ext: string): string {
   return stem || 'playlist-cover';
 }
 
+function normalizeDownloadedAt(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0
+    ? Math.floor(value)
+    : null;
+}
+
 async function resolveArtworkDestination(
   artworkDir: string,
   relativePath: string,
@@ -99,10 +105,13 @@ export async function copyImportData(
     }
 
     await fs.promises.copyFile(sourcePath, destinationPath);
+    const destinationStats = await fs.promises.stat(destinationPath);
     filesToInsert.push({
       destPath: destinationPath,
       hash: entry.file_hash,
       contentHashSha256: entry.content_hash_sha256 ?? null,
+      downloadedAt: normalizeDownloadedAt(entry.downloaded_at),
+      fileSize: destinationStats.size,
       meta: entry.metadata,
     });
     knownHashes.add(entry.file_hash);

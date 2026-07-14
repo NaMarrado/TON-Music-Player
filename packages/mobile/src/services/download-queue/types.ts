@@ -27,6 +27,7 @@ export interface QueueRow {
   url: string;
   source: DownloadInput['source'];
   source_id: string;
+  resolved_source_id: string | null;
   title: string;
   artist: string;
   album: string | null;

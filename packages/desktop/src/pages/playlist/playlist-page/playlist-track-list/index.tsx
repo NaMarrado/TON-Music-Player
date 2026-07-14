@@ -5,6 +5,7 @@ import type { PlaylistTrackListProps } from './types';
 
 export function PlaylistTrackList({
   layout,
+  locale,
   t,
   tracks,
   displayTracks,
@@ -38,6 +39,7 @@ export function PlaylistTrackList({
     return (
       <StaticPlaylistTrackList
         layout={layout}
+        locale={locale}
         t={t}
         isSmart={isSmart}
         allSelected={allSelected}
@@ -57,6 +59,7 @@ export function PlaylistTrackList({
   return (
       <SortablePlaylistTrackList
         layout={layout}
+        locale={locale}
         t={t}
         allSelected={allSelected}
         onSelectAll={onSelectAll}

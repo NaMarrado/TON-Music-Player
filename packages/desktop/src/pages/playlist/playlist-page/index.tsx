@@ -17,6 +17,7 @@ export function PlaylistPage() {
       handleRemoveSelected,
     },
     dnd: { handleDragEnd, sensors },
+    locale,
     pageData: {
       isLoading,
       playingPtId,
@@ -91,6 +92,7 @@ export function PlaylistPage() {
 
       <PlaylistTrackListSection
         layout={layout}
+        locale={locale}
         t={t}
         tracks={tracks}
         displayTracks={displayTracks}

@@ -76,6 +76,22 @@ function resolveTrackExtension(track: Track): string {
   }
 }
 
+function normalizeDownloadedAt(value: number | null): number | null {
+  return value != null && Number.isFinite(value) && value > 0
+    ? Math.floor(value)
+    : null;
+}
+
+function earliestDownloadedAt(
+  current: number | null | undefined,
+  incoming: number | null,
+): number | null {
+  const normalizedCurrent = normalizeDownloadedAt(current ?? null);
+  if (normalizedCurrent == null) return incoming;
+  if (incoming == null) return normalizedCurrent;
+  return Math.min(normalizedCurrent, incoming);
+}
+
 export async function prepareTrackExports(
   tracks: Track[],
   onProgress?: (progress: LibraryTransferProgress) => void,
@@ -118,6 +134,7 @@ export async function prepareTrackExports(
         trackEntry: {
           file_hash: fileHash,
           content_hash_sha256: contentHash,
+          downloaded_at: normalizeDownloadedAt(track.downloaded_at),
           relative_path: `tracks/${exportFileName}`,
           metadata: {
             title: track.title,
@@ -133,6 +150,11 @@ export async function prepareTrackExports(
       };
 
       preparedByHash.set(fileHash, prepared);
+    } else {
+      prepared.trackEntry.downloaded_at = earliestDownloadedAt(
+        prepared.trackEntry.downloaded_at,
+        normalizeDownloadedAt(track.downloaded_at),
+      );
     }
 
     preparedByTrackId.set(track.id, prepared);

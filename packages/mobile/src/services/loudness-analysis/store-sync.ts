@@ -13,9 +13,7 @@ export async function syncAnalyzedTrackById(trackId: number): Promise<{
     return { track: null, updatedCurrentTrack: false };
   }
 
-  if (track.in_library === 1) {
-    upsertTrack(track);
-  }
+  upsertTrack(track);
 
   usePlaylistStore.setState((state) => {
     let changed = false;

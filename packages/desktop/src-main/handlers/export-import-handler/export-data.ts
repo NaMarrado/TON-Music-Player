@@ -19,15 +19,35 @@ type ExportableTrackRow = ExportTrackRow & {
   archivePath: string;
   content_hash_sha256: string;
   file_hash: string;
-  in_library: number;
 };
 
 type SelectedExportRows = {
-  allTracks: Array<ExportTrackRow & { in_library: number }>;
+  allTracks: ExportTrackRow[];
   membershipsByPlaylistId: Map<number, number[]>;
   playlists: ExportPlaylistRow[];
   selectedTrackIds: Set<number>;
 };
+
+function normalizeDownloadedAt(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0
+    ? Math.floor(value)
+    : null;
+}
+
+function earliestDownloadedAt(
+  left: number | null,
+  right: number | null,
+): number | null {
+  const normalizedLeft = normalizeDownloadedAt(left);
+  const normalizedRight = normalizeDownloadedAt(right);
+  if (normalizedLeft == null) {
+    return normalizedRight;
+  }
+  if (normalizedRight == null) {
+    return normalizedLeft;
+  }
+  return Math.min(normalizedLeft, normalizedRight);
+}
 
 async function pathExists(targetPath: string): Promise<boolean> {
   try {
@@ -45,11 +65,12 @@ function loadSelectedExportRows(selection?: ExportSelection): SelectedExportRows
   const selectedPlaylistIds = new Set(selection?.playlistIds ?? []);
 
   const allTracks = db.prepare(`
-    SELECT id, file_path, file_hash, content_hash_sha256, title, artist, album, genre, year,
-           duration_ms, loudness_lufs, loudness_gain, cover_art_path, format, in_library
+    SELECT id, file_path, file_hash, content_hash_sha256, downloaded_at,
+           title, artist, album, genre, year,
+           duration_ms, loudness_lufs, loudness_gain, cover_art_path, format
     FROM tracks
     ORDER BY id ASC
-  `).all() as Array<ExportTrackRow & { in_library: number }>;
+  `).all() as ExportTrackRow[];
 
   const allPlaylists = db.prepare(`
     SELECT id, name, description, cover_path, is_smart, smart_rules
@@ -65,9 +86,7 @@ function loadSelectedExportRows(selection?: ExportSelection): SelectedExportRows
 
   if (includeLibrary) {
     for (const track of allTracks) {
-      if (track.in_library === 1) {
-        selectedTrackIds.add(track.id);
-      }
+      selectedTrackIds.add(track.id);
     }
   }
 
@@ -170,11 +189,17 @@ export async function loadExportBundleData(selection?: ExportSelection): Promise
     if (!prepared) {
       prepared = {
         ...track,
+        downloaded_at: normalizeDownloadedAt(track.downloaded_at),
         archivePath: `tracks/${fileHash}${path.extname(track.file_path)}`,
         content_hash_sha256: contentHash,
         file_hash: fileHash,
       };
       exportableTrackByHash.set(fileHash, prepared);
+    } else {
+      prepared.downloaded_at = earliestDownloadedAt(
+        prepared.downloaded_at,
+        track.downloaded_at,
+      );
     }
     exportableTrackById.set(track.id, prepared);
   }
@@ -211,6 +236,7 @@ export async function loadExportBundleData(selection?: ExportSelection): Promise
   const trackEntries: ExportBundleData['trackEntries'] = tracks.map((track) => ({
     file_hash: track.file_hash,
     content_hash_sha256: track.content_hash_sha256,
+    downloaded_at: normalizeDownloadedAt(track.downloaded_at),
     relative_path: track.archivePath,
     metadata: {
       title: track.title,

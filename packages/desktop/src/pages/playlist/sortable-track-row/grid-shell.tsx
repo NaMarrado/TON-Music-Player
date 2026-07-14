@@ -10,9 +10,11 @@ type PlaylistTrackGridShellProps = {
   artistSlot?: ReactNode;
   checkboxSlot: ReactNode;
   coverSlot: ReactNode;
+  downloadedSlot?: ReactNode;
   dragSlot?: ReactNode;
   indexSlot: ReactNode;
   showArtist: boolean;
+  showDownloaded: boolean;
   showDrag: boolean;
   timeSlot: ReactNode;
   titleSlot: ReactNode;
@@ -22,9 +24,11 @@ export function PlaylistTrackGridShell({
   artistSlot,
   checkboxSlot,
   coverSlot,
+  downloadedSlot,
   dragSlot,
   indexSlot,
   showArtist,
+  showDownloaded,
   showDrag,
   timeSlot,
   titleSlot,
@@ -36,6 +40,7 @@ export function PlaylistTrackGridShell({
       <div>{coverSlot}</div>
       <div className="min-w-0">{titleSlot}</div>
       {showArtist && <div className="min-w-0">{artistSlot}</div>}
+      {showDownloaded && <div className="min-w-0">{downloadedSlot}</div>}
       <div style={playlistTrackTimeCellStyle}>{timeSlot}</div>
       <div style={playlistTrackCheckboxCellStyle}>{checkboxSlot}</div>
     </>

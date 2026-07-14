@@ -7,6 +7,12 @@ export type InsertImportedLibraryResult = {
   playlistIds: number[];
 };
 
+function normalizeDownloadedAt(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0
+    ? Math.floor(value)
+    : null;
+}
+
 export function insertImportedLibrary(
   manifest: ExportManifest,
   filesToInsert: ImportPreparedFile[],
@@ -17,13 +23,14 @@ export function insertImportedLibrary(
   const trackEntryByHash = new Map(manifest.tracks.map((track) => [track.file_hash, track]));
   const insertTrack = db.prepare(`
     INSERT INTO tracks (
-      file_path, file_hash, content_hash_sha256, title, artist, album,
-      genre, year, duration_ms, loudness_lufs, loudness_gain, in_library
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      file_path, file_hash, content_hash_sha256, file_size, title, artist, album,
+      genre, year, duration_ms, loudness_lufs, loudness_gain, downloaded_at, in_library
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   const markTrackInLibrary = db.prepare(`
     UPDATE tracks
-    SET in_library = 1
+    SET in_library = 1,
+        downloaded_at = COALESCE(downloaded_at, ?)
     WHERE file_hash = ? OR (? IS NOT NULL AND content_hash_sha256 = ?)
   `);
   const insertPlaylist = db.prepare(
@@ -50,6 +57,7 @@ export function insertImportedLibrary(
         file.destPath,
         file.hash,
         file.contentHashSha256,
+        file.fileSize,
         file.meta.title,
         file.meta.artist,
         file.meta.album,
@@ -58,13 +66,19 @@ export function insertImportedLibrary(
         file.meta.duration_ms,
         file.meta.loudness_lufs,
         file.meta.loudness_gain,
+        file.downloadedAt,
         1,
       );
     }
 
     for (const entry of manifest.tracks) {
       const contentHash = entry.content_hash_sha256 ?? null;
-      markTrackInLibrary.run(entry.file_hash, contentHash, contentHash);
+      markTrackInLibrary.run(
+        normalizeDownloadedAt(entry.downloaded_at),
+        entry.file_hash,
+        contentHash,
+        contentHash,
+      );
     }
 
     for (let index = 0; index < manifest.playlists.length; index += 1) {

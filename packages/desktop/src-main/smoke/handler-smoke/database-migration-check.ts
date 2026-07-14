@@ -13,6 +13,7 @@ export function runLegacyDatabaseMigrationCheck(rootDir: string): void {
   fs.rmSync(`${databasePath}-shm`, { force: true });
   const db = new Database(databasePath);
   db.pragma('foreign_keys = ON');
+  try {
   db.exec(`
     CREATE TABLE tracks (
       id INTEGER PRIMARY KEY,
@@ -98,10 +99,30 @@ export function runLegacyDatabaseMigrationCheck(rootDir: string): void {
   fs.mkdirSync(playlistDir, { recursive: true });
   const playlistOnlyFile = path.join(playlistDir, 'legacy.mp3');
   const playlistCopy = path.join(playlistDir, 'legacy-copy.mp3');
+  const unknownMtimeFile = path.join(libraryDir, 'unknown-mtime.mp3');
   fs.writeFileSync(playlistOnlyFile, 'legacy-audio');
   fs.writeFileSync(playlistCopy, 'legacy-audio');
-  db.prepare('INSERT INTO tracks (file_path, title, in_library) VALUES (?, ?, 0)')
-    .run(playlistOnlyFile, 'Legacy track');
+  fs.writeFileSync(unknownMtimeFile, 'unknown-mtime-audio');
+  db.prepare(
+    `INSERT INTO tracks (
+       file_path, file_mtime, title, youtube_id, source_url, in_library
+     ) VALUES (?, 1700000100000, ?, ?, ?, 0)`,
+  ).run(playlistOnlyFile, 'Legacy track', 'legacy-video', 'https://youtu.be/legacy-video');
+  db.prepare(
+    `INSERT INTO tracks (
+       file_path, title, youtube_id, source_url, in_library
+     ) VALUES (?, ?, ?, ?, 0)`,
+  ).run(unknownMtimeFile, 'Unknown mtime', 'legacy-video', 'https://youtu.be/legacy-video');
+  db.prepare(
+    `INSERT INTO download_queue (
+       source, source_id, title, status, created_at, completed_at
+     ) VALUES ('youtube', 'legacy-video', 'Legacy track', 'done', 1699999999, 1700000123)`,
+  ).run();
+  db.prepare(
+    `INSERT INTO download_queue (
+       source, source_id, title, status, created_at, completed_at
+     ) VALUES ('youtube', 'legacy-video', 'Legacy duplicate', 'done', 1700002999, 1700003000)`,
+  ).run();
   db.prepare("INSERT INTO playlists (name) VALUES ('Legacy playlist')").run();
   db.prepare(
     'INSERT INTO playlist_tracks (playlist_id, track_id, position, file_path) VALUES (1, 1, 0, ?)',
@@ -109,6 +130,45 @@ export function runLegacyDatabaseMigrationCheck(rootDir: string): void {
 
   createSchema(db);
   migrateSchema(db);
+  const migratedBeforeStorage = db.prepare(
+    'SELECT in_library, downloaded_at FROM tracks WHERE id = 1',
+  ).get() as { downloaded_at: number | null; in_library: number };
+  assert(migratedBeforeStorage.in_library === 1, 'Expected every legacy track promoted during migration');
+  assert(
+    migratedBeforeStorage.downloaded_at === 1700000123,
+    'Expected conservative completed-queue download timestamp backfill',
+  );
+  const unknownMtimeTrack = db.prepare(
+    'SELECT in_library, downloaded_at FROM tracks WHERE id = 2',
+  ).get() as { downloaded_at: number | null; in_library: number };
+  assert(unknownMtimeTrack.in_library === 1, 'Expected non-playlist legacy track promotion');
+  assert(unknownMtimeTrack.downloaded_at == null, 'Expected missing file mtime to remain unknown');
+  db.prepare(
+    `INSERT INTO tracks (file_path, file_mtime, title, youtube_id, in_library)
+     VALUES (?, 1700000200000, 'Future unknown', 'future-video', 1)`,
+  ).run(path.join(rootDir, 'future-unknown.mp3'));
+  const futureTrackId = Number(
+    (db.prepare("SELECT id FROM tracks WHERE youtube_id = 'future-video'").get() as { id: number }).id,
+  );
+  const futureQueueId = Number(db.prepare(
+    `INSERT INTO download_queue (source, source_id, title, status, completed_at)
+     VALUES ('youtube', 'future-video', 'Future unknown', 'done', 1700000201)`,
+  ).run().lastInsertRowid);
+  migrateSchema(db);
+  assert(
+    (db.prepare('SELECT downloaded_at FROM tracks WHERE id = ?').get(futureTrackId) as {
+      downloaded_at: number | null;
+    }).downloaded_at == null,
+    'Expected historical timestamp inference to run only when the column is introduced',
+  );
+  db.prepare('DELETE FROM download_queue WHERE id = ?').run(futureQueueId);
+  db.prepare('DELETE FROM tracks WHERE id = ?').run(futureTrackId);
+  db.prepare('UPDATE tracks SET in_library = 0 WHERE id = 1').run();
+  assert(
+    (db.prepare('SELECT in_library FROM tracks WHERE id = 1').get() as { in_library: number })
+      .in_library === 1,
+    'Expected canonical Library trigger to reject hidden track state',
+  );
   migrateCanonicalLibraryStorage(db, libraryDir);
 
   const trackColumns = new Set(
@@ -132,21 +192,23 @@ export function runLegacyDatabaseMigrationCheck(rootDir: string): void {
   };
 
   assert(trackColumns.has('content_hash_sha256'), 'Expected cloud hash migration');
+  assert(trackColumns.has('downloaded_at'), 'Expected download timestamp migration');
   assert(playlistColumns.has('cloud_id'), 'Expected playlist cloud ID migration');
   assert(playlistTrackColumns.has('import_item_id'), 'Expected playlist import migration');
   assert(downloadColumns.has('quality_profile'), 'Expected queue quality profile migration');
   assert(integrity.integrity_check === 'ok', 'Expected migrated database integrity');
   assert(
-    (db.prepare('SELECT COUNT(*) AS count FROM tracks').get() as { count: number }).count === 1,
-    'Expected legacy track to survive migration',
+    (db.prepare('SELECT COUNT(*) AS count FROM tracks').get() as { count: number }).count === 2,
+    'Expected all legacy tracks to survive migration',
   );
   const migratedTrack = db.prepare(
-    'SELECT file_path, in_library FROM tracks WHERE id = 1',
-  ).get() as { file_path: string; in_library: number };
+    'SELECT file_path, in_library, downloaded_at FROM tracks WHERE id = 1',
+  ).get() as { downloaded_at: number | null; file_path: string; in_library: number };
   const migratedMembership = db.prepare(
     'SELECT file_path FROM playlist_tracks WHERE id = 1',
   ).get() as { file_path: string | null };
   assert(migratedTrack.in_library === 1, 'Expected canonical track in Library');
+  assert(migratedTrack.downloaded_at === 1700000123, 'Expected download timestamp to survive migration');
   assert(!migratedTrack.file_path.includes(`${path.sep}Playlists${path.sep}`), 'Expected canonical Library path');
   assert(fs.existsSync(migratedTrack.file_path), 'Expected promoted canonical audio file');
   assert(migratedMembership.file_path === null, 'Expected reference-only playlist membership');
@@ -155,5 +217,7 @@ export function runLegacyDatabaseMigrationCheck(rootDir: string): void {
     (db.prepare('SELECT COUNT(*) AS count FROM playlist_tracks').get() as { count: number }).count === 1,
     'Expected legacy playlist membership to survive migration',
   );
-  db.close();
+  } finally {
+    db.close();
+  }
 }

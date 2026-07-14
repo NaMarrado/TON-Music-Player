@@ -33,6 +33,7 @@ type LibraryListTrackRow = Pick<
   | 'rating'
   | 'in_library'
   | 'added_at'
+  | 'downloaded_at'
   | 'scanned_at'
 >;
 
@@ -69,10 +70,10 @@ export async function getAllTracks(): Promise<Track[]> {
       last_played_at,
       rating,
       in_library,
-      added_at
-      ,scanned_at
+      added_at,
+      downloaded_at,
+      scanned_at
      FROM tracks
-     WHERE in_library = 1
      ORDER BY added_at DESC`,
   );
 
@@ -107,6 +108,7 @@ export async function getAllTracks(): Promise<Track[]> {
     rating: row.rating,
     in_library: row.in_library,
     added_at: row.added_at,
+    downloaded_at: row.downloaded_at,
     scanned_at: row.scanned_at,
   }));
 }
@@ -174,7 +176,7 @@ export async function searchTracksFts(
   return db.getAllAsync<Track>(
     `SELECT t.* FROM tracks t
      JOIN tracks_fts fts ON fts.rowid = t.id
-     WHERE tracks_fts MATCH ? AND t.in_library = 1
+     WHERE tracks_fts MATCH ?
      ORDER BY bm25(tracks_fts, 10.0, 6.0, 3.0, 4.0, 1.0), t.id
      LIMIT ? OFFSET ?`,
     [ftsQuery, limit, offset],

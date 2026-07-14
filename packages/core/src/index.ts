@@ -2,6 +2,12 @@ export * from './types/index';
 
 export { formatTime, formatDuration } from './utils/format-time';
 export { formatSize } from './utils/format-size';
+export {
+  formatDownloadedDate,
+  formatTrackFileSizeSummary,
+  summarizeTrackFileSizes,
+} from './utils/track-metadata';
+export type { TrackFileSizeSummary } from './utils/track-metadata';
 export { slugify } from './utils/slugify';
 export { debounce } from './utils/debounce';
 export { hashBuffer } from './utils/hash';

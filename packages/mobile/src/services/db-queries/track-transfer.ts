@@ -123,7 +123,7 @@ export async function getTrackIdsBySourceIdentity(
   const rows = await db.getAllAsync<{ id: number; source_id: string }>(
     `SELECT id, ${column} AS source_id
      FROM tracks
-     WHERE in_library = 1 AND ${column} IN (${placeholders})`,
+     WHERE ${column} IN (${placeholders})`,
     sourceIds,
   );
 

@@ -41,7 +41,7 @@ export async function downloadItem(
       priority: 'background',
       run: () => importDownloadedTrack(item, outputFile, resolved),
     });
-    if (abortSignal.aborted || !markDownloadDone(item.id)) {
+    if (abortSignal.aborted || !markDownloadDone(item.id, imported.trackId)) {
       return;
     }
 

@@ -55,6 +55,7 @@ export function getQueueItemTrackSnapshot(item: QueueItem): Track | null {
     rating: null,
     in_library: 1,
     added_at: 0,
+    downloaded_at: null,
     scanned_at: 0,
   };
 }

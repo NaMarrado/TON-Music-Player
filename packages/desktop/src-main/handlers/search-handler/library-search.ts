@@ -20,9 +20,9 @@ export async function searchLocalTracks(
   try {
     const rows = db
       .prepare(
-        `SELECT t.* FROM tracks t
+         `SELECT t.* FROM tracks t
          JOIN tracks_fts fts ON fts.rowid = t.id
-         WHERE tracks_fts MATCH ? AND t.in_library = 1
+         WHERE tracks_fts MATCH ?
          ORDER BY bm25(tracks_fts, 10.0, 6.0, 3.0, 4.0, 1.0), t.id
          LIMIT ? OFFSET ?`,
       )

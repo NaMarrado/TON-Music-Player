@@ -16,7 +16,7 @@ export function ArtistsPage() {
 
   useEffect(() => {
     if ((!hasLoaded || isStale) && !isLoading) {
-      void loadTracks();
+      void loadTracks().catch(() => {});
     }
   }, [hasLoaded, isLoading, isStale]);
 

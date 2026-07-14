@@ -31,6 +31,7 @@
   "toastSaved": "Lista actualizada",
   "colTitle": "Título",
   "colArtist": "Artista",
+  "colDownloaded": "Descargado",
   "colTime": "Duración",
   "searchPlaceholder": "Buscar...",
   "noResults": "No hay canciones que coincidan.",

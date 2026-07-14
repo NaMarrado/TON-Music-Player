@@ -6,6 +6,7 @@ export interface LibraryLayout {
   dense: boolean;
   listBottomPadding: number;
   showArtistColumn: boolean;
+  showDownloadedColumn: boolean;
   showPlaylistColumn: boolean;
 }
 
@@ -21,6 +22,7 @@ export function useLibraryLayout(): LibraryLayout {
     contentPaddingX: compact ? 12 : medium ? 24 : 32,
     listBottomPadding: dense ? 24 : compact ? 36 : 72,
     showArtistColumn: !dense,
+    showDownloadedColumn: !compact,
     showPlaylistColumn: !compact,
   };
 }

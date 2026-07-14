@@ -170,7 +170,10 @@ export async function runExportImportRoundTrip(
   );
   db.prepare(`
     UPDATE tracks
-    SET file_hash = NULL, content_hash_sha256 = NULL
+    SET file_hash = NULL,
+        content_hash_sha256 = NULL,
+        file_size = 1,
+        downloaded_at = 1700000123
     WHERE id = ?
   `).run(canonicalMembership.track_id);
   db.prepare(`
@@ -208,7 +211,11 @@ export async function runExportImportRoundTrip(
   ) as {
     track_count: number;
     playlist_count: number;
-    tracks: Array<{ content_hash_sha256?: string; relative_path: string }>;
+    tracks: Array<{
+      content_hash_sha256?: string;
+      downloaded_at?: number | null;
+      relative_path: string;
+    }>;
     playlists: Array<{ cover_relative_path?: string | null; track_hashes: string[] }>;
   };
   assert(exportedManifest.track_count === 3, `Expected exported manifest track_count=3, got ${exportedManifest.track_count}`);
@@ -236,6 +243,13 @@ export async function runExportImportRoundTrip(
     backfilledTrackIdentity.file_hash === backfilledTrackIdentity.content_hash_sha256
       && /^[a-f0-9]{64}$/.test(backfilledTrackIdentity.content_hash_sha256 ?? ''),
     'Expected export to persist a stable identity for a canonical track with no legacy hash',
+  );
+  const exportedCanonicalTrack = exportedManifest.tracks.find(
+    (track) => track.content_hash_sha256 === backfilledTrackIdentity.content_hash_sha256,
+  );
+  assert(
+    exportedCanonicalTrack?.downloaded_at === 1700000123,
+    'Expected export to preserve the original TON download timestamp',
   );
   assert(
     exportedManifest.playlists[0]?.track_hashes.length === 2
@@ -328,6 +342,24 @@ export async function runExportImportRoundTrip(
     .get() as { tracks: number; playlists: number };
   assert(importedCounts.tracks === 3, `Expected imported tracks=3, got ${importedCounts.tracks}`);
   assert(importedCounts.playlists === 1, `Expected imported playlists=1, got ${importedCounts.playlists}`);
+  const importedCanonicalTrack = db.prepare(`
+    SELECT file_path, file_size, downloaded_at
+    FROM tracks
+    WHERE content_hash_sha256 = ?
+  `).get(backfilledTrackIdentity.content_hash_sha256) as {
+    downloaded_at: number | null;
+    file_path: string;
+    file_size: number | null;
+  } | undefined;
+  assert(importedCanonicalTrack, 'Expected canonical track after folder import');
+  assert(
+    importedCanonicalTrack.downloaded_at === 1700000123,
+    'Expected folder import to preserve the original TON download timestamp',
+  );
+  assert(
+    importedCanonicalTrack.file_size === fs.statSync(importedCanonicalTrack.file_path).size,
+    'Expected folder import to persist the copied file physical size',
+  );
   const importedCover = db.prepare('SELECT cover_path FROM playlists LIMIT 1')
     .get() as { cover_path: string | null } | undefined;
   assert(importedCover?.cover_path, 'Expected imported playlist cover path');
@@ -366,6 +398,26 @@ export async function runExportImportRoundTrip(
   assert(
     tonPlaylistTrackCount.count === 2,
     `Expected TON bundle imported playlist to preserve 2 ordered positions, got ${tonPlaylistTrackCount.count}`,
+  );
+  const importedArchiveTrack = db.prepare(`
+    SELECT t.file_path, t.file_size, t.downloaded_at
+    FROM tracks t
+    JOIN playlist_tracks pt ON pt.track_id = t.id
+    WHERE pt.playlist_id = ?
+    LIMIT 1
+  `).get(importedTonPlaylist.id) as {
+    downloaded_at: number | null;
+    file_path: string;
+    file_size: number | null;
+  } | undefined;
+  assert(importedArchiveTrack, 'Expected canonical track after archive playlist import');
+  assert(
+    importedArchiveTrack.downloaded_at === 1700000123,
+    'Expected archive import to preserve the original TON download timestamp',
+  );
+  assert(
+    importedArchiveTrack.file_size === fs.statSync(importedArchiveTrack.file_path).size,
+    'Expected archive import to persist the copied file physical size',
   );
 
   return {
@@ -686,6 +738,9 @@ export async function runPlaylistDownloadImportChecks(
 export async function runDownloadCancelAllCheck(invoke: InvokeFn): Promise<void> {
   const db = getDb();
   const marker = `cancel-all-smoke-${Date.now()}`;
+  const completionTrackId = Number(db.prepare(
+    'INSERT INTO tracks (file_path, title, in_library) VALUES (?, ?, 1)',
+  ).run(path.join('smoke', `${marker}.m4a`), marker).lastInsertRowid);
   const insert = db.prepare(
     `INSERT INTO download_queue (source, source_id, title, status)
      VALUES ('youtube', ?, ?, ?)`,
@@ -717,7 +772,7 @@ export async function runDownloadCancelAllCheck(invoke: InvokeFn): Promise<void>
     'Expected late progress to be ignored after Cancel All',
   );
   assert(
-    !markDownloadDone(ids[1]),
+    !markDownloadDone(ids[1], completionTrackId),
     'Expected late completion to be ignored after Cancel All',
   );
   const cancelledRows = db.prepare(
@@ -726,5 +781,48 @@ export async function runDownloadCancelAllCheck(invoke: InvokeFn): Promise<void>
   ).get(ids[0], ids[1]) as { count: number };
   assert(cancelledRows.count === 2, 'Expected cancelled downloads to stay cancelled');
 
+  const completionQueueId = Number(
+    insert.run(`${marker}-atomic`, marker, 'pending').lastInsertRowid,
+  );
+  assert(
+    markDownloadDone(completionQueueId, completionTrackId),
+    'Expected queue and track completion to commit atomically',
+  );
+  const completion = db.prepare(
+    `SELECT dq.status, dq.completed_at, t.downloaded_at
+     FROM download_queue dq
+     JOIN tracks t ON t.id = ?
+     WHERE dq.id = ?`,
+  ).get(completionTrackId, completionQueueId) as {
+    completed_at: number | null;
+    downloaded_at: number | null;
+    status: string;
+  };
+  assert(completion.status === 'done', 'Expected atomic queue completion status');
+  assert(
+    completion.completed_at != null && completion.downloaded_at === completion.completed_at,
+    'Expected queue completion and track download timestamps to match',
+  );
+  assert(
+    !markDownloadDone(completionQueueId, completionTrackId),
+    'Expected an already completed queue item to reject a second completion',
+  );
+  const repeatedCompletion = db.prepare(
+    `SELECT dq.completed_at, t.downloaded_at
+     FROM download_queue dq
+     JOIN tracks t ON t.id = ?
+     WHERE dq.id = ?`,
+  ).get(completionTrackId, completionQueueId) as {
+    completed_at: number | null;
+    downloaded_at: number | null;
+  };
+  assert(
+    repeatedCompletion.completed_at === completion.completed_at
+      && repeatedCompletion.downloaded_at === completion.downloaded_at,
+    'Expected queue and track download timestamps to be written only once',
+  );
+
   db.prepare(`DELETE FROM download_queue WHERE id IN (${ids.map(() => '?').join(', ')})`).run(...ids);
+  db.prepare('DELETE FROM download_queue WHERE id = ?').run(completionQueueId);
+  db.prepare('DELETE FROM tracks WHERE id = ?').run(completionTrackId);
 }

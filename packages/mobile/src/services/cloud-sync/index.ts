@@ -134,6 +134,12 @@ function parseManifest(value: CloudLibraryManifestV1 | null): CloudLibraryManife
   return value;
 }
 
+function normalizeDownloadedAt(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0
+    ? Math.floor(value)
+    : null;
+}
+
 async function normalizeCloudAudioForPlayback(
   filePath: string,
   format: AudioFormat | null,
@@ -187,12 +193,7 @@ async function buildLocalManifest(
 ): Promise<{ manifest: CloudLibraryManifestV1; localTracks: LocalCloudTrack[]; localArtworks: LocalCloudArtwork[] }> {
   const allTracks = await getAllTracksForTransfer();
   const playlists = await getAllPlaylists();
-  const selectedTrackIds = new Set<number>();
-  for (const track of allTracks) {
-    if (track.in_library === 1) {
-      selectedTrackIds.add(track.id);
-    }
-  }
+  const selectedTrackIds = new Set(allTracks.map((track) => track.id));
   const playlistTrackIdsByPlaylistId = new Map<number, number[]>();
   for (const playlist of playlists) {
     const playlistTracks = await getPlaylistTracks(playlist.id);
@@ -261,6 +262,7 @@ async function buildLocalManifest(
       spotify_id: track.spotify_id,
       soundcloud_id: track.soundcloud_id,
       source_url: track.source_url,
+      downloaded_at: normalizeDownloadedAt(track.downloaded_at),
       added_at: track.added_at,
       updated_at: track.scanned_at || track.added_at,
       metadata: {
@@ -510,13 +512,23 @@ export async function fetchCloudLibrary(
       }
       const db = getDb();
       const result: CloudSyncResult = { ...EMPTY_RESULT, revision: manifest.revision };
-      const existingRows = await db.getAllAsync<{ id: number; content_hash_sha256: string }>(
-        `SELECT id, content_hash_sha256
+      const existingRows = await db.getAllAsync<{
+        id: number;
+        content_hash_sha256: string;
+        downloaded_at: number | null;
+        in_library: number;
+      }>(
+        `SELECT id, content_hash_sha256, downloaded_at, in_library
          FROM tracks
          WHERE content_hash_sha256 IS NOT NULL AND content_hash_sha256 != ''
          ORDER BY id ASC`,
       );
-      const trackIdByHash = new Map(existingRows.map((row) => [row.content_hash_sha256, row.id]));
+      const existingTrackByHash = new Map(
+        existingRows.map((row) => [row.content_hash_sha256, row] as const),
+      );
+      const trackIdByHash = new Map(
+        existingRows.map((row) => [row.content_hash_sha256, row.id] as const),
+      );
       await ensureMusicDir();
       await ensureArtworkDir();
 
@@ -524,7 +536,25 @@ export async function fetchCloudLibrary(
       for (let index = 0; index < manifest.tracks.length; index += 1) {
         throwIfCancelled(shouldCancel);
         const track = manifest.tracks[index];
-        if (trackIdByHash.has(track.content_hash_sha256)) {
+        const downloadedAt = normalizeDownloadedAt(track.downloaded_at);
+        const existingTrack = existingTrackByHash.get(track.content_hash_sha256);
+        if (existingTrack) {
+          const existingDownloadedAt = normalizeDownloadedAt(existingTrack.downloaded_at);
+          const reconciledDownloadedAt = existingDownloadedAt ?? downloadedAt;
+          if (
+            reconciledDownloadedAt !== existingTrack.downloaded_at
+            || existingTrack.in_library !== 1
+          ) {
+            await db.runAsync(
+              `UPDATE tracks
+               SET downloaded_at = ?,
+                   in_library = 1
+               WHERE id = ?`,
+              [reconciledDownloadedAt, existingTrack.id],
+            );
+            existingTrack.downloaded_at = reconciledDownloadedAt;
+            existingTrack.in_library = 1;
+          }
           result.skipped += 1;
           emitProgress(onProgress, {
             phase: 'downloading',
@@ -582,9 +612,16 @@ export async function fetchCloudLibrary(
           source_url: track.source_url,
           last_played_at: null,
           rating: track.metadata.rating,
+          downloaded_at: downloadedAt,
           in_library: 1,
         });
         trackIdByHash.set(track.content_hash_sha256, trackId);
+        existingTrackByHash.set(track.content_hash_sha256, {
+          id: trackId,
+          content_hash_sha256: track.content_hash_sha256,
+          downloaded_at: downloadedAt,
+          in_library: 1,
+        });
         result.downloaded += 1;
         result.importedTracks += 1;
         emitProgress(onProgress, {

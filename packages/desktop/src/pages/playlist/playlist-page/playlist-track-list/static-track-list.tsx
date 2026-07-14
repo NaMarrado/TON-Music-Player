@@ -7,6 +7,7 @@ import type { PlaylistLayout } from '../use-playlist-layout';
 type StaticPlaylistTrackListProps = Pick<
   PlaylistTrackListProps,
   | 't'
+  | 'locale'
   | 'isSmart'
   | 'allSelected'
   | 'onSelectAll'
@@ -25,6 +26,7 @@ type StaticPlaylistTrackListProps = Pick<
 export function StaticPlaylistTrackList({
   layout,
   t,
+  locale,
   isSmart,
   allSelected,
   onSelectAll,
@@ -49,6 +51,7 @@ export function StaticPlaylistTrackList({
         <TrackListHeader
           dense={layout.dense}
           showArtist={layout.showArtistColumn}
+          showDownloaded={layout.showDownloadedColumn}
           t={t}
           showDrag={!isSmart}
           allSelected={allSelected}
@@ -63,7 +66,9 @@ export function StaticPlaylistTrackList({
         <div style={{ paddingBottom: index === displayTracks.length - 1 ? 0 : 'var(--track-list-row-gap)' }}>
           <StaticTrackRow
             dense={layout.dense}
+            locale={locale}
             showArtist={layout.showArtistColumn}
+            showDownloaded={layout.showDownloadedColumn}
             track={track}
             index={index}
             isPlaying={track.playlist_track_id === playingPtId}

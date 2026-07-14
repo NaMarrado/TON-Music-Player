@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import {
   deleteTracksEverywhere,
-  loadTracks,
+  reconcileLibraryTracks,
 } from '../../../../stores/library-store';
 import { showToast } from '../../../../stores/toast-store';
 import type { LibraryPageActionsArgs } from './types';
@@ -30,7 +30,7 @@ export function useLibraryDeleteActions({
       showToast(t('deletedCount', { count }), 'info');
     } catch {
       showToast(t('deleteFailed'), 'error');
-      await loadTracks({ force: true });
+      await reconcileLibraryTracks({ immediate: true, loadIfUninitialized: true }).catch(() => {});
     }
   }, [t]);
 
