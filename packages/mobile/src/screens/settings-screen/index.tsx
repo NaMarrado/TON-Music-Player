@@ -28,6 +28,7 @@ import { useScreenTopPadding } from '../../hooks/use-screen-top-padding';
 export function SettingsScreen() {
   const { t } = useTranslation('settings');
   const { t: tc } = useTranslation('common');
+  const frequencyEnabled = usePlaybackStore((state) => state.frequencyEnabled);
   const frequencyHz = usePlaybackStore((state) => state.frequencyHz);
   const eqEnabled = usePlaybackStore((state) => state.eqEnabled);
   const eqBands = usePlaybackStore((state) => state.eqBands);
@@ -184,6 +185,7 @@ export function SettingsScreen() {
           description={t('frequencyDescription')}
           disabled={!audioSupport.frequency.supported}
           disabledLabel={audioSupport.frequency.noteKey ? t(audioSupport.frequency.noteKey) : null}
+          frequencyEnabled={frequencyEnabled}
           frequencyHz={frequencyHz}
         />
         <EqualizerCard

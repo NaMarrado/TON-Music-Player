@@ -336,7 +336,7 @@ async function importMobileLibraryJs(
   let stageDirectoryUri: string | null = null;
   let createdTrackUris: string[] = [];
   let createdCoverUris: string[] = [];
-  let sourceUriToCleanup: string | null = source.uri;
+  const sourceUriToCleanup: string | null = source.uri;
 
   try {
     throwIfLibraryTransferCancelled(shouldCancel);

@@ -5,7 +5,7 @@
 
 import { SpotifyApi } from '@spotify/web-api-ts-sdk';
 import type { SearchResult, SpotifyPlaylistTrack } from '@ton/core';
-import { SEARCH_RESULTS_LIMIT } from '@ton/core';
+import { SEARCH_PAGE_LIMITS, executeSpotifySearchPage } from '@ton/core';
 import { getDb } from './database';
 
 let client: SpotifyApi | null = null;
@@ -36,7 +36,7 @@ export function resetSpotifyClient(): void {
 
 export async function searchSpotify(
   query: string,
-  limit = SEARCH_RESULTS_LIMIT,
+  limit = SEARCH_PAGE_LIMITS.spotify,
 ): Promise<SearchResult[]> {
   const response = await searchSpotifyPage(query, limit, 0);
   return response.results;
@@ -44,32 +44,34 @@ export async function searchSpotify(
 
 export async function searchSpotifyPage(
   query: string,
-  limit = SEARCH_RESULTS_LIMIT,
+  limit = SEARCH_PAGE_LIMITS.spotify,
   offset = 0,
+  signal?: AbortSignal,
 ): Promise<{ results: SearchResult[]; hasMore: boolean }> {
   const api = getClient();
-  const response = await api.search(
+  return executeSpotifySearchPage(
+    (effectiveQuery, pageLimit, pageOffset) => raceSearchAbort(api.search(
+      effectiveQuery,
+      ['track'],
+      undefined,
+      pageLimit as 0 & number,
+      pageOffset,
+    ), signal),
     query,
-    ['track'],
-    undefined,
-    limit as 0 & number,
+    limit,
     offset,
   );
+}
 
-  return {
-    results: response.tracks.items.map((track) => ({
-      id: track.id,
-      source: 'spotify' as const,
-      title: track.name,
-      artist: track.artists.map((a) => a.name).join(', '),
-      album: track.album.name,
-      duration_ms: track.duration_ms,
-      thumbnail_url: track.album.images[0]?.url || null,
-      url: track.external_urls.spotify,
-      is_downloaded: false,
-    })),
-    hasMore: offset + response.tracks.items.length < response.tracks.total,
-  };
+function raceSearchAbort<T>(promise: Promise<T>, signal?: AbortSignal): Promise<T> {
+  if (!signal) return promise;
+  if (signal.aborted) return Promise.reject(new Error('Cancelled'));
+
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = () => reject(new Error('Cancelled'));
+    signal.addEventListener('abort', onAbort, { once: true });
+    promise.then(resolve, reject).finally(() => signal.removeEventListener('abort', onAbort));
+  });
 }
 
 /** Parse a Spotify playlist URL to extract the playlist ID. */

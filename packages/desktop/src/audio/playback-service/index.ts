@@ -20,6 +20,7 @@ import {
   setEqPreset,
   setFrequency,
   toggleEq,
+  toggleFrequencyTuning,
   toggleLoudnessNorm,
 } from '../playback-eq';
 import { setupAudioEvents } from './events';
@@ -56,6 +57,7 @@ export {
   setFrequency,
   subscribePosition,
   toggleEq,
+  toggleFrequencyTuning,
   toggleLoudnessNorm,
 };
 export {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
+import { Switch, Text, View } from 'react-native';
 import Slider from '@react-native-community/slider';
 import {
   FREQUENCY_PRESETS,
@@ -7,7 +7,7 @@ import {
   MIN_FREQUENCY_HZ,
   normalizeFrequencyHz,
 } from '@ton/core';
-import { setFrequency } from '../../services/audio-settings';
+import { setFrequency, setFrequencyEnabled } from '../../services/audio-settings';
 import { PillButton, SectionHeader, SettingsCard } from './primitives';
 
 export function FrequencyCard({
@@ -15,15 +15,18 @@ export function FrequencyCard({
   description,
   disabled = false,
   disabledLabel = null,
+  frequencyEnabled,
   frequencyHz,
 }: {
   title: string;
   description: string;
   disabled?: boolean;
   disabledLabel?: string | null;
+  frequencyEnabled: boolean;
   frequencyHz: number;
 }) {
   const [draftFrequencyHz, setDraftFrequencyHz] = useState(frequencyHz);
+  const controlsEnabled = !disabled && frequencyEnabled;
 
   useEffect(() => {
     setDraftFrequencyHz(frequencyHz);
@@ -41,19 +44,34 @@ export function FrequencyCard({
         icon="radio"
         title={title}
         description={description}
+        right={(
+          <Switch
+            accessibilityHint={description}
+            accessibilityLabel={title}
+            accessibilityRole="switch"
+            accessibilityState={{ checked: frequencyEnabled, disabled }}
+            disabled={disabled}
+            value={frequencyEnabled}
+            onValueChange={(enabled) => {
+              void setFrequencyEnabled(enabled);
+            }}
+            trackColor={{ false: '#333', true: '#555' }}
+            thumbColor={frequencyEnabled ? '#fff' : '#888'}
+          />
+        )}
       />
       {disabledLabel && (
         <Text className="text-[#d6aa6a] text-xs ml-[38px] mb-3">{disabledLabel}</Text>
       )}
       <View
-        pointerEvents={disabled ? 'none' : 'auto'}
-        style={{ opacity: disabled ? 0.4 : 1 }}
+        pointerEvents={controlsEnabled ? 'auto' : 'none'}
+        style={{ opacity: controlsEnabled ? 1 : 0.35 }}
       >
         <Text className="text-white text-lg font-bold mb-3">{draftFrequencyHz} Hz</Text>
 
         <View className="mb-3">
           <Slider
-            disabled={disabled}
+            disabled={!controlsEnabled}
             minimumValue={MIN_FREQUENCY_HZ}
             maximumValue={MAX_FREQUENCY_HZ}
             step={1}
@@ -80,7 +98,7 @@ export function FrequencyCard({
               key={preset.hz}
               label={`${preset.hz} Hz`}
               active={draftFrequencyHz === preset.hz}
-              disabled={disabled}
+              disabled={!controlsEnabled}
               onPress={() => {
                 void commitFrequency(preset.hz);
               }}

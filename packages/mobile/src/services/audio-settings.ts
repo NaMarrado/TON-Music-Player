@@ -14,6 +14,7 @@ export {
   setEqBand,
   setEqPresetByName,
   setFrequency,
+  setFrequencyEnabled,
   setLoudnessNormalizationEnabled,
   supportsEqualizerEffects,
   supportsLoudnessAnalysis,

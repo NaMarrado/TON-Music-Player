@@ -38,7 +38,6 @@ export async function downloadWithYtDlp(
     '--js-runtimes', 'node',
     '--extractor-args', 'youtube:player_client=default,-android_sdkless',
     '--embed-metadata',
-    '--embed-thumbnail',
   ];
 
   if (ffmpegPath) {
@@ -138,8 +137,8 @@ async function transcodeM4aTo96(
   const errors: string[] = [];
   const subprocess = spawn(ffmpegPath, [
     '-hide_banner', '-y', '-i', inputFile,
-    '-map', '0:a:0', '-map', '0:v?',
-    '-c:a', 'aac', '-b:a', '96k', '-c:v', 'copy',
+    '-map', '0:a:0', '-vn',
+    '-c:a', 'aac', '-b:a', '96k',
     '-map_metadata', '0', '-movflags', '+faststart', tempFile,
   ], { stdio: ['ignore', 'ignore', 'pipe'] });
   const stderr = createInterface({ input: subprocess.stderr });

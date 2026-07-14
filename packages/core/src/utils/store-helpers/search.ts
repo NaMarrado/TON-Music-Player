@@ -1,20 +1,9 @@
 import type { SearchResult, SearchSource } from '../../types';
+import { rankSearchResults, searchRelevanceScore } from '../search';
 
+/** @deprecated Prefer searchRelevanceScore. Kept for store compatibility. */
 export function relevanceScore(result: SearchResult, query: string): number {
-  const q = query.toLowerCase().trim();
-  if (!q) return 0;
-  const title = (result.title || '').toLowerCase();
-  const artist = (result.artist || '').toLowerCase();
-
-  if (title === q) return 100;
-  if (title.startsWith(q)) return 80;
-  if (new RegExp(`\\b${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(title)) {
-    return 60;
-  }
-  if (title.includes(q)) return 40;
-  if (artist.startsWith(q)) return 30;
-  if (artist.includes(q)) return 20;
-  return 0;
+  return searchRelevanceScore(result, query);
 }
 
 export function getVisibleResults(
@@ -22,29 +11,17 @@ export function getVisibleResults(
   activeSource: SearchSource | 'all',
   query: string,
 ): SearchResult[] {
-  let visible: SearchResult[];
-  if (activeSource === 'all') {
-    visible = [
-      ...results.local,
-      ...results.playlist,
-      ...results.youtube,
-      ...results.spotify,
-      ...results.soundcloud,
-    ];
-  } else {
-    visible = [...(results[activeSource] || [])];
-  }
+  const visible = activeSource === 'all'
+    ? [
+        ...results.local,
+        ...results.playlist,
+        ...results.youtube,
+        ...results.spotify,
+        ...results.soundcloud,
+      ]
+    : [...(results[activeSource] || [])];
 
-  if (query.trim()) {
-    visible.sort((a, b) => {
-      const aLocal = a.source === 'local' || a.source === 'playlist' ? 1 : 0;
-      const bLocal = b.source === 'local' || b.source === 'playlist' ? 1 : 0;
-      if (aLocal !== bLocal) return bLocal - aLocal;
-      return relevanceScore(b, query) - relevanceScore(a, query);
-    });
-  }
-
-  return visible;
+  return query.trim() ? rankSearchResults(visible, query) : visible;
 }
 
 export function getSourceCounts(

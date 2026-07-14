@@ -83,6 +83,7 @@ interface ElectronAPI {
     channel: 'search:query',
     query: import('@ton/core').SearchQuery,
   ): Promise<{ sourceErrors: Record<string, string> }>;
+  invoke(channel: 'search:cancel', requestId?: number): Promise<void>;
   invoke(
     channel: 'search:spotify-playlist',
     url: string,

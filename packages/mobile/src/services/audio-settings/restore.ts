@@ -1,4 +1,4 @@
-import { PITCH_REFERENCE_FREQUENCY_HZ } from '@ton/core';
+import { getEffectiveFrequencyPitchRatio } from '@ton/core';
 import { usePlaybackStore } from '../../stores/playback-store';
 import { setPitch } from '../native-pitch';
 import { restoreVolumePercent } from '../playback-bridge/volume';
@@ -14,8 +14,10 @@ export async function restoreAudioSettings(): Promise<void> {
     eqBands,
     eqEnabled,
     eqPreset,
+    frequencyEnabled,
     frequencyHz,
     loudnessNormEnabled,
+    shouldPersistFrequencyEnabled,
     shouldPersistVolumePercent,
     volumePercent,
   } = settings;
@@ -28,6 +30,7 @@ export async function restoreAudioSettings(): Promise<void> {
     eqBands,
     eqEnabled,
     eqPreset,
+    frequencyEnabled,
     frequencyHz,
     loudnessNormEnabled,
     volumePercent,
@@ -47,23 +50,26 @@ export async function restoreAudioSettings(): Promise<void> {
     persistAudioSetting('frequency_hz', String(frequencyHz));
   }
 
+  if (shouldPersistFrequencyEnabled) {
+    persistAudioSetting('frequency_enabled', String(frequencyEnabled));
+  }
+
   if (didNormalizeEqState) {
     persistAudioSetting('eq_bands', JSON.stringify(eqBands));
     persistAudioSetting('eq_preset', eqPreset);
   }
 
-  if (frequencyHz !== PITCH_REFERENCE_FREQUENCY_HZ) {
-    try {
-      await setPitch(frequencyHz / PITCH_REFERENCE_FREQUENCY_HZ);
-    } catch {
-      // Pitch not available until first track plays.
-    }
+  try {
+    await setPitch(getEffectiveFrequencyPitchRatio(frequencyHz, frequencyEnabled));
+  } catch {
+    // Pitch not available until first track plays.
   }
 
   usePlaybackStore.setState({
     eqBands,
     eqEnabled,
     eqPreset,
+    frequencyEnabled,
     frequencyHz,
     loudnessNormEnabled,
     volumePercent,

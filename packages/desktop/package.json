@@ -35,8 +35,20 @@
     ],
     "extraResources": [
       {
+        "from": "build-resources/icon.png",
+        "to": "icon.png"
+      },
+      {
         "from": "build-resources/dock-icon.png",
         "to": "dock-icon.png"
+      },
+      {
+        "from": "build-resources/tray-icon-16.png",
+        "to": "tray-icon-16.png"
+      },
+      {
+        "from": "build-resources/tray-icon-32.png",
+        "to": "tray-icon-32.png"
       },
       {
         "from": "build-resources/bin",
@@ -55,6 +67,10 @@
         "nsis"
       ],
       "icon": "icon.ico"
+    },
+    "nsis": {
+      "installerIcon": "icon.ico",
+      "uninstallerIcon": "icon.ico"
     },
     "linux": {
       "target": [

@@ -5,7 +5,7 @@
 
 import { Innertube, Parser, YTNodes } from 'youtubei.js';
 import type { SearchResult, YouTubePlaylistTrack } from '@ton/core';
-import { parseYouTubePlaylistItem, SEARCH_RESULTS_LIMIT } from '@ton/core';
+import { parseYouTubePlaylistItem, SEARCH_PAGE_LIMITS } from '@ton/core';
 import { searchYouTubeWithYtDlp } from './youtube-search-fallback';
 
 let innertube: Innertube | null = null;
@@ -14,6 +14,7 @@ const YOUTUBE_SEARCH_CACHE_LIMIT = 12;
 const youtubeSearchSessions = new Map<string, {
   search: Awaited<ReturnType<Innertube['search']>>;
   results: SearchResult[];
+  exhausted: boolean;
 }>();
 
 async function getClient(): Promise<Innertube> {
@@ -27,7 +28,7 @@ async function getClient(): Promise<Innertube> {
 
 export async function searchYouTube(
   query: string,
-  limit = SEARCH_RESULTS_LIMIT,
+  limit = SEARCH_PAGE_LIMITS.youtube,
   signal?: AbortSignal,
 ): Promise<SearchResult[]> {
   const response = await searchYouTubePage(query, limit, 0, signal);
@@ -36,7 +37,7 @@ export async function searchYouTube(
 
 export async function searchYouTubePage(
   query: string,
-  limit = SEARCH_RESULTS_LIMIT,
+  limit = SEARCH_PAGE_LIMITS.youtube,
   offset = 0,
   signal?: AbortSignal,
 ): Promise<{ results: SearchResult[]; hasMore: boolean }> {
@@ -56,19 +57,21 @@ export async function searchYouTubePage(
       session = {
         search: await raceSearchAbort(yt.search(normalizedQuery, { type: 'video' }), signal),
         results: [],
+        exhausted: false,
       };
       youtubeSearchSessions.set(sessionKey, session);
       trimYouTubeSearchSessions();
     }
 
-    await raceSearchAbort(fillYouTubeSearchSession(session, offset + limit), signal);
+    await fillYouTubeSearchSession(session, offset + limit + 1, signal);
     if (offset === 0 && session.results.length === 0) {
       throw new Error('YouTube.js returned no search results');
     }
 
     return {
       results: session.results.slice(offset, offset + limit),
-      hasMore: session.results.length > offset + limit || session.search.has_continuation,
+      hasMore: session.results.length > offset + limit
+        || (!session.exhausted && session.search.has_continuation),
     };
   } catch (primaryError) {
     youtubeSearchSessions.delete(sessionKey);
@@ -138,7 +141,9 @@ function extractVideos(
   items: { type?: string }[],
   results: SearchResult[],
   limit: number,
-): void {
+): number {
+  const seen = new Set(results.map((result) => result.id));
+  let added = 0;
   for (const item of items) {
     if (results.length >= limit) break;
     if (item.type !== 'Video') continue;
@@ -151,6 +156,9 @@ function extractVideos(
       thumbnails?: Array<{ url?: string }>;
     };
 
+    if (!video.id || seen.has(video.id)) continue;
+    seen.add(video.id);
+    added++;
     results.push({
       id: video.id,
       source: 'youtube',
@@ -163,21 +171,37 @@ function extractVideos(
       is_downloaded: false,
     });
   }
+  return added;
 }
 
 async function fillYouTubeSearchSession(
   session: {
     search: Awaited<ReturnType<Innertube['search']>>;
     results: SearchResult[];
+    exhausted: boolean;
   },
   targetCount: number,
+  signal?: AbortSignal,
 ): Promise<void> {
   extractVideos(session.search.results || [], session.results, targetCount);
 
-  while (session.results.length < targetCount && session.search.has_continuation) {
-    session.search = await session.search.getContinuation();
-    extractVideos(session.search.results || [], session.results, targetCount);
+  let continuationPages = 0;
+  while (
+    session.results.length < targetCount
+    && session.search.has_continuation
+    && continuationPages < 3
+  ) {
+    throwIfSearchAborted(signal);
+    session.search = await raceSearchAbort(session.search.getContinuation(), signal);
+    continuationPages++;
+    const added = extractVideos(session.search.results || [], session.results, targetCount);
+    if (added === 0) {
+      session.exhausted = true;
+      break;
+    }
   }
+
+  if (!session.search.has_continuation) session.exhausted = true;
 }
 
 function trimYouTubeSearchSessions(): void {

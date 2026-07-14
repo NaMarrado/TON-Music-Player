@@ -30,6 +30,7 @@ export const EMPTY_HAS_MORE = (): Record<SearchSource, boolean> => ({
 
 export const useSearchStore = create<SearchState>()(() => ({
   query: '',
+  effectiveQuery: '',
   results: EMPTY_RESULTS(),
   sourceErrors: {},
   isSearching: false,
@@ -37,4 +38,5 @@ export const useSearchStore = create<SearchState>()(() => ({
   loadedSources: EMPTY_LOADED_SOURCES(),
   hasMoreBySource: EMPTY_HAS_MORE(),
   activeRequestId: 0,
+  pendingSources: [],
 }));

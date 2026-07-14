@@ -2,9 +2,11 @@ import { Platform } from 'react-native';
 
 export * from './types';
 
+/* eslint-disable @typescript-eslint/no-require-imports -- Metro needs synchronous platform selection. */
 const runtime = Platform.OS === 'ios'
   ? require('./ios')
   : require('./android');
+/* eslint-enable @typescript-eslint/no-require-imports */
 
 export const setupPlaybackRuntimePlayer = runtime.setupPlaybackRuntimePlayer as typeof import('./android').setupPlaybackRuntimePlayer;
 export const configureDefaultPlaybackRuntimeOptions = runtime.configureDefaultPlaybackRuntimeOptions as typeof import('./android').configureDefaultPlaybackRuntimeOptions;

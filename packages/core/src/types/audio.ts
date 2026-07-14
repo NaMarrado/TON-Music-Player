@@ -58,6 +58,11 @@ export type ResolvedStoredFrequencyHz = {
   shouldPersist: boolean;
 };
 
+export type ResolvedStoredFrequencyEnabled = {
+  frequencyEnabled: boolean;
+  shouldPersist: boolean;
+};
+
 export function normalizeFrequencyHz(value: number): number {
   if (!Number.isFinite(value)) {
     return DEFAULT_FREQUENCY_HZ;
@@ -83,4 +88,22 @@ export function resolveStoredFrequencyHz(
     frequencyHz,
     shouldPersist: !Number.isFinite(parsed) || frequencyHz !== parsed,
   };
+}
+
+export function resolveStoredFrequencyEnabled(
+  value: string | boolean | number | null | undefined,
+): ResolvedStoredFrequencyEnabled {
+  const frequencyEnabled = value === true || value === 'true';
+  return {
+    frequencyEnabled,
+    shouldPersist: value == null || String(value) !== String(frequencyEnabled),
+  };
+}
+
+export function getEffectiveFrequencyPitchRatio(
+  frequencyHz: number,
+  enabled: boolean,
+): number {
+  if (!enabled) return 1;
+  return normalizeFrequencyHz(frequencyHz) / PITCH_REFERENCE_FREQUENCY_HZ;
 }

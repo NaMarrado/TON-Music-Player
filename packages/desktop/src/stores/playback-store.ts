@@ -16,6 +16,7 @@ export interface PlaybackState {
   isMuted: boolean;
   repeat: RepeatMode;
   shuffle: boolean;
+  frequencyEnabled: boolean;
   frequencyHz: number;
   loudnessNormEnabled: boolean;
   eqEnabled: boolean;
@@ -32,6 +33,7 @@ export const usePlaybackStore = create<PlaybackState>()(() => ({
   isMuted: false,
   repeat: 'all',
   shuffle: false,
+  frequencyEnabled: false,
   frequencyHz: DEFAULT_FREQUENCY_HZ,
   loudnessNormEnabled: false,
   eqEnabled: false,

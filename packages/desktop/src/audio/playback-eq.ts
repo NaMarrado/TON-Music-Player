@@ -7,8 +7,9 @@
 
 import {
   EQ_PRESETS,
-  PITCH_REFERENCE_FREQUENCY_HZ,
+  getEffectiveFrequencyPitchRatio,
   normalizeFrequencyHz,
+  resolveStoredFrequencyEnabled,
   resolveStoredFrequencyHz,
 } from '@ton/core';
 import { usePlaybackStore } from '../stores/playback-store';
@@ -26,13 +27,15 @@ const ipc = window.api.invoke as (...args: unknown[]) => Promise<unknown>;
 
 export async function restoreAudioSettings(): Promise<void> {
   try {
-    const [eqEnabledStr, eqBandsStr, eqPresetStr, freqStr, loudnessStr] = await Promise.all([
-      ipc('settings:get', 'eq_enabled') as Promise<string | null>,
-      ipc('settings:get', 'eq_bands') as Promise<string | null>,
-      ipc('settings:get', 'eq_preset') as Promise<string | null>,
-      ipc('settings:get', 'frequency_hz') as Promise<string | null>,
-      ipc('settings:get', 'loudness_normalization') as Promise<string | null>,
-    ]);
+    const [eqEnabledStr, eqBandsStr, eqPresetStr, freqEnabledStr, freqStr, loudnessStr] =
+      await Promise.all([
+        ipc('settings:get', 'eq_enabled') as Promise<string | null>,
+        ipc('settings:get', 'eq_bands') as Promise<string | null>,
+        ipc('settings:get', 'eq_preset') as Promise<string | null>,
+        ipc('settings:get', 'frequency_enabled') as Promise<string | null>,
+        ipc('settings:get', 'frequency_hz') as Promise<string | null>,
+        ipc('settings:get', 'loudness_normalization') as Promise<string | null>,
+      ]);
 
     const eqEnabled = eqEnabledStr === 'true';
     const eqPreset = eqPresetStr || 'flat';
@@ -50,12 +53,15 @@ export async function restoreAudioSettings(): Promise<void> {
     }
 
     const { frequencyHz, shouldPersist } = resolveStoredFrequencyHz(freqStr);
-    usePlaybackStore.setState({ frequencyHz });
-    if (frequencyHz !== PITCH_REFERENCE_FREQUENCY_HZ) {
-      enablePitchShifter(frequencyHz / PITCH_REFERENCE_FREQUENCY_HZ);
-    }
+    const { frequencyEnabled, shouldPersist: shouldPersistFrequencyEnabled } =
+      resolveStoredFrequencyEnabled(freqEnabledStr);
+    usePlaybackStore.setState({ frequencyEnabled, frequencyHz });
+    applyFrequencyTuning(frequencyHz, frequencyEnabled);
     if (shouldPersist) {
       ipc('settings:set', 'frequency_hz', String(frequencyHz));
+    }
+    if (shouldPersistFrequencyEnabled) {
+      ipc('settings:set', 'frequency_enabled', String(frequencyEnabled));
     }
 
     const loudnessNormEnabled = loudnessStr === 'true';
@@ -115,14 +121,25 @@ export function toggleEq(): void {
 export function setFrequency(hz: number): void {
   const frequencyHz = normalizeFrequencyHz(hz);
   usePlaybackStore.setState({ frequencyHz });
+  applyFrequencyTuning(frequencyHz, usePlaybackStore.getState().frequencyEnabled);
+  ipc('settings:set', 'frequency_hz', String(frequencyHz));
+}
 
-  if (frequencyHz === PITCH_REFERENCE_FREQUENCY_HZ) {
+export function toggleFrequencyTuning(): void {
+  const { frequencyEnabled, frequencyHz } = usePlaybackStore.getState();
+  const nextFrequencyEnabled = !frequencyEnabled;
+  usePlaybackStore.setState({ frequencyEnabled: nextFrequencyEnabled });
+  applyFrequencyTuning(frequencyHz, nextFrequencyEnabled);
+  ipc('settings:set', 'frequency_enabled', String(nextFrequencyEnabled));
+}
+
+function applyFrequencyTuning(frequencyHz: number, enabled: boolean): void {
+  const pitchRatio = getEffectiveFrequencyPitchRatio(frequencyHz, enabled);
+  if (pitchRatio === 1) {
     disablePitchShifter();
   } else {
-    enablePitchShifter(frequencyHz / PITCH_REFERENCE_FREQUENCY_HZ);
+    enablePitchShifter(pitchRatio);
   }
-
-  ipc('settings:set', 'frequency_hz', String(frequencyHz));
 }
 
 // ── Loudness toggle ──

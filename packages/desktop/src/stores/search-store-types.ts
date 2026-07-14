@@ -4,6 +4,7 @@ export type ActiveTab = SearchSource | 'all';
 
 export interface SearchState {
   query: string;
+  effectiveQuery: string;
   results: Record<SearchSource, SearchResult[]>;
   sourceErrors: Record<string, string>;
   isSearching: boolean;
@@ -11,13 +12,5 @@ export interface SearchState {
   loadedSources: Record<SearchSource, boolean>;
   hasMoreBySource: Record<SearchSource, boolean>;
   activeRequestId: number;
+  pendingSources: SearchSource[];
 }
-
-export type SearchSourceResultsEvent = {
-  source: SearchSource;
-  results: SearchResult[];
-  query: string;
-  requestId?: number;
-  offset: number;
-  hasMore: boolean;
-};

@@ -22,6 +22,20 @@ export {
   PITCH_SHIFT_LATENCY_MS,
   CUSTOM_PROTOCOL,
 } from './utils/constants';
+export {
+  SEARCH_PAGE_LIMITS,
+  SearchProviderQueryAliases,
+  buildSearchFtsQuery,
+  canonicalizeSearchQuery,
+  createSearchPageRequest,
+  createSearchRequestIdGenerator,
+  getSearchPageLimit,
+  isCurrentSearchRequest,
+  rankSearchResults,
+  relaxSearchQuery,
+  searchRelevanceScore,
+  tokenizeSearchQuery,
+} from './utils/search';
 
 export { sanitizeFilename } from './utils/sanitize-filename';
 export {
@@ -85,10 +99,17 @@ export type {
   UpdateFetchResponse,
 } from './services/app-update';
 
-export { findBestMatch, normalizeTitle } from './services/match-service';
+export { diceCoefficient, findBestMatch, normalizeTitle } from './services/match-service';
 export type { MatchCandidate, MatchInput } from './services/match-service';
 
 export { parseYouTubePlaylistItem } from './services/youtube-playlist-item';
+
+export { executeSpotifySearchPage } from './services/spotify-search';
+export type {
+  SpotifySearchPageFetcher,
+  SpotifySearchResponseLike,
+  SpotifySearchTrackLike,
+} from './services/spotify-search';
 
 export { buildSmartPlaylistQuery } from './services/smart-playlist-service';
 export type { SmartPlaylistQuery } from './services/smart-playlist-service';

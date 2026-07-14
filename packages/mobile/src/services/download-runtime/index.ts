@@ -8,9 +8,11 @@ export type {
   DownloadRuntimePermissionNoticeKey,
 } from './types';
 
+/* eslint-disable @typescript-eslint/no-require-imports -- Metro needs synchronous platform selection. */
 const runtime = (Platform.OS === 'ios'
   ? require('./ios')
   : require('./android')) as DownloadRuntimeModule;
+/* eslint-enable @typescript-eslint/no-require-imports */
 
 export const getDownloadRuntimePermissionNoticeKey =
   runtime.getDownloadRuntimePermissionNoticeKey;

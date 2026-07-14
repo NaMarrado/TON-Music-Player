@@ -1,30 +1,34 @@
 import { create } from 'zustand';
-import type { SearchResult, SearchSource } from '@ton/core';
 import {
   SEARCH_DEBOUNCE_MS,
-  SEARCH_RESULTS_LIMIT,
-  getVisibleResults,
+  canonicalizeSearchQuery,
+  createSearchRequestIdGenerator,
+  getSearchPageLimit,
   getSourceCounts,
+  getVisibleResults,
+  type SearchResult,
+  type SearchSource,
 } from '@ton/core';
 import { countPerfEvent, markPerf } from '../services/perf';
-import { executeSearch } from '../services/search-service';
+import {
+  executeSearch,
+  type MobileSearchSourceEvent,
+} from '../services/search-service';
 import {
   DEFAULT_SEARCH_SOURCES,
-  appendSearchResults,
   appendCompletedSources,
-  coversRequestedSources,
+  appendSearchResults,
   createEmptySearchMoreState,
   createEmptySearchResults,
-  mergeSearchMoreState,
   mergeSearchResults,
   mergeSourceErrors,
-  splitSearchSources,
 } from '../services/search-plan';
 
 type ActiveTab = SearchSource | 'all';
 
 interface SearchState {
   query: string;
+  effectiveQuery: string;
   results: Record<SearchSource, SearchResult[]>;
   sourceErrors: Record<string, string>;
   isSearching: boolean;
@@ -38,6 +42,7 @@ interface SearchState {
 
 export const useSearchStore = create<SearchState>()(() => ({
   query: '',
+  effectiveQuery: '',
   results: createEmptySearchResults(),
   sourceErrors: {},
   isSearching: false,
@@ -51,7 +56,7 @@ export const useSearchStore = create<SearchState>()(() => ({
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 let activeSearchController: AbortController | null = null;
-let requestId = 0;
+const nextRequestId = createSearchRequestIdGenerator();
 
 function getRequestedSources(): SearchSource[] {
   return [...DEFAULT_SEARCH_SOURCES];
@@ -59,56 +64,62 @@ function getRequestedSources(): SearchSource[] {
 
 function isCurrentSearch(
   query: string,
-  currentRequestId: number,
+  requestId: number,
   controller: AbortController,
 ): boolean {
   const state = useSearchStore.getState();
-  return (
-    state.query.trim() === query
-    && state.activeRequestId === currentRequestId
-    && !controller.signal.aborted
-  );
+  return state.effectiveQuery === query
+    && state.activeRequestId === requestId
+    && !controller.signal.aborted;
 }
 
-function applySearchPhase(
+function applySourceEvent(
   query: string,
-  currentRequestId: number,
+  requestId: number,
   controller: AbortController,
-  updatedSources: SearchSource[],
-  phaseResults: Record<SearchSource, SearchResult[]>,
-  phaseErrors: Record<string, string>,
-  isSearching: boolean,
-  pendingSources: SearchSource[],
-): boolean {
-  if (!isCurrentSearch(query, currentRequestId, controller)) {
-    return false;
+  event: MobileSearchSourceEvent,
+): void {
+  if (!isCurrentSearch(query, requestId, controller)) return;
+
+  useSearchStore.setState((state) => {
+    const pendingSources = state.pendingSources.filter((source) => source !== event.source);
+    const nextResults = createEmptySearchResults();
+    nextResults[event.source] = event.results;
+    const nextErrors = event.error ? { [event.source]: event.error } : {};
+
+    return {
+      results: event.status === 'success'
+        ? mergeSearchResults(state.results, nextResults, [event.source])
+        : state.results,
+      sourceErrors: mergeSourceErrors(state.sourceErrors, nextErrors, [event.source]),
+      hasMoreBySource: {
+        ...state.hasMoreBySource,
+        [event.source]: event.status === 'success' && event.hasMore,
+      },
+      completedSources: event.status === 'cancelled'
+        ? state.completedSources
+        : appendCompletedSources(state.completedSources, [event.source]),
+      pendingSources,
+      isSearching: pendingSources.length > 0,
+    };
+  });
+}
+
+export function setSearchQuery(rawQuery: string): void {
+  const effectiveQuery = canonicalizeSearchQuery(rawQuery);
+  const requestId = nextRequestId();
+  activeSearchController?.abort();
+  countPerfEvent('search:query-change');
+  if (debounceTimer) {
+    clearTimeout(debounceTimer);
+    debounceTimer = null;
   }
 
-  useSearchStore.setState((state) => ({
-    results: mergeSearchResults(state.results, phaseResults, updatedSources),
-    sourceErrors: mergeSourceErrors(state.sourceErrors, phaseErrors, updatedSources),
-    hasMoreBySource: mergeSearchMoreState(
-      state.hasMoreBySource,
-      phaseResults,
-      updatedSources,
-      SEARCH_RESULTS_LIMIT,
-    ),
-    isSearching,
-    completedSources: appendCompletedSources(state.completedSources, updatedSources),
-    pendingSources,
-  }));
-
-  return true;
-}
-
-export function setSearchQuery(query: string): void {
-  useSearchStore.setState({ query });
-  countPerfEvent('search:query-change');
-
-  if (debounceTimer) clearTimeout(debounceTimer);
-
-  if (!query.trim()) {
+  if (!effectiveQuery) {
     useSearchStore.setState({
+      query: rawQuery,
+      effectiveQuery,
+      activeRequestId: requestId,
       results: createEmptySearchResults(),
       sourceErrors: {},
       isSearching: false,
@@ -117,112 +128,98 @@ export function setSearchQuery(query: string): void {
       loadingMoreSources: [],
       hasMoreBySource: createEmptySearchMoreState(),
     });
-    activeSearchController?.abort();
     return;
   }
 
-  useSearchStore.setState({ isSearching: true, sourceErrors: {} });
-  debounceTimer = setTimeout(() => {
-    void runSearch(query.trim(), useSearchStore.getState().activeSource);
-  }, SEARCH_DEBOUNCE_MS);
-}
-
-async function runSearch(query: string, activeSource: ActiveTab): Promise<void> {
-  activeSearchController?.abort();
-  const controller = new AbortController();
-  activeSearchController = controller;
-  const currentRequestId = ++requestId;
-  const requestedSources = getRequestedSources();
-  const { primarySources, secondarySources } = splitSearchSources(activeSource, requestedSources);
-  markPerf('search:start', `${currentRequestId}:${activeSource}:${query}`);
   useSearchStore.setState({
-    activeRequestId: currentRequestId,
+    query: rawQuery,
+    effectiveQuery,
+    activeRequestId: requestId,
     isSearching: true,
     sourceErrors: {},
     results: createEmptySearchResults(),
-    hasMoreBySource: createEmptySearchMoreState(),
     completedSources: [],
+    pendingSources: getRequestedSources(),
+    loadingMoreSources: [],
+    hasMoreBySource: createEmptySearchMoreState(),
+  });
+  const activeSource = useSearchStore.getState().activeSource;
+  debounceTimer = setTimeout(() => {
+    debounceTimer = null;
+    void runSearch(effectiveQuery, activeSource, requestId);
+  }, SEARCH_DEBOUNCE_MS);
+}
+
+async function runSearch(
+  query: string,
+  activeSource: ActiveTab,
+  requestId: number,
+): Promise<void> {
+  if (useSearchStore.getState().activeRequestId !== requestId) return;
+  activeSearchController?.abort();
+  const controller = new AbortController();
+  activeSearchController = controller;
+  const snapshot = useSearchStore.getState();
+  const requestedSources = getRequestedSources().filter(
+    (source) => !snapshot.completedSources.includes(source),
+  );
+  if (requestedSources.length === 0) {
+    useSearchStore.setState({ isSearching: false, pendingSources: [] });
+    activeSearchController = null;
+    return;
+  }
+  markPerf('search:start', `${requestId}:${activeSource}:${query}`);
+  useSearchStore.setState({
+    isSearching: true,
     pendingSources: requestedSources,
     loadingMoreSources: [],
   });
 
   try {
-    const primaryResponse = await executeSearch(query, {
-      sources: primarySources,
+    await executeSearch(query, {
+      sources: requestedSources,
       signal: controller.signal,
+      limitBySource: Object.fromEntries(
+        requestedSources.map((source) => [source, getSearchPageLimit(source)]),
+      ),
+      onSourceSettled: (event) => applySourceEvent(query, requestId, controller, event),
     });
-
-    const appliedPrimary = applySearchPhase(
-      query,
-      currentRequestId,
-      controller,
-      primarySources,
-      primaryResponse.results,
-      primaryResponse.sourceErrors,
-      secondarySources.length > 0,
-      secondarySources,
-    );
-
-    if (appliedPrimary) {
-      markPerf('search:finish', `${currentRequestId}:${activeSource}:primary`);
-    }
-
-    if (secondarySources.length === 0 || !appliedPrimary) {
-      return;
-    }
-
-    countPerfEvent('search:secondary-prefetch');
-    const secondaryResponse = await executeSearch(query, {
-      sources: secondarySources,
-      signal: controller.signal,
-    });
-
-    const appliedSecondary = applySearchPhase(
-      query,
-      currentRequestId,
-      controller,
-      secondarySources,
-      secondaryResponse.results,
-      secondaryResponse.sourceErrors,
-      false,
-      [],
-    );
-
-    if (appliedSecondary) {
-      markPerf('search:finish', `${currentRequestId}:${activeSource}:secondary`);
-    } else {
-      countPerfEvent('search:secondary-discarded');
+    if (isCurrentSearch(query, requestId, controller)) {
+      useSearchStore.setState({ isSearching: false, pendingSources: [] });
+      markPerf('search:finish', `${requestId}:${activeSource}`);
     }
   } catch {
-    if (isCurrentSearch(query, currentRequestId, controller)) {
-      useSearchStore.setState({ isSearching: false });
+    if (isCurrentSearch(query, requestId, controller)) {
+      useSearchStore.setState({ isSearching: false, pendingSources: [] });
     }
   } finally {
-    if (controller.signal.aborted) {
-      markPerf('search:aborted', `${currentRequestId}:${activeSource}`);
-    }
-    if (activeSearchController === controller) {
-      activeSearchController = null;
-    }
+    if (controller.signal.aborted) markPerf('search:aborted', `${requestId}:${activeSource}`);
+    if (activeSearchController === controller) activeSearchController = null;
   }
 }
 
 export function setActiveSource(source: ActiveTab): void {
   const state = useSearchStore.getState();
-  useSearchStore.setState({ activeSource: source });
-  const query = state.query.trim();
-  if (!query) {
-    return;
-  }
+  const requestId = nextRequestId();
+  activeSearchController?.abort();
+  useSearchStore.setState({
+    activeSource: source,
+    activeRequestId: requestId,
+    loadingMoreSources: [],
+  });
+  if (!state.effectiveQuery) return;
 
   if (source !== 'all' && state.completedSources.includes(source)) {
+    useSearchStore.setState({ isSearching: false, pendingSources: [] });
     return;
   }
-
   if (
     source === 'all'
-    && coversRequestedSources(getRequestedSources(), state.completedSources, state.pendingSources)
+    && getRequestedSources().every((requestedSource) => (
+      state.completedSources.includes(requestedSource)
+    ))
   ) {
+    useSearchStore.setState({ isSearching: false, pendingSources: [] });
     return;
   }
 
@@ -230,14 +227,11 @@ export function setActiveSource(source: ActiveTab): void {
     clearTimeout(debounceTimer);
     debounceTimer = null;
   }
-  void runSearch(query, source);
+  void runSearch(state.effectiveQuery, source, requestId);
 }
 
 function resolveLoadMoreSource(source?: SearchSource): SearchSource | null {
-  if (source) {
-    return source;
-  }
-
+  if (source) return source;
   const activeSource = useSearchStore.getState().activeSource;
   return activeSource === 'all' ? null : activeSource;
 }
@@ -250,37 +244,39 @@ function removeLoadingMoreSource(source: SearchSource): void {
 
 export async function loadMoreSearchResults(source?: SearchSource): Promise<void> {
   const resolvedSource = resolveLoadMoreSource(source);
-  if (!resolvedSource) {
-    return;
-  }
+  if (!resolvedSource) return;
 
   const state = useSearchStore.getState();
-  const query = state.query.trim();
   if (
-    !query
+    !state.effectiveQuery
     || state.isSearching
     || state.loadingMoreSources.includes(resolvedSource)
     || !state.hasMoreBySource[resolvedSource]
-  ) {
-    return;
-  }
+  ) return;
 
+  const requestId = nextRequestId();
+  const controller = new AbortController();
+  activeSearchController?.abort();
+  activeSearchController = controller;
   const offset = state.results[resolvedSource].length;
-  useSearchStore.setState((current) => ({
-    loadingMoreSources: [...new Set([...current.loadingMoreSources, resolvedSource])],
-  }));
+  useSearchStore.setState({
+    activeRequestId: requestId,
+    loadingMoreSources: [resolvedSource],
+  });
 
   try {
-    const response = await executeSearch(query, {
+    const response = await executeSearch(state.effectiveQuery, {
       sources: [resolvedSource],
-      limit: SEARCH_RESULTS_LIMIT,
+      limitBySource: { [resolvedSource]: getSearchPageLimit(resolvedSource) },
       offsetBySource: { [resolvedSource]: offset },
+      signal: controller.signal,
     });
-
     const latest = useSearchStore.getState();
-    if (latest.query.trim() !== query) {
-      return;
-    }
+    if (
+      latest.activeRequestId !== requestId
+      || latest.effectiveQuery !== state.effectiveQuery
+      || controller.signal.aborted
+    ) return;
 
     useSearchStore.setState((current) => ({
       results: appendSearchResults(current.results, response.results, [resolvedSource]),
@@ -289,21 +285,24 @@ export async function loadMoreSearchResults(source?: SearchSource): Promise<void
         response.sourceErrors,
         [resolvedSource],
       ),
-      hasMoreBySource: mergeSearchMoreState(
-        current.hasMoreBySource,
-        response.results,
-        [resolvedSource],
-        SEARCH_RESULTS_LIMIT,
-      ),
+      hasMoreBySource: {
+        ...current.hasMoreBySource,
+        [resolvedSource]: response.hasMoreBySource[resolvedSource],
+      },
     }));
+  } catch {
+    // A newer edit/tab/load-more request owns the UI now. Abort is not a user-facing error.
   } finally {
-    removeLoadingMoreSource(resolvedSource);
+    if (useSearchStore.getState().activeRequestId === requestId) {
+      removeLoadingMoreSource(resolvedSource);
+    }
+    if (activeSearchController === controller) activeSearchController = null;
   }
 }
 
 export function getDisplayResults(): SearchResult[] {
-  const { results, activeSource, query } = useSearchStore.getState();
-  return getVisibleResults(results, activeSource, query);
+  const { results, activeSource, effectiveQuery } = useSearchStore.getState();
+  return getVisibleResults(results, activeSource, effectiveQuery);
 }
 
 export function getTabCounts(): Record<string, number> {
@@ -311,15 +310,19 @@ export function getTabCounts(): Record<string, number> {
 }
 
 export function clearSearch(): void {
-  if (debounceTimer) clearTimeout(debounceTimer);
+  if (debounceTimer) {
+    clearTimeout(debounceTimer);
+    debounceTimer = null;
+  }
   activeSearchController?.abort();
   useSearchStore.setState({
     query: '',
+    effectiveQuery: '',
     results: createEmptySearchResults(),
     sourceErrors: {},
     isSearching: false,
     activeSource: 'all',
-    activeRequestId: 0,
+    activeRequestId: nextRequestId(),
     completedSources: [],
     pendingSources: [],
     loadingMoreSources: [],

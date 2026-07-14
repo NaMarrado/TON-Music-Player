@@ -1,4 +1,4 @@
-import type { SearchResult } from '@ton/core';
+import { buildSearchFtsQuery, type SearchResult } from '@ton/core';
 import { getDb } from '../../services/database';
 
 export type SearchPageResult = {
@@ -12,8 +12,10 @@ export async function searchLocalTracks(
   offset = 0,
 ): Promise<SearchPageResult> {
   const db = getDb();
-  const ftsQuery = buildFtsQuery(query);
+  const ftsQuery = buildSearchFtsQuery(query);
   const pageSize = limit || 100;
+
+  if (!ftsQuery) return { results: [], hasMore: false };
 
   try {
     const rows = db
@@ -21,7 +23,7 @@ export async function searchLocalTracks(
         `SELECT t.* FROM tracks t
          JOIN tracks_fts fts ON fts.rowid = t.id
          WHERE tracks_fts MATCH ? AND t.in_library = 1
-         ORDER BY rank
+         ORDER BY bm25(tracks_fts, 10.0, 6.0, 3.0, 4.0, 1.0), t.id
          LIMIT ? OFFSET ?`,
       )
       .all(ftsQuery, pageSize + 1, offset) as Array<{
@@ -59,8 +61,10 @@ export async function searchPlaylistTracks(
   offset = 0,
 ): Promise<SearchPageResult> {
   const db = getDb();
-  const ftsQuery = buildFtsQuery(query);
+  const ftsQuery = buildSearchFtsQuery(query);
   const pageSize = limit || 100;
+
+  if (!ftsQuery) return { results: [], hasMore: false };
 
   try {
     const rows = db
@@ -70,7 +74,7 @@ export async function searchPlaylistTracks(
          JOIN playlist_tracks pt ON pt.track_id = t.id
          JOIN playlists p ON p.id = pt.playlist_id
          WHERE tracks_fts MATCH ?
-         ORDER BY rank
+         ORDER BY bm25(tracks_fts, 10.0, 6.0, 3.0, 4.0, 1.0), t.id
          LIMIT ? OFFSET ?`,
       )
       .all(ftsQuery, pageSize + 1, offset) as Array<{
@@ -160,12 +164,4 @@ export function enrichWithDownloadStatus(results: SearchResult[]): SearchResult[
   }
 
   return results;
-}
-
-function buildFtsQuery(query: string): string {
-  return query
-    .trim()
-    .split(/\s+/)
-    .map((word) => `"${word.replace(/"/g, '')}"*`)
-    .join(' ');
 }

@@ -7,6 +7,7 @@ const INSTALLER_INTENT_FLAGS = 1 | 0x10000000;
 
 function sanitizeFileName(value: string): string {
   const sanitized = value
+    // eslint-disable-next-line no-control-regex -- Windows/Android filenames must reject ASCII controls.
     .replace(/[<>:"/\\|?*\x00-\x1F]/g, '-')
     .replace(/\s+/g, ' ')
     .trim();
