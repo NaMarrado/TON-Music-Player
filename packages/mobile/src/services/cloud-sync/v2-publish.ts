@@ -24,7 +24,7 @@ import {
   type MobileCloudV2SyncOptions,
   type PreparedLocalManifest,
 } from './v2-common';
-import { buildLocalMutationManifest, findDeletedTrackHashesStillPresent } from './v2-mutations';
+import { buildLocalMutationManifest } from './v2-mutations';
 import { repairMissingPublishedObjects, uploadPreparedObjects } from './v2-upload';
 
 export async function publishMobileV2Head(input: {
@@ -90,7 +90,6 @@ export async function publishMobileV2Head(input: {
     }
     if (remoteRead.status === 'missing' && remoteSource !== 'v2') bootstrapLiveMerge = true;
     previousRemoteForGc = remote;
-    const hashesStillPresent = await findDeletedTrackHashesStillPresent(outbox);
     const versionedLocal = buildLocalMutationManifest(
       remote,
       prepared,
@@ -98,7 +97,6 @@ export async function publishMobileV2Head(input: {
       deviceId,
       Math.max(state.lamport_counter, remote.max_counter),
       bootstrapLiveMerge && prepared?.incremental === false,
-      hashesStillPresent,
     );
     await uploadPreparedObjects(
       client, prepared, versionedLocal, attemptedUploadKeys,

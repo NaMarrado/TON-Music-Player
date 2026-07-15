@@ -201,6 +201,8 @@ export type CloudSyncPhase =
   | 'downloading'
   | 'writing-manifest'
   | 'importing'
+  | 'analyzing-cleanup'
+  | 'cleaning'
   | 'done'
   | 'failed'
   | 'cancelled';
@@ -224,4 +226,30 @@ export interface CloudSyncResult {
   importedTracks: number;
   importedPlaylists: number;
   revision: string | null;
+}
+
+export interface CloudR2ObjectInfo {
+  key: string;
+  size: number;
+}
+
+export interface CloudR2CleanupPreview {
+  previewToken: string;
+  localTracks: number;
+  cloudTracks: number;
+  cloudOnlyTracks: number;
+  affectedPlaylists: number;
+  objectsToDelete: number;
+  reclaimableBytes: number;
+}
+
+export interface CloudR2CleanupResult {
+  status: 'completed' | 'stale';
+  deletedTracks: number;
+  updatedPlaylists: number;
+  deletedObjects: number;
+  failedObjects: number;
+  freedBytes: number;
+  revision: string | null;
+  refreshedPreview?: CloudR2CleanupPreview;
 }

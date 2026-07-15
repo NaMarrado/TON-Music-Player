@@ -8,13 +8,11 @@ import type {
 } from '@ton/core';
 import {
   createCloudDeletedPlaylistRecordV2,
-  createCloudDeletedTrackRecordV2,
   createCloudLivePlaylistRecordV2,
   createCloudLiveTrackRecordV2,
   createEmptyCloudLibraryManifestV2,
   nextCloudEntityVersion,
 } from '@ton/core';
-import { getDb } from '../database';
 import type { DesktopCloudOutboxEntry, DesktopCloudSyncStateRow } from './auto-sync-store';
 import { contentTypeForExtension } from './media';
 import type { LocalCloudArtwork } from './sync-common';
@@ -106,16 +104,6 @@ export function createV2MutationBuilder(input: {
         });
       }
     }
-    for (const item of outbox) {
-      if (item.entity_type !== 'track' || item.operation !== 'delete') continue;
-      let hash: string | undefined;
-      try { hash = (JSON.parse(item.payload_json || '{}') as { content_hash_sha256?: string }).content_hash_sha256; }
-      catch { hash = undefined; }
-      if (!hash) continue;
-      const stillExists = getDb().prepare('SELECT 1 FROM tracks WHERE content_hash_sha256 = ? LIMIT 1').get(hash);
-      if (!stillExists) trackRecords.push(createCloudDeletedTrackRecordV2(hash, nextVersion()));
-    }
-
     for (const [id, serialized] of playlists) {
       const pending = outbox.some((item) => (
         item.entity_type === 'playlist' && item.local_id === id && item.operation === 'upsert'

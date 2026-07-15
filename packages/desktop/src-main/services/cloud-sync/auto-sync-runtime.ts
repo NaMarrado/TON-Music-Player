@@ -56,6 +56,8 @@ class DesktopCloudAutoSyncRuntime {
 
   private cancelledManualRequestSequence = 0;
 
+  private exclusiveOperationActive = false;
+
   constructor() {
     const persisted = readDesktopCloudAutoSyncStatus();
     this.coordinator = new CloudAutoSyncCoordinator({
@@ -210,6 +212,7 @@ class DesktopCloudAutoSyncRuntime {
     mode: 'upload' | 'fetch' | 'sync' = 'sync',
     listener?: ManualProgressListener,
   ): Promise<CloudSyncResult | null> {
+    if (this.exclusiveOperationActive) throw new Error('cloud_cleanup_busy');
     const requestSequence = ++this.manualRequestSequence;
     if (listener) this.progressListeners.add(listener);
     try {
@@ -232,6 +235,24 @@ class DesktopCloudAutoSyncRuntime {
   cancel(): void {
     this.cancelledManualRequestSequence = this.manualRequestSequence;
     this.coordinator.cancelActive();
+  }
+
+  async runExclusive<T>(operation: (signal: AbortSignal) => Promise<T>): Promise<T> {
+    if (this.exclusiveOperationActive) throw new Error('cloud_cleanup_busy');
+    this.exclusiveOperationActive = true;
+    const restartCoordinator = this.started;
+    this.coordinator.cancelActive();
+    await this.activeCycleDone?.catch(() => undefined);
+    this.coordinator.stop();
+    const controller = new AbortController();
+    this.activeAbortController = controller;
+    try {
+      return await operation(controller.signal);
+    } finally {
+      if (this.activeAbortController === controller) this.activeAbortController = null;
+      this.exclusiveOperationActive = false;
+      if (restartCoordinator) this.coordinator.start(true);
+    }
   }
 
   async shutdownForQuit(): Promise<void> {

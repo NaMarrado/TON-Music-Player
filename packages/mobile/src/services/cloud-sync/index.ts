@@ -3,6 +3,10 @@ export {
   saveMobileCloudSyncConfig,
   testMobileCloudConnection,
 } from './cloud-config-api';
+export {
+  executeCloudCleanup,
+  previewCloudCleanup,
+} from './r2-cleanup';
 export type {
   CloudFetchApplyProtection,
   LocalCloudArtwork,

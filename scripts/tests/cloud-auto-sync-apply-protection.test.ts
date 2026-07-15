@@ -37,7 +37,7 @@ test('cloud apply suppression prevents an echo outbox mutation', () => {
   }
 });
 
-test('newer outbox generations protect both old and current cloud identities from apply', () => {
+test('newer outbox generations protect current tracks and both playlist identities from apply', () => {
   const db = createTestDatabase();
   try {
     const trackId = Number(db.prepare(`
@@ -76,7 +76,7 @@ test('newer outbox generations protect both old and current cloud identities fro
         ?.cloud_id ?? null,
     });
 
-    assert.deepEqual([...protection.trackHashes].sort(), [HASH_A, HASH_B]);
+    assert.deepEqual([...protection.trackHashes].sort(), [HASH_B]);
     assert.deepEqual(
       [...protection.playlistCloudIds].sort(),
       ['playlist-current', 'playlist-old'],

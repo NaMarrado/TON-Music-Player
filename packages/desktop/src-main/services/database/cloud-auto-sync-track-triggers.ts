@@ -47,22 +47,6 @@ export function createCloudAutoSyncTrackTriggers(db: Database.Database): void {
         updated_at = strftime('%s','now');
 
       INSERT INTO cloud_sync_outbox (
-        scope_id, entity_type, entity_key, operation, payload_json, generation
-      )
-      SELECT active_scope_id, 'track', 'hash:' || old.content_hash_sha256,
-        'delete', json_object('content_hash_sha256', old.content_hash_sha256), generation
-      FROM cloud_sync_control
-      WHERE id = 1 AND suppress_outbox = 0
-        AND old.content_hash_sha256 IS NOT NULL
-        AND old.content_hash_sha256 != ''
-        AND old.content_hash_sha256 IS NOT new.content_hash_sha256
-      ON CONFLICT(scope_id, entity_type, entity_key) DO UPDATE SET
-        operation = 'delete',
-        payload_json = excluded.payload_json,
-        generation = excluded.generation,
-        updated_at = strftime('%s','now');
-
-      INSERT INTO cloud_sync_outbox (
         scope_id, entity_type, entity_key, local_id, operation, generation
       )
       SELECT control.active_scope_id, 'playlist', CAST(membership.playlist_id AS TEXT),
@@ -84,28 +68,24 @@ export function createCloudAutoSyncTrackTriggers(db: Database.Database): void {
     END;
 
     DROP TRIGGER IF EXISTS cloud_sync_track_delete;
+    DROP TRIGGER IF EXISTS cloud_sync_track_delete_end;
     CREATE TRIGGER cloud_sync_track_delete
     BEFORE DELETE ON tracks
     BEGIN
-      UPDATE cloud_sync_control SET generation = generation + 1
-      WHERE id = 1 AND suppress_outbox = 0;
-      INSERT INTO cloud_sync_outbox (
-        scope_id, entity_type, entity_key, local_id, operation, payload_json, generation
-      )
-      SELECT active_scope_id, 'track',
-        CASE
-          WHEN old.content_hash_sha256 IS NOT NULL AND old.content_hash_sha256 != ''
-            THEN 'hash:' || old.content_hash_sha256
-          ELSE CAST(old.id AS TEXT)
-        END,
-        old.id, 'delete', json_object('content_hash_sha256', old.content_hash_sha256), generation
-      FROM cloud_sync_control
-      WHERE id = 1 AND suppress_outbox = 0
-      ON CONFLICT(scope_id, entity_type, entity_key) DO UPDATE SET
-        operation = 'delete',
-        payload_json = excluded.payload_json,
-        generation = excluded.generation,
-        updated_at = strftime('%s','now');
+      UPDATE cloud_sync_control
+      SET suppress_outbox = suppress_outbox + 1
+      WHERE id = 1;
     END;
+
+    CREATE TRIGGER cloud_sync_track_delete_end
+    AFTER DELETE ON tracks
+    BEGIN
+      UPDATE cloud_sync_control
+      SET suppress_outbox = MAX(0, suppress_outbox - 1)
+      WHERE id = 1;
+    END;
+
+    DELETE FROM cloud_sync_outbox
+    WHERE entity_type = 'track' AND operation = 'delete';
   `);
 }

@@ -1,4 +1,4 @@
-import type { CloudAutoSyncStatus } from '@ton/core';
+import type { CloudAutoSyncStatus, CloudR2CleanupPreview } from '@ton/core';
 import { Dialog } from '../../components/ui/dialog';
 import type { Translator } from './cloud-section-types';
 import { cloudAutoSyncStateKey } from './cloud-section-utils';
@@ -45,11 +45,13 @@ export function CloudActionButton({
   disabled,
   onClick,
   primary = false,
+  danger = false,
 }: {
   children: React.ReactNode;
   disabled?: boolean;
   onClick: () => void;
   primary?: boolean;
+  danger?: boolean;
 }) {
   return (
     <button
@@ -58,15 +60,78 @@ export function CloudActionButton({
       onClick={onClick}
       style={{
         padding: '8px 14px', borderRadius: '16px',
-        background: primary ? 'var(--white)' : 'transparent',
-        color: primary ? 'var(--bg-deep)' : 'var(--text-secondary)',
-        border: primary ? 'none' : '1px solid var(--border)',
+        background: primary ? 'var(--white)' : danger ? 'rgba(239, 68, 68, 0.12)' : 'transparent',
+        color: primary ? 'var(--bg-deep)' : danger ? '#f87171' : 'var(--text-secondary)',
+        border: primary ? 'none' : danger ? '1px solid rgba(239, 68, 68, 0.65)' : '1px solid var(--border)',
         fontSize: '0.78rem', fontWeight: 500, fontFamily: 'inherit',
         opacity: disabled ? 0.5 : 1, width: '100%',
       }}
     >
       {children}
     </button>
+  );
+}
+
+export function CloudCleanupDialog({
+  busy,
+  formatSize,
+  onAbort,
+  onCancel,
+  onConfirm,
+  preview,
+  t,
+}: {
+  busy: boolean;
+  formatSize: (bytes: number) => string;
+  onAbort: () => void;
+  onCancel: () => void;
+  onConfirm: () => void;
+  preview: CloudR2CleanupPreview;
+  t: Translator;
+}) {
+  return (
+    <Dialog open onClose={busy ? () => {} : onCancel} title={t('cloudCleanupTitle')}>
+      <div className="flex flex-col gap-2" style={{ marginBottom: '22px' }}>
+        <p style={{ color: 'var(--text-primary)', fontSize: '0.86rem' }}>
+          {t('cloudCleanupSongs', { count: preview.cloudOnlyTracks })}
+        </p>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
+          {t('cloudCleanupPlaylists', { count: preview.affectedPlaylists })}
+        </p>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
+          {t('cloudCleanupSpace', { size: formatSize(preview.reclaimableBytes) })}
+        </p>
+        <p style={{ color: '#f87171', fontSize: '0.8rem', lineHeight: 1.55, marginTop: '8px' }}>
+          {t('cloudCleanupWarning')}
+        </p>
+      </div>
+      <div className="flex justify-end gap-3">
+        <button
+          type="button"
+          onClick={busy ? onAbort : onCancel}
+          style={{
+            padding: '9px 16px', borderRadius: '8px', border: '1px solid var(--border)',
+            background: 'var(--bg-elevated)', color: 'var(--text-primary)',
+            cursor: 'pointer',
+          }}
+        >
+          {t('cloudCancel')}
+        </button>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={onConfirm}
+          style={{
+            padding: '9px 16px', borderRadius: '8px',
+            border: '1px solid rgba(239, 68, 68, 0.65)',
+            background: 'rgba(239, 68, 68, 0.14)', color: '#f87171',
+            cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.55 : 1,
+          }}
+        >
+          {busy ? t('cloudWorking') : t('cloudCleanupConfirm', { count: preview.cloudOnlyTracks })}
+        </button>
+      </div>
+    </Dialog>
   );
 }
 

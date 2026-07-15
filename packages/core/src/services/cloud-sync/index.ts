@@ -24,6 +24,14 @@ export {
   type R2SignedRequest,
 } from './r2-signing';
 export {
+  buildCloudR2CleanupPlan,
+  fingerprintCloudCleanupLibrary,
+  getLiveCloudManifestObjectKeys,
+  isTonManagedMediaObjectKey,
+  type BuildCloudR2CleanupPlanInput,
+  type CloudR2CleanupPlan,
+} from './r2-cleanup';
+export {
   buildCloudAudioObjectKey,
   buildCloudArtworkObjectKey,
   buildCloudContentArtworkObjectKey,

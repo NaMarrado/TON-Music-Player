@@ -1,3 +1,4 @@
+import { formatSize } from '@ton/core';
 import { SettingsGroup } from './primitives';
 import { SpotifyCard } from './spotify-card';
 import { CloudCard } from './cloud-card';
@@ -23,6 +24,9 @@ export function SettingsConnectionsGroup({
     cloudBusy,
     cloudCanRun,
     cloudConnectedLabel,
+    cloudCleanupChecking,
+    cloudCleanupPreview,
+    cloudCleanupStatus,
     cloudError,
     cloudForm,
     cloudHasSecret,
@@ -33,6 +37,7 @@ export function SettingsConnectionsGroup({
     cloudResultLabel,
     fetchCloud,
     loadCloudConfig,
+    runCloudCleanup,
     loadSpotifyCreds,
     saveAndTestCloud,
     saveSpotifyCreds,
@@ -78,6 +83,9 @@ export function SettingsConnectionsGroup({
         autoSyncStatusLabel={cloudAutoSyncStatusLabel}
         canRun={cloudCanRun}
         connectedLabel={cloudConnectedLabel}
+        cleanupChecking={cloudCleanupChecking}
+        cleanupPreview={cloudCleanupPreview}
+        cleanupStatus={cloudCleanupStatus}
         description={t('cloudDescription')}
         failedLabel={cloudError}
         form={cloudForm}
@@ -108,8 +116,23 @@ export function SettingsConnectionsGroup({
           syncNow: t('cloudSyncNow'),
           cancel: tc('cancel'),
           working: t('cloudWorking'),
+          cleanupSectionTitle: t('cloudCleanupSectionTitle'),
+          cleanupDescription: t('cloudCleanupDescription'),
+          cleanupChecking: t('cloudCleanupChecking'),
+          cleanupClean: t('cloudCleanupClean'),
+          cleanupButton: cloudCleanupPreview ? t('cloudCleanupButton', {
+            count: cloudCleanupPreview.cloudOnlyTracks,
+            size: formatSize(cloudCleanupPreview.reclaimableBytes),
+          }) : t('cloudCleanupClean'),
+          cleanupTitle: t('cloudCleanupTitle'),
+          cleanupSongs: t('cloudCleanupSongs', { count: cloudCleanupPreview?.cloudOnlyTracks ?? 0 }),
+          cleanupPlaylists: t('cloudCleanupPlaylists', { count: cloudCleanupPreview?.affectedPlaylists ?? 0 }),
+          cleanupSpace: t('cloudCleanupSpace', { size: formatSize(cloudCleanupPreview?.reclaimableBytes ?? 0) }),
+          cleanupWarning: t('cloudCleanupWarning'),
+          cleanupConfirm: t('cloudCleanupConfirm', { count: cloudCleanupPreview?.cloudOnlyTracks ?? 0 }),
         }}
         onCancel={cancelCloudTask}
+        onCleanup={runCloudCleanup}
         onFetch={fetchCloud}
         onLoad={loadCloudConfig}
         onSaveTest={saveAndTestCloud}

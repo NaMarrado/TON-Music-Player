@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type {
   CloudAutoSyncStatus,
+  CloudR2CleanupPreview,
+  CloudR2CleanupResult,
   CloudStorageConfig,
   CloudStorageJurisdiction,
   CloudSyncProgress,
   CloudSyncResult,
 } from '@ton/core';
+import { formatSize } from '@ton/core';
 import { reconcileLibraryTracks } from '../../stores/library-store';
 import { reloadPlaylistViews } from '../../stores/playlist-store';
 import { SectionHeader, ToggleSwitch } from './helpers';
@@ -14,6 +17,7 @@ import { EMPTY_CLOUD_FORM, type CloudFormState, type Translator } from './cloud-
 import {
   CloudActionButton,
   CloudAutoSyncSummary,
+  CloudCleanupDialog,
   CloudField,
   CloudHelpButton,
   CloudHelpDialog,
@@ -40,17 +44,31 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
   const [result, setResult] = useState<CloudSyncResult | null>(null);
   const [autoSyncStatus, setAutoSyncStatus] = useState<CloudAutoSyncStatus | null>(null);
   const [autoSyncBusy, setAutoSyncBusy] = useState(false);
+  const [cleanupPreview, setCleanupPreview] = useState<CloudR2CleanupPreview | null>(null);
+  const [cleanupChecking, setCleanupChecking] = useState(false);
+  const [showCleanup, setShowCleanup] = useState(false);
 
   useEffect(() => {
     void Promise.all([
       window.api.invoke('cloud:get-config'),
       window.api.invoke('cloud:get-auto-sync-status'),
-    ]).then(([config, syncStatus]) => {
+    ]).then(async ([config, syncStatus]) => {
       setForm(toCloudForm(config));
       setHasSecret(Boolean(config?.hasSecretAccessKey));
       setAutoSyncStatus(syncStatus);
+      if (config) {
+        setCleanupChecking(true);
+        try {
+          setCleanupPreview(await window.api.invoke('cloud:preview-cleanup'));
+        } catch (error) {
+          setStatus(formatCloudError(error, t));
+        } finally {
+          setCleanupChecking(false);
+          setProgress(null);
+        }
+      }
     });
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     const handler = (payload: unknown) => {
@@ -94,13 +112,53 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
       setAutoSyncStatus(await window.api.invoke('cloud:get-auto-sync-status'));
       setStatus(t('cloudConnected'));
       setProgress(null);
+      setCleanupChecking(true);
+      setCleanupPreview(await window.api.invoke('cloud:preview-cleanup'));
     } catch (error) {
       setStatus(formatCloudError(error, t));
       setProgress(null);
     } finally {
       setBusy(false);
+      setCleanupChecking(false);
     }
   }, [buildConfig, t]);
+
+  const executeCleanup = useCallback(async () => {
+    if (!cleanupPreview) return;
+    setBusy(true);
+    setStatus(null);
+    setResult(null);
+    try {
+      const cleanupResult = await window.api.invoke(
+        'cloud:execute-cleanup', cleanupPreview.previewToken,
+      ) as CloudR2CleanupResult | null;
+      if (!cleanupResult) {
+        setStatus(t('cloudCancelled'));
+        setShowCleanup(false);
+        return;
+      }
+      if (cleanupResult.status === 'stale' && cleanupResult.refreshedPreview) {
+        setCleanupPreview(cleanupResult.refreshedPreview);
+        setStatus(t('cloudCleanupStale'));
+        return;
+      }
+      setShowCleanup(false);
+      setStatus(t('cloudCleanupDone', {
+        songs: cleanupResult.deletedTracks,
+        objects: cleanupResult.deletedObjects,
+        failed: cleanupResult.failedObjects,
+        size: formatSize(cleanupResult.freedBytes),
+      }));
+      setCleanupChecking(true);
+      setCleanupPreview(await window.api.invoke('cloud:preview-cleanup'));
+    } catch (error) {
+      setStatus(formatCloudError(error, t));
+    } finally {
+      setBusy(false);
+      setCleanupChecking(false);
+      setProgress(null);
+    }
+  }, [cleanupPreview, t]);
 
   const toggleAutoSync = useCallback(async () => {
     if (!autoSyncStatus || autoSyncBusy) {
@@ -135,12 +193,17 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
           reloadPlaylistViews(),
         ]);
       }
+      if (taskResult) {
+        setCleanupChecking(true);
+        setCleanupPreview(await window.api.invoke('cloud:preview-cleanup'));
+      }
       setResult(taskResult as CloudSyncResult | null);
       setStatus(taskResult ? t('cloudDone') : t('cloudCancelled'));
     } catch (error) {
       setStatus(formatCloudError(error, t));
     } finally {
       setBusy(false);
+      setCleanupChecking(false);
       setProgress(null);
     }
   }, [t]);
@@ -175,6 +238,17 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
         )}
       />
       {showHelp && <CloudHelpDialog t={t} onClose={() => setShowHelp(false)} />}
+      {showCleanup && cleanupPreview && (
+        <CloudCleanupDialog
+          busy={busy}
+          formatSize={formatSize}
+          onAbort={() => void window.api.invoke('cloud:cancel')}
+          onCancel={() => setShowCleanup(false)}
+          onConfirm={() => void executeCleanup()}
+          preview={cleanupPreview}
+          t={t}
+        />
+      )}
       <div className="flex flex-col gap-3" style={{ paddingLeft: layout.sectionIndent }}>
         {autoSyncStatus && (
           <CloudAutoSyncSummary
@@ -183,6 +257,16 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
             status={autoSyncStatus}
             t={t}
           />
+        )}
+        {progressText && (
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.78rem', lineHeight: 1.5 }}>
+            {progressText}
+          </p>
+        )}
+        {status && (
+          <p style={{ color: status === t('cloudConnected') || status === t('cloudDone') ? 'var(--white)' : 'var(--text-secondary)', fontSize: '0.78rem', lineHeight: 1.5 }}>
+            {status}
+          </p>
         )}
         <div
           className="grid gap-3"
@@ -243,16 +327,40 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
             {t('cloudCancel')}
           </CloudActionButton>
         </div>
-        {progressText && (
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.78rem', lineHeight: 1.5 }}>
-            {progressText}
+        <div
+          style={{
+            marginTop: '6px',
+            padding: '14px',
+            border: '1px solid rgba(239, 68, 68, 0.55)',
+            borderRadius: 'var(--radius)',
+            background: 'rgba(239, 68, 68, 0.06)',
+          }}
+        >
+          <p style={{ color: '#f87171', fontSize: '0.82rem', fontWeight: 600 }}>
+            {t('cloudCleanupSectionTitle')}
           </p>
-        )}
-        {status && (
-          <p style={{ color: status === t('cloudConnected') || status === t('cloudDone') ? 'var(--white)' : 'var(--text-secondary)', fontSize: '0.78rem', lineHeight: 1.5 }}>
-            {status}
+          <p style={{
+            color: 'var(--text-secondary)', fontSize: '0.76rem', lineHeight: 1.55,
+            margin: '5px 0 12px',
+          }}>
+            {t('cloudCleanupDescription')}
           </p>
-        )}
+          <CloudActionButton
+            danger
+            disabled={busy || cleanupChecking || !cleanupPreview
+              || (cleanupPreview.cloudOnlyTracks === 0 && cleanupPreview.objectsToDelete === 0)}
+            onClick={() => setShowCleanup(true)}
+          >
+            {cleanupChecking
+              ? t('cloudCleanupChecking')
+              : cleanupPreview && (cleanupPreview.cloudOnlyTracks > 0 || cleanupPreview.objectsToDelete > 0)
+                ? t('cloudCleanupButton', {
+                  count: cleanupPreview.cloudOnlyTracks,
+                  size: formatSize(cleanupPreview.reclaimableBytes),
+                })
+                : t('cloudCleanupClean')}
+          </CloudActionButton>
+        </div>
       </div>
     </div>
   );

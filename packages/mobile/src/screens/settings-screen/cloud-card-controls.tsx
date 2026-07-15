@@ -104,13 +104,17 @@ export function CloudHelpModal({
 }
 
 export function CloudPill({
+  danger,
   disabled,
+  fullWidth,
   gridItem,
   label,
   onPress,
   primary,
 }: {
   disabled?: boolean;
+  danger?: boolean;
+  fullWidth?: boolean;
   gridItem?: boolean;
   label: string;
   onPress: () => void;
@@ -118,7 +122,7 @@ export function CloudPill({
 }) {
   const className = primary
     ? `bg-white items-center justify-center${gridItem ? '' : ' mr-2 mb-2'}`
-    : `border border-border items-center justify-center${gridItem ? '' : ' mr-2 mb-2'}`;
+    : `border items-center justify-center${gridItem ? '' : ' mr-2 mb-2'} ${danger ? 'border-red-500' : 'border-border'}`;
   return (
     <Pressable
       disabled={disabled}
@@ -131,14 +135,64 @@ export function CloudPill({
         opacity: disabled ? 0.5 : 1,
         paddingVertical: 9,
         paddingHorizontal: 14,
-        width: gridItem ? '48%' : undefined,
+        width: fullWidth ? '100%' : gridItem ? '48%' : undefined,
       }}
     >
       <Text className={primary
         ? 'text-black text-[13px] font-semibold text-center'
-        : 'text-text-secondary text-[13px] font-semibold text-center'}>
+        : danger
+          ? 'text-red-400 text-[13px] font-semibold text-center'
+          : 'text-text-secondary text-[13px] font-semibold text-center'}>
         {label}
       </Text>
     </Pressable>
+  );
+}
+
+export function CloudCleanupModal({
+  busy,
+  labels,
+  onAbort,
+  onClose,
+  onConfirm,
+}: {
+  busy: boolean;
+  labels: Record<string, string>;
+  onAbort: () => void;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <Modal transparent visible animationType="fade" onRequestClose={busy ? undefined : onClose}>
+      <View className="flex-1 items-center justify-center px-5" style={{ backgroundColor: 'rgba(0,0,0,0.78)' }}>
+        {!busy && <Pressable style={StyleSheet.absoluteFillObject} onPress={onClose} />}
+        <View className="bg-bg-surface border border-border w-full" style={{ borderRadius: 24, maxWidth: 420, padding: 20 }}>
+          <Text className="text-text-primary text-lg font-bold mb-4">{labels.cleanupTitle}</Text>
+          <Text className="text-text-primary text-sm mb-2">{labels.cleanupSongs}</Text>
+          <Text className="text-text-secondary text-sm mb-2">{labels.cleanupPlaylists}</Text>
+          <Text className="text-text-secondary text-sm mb-4">{labels.cleanupSpace}</Text>
+          <Text className="text-red-400 text-xs leading-5 mb-5">{labels.cleanupWarning}</Text>
+          <View className="flex-row justify-end">
+            <Pressable
+              onPress={busy ? onAbort : onClose}
+              className="border border-border items-center mr-3"
+              style={{ borderRadius: 18, paddingHorizontal: 18, paddingVertical: 10 }}
+            >
+              <Text className="text-text-primary text-[13px] font-semibold">{labels.cancel}</Text>
+            </Pressable>
+            <Pressable
+              disabled={busy}
+              onPress={onConfirm}
+              className="border border-red-500 items-center"
+              style={{ borderRadius: 18, backgroundColor: 'rgba(239,68,68,0.12)', opacity: busy ? 0.5 : 1, paddingHorizontal: 18, paddingVertical: 10 }}
+            >
+              <Text className="text-red-400 text-[13px] font-semibold">
+                {busy ? labels.working : labels.cleanupConfirm}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    </Modal>
   );
 }

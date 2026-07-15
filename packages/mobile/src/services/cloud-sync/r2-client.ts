@@ -6,6 +6,7 @@ import {
   signR2Request,
   sha256Hex,
   type CloudStorageConfig,
+  type CloudR2ObjectInfo,
 } from '@ton/core';
 import { parseListBucketResult } from './r2-list-parser';
 
@@ -120,7 +121,11 @@ export class MobileR2Client {
   }
 
   async listObjectKeys(prefix: string, signal?: AbortSignal): Promise<string[]> {
-    const keys: string[] = [];
+    return (await this.listObjects(prefix, signal)).map((object) => object.key);
+  }
+
+  async listObjects(prefix: string, signal?: AbortSignal): Promise<CloudR2ObjectInfo[]> {
+    const objects: CloudR2ObjectInfo[] = [];
     let continuationToken: string | null = null;
     do {
       const query: Record<string, string> = {
@@ -142,15 +147,12 @@ export class MobileR2Client {
         headers: requestHeaders(signed.headers),
         signal,
       });
-      if (response.status === 404 || response.status === 403) {
-        return keys;
-      }
       await assertFetchOk(response);
       const parsed = parseListBucketResult(await response.text());
-      keys.push(...parsed.keys);
+      objects.push(...parsed.objects);
       continuationToken = parsed.nextContinuationToken;
     } while (continuationToken);
-    return keys;
+    return objects;
   }
 
   async putJson(key: string, value: unknown, signal?: AbortSignal): Promise<void> {

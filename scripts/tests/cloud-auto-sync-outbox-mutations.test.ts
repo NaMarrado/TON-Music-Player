@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import Database from 'better-sqlite3';
+import { createEmptyCloudLibraryManifestV2 } from '../../packages/core/src/services/cloud-sync/manifest-records.ts';
 import { deriveDesktopCloudApplyProtection } from '../../packages/desktop/src-main/services/cloud-sync/apply-protection.ts';
+import { createV2MutationBuilder } from '../../packages/desktop/src-main/services/cloud-sync/v2-mutations.ts';
 import { createCloudAutoSyncSchema } from '../../packages/desktop/src-main/services/database/cloud-auto-sync-schema.ts';
 import { createSchema } from '../../packages/desktop/src-main/services/database/schema.ts';
 
@@ -16,7 +18,7 @@ function createTestDatabase(): Database.Database {
   return db;
 }
 
-test('track identity replacement emits one generation with a live upsert and old-hash tombstone', () => {
+test('track identity replacement updates the live track without deleting the old cloud hash', () => {
   const db = createTestDatabase();
   try {
     const trackId = Number(db.prepare(`
@@ -44,10 +46,8 @@ test('track identity replacement emits one generation with a live upsert and old
     }>;
     assert.deepEqual(rows.map((row) => [row.entity_key, row.operation]), [
       [String(trackId), 'upsert'],
-      [`hash:${HASH_A}`, 'delete'],
     ]);
     assert.equal(rows[0]?.local_id, trackId);
-    assert.equal(JSON.parse(rows[1]?.payload_json ?? '{}').content_hash_sha256, HASH_A);
     assert.ok(rows.every((row) => row.generation === control.generation));
   } finally {
     db.close();
@@ -143,7 +143,7 @@ test('playlist cascades preserve a durable cloud-id tombstone instead of an upse
   }
 });
 
-test('delete then reused numeric ID preserves old track and playlist tombstones', () => {
+test('local track delete stays local while playlist deletion remains synchronized', () => {
   const db = createTestDatabase();
   try {
     const oldTrackId = Number(db.prepare(`
@@ -176,11 +176,9 @@ test('delete then reused numeric ID preserves old track and playlist tombstones'
       operation: string;
       payload_json: string | null;
     }>;
-    assert.ok(rows.some((row) => (
+    assert.ok(!rows.some((row) => (
       row.entity_type === 'track'
-      && row.entity_key === `hash:${HASH_A}`
       && row.operation === 'delete'
-      && JSON.parse(row.payload_json ?? '{}').content_hash_sha256 === HASH_A
     )));
     assert.ok(rows.some((row) => (
       row.entity_type === 'track'
@@ -201,4 +199,90 @@ test('delete then reused numeric ID preserves old track and playlist tombstones'
   } finally {
     db.close();
   }
+});
+
+test('deleting a local track suppresses its cascade without changing cloud playlist state', () => {
+  const db = createTestDatabase();
+  try {
+    const trackId = Number(db.prepare(`
+      INSERT INTO tracks (file_path, content_hash_sha256, title)
+      VALUES ('/music/local.mp3', ?, 'Local')
+    `).run(HASH_A).lastInsertRowid);
+    const playlistId = Number(db.prepare(`
+      INSERT INTO playlists (cloud_id, name) VALUES ('playlist-local', 'Local')
+    `).run().lastInsertRowid);
+    db.prepare(`
+      INSERT INTO playlist_tracks (playlist_id, track_id, position)
+      VALUES (?, ?, 0)
+    `).run(playlistId, trackId);
+    db.prepare('DELETE FROM cloud_sync_outbox').run();
+    const before = db.prepare('SELECT generation FROM cloud_sync_control WHERE id = 1')
+      .get() as { generation: number };
+
+    db.prepare('DELETE FROM tracks WHERE id = ?').run(trackId);
+
+    const control = db.prepare(`
+      SELECT generation, suppress_outbox FROM cloud_sync_control WHERE id = 1
+    `).get() as { generation: number; suppress_outbox: number };
+    const pending = db.prepare('SELECT COUNT(*) AS count FROM cloud_sync_outbox')
+      .get() as { count: number };
+    const memberships = db.prepare('SELECT COUNT(*) AS count FROM playlist_tracks')
+      .get() as { count: number };
+    assert.equal(pending.count, 0);
+    assert.equal(memberships.count, 0);
+    assert.equal(control.generation, before.generation);
+    assert.equal(control.suppress_outbox, 0);
+  } finally {
+    db.close();
+  }
+});
+
+test('schema refresh discards track tombstones queued by older builds', () => {
+  const db = createTestDatabase();
+  try {
+    db.prepare(`
+      INSERT INTO cloud_sync_outbox (
+        scope_id, entity_type, entity_key, operation, payload_json, generation
+      ) VALUES ('scope', 'track', ?, 'delete', ?, 1)
+    `).run(`hash:${HASH_A}`, JSON.stringify({ content_hash_sha256: HASH_A }));
+
+    createCloudAutoSyncSchema(db);
+
+    const pending = db.prepare(`
+      SELECT COUNT(*) AS count FROM cloud_sync_outbox
+      WHERE entity_type = 'track' AND operation = 'delete'
+    `).get() as { count: number };
+    assert.equal(pending.count, 0);
+  } finally {
+    db.close();
+  }
+});
+
+test('normal desktop sync ignores stale track tombstones', () => {
+  const remote = createEmptyCloudLibraryManifestV2('remote');
+  const desktopDelete = {
+    id: 1,
+    scope_id: 'scope',
+    entity_type: 'track' as const,
+    entity_key: `hash:${HASH_A}`,
+    local_id: null,
+    operation: 'delete' as const,
+    payload_json: JSON.stringify({ content_hash_sha256: HASH_A }),
+    generation: 1,
+  };
+  const desktop = createV2MutationBuilder({
+    state: {
+      scope_id: 'scope', revision: null, etag: null, lamport_counter: 0,
+      last_success_at: null, last_error: null, next_retry_at: null,
+      needs_full_reconcile: 0, pending_remote_revision: null, pending_downloads: 0,
+      last_commit_cleanup_at: null, activation_marker_confirmed: 1,
+    },
+    deviceId: 'desktop',
+    outbox: [desktopDelete],
+    tracks: new Map(),
+    playlists: new Map(),
+    bootstrappingFromV1: false,
+    repairReferencedBlobs: false,
+  }).build(remote);
+  assert.deepEqual(desktop.tracks, []);
 });

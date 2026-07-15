@@ -11,6 +11,7 @@ import {
   type CloudConditionalReadOptions,
   type CloudConditionalWriteOptions,
   type CloudConditionalWriteResult,
+  type CloudR2ObjectInfo,
   type CloudStorageConfig,
 } from '@ton/core';
 
@@ -37,11 +38,20 @@ function decodeXmlText(value: string): string {
     .replace(/&amp;/g, '&');
 }
 
-function parseListBucketResult(xml: string): { keys: string[]; nextContinuationToken: string | null } {
-  const keys = Array.from(xml.matchAll(/<Key>([^<]+)<\/Key>/g), (match) => decodeXmlText(match[1]));
+function parseListBucketResult(xml: string): {
+  objects: CloudR2ObjectInfo[];
+  nextContinuationToken: string | null;
+} {
+  const objects = Array.from(xml.matchAll(/<Contents>([\s\S]*?)<\/Contents>/g), (match) => {
+    const keyMatch = match[1].match(/<Key>([^<]+)<\/Key>/);
+    const sizeMatch = match[1].match(/<Size>(\d+)<\/Size>/);
+    return keyMatch
+      ? { key: decodeXmlText(keyMatch[1]), size: Number(sizeMatch?.[1] ?? 0) }
+      : null;
+  }).filter((object): object is CloudR2ObjectInfo => object != null);
   const tokenMatch = xml.match(/<NextContinuationToken>([^<]+)<\/NextContinuationToken>/);
   return {
-    keys,
+    objects,
     nextContinuationToken: tokenMatch ? decodeXmlText(tokenMatch[1]) : null,
   };
 }
@@ -111,7 +121,11 @@ export class DesktopR2Client {
   }
 
   async listObjectKeys(prefix: string, signal?: AbortSignal): Promise<string[]> {
-    const keys: string[] = [];
+    return (await this.listObjects(prefix, signal)).map((object) => object.key);
+  }
+
+  async listObjects(prefix: string, signal?: AbortSignal): Promise<CloudR2ObjectInfo[]> {
+    const objects: CloudR2ObjectInfo[] = [];
     let continuationToken: string | null = null;
     do {
       const query: Record<string, string> = {
@@ -133,15 +147,12 @@ export class DesktopR2Client {
         headers: requestHeaders(signed.headers),
         signal,
       });
-      if (response.status === 404 || response.status === 403) {
-        return keys;
-      }
       await assertOk(response);
       const parsed = parseListBucketResult(await response.text());
-      keys.push(...parsed.keys);
+      objects.push(...parsed.objects);
       continuationToken = parsed.nextContinuationToken;
     } while (continuationToken);
-    return keys;
+    return objects;
   }
 
   async putJson(key: string, value: unknown, signal?: AbortSignal): Promise<void> {

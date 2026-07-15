@@ -64,6 +64,11 @@ interface ElectronAPI {
   invoke(channel: 'cloud:upload-missing'): Promise<import('@ton/core').CloudSyncResult | null>;
   invoke(channel: 'cloud:fetch-library'): Promise<import('@ton/core').CloudSyncResult | null>;
   invoke(channel: 'cloud:sync-now'): Promise<import('@ton/core').CloudSyncResult | null>;
+  invoke(channel: 'cloud:preview-cleanup'): Promise<import('@ton/core').CloudR2CleanupPreview>;
+  invoke(
+    channel: 'cloud:execute-cleanup',
+    previewToken: string,
+  ): Promise<import('@ton/core').CloudR2CleanupResult | null>;
   invoke(channel: 'cloud:cancel'): Promise<void>;
   invoke(channel: 'app:get-version'): Promise<string>;
   invoke(channel: 'app:get-platform'): Promise<NodeJS.Platform>;

@@ -7,13 +7,11 @@ import type {
 } from '@ton/core';
 import {
   createCloudDeletedPlaylistRecordV2,
-  createCloudDeletedTrackRecordV2,
   createCloudLivePlaylistRecordV2,
   createCloudLiveTrackRecordV2,
   createEmptyCloudLibraryManifestV2,
   nextCloudEntityVersion,
 } from '@ton/core';
-import { getDb } from '../database';
 import type { MobileCloudOutboxRow } from './local-state';
 import { normalizeDownloadedAt, type PreparedLocalManifest } from './v2-common';
 
@@ -58,7 +56,6 @@ export function buildLocalMutationManifest(
   deviceId: string,
   observedCounter: number,
   refreshV1LiveRecords: boolean,
-  trackHashesStillPresent: ReadonlySet<string>,
 ): CloudLibraryManifestV2 {
   const remoteTracks = new Map(remote.tracks.map((record) => [record.content_hash_sha256, record]));
   const remotePlaylists = new Map(remote.playlists.map((record) => [record.cloud_id, record]));
@@ -114,12 +111,7 @@ export function buildLocalMutationManifest(
   for (const row of outbox) {
     const version = nextVersion();
     if (row.entity_type === 'track') {
-      if (row.operation === 'delete') {
-        const hash = parseDeletePayload(row).content_hash_sha256;
-        if (typeof hash === 'string' && hash && !trackHashesStillPresent.has(hash)) {
-          tracks.set(hash, createCloudDeletedTrackRecordV2(hash, version, row.created_at * 1000));
-        }
-      } else if (row.local_id != null) {
+      if (row.operation === 'upsert' && row.local_id != null) {
         const entry = prepared?.trackEntryByLocalId.get(row.local_id);
         if (entry) {
           const reconciled = preserveExistingTrackBlobKeys(
@@ -149,21 +141,4 @@ export function buildLocalMutationManifest(
     tracks: [...tracks.values()],
     playlists: [...playlists.values()],
   };
-}
-
-export async function findDeletedTrackHashesStillPresent(
-  outbox: readonly MobileCloudOutboxRow[],
-): Promise<Set<string>> {
-  const hashes = new Set<string>();
-  for (const row of outbox) {
-    if (row.entity_type !== 'track' || row.operation !== 'delete') continue;
-    const hash = parseDeletePayload(row).content_hash_sha256;
-    if (typeof hash !== 'string' || !hash || hashes.has(hash)) continue;
-    const stillExists = await getDb().getFirstAsync<{ present: number }>(
-      `SELECT EXISTS(SELECT 1 FROM tracks WHERE content_hash_sha256 = ? LIMIT 1) AS present`,
-      [hash],
-    );
-    if (stillExists?.present) hashes.add(hash);
-  }
-  return hashes;
 }

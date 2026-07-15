@@ -1,4 +1,9 @@
-import type { CloudStorageJurisdiction, CloudSyncProgress, CloudSyncResult } from '@ton/core';
+import type {
+  CloudR2CleanupPreview,
+  CloudStorageJurisdiction,
+  CloudSyncProgress,
+  CloudSyncResult,
+} from '@ton/core';
 
 export type CloudForm = {
   accountId: string;
@@ -17,6 +22,9 @@ export type CloudCardProps = {
   autoSyncStatusLabel: string;
   canRun: boolean;
   connectedLabel: string | null;
+  cleanupChecking: boolean;
+  cleanupPreview: CloudR2CleanupPreview | null;
+  cleanupStatus: string | null;
   description: string;
   failedLabel: string | null;
   form: CloudForm;
@@ -32,6 +40,7 @@ export type CloudCardProps = {
   resultLabel: string | null;
   labels: Record<string, string>;
   onCancel: () => void;
+  onCleanup: () => Promise<'completed' | 'stale' | 'cancelled'>;
   onFetch: () => void;
   onLoad: () => void;
   onSaveTest: () => void;

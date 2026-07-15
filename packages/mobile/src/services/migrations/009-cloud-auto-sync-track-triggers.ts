@@ -47,26 +47,6 @@ export async function createCloudAutoSyncTrackTriggers009(db: SQLiteDatabase): P
         created_at = strftime('%s','now');
 
       INSERT INTO cloud_sync_outbox(
-        scope_id, entity_type, entity_key, local_id, operation, payload_json, generation
-      )
-      SELECT '', 'track', 'hash:' || OLD.content_hash_sha256, NULL, 'delete',
-        json_object(
-          'content_hash_sha256', OLD.content_hash_sha256,
-          'file_path', OLD.file_path,
-          'cover_art_path', OLD.cover_art_path
-        ),
-        (SELECT generation FROM cloud_sync_control WHERE id = 1)
-      WHERE OLD.content_hash_sha256 IS NOT NULL
-        AND OLD.content_hash_sha256 != ''
-        AND OLD.content_hash_sha256 IS NOT NEW.content_hash_sha256
-      ON CONFLICT(scope_id, entity_type, entity_key) DO UPDATE SET
-        local_id = NULL,
-        operation = excluded.operation,
-        payload_json = excluded.payload_json,
-        generation = excluded.generation,
-        created_at = strftime('%s','now');
-
-      INSERT INTO cloud_sync_outbox(
         scope_id, entity_type, entity_key, local_id, operation, generation
       )
       SELECT '', 'playlist', CAST(p.id AS TEXT), p.id, 'upsert',
@@ -84,33 +64,24 @@ export async function createCloudAutoSyncTrackTriggers009(db: SQLiteDatabase): P
     END;
 
     DROP TRIGGER IF EXISTS cloud_tracks_delete;
+    DROP TRIGGER IF EXISTS cloud_tracks_delete_end;
     CREATE TRIGGER cloud_tracks_delete
     BEFORE DELETE ON tracks
-    WHEN (SELECT suppress_outbox FROM cloud_sync_control WHERE id = 1) = 0
     BEGIN
-      UPDATE cloud_sync_control SET generation = generation + 1 WHERE id = 1;
-      DELETE FROM cloud_sync_outbox
-      WHERE scope_id = '' AND entity_type = 'track' AND entity_key = CAST(OLD.id AS TEXT);
-      INSERT INTO cloud_sync_outbox(
-        scope_id, entity_type, entity_key, local_id, operation, payload_json, generation
-      ) VALUES (
-        '', 'track',
-        CASE WHEN OLD.content_hash_sha256 IS NOT NULL AND OLD.content_hash_sha256 != ''
-          THEN 'hash:' || OLD.content_hash_sha256 ELSE CAST(OLD.id AS TEXT) END,
-        OLD.id, 'delete',
-        json_object(
-          'content_hash_sha256', OLD.content_hash_sha256,
-          'file_path', OLD.file_path,
-          'cover_art_path', OLD.cover_art_path
-        ),
-        (SELECT generation FROM cloud_sync_control WHERE id = 1)
-      )
-      ON CONFLICT(scope_id, entity_type, entity_key) DO UPDATE SET
-        local_id = excluded.local_id,
-        operation = excluded.operation,
-        payload_json = excluded.payload_json,
-        generation = excluded.generation,
-        created_at = strftime('%s','now');
+      UPDATE cloud_sync_control
+      SET suppress_outbox = suppress_outbox + 1
+      WHERE id = 1;
     END;
+
+    CREATE TRIGGER cloud_tracks_delete_end
+    AFTER DELETE ON tracks
+    BEGIN
+      UPDATE cloud_sync_control
+      SET suppress_outbox = MAX(0, suppress_outbox - 1)
+      WHERE id = 1;
+    END;
+
+    DELETE FROM cloud_sync_outbox
+    WHERE entity_type = 'track' AND operation = 'delete';
   `);
 }

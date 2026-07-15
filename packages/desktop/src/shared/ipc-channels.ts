@@ -58,6 +58,8 @@ export const ALLOWED_INVOKE_CHANNELS = [
   'cloud:upload-missing',
   'cloud:fetch-library',
   'cloud:sync-now',
+  'cloud:preview-cleanup',
+  'cloud:execute-cleanup',
   'cloud:cancel',
   'discord:sync-activity',
   'discord:clear-activity',

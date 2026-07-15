@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, Switch, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { SettingsCard, SectionHeader } from './primitives';
-import { CloudField, CloudHelpModal, CloudPill } from './cloud-card-controls';
+import { CloudCleanupModal, CloudField, CloudHelpModal, CloudPill } from './cloud-card-controls';
 import type { CloudCardProps } from './cloud-card-types';
 
 export function CloudCard({
@@ -13,6 +13,9 @@ export function CloudCard({
   autoSyncStatusLabel,
   canRun,
   connectedLabel,
+  cleanupChecking,
+  cleanupPreview,
+  cleanupStatus,
   description,
   failedLabel,
   form,
@@ -28,6 +31,7 @@ export function CloudCard({
   resultLabel,
   labels,
   onCancel,
+  onCleanup,
   onFetch,
   onLoad,
   onSaveTest,
@@ -38,6 +42,7 @@ export function CloudCard({
   title,
 }: CloudCardProps) {
   const [showHelp, setShowHelp] = useState(false);
+  const [showCleanup, setShowCleanup] = useState(false);
 
   const card = (
     <SettingsCard>
@@ -82,6 +87,21 @@ export function CloudCard({
         </View>
       ) : (
         <View>
+          {progressLabel && (
+            <Text className="text-text-secondary text-xs mb-1">{progressLabel}</Text>
+          )}
+          {resultLabel && !progress && (
+            <Text className="text-text-secondary text-xs mb-1">{resultLabel}</Text>
+          )}
+          {connectedLabel && !progress && !result && (
+            <Text className="text-text-secondary text-xs mb-1">{connectedLabel}</Text>
+          )}
+          {cleanupStatus && !progress && (
+            <Text className="text-text-secondary text-xs mb-1">{cleanupStatus}</Text>
+          )}
+          {failedLabel && (
+            <Text className="text-red-300 text-xs mb-1">{failedLabel}</Text>
+          )}
           <CloudField label={labels.accountId} value={form.accountId} onChange={(accountId) => onUpdate({ accountId })} />
           <CloudField label={labels.bucket} value={form.bucket} onChange={(bucket) => onUpdate({ bucket })} />
           <CloudField label={labels.prefix} value={form.prefix} onChange={(prefix) => onUpdate({ prefix })} placeholder="ton" />
@@ -113,18 +133,34 @@ export function CloudCard({
             <CloudPill gridItem disabled={isBusy || !canRun} label={labels.syncNow} onPress={onSync} />
             <CloudPill gridItem disabled={!isBusy} label={labels.cancel} onPress={onCancel} />
           </View>
-          {progressLabel && (
-            <Text className="text-text-secondary text-xs mt-1">{progressLabel}</Text>
-          )}
-          {resultLabel && !progress && (
-            <Text className="text-text-secondary text-xs mt-1">{resultLabel}</Text>
-          )}
-          {connectedLabel && !progress && !result && (
-            <Text className="text-text-secondary text-xs mt-1">{connectedLabel}</Text>
-          )}
-          {failedLabel && (
-            <Text className="text-red-300 text-xs mt-1">{failedLabel}</Text>
-          )}
+          <View
+            className="border border-red-500"
+            style={{
+              backgroundColor: 'rgba(239, 68, 68, 0.06)',
+              borderRadius: 14,
+              marginTop: 2,
+              padding: 12,
+            }}
+          >
+            <Text className="text-red-400 text-sm font-semibold">
+              {labels.cleanupSectionTitle}
+            </Text>
+            <Text className="text-text-secondary text-xs mt-1 mb-3" style={{ lineHeight: 18 }}>
+              {labels.cleanupDescription}
+            </Text>
+            <CloudPill
+              danger
+              fullWidth
+              disabled={isBusy || cleanupChecking || !cleanupPreview
+                || (cleanupPreview.cloudOnlyTracks === 0 && cleanupPreview.objectsToDelete === 0)}
+              label={cleanupChecking
+                ? labels.cleanupChecking
+                : cleanupPreview && (cleanupPreview.cloudOnlyTracks > 0 || cleanupPreview.objectsToDelete > 0)
+                  ? labels.cleanupButton
+                  : labels.cleanupClean}
+              onPress={() => setShowCleanup(true)}
+            />
+          </View>
         </View>
       )}
     </SettingsCard>
@@ -135,6 +171,19 @@ export function CloudCard({
       {loaded ? card : <Pressable onPress={onLoad}>{card}</Pressable>}
       {showHelp && (
         <CloudHelpModal title={helpTitle} steps={helpSteps} onClose={() => setShowHelp(false)} />
+      )}
+      {showCleanup && cleanupPreview && (
+        <CloudCleanupModal
+          busy={isBusy}
+          labels={labels}
+          onAbort={onCancel}
+          onClose={() => setShowCleanup(false)}
+          onConfirm={() => {
+            void onCleanup().then((outcome) => {
+              if (outcome !== 'stale') setShowCleanup(false);
+            });
+          }}
+        />
       )}
     </>
   );

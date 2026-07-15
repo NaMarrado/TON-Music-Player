@@ -46,6 +46,7 @@ export function formatCloudProgress(
 export function formatCloudError(error: unknown, t: Translator): string {
   if (!(error instanceof Error)) return t('cloudFailed');
   const errorKey = normalizeCloudStorageErrorKey(error.message);
+  if (error.message.startsWith('cloud_cleanup_')) return t(error.message);
   return errorKey ? t(errorKey) : error.message || t('cloudFailed');
 }
 
