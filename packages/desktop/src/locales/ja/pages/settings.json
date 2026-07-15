@@ -132,7 +132,7 @@
   "cloudPhase_testing": "テスト",
   "cloudPhase_hashing": "ハッシュ化",
   "cloudPhase_reading-manifest": "マニフェストの読み取り",
-  "cloudPhase_uploading": "アップロード中",
+  "cloudPhase_uploading": "ファイルをアップロード中",
   "cloudPhase_downloading": "ダウンロード中",
   "cloudPhase_writing-manifest": "マニフェストの作成",
   "cloudPhase_importing": "インポート中",

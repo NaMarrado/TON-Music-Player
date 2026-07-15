@@ -157,7 +157,7 @@ export function CloudAutoSyncSummary({
         {nextRetryText && (
           <span style={secondaryStyle}>{t('cloudAutoSyncNextRetry', { time: nextRetryText })}</span>
         )}
-        {status.lastErrorKey && status.state === 'error' && (
+        {status.lastErrorKey && (status.state === 'error' || status.state === 'backing-off') && (
           <span style={secondaryStyle}>{t(status.lastErrorKey)}</span>
         )}
       </div>

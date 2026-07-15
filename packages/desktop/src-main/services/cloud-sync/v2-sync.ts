@@ -115,6 +115,7 @@ export async function syncCloudLibraryV2ForDesktop(
     client,
     options,
     result,
+    tracks: serialized.tracks,
     requiredAudio: mutations.requiredAudio,
     requiredArtwork: mutations.requiredArtwork,
     repairObjectKeys: mutations.repairObjectKeys,

@@ -132,7 +132,7 @@
   "cloudPhase_testing": "Verifica",
   "cloudPhase_hashing": "Calcolo hash",
   "cloudPhase_reading-manifest": "Lettura manifest",
-  "cloudPhase_uploading": "Caricamento",
+  "cloudPhase_uploading": "Caricamento file",
   "cloudPhase_downloading": "Download",
   "cloudPhase_writing-manifest": "Scrittura manifest",
   "cloudPhase_importing": "Importazione",

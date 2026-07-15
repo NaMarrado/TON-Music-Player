@@ -132,7 +132,7 @@
   "cloudPhase_testing": "Probando",
   "cloudPhase_hashing": "Calculando hashes",
   "cloudPhase_reading-manifest": "Leyendo manifiesto",
-  "cloudPhase_uploading": "Subiendo",
+  "cloudPhase_uploading": "Subiendo archivos",
   "cloudPhase_downloading": "Descargando",
   "cloudPhase_writing-manifest": "Guardando manifiesto",
   "cloudPhase_importing": "Importando",

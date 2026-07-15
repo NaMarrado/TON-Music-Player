@@ -132,7 +132,7 @@
   "cloudPhase_testing": "Testuji",
   "cloudPhase_hashing": "Hashuji",
   "cloudPhase_reading-manifest": "Čtu manifest",
-  "cloudPhase_uploading": "Nahrávám",
+  "cloudPhase_uploading": "Nahrávám soubory",
   "cloudPhase_downloading": "Stahuji",
   "cloudPhase_writing-manifest": "Zapisuji manifest",
   "cloudPhase_importing": "Importuji",

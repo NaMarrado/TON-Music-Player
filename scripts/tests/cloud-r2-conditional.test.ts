@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import test from 'node:test';
 import type { CloudStorageConfig } from '../../packages/core/src/types/cloud-sync.ts';
 import { DesktopR2Client } from '../../packages/desktop/src-main/services/cloud-sync/r2-client.ts';
@@ -72,5 +75,39 @@ test('R2 transport exposes conditional 200/304/404 and PUT 412 without unsafe fa
     );
   } finally {
     globalThis.fetch = originalFetch;
+  }
+});
+
+test('desktop R2 file upload sends a signed fixed content length', async () => {
+  const originalFetch = globalThis.fetch;
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'ton-r2-upload-'));
+  const filePath = path.join(directory, 'fixture.m4a');
+  const body = Buffer.from('fixed-length-audio-fixture');
+  await fs.writeFile(filePath, body);
+  try {
+    let requestHeaders: Headers | null = null;
+    globalThis.fetch = async (_input, init) => {
+      requestHeaders = new Headers(init?.headers);
+      return new Response(null, { status: 200, headers: { etag: '"uploaded"' } });
+    };
+
+    const client = new DesktopR2Client(CONFIG);
+    const result = await client.uploadFile(
+      'ton/Library/fixture.m4a',
+      filePath,
+      'audio/mp4',
+      'a'.repeat(64),
+      { ifNoneMatch: '*' },
+    );
+
+    assert.deepEqual(result, { status: 'ok', etag: '"uploaded"' });
+    assert.equal(requestHeaders?.get('content-length'), String(body.byteLength));
+    assert.match(
+      requestHeaders?.get('authorization') ?? '',
+      /SignedHeaders=[^\s]*content-length[^\s]*/,
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+    await fs.rm(directory, { recursive: true, force: true });
   }
 });

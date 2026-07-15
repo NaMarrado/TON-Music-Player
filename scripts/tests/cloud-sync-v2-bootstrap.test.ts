@@ -64,9 +64,11 @@ test('object upload batches pick up requirements added by a CAS rebase', async (
   };
   const first = {
     key: 'objects/initial', filePath: '/initial', contentType: 'audio/mpeg', hash: HASH_A,
+    progressGroup: HASH_A,
   };
   const discoveredAfterRebase = {
     key: 'objects/rebased', filePath: '/rebased', contentType: 'audio/mpeg', hash: HASH_B,
+    progressGroup: HASH_B,
   };
   const repair = {
     key: 'objects/existing', filePath: '/existing', contentType: 'image/jpeg', hash: HASH_A,
@@ -86,6 +88,26 @@ test('object upload batches pick up requirements added by a CAS rebase', async (
     [...completed].sort(),
     ['objects/existing', 'objects/initial', 'objects/rebased'],
   );
+});
+
+test('audio and artwork count as one uploaded track while playlist covers stay auxiliary', async () => {
+  const progress: Array<[number, number]> = [];
+  await uploadPendingCloudObjects(
+    [
+      { key: 'audio/a', filePath: '/a', contentType: 'audio/mp4', hash: HASH_A, progressGroup: HASH_A },
+      { key: 'art/a', filePath: '/a.jpg', contentType: 'image/jpeg', hash: HASH_B, progressGroup: HASH_A },
+      { key: 'audio/b', filePath: '/b', contentType: 'audio/mp4', hash: HASH_B, progressGroup: HASH_B },
+      { key: 'playlist/cover', filePath: '/cover.jpg', contentType: 'image/jpeg', hash: HASH_A },
+    ],
+    new Set(),
+    new Set(),
+    {
+      headObject: async () => false,
+      uploadObject: async () => 'uploaded',
+    },
+    (current, total) => progress.push([current, total]),
+  );
+  assert.deepEqual(progress, [[0, 2], [1, 2], [2, 2], [2, 2]]);
 });
 
 test('V1 bootstrap merges by updated_at, keeps earliest download and lets local win ties', () => {
