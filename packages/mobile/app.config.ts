@@ -3,7 +3,7 @@ import type { ExpoConfig } from 'expo/config';
 const config: ExpoConfig = {
   name: 'TON',
   slug: 'ton-player',
-  version: '1.0.26',
+  version: '1.0.27',
   icon: './assets/icon.png',
   scheme: 'ton',
   orientation: 'portrait',
@@ -11,7 +11,7 @@ const config: ExpoConfig = {
   newArchEnabled: true,
   android: {
     package: 'com.ton.player',
-    versionCode: 1000026,
+    versionCode: 1000027,
     icon: './assets/android-icon.png',
     permissions: [
       'android.permission.FOREGROUND_SERVICE',
@@ -29,7 +29,7 @@ const config: ExpoConfig = {
   },
   ios: {
     bundleIdentifier: 'com.ton.player',
-    buildNumber: '1000026',
+    buildNumber: '1000027',
     icon: './assets/icon.png',
     infoPlist: {
       NSSupportsLiveActivities: true,
