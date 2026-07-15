@@ -62,9 +62,10 @@ export function useDownloadsPageState() {
     ['downloading', 'resolving', 'converting'].includes(item.status),
   );
   const queuedItems = items.filter((item) => item.status === 'pending');
-  const completedItems = items.filter((item) =>
-    ['done', 'error', 'cancelled'].includes(item.status),
-  );
+  const failedItems = items
+    .filter((item) => item.status === 'error')
+    .sort((left, right) => right.id - left.id);
+  const completedItems = items.filter((item) => ['done', 'cancelled'].includes(item.status));
 
   const clearActions = [
     { label: 'clearAll', color: undefined, action: clearAll },
@@ -77,6 +78,7 @@ export function useDownloadsPageState() {
     clearActions,
     clearMenuRef,
     completedItems,
+    failedItems,
     handleClearAction,
     handleConfirmCancelAll,
     isCancellingAll,

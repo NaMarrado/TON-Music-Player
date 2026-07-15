@@ -41,9 +41,9 @@ export function useDownloadGroups() {
       }
     };
 
+    pushSection('failed', t('failed'), [...errorIds].reverse());
     pushSection('active', t('active'), activeIds);
     pushSection('queued', t('queued'), pendingIds);
-    pushSection('failed', t('failed'), errorIds);
     pushSection('completed', t('completed'), completedIds);
 
     return entries;

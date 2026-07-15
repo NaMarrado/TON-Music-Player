@@ -12,6 +12,11 @@ export { slugify } from './utils/slugify';
 export { debounce } from './utils/debounce';
 export { hashBuffer } from './utils/hash';
 export {
+  AGE_RESTRICTED_DOWNLOAD_MESSAGE,
+  isAgeRestrictedDownloadError,
+  toDownloadFailureMessage,
+} from './utils/download-failure';
+export {
   APP_NAME,
   APP_VERSION,
   TON_DISCORD_URL,

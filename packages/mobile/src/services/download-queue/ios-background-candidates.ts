@@ -1,3 +1,4 @@
+import { isAgeRestrictedDownloadError } from '@ton/core';
 import { prepareDownloadSource } from '../downloader';
 import { cleanupFailedDownload } from '../downloader/filesystem';
 import { invalidatePoToken } from '../po-token-service';
@@ -97,6 +98,7 @@ export async function tryStartNextIosBackgroundCandidate(
   queue: IosBackgroundQueueFacade,
   item: IosBackgroundDownloadSnapshotItem,
 ): Promise<boolean> {
+  if (isAgeRestrictedDownloadError(item.error)) return false;
   if (!item.error || !NATIVE_CANDIDATE_REJECTION_RE.test(item.error)) return false;
   const existingRetry = state.candidateRetryPromisesByItemId.get(item.itemId);
   if (existingRetry) {

@@ -1,4 +1,8 @@
 import { Platform } from 'react-native';
+import {
+  AGE_RESTRICTED_DOWNLOAD_MESSAGE,
+  isAgeRestrictedDownloadError,
+} from '@ton/core';
 import { isWebViewReady, waitForWebViewReady } from '../js-evaluator';
 import {
   getAudioUrlViaAndroid,
@@ -125,6 +129,9 @@ async function tryAudioStrategy(
       || (error instanceof Error && error.name === 'AbortError')
     ) {
       throw new Error('download_cancelled');
+    }
+    if (isAgeRestrictedDownloadError(message)) {
+      throw new Error(AGE_RESTRICTED_DOWNLOAD_MESSAGE);
     }
     if (isYouTubeResolverError(error) && error.status === 429) {
       console.log(`[YT-AUDIO] ${strategy} rate limited; stopping provider resolution`);

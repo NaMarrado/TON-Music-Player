@@ -1,4 +1,8 @@
-import { DOWNLOAD_RETRY_MAX } from '@ton/core';
+import {
+  DOWNLOAD_RETRY_MAX,
+  isAgeRestrictedDownloadError,
+  toDownloadFailureMessage,
+} from '@ton/core';
 import {
   completeQueueItemRecord,
   requeueQueueItem,
@@ -90,7 +94,11 @@ export async function failQueueItem(
     return;
   }
 
-  runtime.consecutiveErrors += 1;
+  const isAgeRestricted = isAgeRestrictedDownloadError(message);
+  const displayMessage = toDownloadFailureMessage(message);
+  if (!isAgeRestricted) {
+    runtime.consecutiveErrors += 1;
+  }
   console.log(
     '[DL-QUEUE] Download FAILED (consecutive:',
     runtime.consecutiveErrors,
@@ -112,9 +120,9 @@ export async function failQueueItem(
       retryCount: nextRetryCount,
       status: 'retrying',
       progress: 0,
-      error: message,
+      error: displayMessage,
     }));
-    await updateQueueItemStatus(itemId, 'retrying', message);
+    await updateQueueItemStatus(itemId, 'retrying', displayMessage);
     await updateQueueItemRetry(itemId, nextRetryCount);
     queue.notify();
 
@@ -139,11 +147,14 @@ export async function failQueueItem(
   }
 
   clearProgressTracking(runtime, itemId);
+  if (isAgeRestricted) {
+    runtime.consecutiveErrors = 0;
+  }
   updateQueueItem(runtime, itemId, (existing) => ({
     ...existing,
     status: 'error',
     progress: 0,
-    error: message,
+    error: displayMessage,
   }));
-  await updateQueueItemStatus(itemId, 'error', message);
+  await updateQueueItemStatus(itemId, 'error', displayMessage);
 }

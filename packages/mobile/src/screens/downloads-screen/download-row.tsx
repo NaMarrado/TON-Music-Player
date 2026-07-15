@@ -19,7 +19,12 @@ export const DownloadRow = memo(function DownloadRow({ itemId }: { itemId: numbe
   return (
     <View
       className="flex-row items-center px-4"
-      style={{ height: 64, borderBottomWidth: 0.5, borderBottomColor: 'rgba(255,255,255,0.06)' }}
+      style={{
+        minHeight: 64,
+        paddingVertical: isError ? 8 : 0,
+        borderBottomWidth: 0.5,
+        borderBottomColor: 'rgba(255,255,255,0.06)',
+      }}
     >
       <View
         className="items-center justify-center rounded-lg"
@@ -51,7 +56,10 @@ export const DownloadRow = memo(function DownloadRow({ itemId }: { itemId: numbe
           </View>
         )}
         {isError && item.error && (
-          <Text style={{ fontSize: 10, color: '#ef4444', marginTop: 2 }} numberOfLines={1}>
+          <Text
+            style={{ fontSize: 10, lineHeight: 13, color: '#ef4444', marginTop: 2 }}
+            numberOfLines={2}
+          >
             {item.error}
           </Text>
         )}

@@ -50,6 +50,22 @@ export const DownloadItemRow = memo(function DownloadItemRow({ item, t }: Downlo
               marginTop: '2px',
             }}
           />
+          {isFailed && item.error_message && (
+            <div
+              style={{
+                color: '#ef4444',
+                fontSize: '0.7rem',
+                lineHeight: 1.35,
+                marginTop: '3px',
+                overflow: 'hidden',
+                display: '-webkit-box',
+                WebkitBoxOrient: 'vertical',
+                WebkitLineClamp: 2,
+              }}
+            >
+              {item.error_message}
+            </div>
+          )}
           {isActive && <DownloadProgressBar item={item} />}
         </div>
 
