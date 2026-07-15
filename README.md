@@ -26,7 +26,7 @@ Production builds are published on the [GitHub Releases](https://github.com/NaMa
 - **Android:** installable APK
 - **iOS:** build and sign the app from source with your own Apple account
 
-> Windows and macOS builds are not code-signed, so the operating system may show a security warning on first launch. Android v1.0.15 and newer use one permanent project signing key. Upgrading from v1.0.14 or older requires uninstalling TON once because those builds used temporary keys.
+> Windows and macOS builds are not code-signed, so the operating system may show a security warning on first launch.
 
 ## 🤍 Support TON
 
@@ -45,7 +45,7 @@ If TON is useful to you, the easiest way to support the project is to star the r
 - 🔊 **Tired of jumping from too quiet to too loud?** Phone volume controls often move in steps that are simply too large. TON adds its own independent volume layer without changing the device volume, letting you fine-tune playback between those system steps.
 - 📥 **Download Entire Playlists:** Paste a Spotify or YouTube playlist and TON creates it locally, processes tracks you are permitted to download, and preserves their original order. Large playlists are supported, subject to content availability and the terms of the source platform.
 
-  > **Copyright notice:** TON's download features were tested only with no-copyright and royalty-free music. TON is not intended for downloading copyrighted material without permission. You are solely responsible for ensuring that you have the right to download and use each track. The developer is not responsible for content downloaded by users.
+  > **Copyright notice:** Only download content you own or have permission to use. TON does not provide or host music and is not affiliated with Spotify, YouTube, or SoundCloud. Users are responsible for complying with copyright law and the source platform’s terms.
 
 - 🔀 **Actual Shuffle:** TON shuffles your entire queue and plays through every song instead of repeatedly picking from the same small group.
 - ⚡ **Lightweight by Design:** A fast, focused player without ads, bloated dashboards, or unnecessary background services.
@@ -128,8 +128,6 @@ packages/
 - FFmpeg, yt-dlp, YouTube.js, and native media playback
 - Cloudflare R2 through the S3-compatible API
 - pnpm workspaces
-
-> Only download or sync media that you are permitted to use. TON does not provide or host music.
 
 ## 📄 License
 
