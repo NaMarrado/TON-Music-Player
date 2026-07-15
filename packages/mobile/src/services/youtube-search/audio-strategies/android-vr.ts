@@ -1,3 +1,7 @@
+import {
+  AGE_RESTRICTED_DOWNLOAD_MESSAGE,
+  isAgeRestrictedDownloadError,
+} from '@ton/core';
 import { ANDROID_MEDIA_UA } from '../constants';
 import { YouTubeResolverError } from '../errors';
 import type { ResolvedAudioUrl } from '../types';
@@ -76,6 +80,10 @@ export async function getAudioUrlViaAndroidVR(
     const data = await requestAndroidVrPlayer(videoId, visitorData, options.signal);
 
     if (data.playabilityStatus?.status !== 'OK') {
+      const playabilityError = getPlayabilityError(data);
+      if (isAgeRestrictedDownloadError(playabilityError)) {
+        throw new Error(AGE_RESTRICTED_DOWNLOAD_MESSAGE);
+      }
       const canRefresh = data.playabilityStatus?.status === 'LOGIN_REQUIRED';
       if (canRefresh && attempt === 0) {
         invalidateAndroidVrVisitorData();
@@ -85,7 +93,7 @@ export async function getAudioUrlViaAndroidVR(
 
       throw new YouTubeResolverError({
         canRefresh,
-        message: `ANDROID_VR player rejected video: ${getPlayabilityError(data)}`,
+        message: `ANDROID_VR player rejected video: ${playabilityError}`,
         stage: 'player',
         strategy: 'ANDROID_VR',
       });

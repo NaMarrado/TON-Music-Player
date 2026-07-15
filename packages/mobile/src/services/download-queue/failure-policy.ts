@@ -1,3 +1,5 @@
+import { isAgeRestrictedDownloadError } from '@ton/core';
+
 const HTTP_DOWNLOAD_FAILURE_RE = /\bHTTP (\d{3})\b/;
 const NON_RETRYABLE_LOCAL_FAILURES = [
   /UNIQUE constraint failed/i,
@@ -16,6 +18,10 @@ function parseDownloadHttpStatus(message: string): number | null {
 }
 
 export function shouldRetryQueueFailure(message: string): boolean {
+  if (isAgeRestrictedDownloadError(message)) {
+    return false;
+  }
+
   if (NON_RETRYABLE_LOCAL_FAILURES.some((pattern) => pattern.test(message))) {
     return false;
   }

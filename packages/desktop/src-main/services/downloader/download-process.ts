@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { createInterface } from 'readline';
 import { randomUUID } from 'crypto';
-import type { DownloadItem } from '@ton/core';
+import { toDownloadFailureMessage, type DownloadItem } from '@ton/core';
 import { getFfmpegPathAsync, getYtDlpPathAsync } from '../binary-manager';
 import { findNonCollidingFileAsync } from '../library-paths';
 import { buildSafeOutputTitle, findOutputFile, getDownloadDir } from './file-output';
@@ -83,7 +83,10 @@ export async function downloadWithYtDlp(
         } else if (code === 0) {
           resolve();
         } else {
-          reject(new Error(errorLines.at(-1) || `yt-dlp exited with code ${code}`));
+          const details = errorLines.length > 0
+            ? errorLines.join('\n')
+            : `yt-dlp exited with code ${code}`;
+          reject(new Error(toDownloadFailureMessage(details)));
         }
       });
       subprocess.on('error', reject);

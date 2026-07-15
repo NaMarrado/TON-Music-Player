@@ -1,4 +1,9 @@
-import { DOWNLOAD_RETRY_MAX, MAX_CONCURRENT_DOWNLOADS } from '@ton/core';
+import {
+  DOWNLOAD_RETRY_MAX,
+  isAgeRestrictedDownloadError,
+  MAX_CONCURRENT_DOWNLOADS,
+  toDownloadFailureMessage,
+} from '@ton/core';
 import type { DownloadItem, DownloadRequest } from '@ton/core';
 import { downloadItem } from '../downloader';
 import { createDownloadCallbacks } from './callbacks';
@@ -183,11 +188,14 @@ export class DownloadQueue {
             return;
           }
 
-          didFail = true;
-          this.consecutiveErrors += 1;
-          const message = error instanceof Error ? error.message : String(error);
+          const rawMessage = error instanceof Error ? error.message : String(error);
+          const isAgeRestricted = isAgeRestrictedDownloadError(rawMessage);
+          const message = toDownloadFailureMessage(rawMessage);
+          console.warn('[DL-QUEUE] Download failed:', nextDownload.id, rawMessage);
 
-          if (nextDownload.retry_count < DOWNLOAD_RETRY_MAX) {
+          if (!isAgeRestricted && nextDownload.retry_count < DOWNLOAD_RETRY_MAX) {
+            didFail = true;
+            this.consecutiveErrors += 1;
             requeueDownloadAfterFailure(nextDownload.id);
             callbacks.onProgress({
               id: nextDownload.id,
@@ -198,6 +206,13 @@ export class DownloadQueue {
               size: '',
             });
             return;
+          }
+
+          if (isAgeRestricted) {
+            this.consecutiveErrors = 0;
+          } else {
+            didFail = true;
+            this.consecutiveErrors += 1;
           }
 
           markDownloadError(nextDownload.id, message);

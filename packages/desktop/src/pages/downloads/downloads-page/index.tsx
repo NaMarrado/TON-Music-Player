@@ -11,6 +11,7 @@ export function DownloadsPage() {
     clearActions,
     clearMenuRef,
     completedItems,
+    failedItems,
     handleClearAction,
     handleConfirmCancelAll,
     isCancellingAll,
@@ -22,11 +23,14 @@ export function DownloadsPage() {
     showClearMenu,
   } = useDownloadsPageState();
 
-  const hasClearable = completedItems.length > 0;
+  const hasClearable = completedItems.length > 0 || failedItems.length > 0;
   const hasCancellable = activeItems.length > 0 || queuedItems.length > 0;
   const totalActive = activeItems.length + queuedItems.length;
 
   const sections = [
+    failedItems.length > 0
+      ? { key: 'failed', label: t('error'), items: failedItems }
+      : null,
     activeItems.length > 0
       ? { key: 'active', label: t('active'), items: activeItems }
       : null,
