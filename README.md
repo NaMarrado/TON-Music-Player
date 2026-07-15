@@ -43,7 +43,7 @@ If TON is useful to you, the easiest way to support the project is to star the r
 
 - 🔒 **Fully Local, No Account Required:** TON works without registration, sign-in, or a mandatory online service. Your music, playlists, settings, and playback data stay on your device; cloud sync is entirely optional.
 - 🔊 **Tired of jumping from too quiet to too loud?** Phone volume controls often move in steps that are simply too large. TON adds its own independent volume layer without changing the device volume, letting you fine-tune playback between those system steps.
-- 📥 **Download Entire Playlists:** Paste a Spotify or YouTube playlist and TON creates it locally, downloads the tracks, and adds each song in the original order as soon as it is ready. Playlists with more than 1,000 songs are supported; downloads take longer because TON respects YouTube rate limits.
+- 📥 **Download Entire Playlists:** Paste a Spotify or YouTube playlist and TON creates it locally, processes tracks you are permitted to download, and preserves their original order. Large playlists are supported, subject to content availability and the terms of the source platform.
 
   > **Copyright notice:** TON's download features were tested only with no-copyright and royalty-free music. TON is not intended for downloading copyrighted material without permission. You are solely responsible for ensuring that you have the right to download and use each track. The developer is not responsible for content downloaded by users.
 
