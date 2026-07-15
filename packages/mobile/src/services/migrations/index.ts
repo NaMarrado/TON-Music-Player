@@ -9,6 +9,7 @@ import { migrate007 } from './007-canonical-library';
 import { migrate008 } from './008-downloaded-at';
 import { migrate009 } from './009-cloud-auto-sync';
 import { migrate010 } from './010-cloud-v2-activation';
+import { migrate011 } from './011-schema-drift-repair';
 
 interface Migration {
   version: number;
@@ -26,6 +27,7 @@ const MIGRATIONS: Migration[] = [
   { version: 8, run: migrate008 },
   { version: 9, run: migrate009 },
   { version: 10, run: migrate010 },
+  { version: 11, run: migrate011 },
 ];
 
 export async function runMigrations(db: SQLiteDatabase): Promise<void> {

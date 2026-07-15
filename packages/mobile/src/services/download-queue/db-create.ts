@@ -1,3 +1,4 @@
+import type { SQLiteBindValue } from 'expo-sqlite';
 import { getDb } from '../database';
 import type { DownloadInput } from '../downloader';
 
@@ -6,7 +7,7 @@ const INSERT_QUEUE_SQL = `INSERT INTO download_queue (
   playlist_id, duration_ms, format, quality_profile, status
 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'm4a', ?, 'pending')`;
 
-function inputValues(input: DownloadInput): unknown[] {
+function inputValues(input: DownloadInput): SQLiteBindValue[] {
   return [
     input.sourceUrl, input.source, input.sourceId, input.title, input.artist,
     input.album, input.coverUrl, input.playlistId, input.durationMs,

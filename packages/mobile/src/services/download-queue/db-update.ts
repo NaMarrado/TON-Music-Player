@@ -1,3 +1,4 @@
+import type { SQLiteBindValue } from 'expo-sqlite';
 import { getDb } from '../database';
 import type { DownloadFormat } from '../downloader';
 
@@ -49,7 +50,7 @@ export async function completeQueueItemRecord(id: number, trackId: number): Prom
   return completed;
 }
 
-async function updateValue(sql: string, values: unknown[]): Promise<void> {
+async function updateValue(sql: string, values: SQLiteBindValue[]): Promise<void> {
   try { await getDb().runAsync(sql, values); }
   catch { /* non-fatal */ }
 }

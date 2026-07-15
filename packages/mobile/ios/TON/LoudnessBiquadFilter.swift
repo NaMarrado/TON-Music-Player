@@ -21,6 +21,14 @@ struct LoudnessBiquadFilter {
   private var z1 = 0.0
   private var z2 = 0.0
 
+  init(b0: Double, b1: Double, b2: Double, a1: Double, a2: Double) {
+    self.a1 = a1
+    self.a2 = a2
+    self.b0 = b0
+    self.b1 = b1
+    self.b2 = b2
+  }
+
   mutating func process(_ sample: Float) -> Double {
     let x = Double(sample)
     let y = b0 * x + z1
