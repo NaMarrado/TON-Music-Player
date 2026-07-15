@@ -39,16 +39,32 @@ export type {
 export type { DownloadQualityProfile, SettingsMap, SettingKey } from './settings';
 export { PERSISTED_SETTING_DEFAULTS, SETTING_DEFAULTS } from './settings';
 export type {
+  CloudAbortSignal,
+  CloudAutoSyncState,
+  CloudAutoSyncStatus,
+  CloudConditionalJsonReadResult,
+  CloudConditionalReadOptions,
+  CloudConditionalWriteOptions,
+  CloudConditionalWriteResult,
+  CloudDeletedPlaylistRecordV2,
+  CloudDeletedTrackRecordV2,
+  CloudEntityVersionV2,
   CloudLibraryManifestV1,
+  CloudLibraryManifestV2,
+  CloudLivePlaylistRecordV2,
+  CloudLiveTrackRecordV2,
   CloudPlaylistEntry,
+  CloudPlaylistRecordV2,
   CloudStorageConfig,
   CloudStorageJurisdiction,
   CloudStoragePublicConfig,
   CloudSyncPhase,
   CloudSyncProgress,
   CloudSyncResult,
+  CloudSyncOrigin,
   CloudTrackEntry,
   CloudTrackMetadata,
+  CloudTrackRecordV2,
 } from './cloud-sync';
 export type { EQBand, EQFilterType, FrequencyPreset, LoudnessData } from './audio';
 export {

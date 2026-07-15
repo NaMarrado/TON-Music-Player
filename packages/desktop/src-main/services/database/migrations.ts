@@ -1,4 +1,5 @@
 import type Database from 'better-sqlite3';
+import { createCloudAutoSyncSchema } from './cloud-auto-sync-schema';
 
 export function migrateSchema(db: Database.Database): void {
   db.transaction(() => migrateSchemaInTransaction(db))();
@@ -229,4 +230,6 @@ function migrateSchemaInTransaction(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_playlist_import_items_track ON playlist_import_items(track_id);
     CREATE INDEX IF NOT EXISTS idx_playlist_tracks_track_playlist_position ON playlist_tracks(track_id, playlist_id, position);
   `);
+
+  createCloudAutoSyncSchema(db);
 }

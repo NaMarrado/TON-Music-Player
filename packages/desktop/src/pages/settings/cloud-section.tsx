@@ -1,277 +1,54 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type {
+  CloudAutoSyncStatus,
   CloudStorageConfig,
   CloudStorageJurisdiction,
-  CloudStoragePublicConfig,
   CloudSyncProgress,
   CloudSyncResult,
 } from '@ton/core';
-import { normalizeCloudStorageErrorKey } from '@ton/core';
-import { Dialog } from '../../components/ui/dialog';
 import { reconcileLibraryTracks } from '../../stores/library-store';
-import { loadPlaylists } from '../../stores/playlist-store';
-import { SectionHeader } from './helpers';
+import { reloadPlaylistViews } from '../../stores/playlist-store';
+import { SectionHeader, ToggleSwitch } from './helpers';
 import type { SettingsLayout } from './use-settings-layout';
-
-type Translator = (key: string, opts?: Record<string, unknown>) => string;
+import { EMPTY_CLOUD_FORM, type CloudFormState, type Translator } from './cloud-section-types';
+import {
+  CloudActionButton,
+  CloudAutoSyncSummary,
+  CloudField,
+  CloudHelpButton,
+  CloudHelpDialog,
+} from './cloud-section-components';
+import {
+  formatCloudAutoSyncTime,
+  formatCloudError,
+  formatCloudProgress,
+  toCloudForm,
+} from './cloud-section-utils';
 
 interface CloudSectionProps {
   layout: SettingsLayout;
   t: Translator;
 }
 
-type CloudFormState = {
-  accountId: string;
-  bucket: string;
-  prefix: string;
-  accessKeyId: string;
-  secretAccessKey: string;
-  jurisdiction: CloudStorageJurisdiction;
-};
-
-const EMPTY_FORM: CloudFormState = {
-  accountId: '',
-  bucket: '',
-  prefix: 'ton',
-  accessKeyId: '',
-  secretAccessKey: '',
-  jurisdiction: 'default',
-};
-
-function Field({
-  label,
-  onChange,
-  placeholder,
-  type = 'text',
-  value,
-}: {
-  label: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  type?: 'password' | 'text';
-  value: string;
-}) {
-  return (
-    <label style={{ display: 'block' }}>
-      <span
-        style={{
-          display: 'block',
-          fontSize: '0.72rem',
-          color: 'var(--text-secondary)',
-          marginBottom: '4px',
-          letterSpacing: '0.04em',
-        }}
-      >
-        {label}
-      </span>
-      <input
-        type={type}
-        className="w-full outline-none"
-        placeholder={placeholder}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        style={{
-          background: 'var(--bg-deep)',
-          border: '1px solid var(--border)',
-          borderRadius: 'var(--radius)',
-          padding: '9px 12px',
-          color: 'var(--text-primary)',
-          fontFamily: 'inherit',
-          fontSize: '0.82rem',
-        }}
-      />
-    </label>
-  );
-}
-
-function ActionButton({
-  children,
-  disabled,
-  onClick,
-  primary = false,
-}: {
-  children: React.ReactNode;
-  disabled?: boolean;
-  onClick: () => void;
-  primary?: boolean;
-}) {
-  return (
-    <button
-      className={`${primary ? 'play-all-btn' : 'preset-btn'} cursor-pointer`}
-      disabled={disabled}
-      onClick={onClick}
-      style={{
-        padding: '8px 14px',
-        borderRadius: '16px',
-        background: primary ? 'var(--white)' : 'transparent',
-        color: primary ? 'var(--bg-deep)' : 'var(--text-secondary)',
-        border: primary ? 'none' : '1px solid var(--border)',
-        fontSize: '0.78rem',
-        fontWeight: 500,
-        fontFamily: 'inherit',
-        opacity: disabled ? 0.5 : 1,
-        width: '100%',
-      }}
-    >
-      {children}
-    </button>
-  );
-}
-
-function HelpButton({
-  onClick,
-  title,
-}: {
-  onClick: () => void;
-  title: string;
-}) {
-  return (
-    <button
-      className="download-btn cursor-pointer flex items-center justify-center"
-      onClick={onClick}
-      title={title}
-      style={{
-        width: '20px',
-        height: '20px',
-        borderRadius: '50%',
-        background: 'var(--bg-elevated)',
-        border: '1px solid var(--border)',
-        color: 'var(--white)',
-        fontSize: '0.7rem',
-        fontWeight: 600,
-        fontFamily: 'inherit',
-        padding: 0,
-        transition: 'all var(--transition)',
-      }}
-    >
-      ?
-    </button>
-  );
-}
-
-function CloudHelpDialog({
-  onClose,
-  t,
-}: {
-  onClose: () => void;
-  t: Translator;
-}) {
-  const steps = [
-    t('cloudHelpStep1'),
-    t('cloudHelpStep2'),
-    t('cloudHelpStep3'),
-    t('cloudHelpStep4'),
-    t('cloudHelpStep5'),
-    t('cloudHelpStep6'),
-    t('cloudHelpStep7'),
-    t('cloudHelpStep8'),
-    t('cloudHelpStep9'),
-    t('cloudHelpStep10'),
-  ];
-
-  return (
-    <Dialog open onClose={onClose} title={t('cloudHelpTitle')}>
-      <div style={{ maxHeight: '420px', overflowY: 'auto', paddingRight: '8px' }}>
-        <ol style={{ margin: 0, paddingLeft: '20px' }}>
-          {steps.map((step) => (
-            <li
-              key={step}
-              style={{
-                color: 'var(--text-secondary)',
-                fontSize: '0.82rem',
-                lineHeight: '1.6',
-                marginBottom: '12px',
-              }}
-            >
-              {step}
-            </li>
-          ))}
-        </ol>
-      </div>
-      <div className="flex justify-end" style={{ marginTop: '20px' }}>
-        <button
-          className="play-all-btn cursor-pointer"
-          onClick={onClose}
-          style={{
-            padding: '8px 24px',
-            borderRadius: '16px',
-            background: 'var(--white)',
-            color: 'var(--bg-deep)',
-            border: 'none',
-            fontSize: '0.78rem',
-            fontWeight: 500,
-            fontFamily: 'inherit',
-            transition: 'all var(--transition)',
-          }}
-        >
-          OK
-        </button>
-      </div>
-    </Dialog>
-  );
-}
-
-function toForm(config: CloudStoragePublicConfig | null): CloudFormState {
-  if (!config) {
-    return EMPTY_FORM;
-  }
-  return {
-    accountId: config.accountId,
-    bucket: config.bucket,
-    prefix: config.prefix || 'ton',
-    accessKeyId: config.accessKeyId,
-    secretAccessKey: '',
-    jurisdiction: config.jurisdiction,
-  };
-}
-
-function formatProgress(progress: CloudSyncProgress | null, result: CloudSyncResult | null, t: Translator): string | null {
-  if (progress) {
-    return t('cloudProgress', {
-      phase: t(`cloudPhase_${progress.phase}`),
-      current: progress.current,
-      total: progress.total,
-      uploaded: progress.uploaded,
-      downloaded: progress.downloaded,
-      skipped: progress.skipped,
-      failed: progress.failed,
-    });
-  }
-  if (result) {
-    return t('cloudResult', {
-      uploaded: result.uploaded,
-      downloaded: result.downloaded,
-      skipped: result.skipped,
-      playlists: result.importedPlaylists,
-    });
-  }
-  return null;
-}
-
-function formatCloudError(error: unknown, t: Translator): string {
-  if (!(error instanceof Error)) {
-    return t('cloudFailed');
-  }
-  const errorKey = normalizeCloudStorageErrorKey(error.message);
-  if (errorKey) {
-    return t(errorKey);
-  }
-  return error.message || t('cloudFailed');
-}
-
 export function CloudSection({ layout, t }: CloudSectionProps) {
-  const [form, setForm] = useState<CloudFormState>(EMPTY_FORM);
+  const [form, setForm] = useState<CloudFormState>(EMPTY_CLOUD_FORM);
   const [hasSecret, setHasSecret] = useState(false);
   const [busy, setBusy] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [progress, setProgress] = useState<CloudSyncProgress | null>(null);
   const [result, setResult] = useState<CloudSyncResult | null>(null);
+  const [autoSyncStatus, setAutoSyncStatus] = useState<CloudAutoSyncStatus | null>(null);
+  const [autoSyncBusy, setAutoSyncBusy] = useState(false);
 
   useEffect(() => {
-    void window.api.invoke('cloud:get-config').then((config) => {
-      setForm(toForm(config));
+    void Promise.all([
+      window.api.invoke('cloud:get-config'),
+      window.api.invoke('cloud:get-auto-sync-status'),
+    ]).then(([config, syncStatus]) => {
+      setForm(toCloudForm(config));
       setHasSecret(Boolean(config?.hasSecretAccessKey));
+      setAutoSyncStatus(syncStatus);
     });
   }, []);
 
@@ -281,6 +58,14 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
     };
     window.api.on('cloud:progress', handler);
     return () => window.api.off('cloud:progress', handler);
+  }, []);
+
+  useEffect(() => {
+    const handler = (payload: unknown) => {
+      setAutoSyncStatus(payload as CloudAutoSyncStatus);
+    };
+    window.api.on('cloud:state', handler);
+    return () => window.api.off('cloud:state', handler);
   }, []);
 
   const canRun = useMemo(() => (
@@ -304,8 +89,9 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
     try {
       const saved = await window.api.invoke('cloud:save-config', buildConfig());
       setHasSecret(saved.hasSecretAccessKey);
-      setForm(toForm(saved));
+      setForm(toCloudForm(saved));
       await window.api.invoke('cloud:test-config');
+      setAutoSyncStatus(await window.api.invoke('cloud:get-auto-sync-status'));
       setStatus(t('cloudConnected'));
       setProgress(null);
     } catch (error) {
@@ -315,6 +101,24 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
       setBusy(false);
     }
   }, [buildConfig, t]);
+
+  const toggleAutoSync = useCallback(async () => {
+    if (!autoSyncStatus || autoSyncBusy) {
+      return;
+    }
+    setAutoSyncBusy(true);
+    try {
+      const nextStatus = await window.api.invoke(
+        'cloud:set-auto-sync-enabled',
+        !autoSyncStatus.enabled,
+      );
+      setAutoSyncStatus(nextStatus);
+    } catch (error) {
+      setStatus(formatCloudError(error, t));
+    } finally {
+      setAutoSyncBusy(false);
+    }
+  }, [autoSyncBusy, autoSyncStatus, t]);
 
   const runTask = useCallback(async (
     task: 'cloud:upload-missing' | 'cloud:fetch-library' | 'cloud:sync-now',
@@ -328,7 +132,7 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
       if (taskResult && task !== 'cloud:upload-missing') {
         await Promise.all([
           reconcileLibraryTracks({ immediate: true, loadIfUninitialized: true }),
-          loadPlaylists({ force: true }),
+          reloadPlaylistViews(),
         ]);
       }
       setResult(taskResult as CloudSyncResult | null);
@@ -341,7 +145,9 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
     }
   }, [t]);
 
-  const progressText = formatProgress(progress, result, t);
+  const progressText = formatCloudProgress(progress, result, t);
+  const lastSuccessText = formatCloudAutoSyncTime(autoSyncStatus?.lastSuccessAt ?? null);
+  const nextRetryText = formatCloudAutoSyncTime(autoSyncStatus?.nextRetryAt ?? null);
 
   return (
     <div>
@@ -351,20 +157,40 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
         title={
           <span className="flex items-center gap-2">
             {t('cloudSection')}
-            <HelpButton title={t('cloudHelpTitle')} onClick={() => setShowHelp(true)} />
+            <CloudHelpButton title={t('cloudHelpTitle')} onClick={() => setShowHelp(true)} />
           </span>
         }
         description={t('cloudDescription')}
+        right={(
+          <div className="flex items-center gap-2">
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.76rem' }}>
+              {t('cloudAutoSync')}
+            </span>
+            <ToggleSwitch
+              disabled={!autoSyncStatus || autoSyncBusy}
+              enabled={autoSyncStatus?.enabled ?? true}
+              onClick={() => void toggleAutoSync()}
+            />
+          </div>
+        )}
       />
       {showHelp && <CloudHelpDialog t={t} onClose={() => setShowHelp(false)} />}
       <div className="flex flex-col gap-3" style={{ paddingLeft: layout.sectionIndent }}>
+        {autoSyncStatus && (
+          <CloudAutoSyncSummary
+            lastSuccessText={lastSuccessText}
+            nextRetryText={nextRetryText}
+            status={autoSyncStatus}
+            t={t}
+          />
+        )}
         <div
           className="grid gap-3"
           style={{ gridTemplateColumns: layout.compact ? '1fr' : 'repeat(2, minmax(0, 1fr))' }}
         >
-          <Field label={t('cloudAccountId')} value={form.accountId} onChange={(value) => setForm((state) => ({ ...state, accountId: value }))} />
-          <Field label={t('cloudBucket')} value={form.bucket} onChange={(value) => setForm((state) => ({ ...state, bucket: value }))} />
-          <Field label={t('cloudPrefix')} value={form.prefix} onChange={(value) => setForm((state) => ({ ...state, prefix: value }))} placeholder="ton" />
+          <CloudField label={t('cloudAccountId')} value={form.accountId} onChange={(value) => setForm((state) => ({ ...state, accountId: value }))} />
+          <CloudField label={t('cloudBucket')} value={form.bucket} onChange={(value) => setForm((state) => ({ ...state, bucket: value }))} />
+          <CloudField label={t('cloudPrefix')} value={form.prefix} onChange={(value) => setForm((state) => ({ ...state, prefix: value }))} placeholder="ton" />
           <label style={{ display: 'block' }}>
             <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-secondary)', marginBottom: '4px', letterSpacing: '0.04em' }}>
               {t('cloudJurisdiction')}
@@ -388,8 +214,8 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
               <option value="fedramp">{t('cloudJurisdictionFedramp')}</option>
             </select>
           </label>
-          <Field label={t('cloudAccessKeyId')} value={form.accessKeyId} onChange={(value) => setForm((state) => ({ ...state, accessKeyId: value }))} />
-          <Field
+          <CloudField label={t('cloudAccessKeyId')} value={form.accessKeyId} onChange={(value) => setForm((state) => ({ ...state, accessKeyId: value }))} />
+          <CloudField
             label={t('cloudSecretAccessKey')}
             value={form.secretAccessKey}
             onChange={(value) => setForm((state) => ({ ...state, secretAccessKey: value }))}
@@ -401,21 +227,21 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
           className="grid gap-2"
           style={{ gridTemplateColumns: layout.compact ? '1fr' : 'repeat(2, minmax(0, 1fr))' }}
         >
-          <ActionButton primary disabled={busy || !canRun} onClick={() => void saveAndTest()}>
+          <CloudActionButton primary disabled={busy || !canRun} onClick={() => void saveAndTest()}>
             {busy ? t('cloudWorking') : t('cloudSaveTest')}
-          </ActionButton>
-          <ActionButton disabled={busy || !canRun} onClick={() => void runTask('cloud:upload-missing')}>
+          </CloudActionButton>
+          <CloudActionButton disabled={busy || !canRun} onClick={() => void runTask('cloud:upload-missing')}>
             {t('cloudUploadMissing')}
-          </ActionButton>
-          <ActionButton disabled={busy || !canRun} onClick={() => void runTask('cloud:fetch-library')}>
+          </CloudActionButton>
+          <CloudActionButton disabled={busy || !canRun} onClick={() => void runTask('cloud:fetch-library')}>
             {t('cloudFetchLibrary')}
-          </ActionButton>
-          <ActionButton disabled={busy || !canRun} onClick={() => void runTask('cloud:sync-now')}>
+          </CloudActionButton>
+          <CloudActionButton disabled={busy || !canRun} onClick={() => void runTask('cloud:sync-now')}>
             {t('cloudSyncNow')}
-          </ActionButton>
-          <ActionButton disabled={!busy} onClick={() => void window.api.invoke('cloud:cancel')}>
+          </CloudActionButton>
+          <CloudActionButton disabled={!busy} onClick={() => void window.api.invoke('cloud:cancel')}>
             {t('cloudCancel')}
-          </ActionButton>
+          </CloudActionButton>
         </div>
         {progressText && (
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.78rem', lineHeight: 1.5 }}>

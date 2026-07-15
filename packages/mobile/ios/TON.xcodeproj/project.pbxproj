@@ -7,72 +7,126 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0F667EC744934C538555C320 /* TONDownloadActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C9D03B9E3FD4920A7E9ACB6 /* TONDownloadActivityAttributes.swift */; };
 		13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.mm */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
+		15467DBB7B8849199A097C32 /* TONDownloadActivityBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD051035D1A343D081E5EFB8 /* TONDownloadActivityBundle.swift */; };
+		3172675C025943B895C34496 /* TONDownloadLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81F722F8A6744264A92498F2 /* TONDownloadLiveActivity.swift */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		58A95B3E94C14B80A6D45101 /* TON/TONIosBackgroundDownloadModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58A95B3E94C14B80A6D45111 /* TON/TONIosBackgroundDownloadModels.swift */; };
-		58A95B3E94C14B80A6D45102 /* TON/TONIosBackgroundDownloadsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58A95B3E94C14B80A6D45112 /* TON/TONIosBackgroundDownloadsManager.swift */; };
-		58A95B3E94C14B80A6D45103 /* TON/IosBackgroundDownloads.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58A95B3E94C14B80A6D45113 /* TON/IosBackgroundDownloads.swift */; };
-		58A95B3E94C14B80A6D45104 /* TON/IosBackgroundDownloadsBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 58A95B3E94C14B80A6D45114 /* TON/IosBackgroundDownloadsBridge.m */; };
-		6AA95B3E94C14B80A6D45101 /* TON/TONIosPlaybackTrack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AA95B3E94C14B80A6D45111 /* TON/TONIosPlaybackTrack.swift */; };
-		6AA95B3E94C14B80A6D45102 /* TON/TONIosPlaybackEngineManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AA95B3E94C14B80A6D45112 /* TON/TONIosPlaybackEngineManager.swift */; };
-		6AA95B3E94C14B80A6D45103 /* TON/IosPlaybackEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AA95B3E94C14B80A6D45113 /* TON/IosPlaybackEngine.swift */; };
-		6AA95B3E94C14B80A6D45104 /* TON/IosPlaybackEngineBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 6AA95B3E94C14B80A6D45114 /* TON/IosPlaybackEngineBridge.m */; };
-		7BA95B3E94C14B80A6D45101 /* TON/TONIosLoudnessAnalyzerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BA95B3E94C14B80A6D45111 /* TON/TONIosLoudnessAnalyzerManager.swift */; };
-		7BA95B3E94C14B80A6D45102 /* TON/IosLoudnessAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BA95B3E94C14B80A6D45112 /* TON/IosLoudnessAnalyzer.swift */; };
-		7BA95B3E94C14B80A6D45103 /* TON/IosLoudnessAnalyzerBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 7BA95B3E94C14B80A6D45113 /* TON/IosLoudnessAnalyzerBridge.m */; };
-		8CA95B3E94C14B80A6D45101 /* TON/IosAudioNormalizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CA95B3E94C14B80A6D45111 /* TON/IosAudioNormalizer.swift */; };
-		8CA95B3E94C14B80A6D45102 /* TON/IosAudioNormalizerBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 8CA95B3E94C14B80A6D45112 /* TON/IosAudioNormalizerBridge.m */; };
+		58A95B3E94C14B80A6D45101 /* TONIosBackgroundDownloadModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58A95B3E94C14B80A6D45111 /* TONIosBackgroundDownloadModels.swift */; };
+		58A95B3E94C14B80A6D45102 /* TONIosBackgroundDownloadsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58A95B3E94C14B80A6D45112 /* TONIosBackgroundDownloadsManager.swift */; };
+		58A95B3E94C14B80A6D45103 /* IosBackgroundDownloads.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58A95B3E94C14B80A6D45113 /* IosBackgroundDownloads.swift */; };
+		58A95B3E94C14B80A6D45104 /* IosBackgroundDownloadsBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 58A95B3E94C14B80A6D45114 /* IosBackgroundDownloadsBridge.m */; };
+		6AA95B3E94C14B80A6D45101 /* TONIosPlaybackTrack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AA95B3E94C14B80A6D45111 /* TONIosPlaybackTrack.swift */; };
+		6AA95B3E94C14B80A6D45102 /* TONIosPlaybackEngineManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AA95B3E94C14B80A6D45112 /* TONIosPlaybackEngineManager.swift */; };
+		6AA95B3E94C14B80A6D45103 /* IosPlaybackEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AA95B3E94C14B80A6D45113 /* IosPlaybackEngine.swift */; };
+		6AA95B3E94C14B80A6D45104 /* IosPlaybackEngineBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 6AA95B3E94C14B80A6D45114 /* IosPlaybackEngineBridge.m */; };
+		7BA95B3E94C14B80A6D45101 /* TONIosLoudnessAnalyzerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BA95B3E94C14B80A6D45111 /* TONIosLoudnessAnalyzerManager.swift */; };
+		7BA95B3E94C14B80A6D45102 /* IosLoudnessAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BA95B3E94C14B80A6D45112 /* IosLoudnessAnalyzer.swift */; };
+		7BA95B3E94C14B80A6D45103 /* IosLoudnessAnalyzerBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 7BA95B3E94C14B80A6D45113 /* IosLoudnessAnalyzerBridge.m */; };
+		8402D722B8D2496094242507 /* TONDownloadActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C9D03B9E3FD4920A7E9ACB6 /* TONDownloadActivityAttributes.swift */; };
+		8CA95B3E94C14B80A6D45101 /* IosAudioNormalizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CA95B3E94C14B80A6D45111 /* IosAudioNormalizer.swift */; };
+		8CA95B3E94C14B80A6D45102 /* IosAudioNormalizerBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 8CA95B3E94C14B80A6D45112 /* IosAudioNormalizerBridge.m */; };
 		96905EF65AED1B983A6B3ABC /* libPods-TON.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 58EEBF8E8E6FB1BC6CAF49B5 /* libPods-TON.a */; };
+		9DA95B3E94C14B80A6D45201 /* TONIosBackgroundDownloadsSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DA95B3E94C14B80A6D45211 /* TONIosBackgroundDownloadsSession.swift */; };
+		9DA95B3E94C14B80A6D45202 /* TONIosBackgroundDownloadsDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DA95B3E94C14B80A6D45212 /* TONIosBackgroundDownloadsDelegate.swift */; };
+		9DA95B3E94C14B80A6D45203 /* TONIosLoudnessAnalyzerTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DA95B3E94C14B80A6D45213 /* TONIosLoudnessAnalyzerTask.swift */; };
+		9DA95B3E94C14B80A6D45204 /* LoudnessIntegrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DA95B3E94C14B80A6D45214 /* LoudnessIntegrator.swift */; };
+		9DA95B3E94C14B80A6D45205 /* LoudnessBiquadFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DA95B3E94C14B80A6D45215 /* LoudnessBiquadFilter.swift */; };
+		9DA95B3E94C14B80A6D45206 /* IosPlaybackEngineQueueBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DA95B3E94C14B80A6D45216 /* IosPlaybackEngineQueueBridge.swift */; };
+		9DA95B3E94C14B80A6D45207 /* IosPlaybackEngineAudioBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DA95B3E94C14B80A6D45217 /* IosPlaybackEngineAudioBridge.swift */; };
+		9DA95B3E94C14B80A6D45208 /* IosAudioNormalizerRemux.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DA95B3E94C14B80A6D45218 /* IosAudioNormalizerRemux.swift */; };
+		9DA95B3E94C14B80A6D45209 /* IosAudioNormalizerOperations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DA95B3E94C14B80A6D45219 /* IosAudioNormalizerOperations.swift */; };
+		9DA95B3E94C14B80A6D4520A /* TONIosPlaybackEngineQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DA95B3E94C14B80A6D4521A /* TONIosPlaybackEngineQueue.swift */; };
+		9DA95B3E94C14B80A6D4520B /* TONIosPlaybackEngineAudio.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DA95B3E94C14B80A6D4521B /* TONIosPlaybackEngineAudio.swift */; };
+		9DA95B3E94C14B80A6D4520C /* TONIosPlaybackEngineSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DA95B3E94C14B80A6D4521C /* TONIosPlaybackEngineSession.swift */; };
+		9DA95B3E94C14B80A6D4520D /* TONIosPlaybackEngineScheduling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DA95B3E94C14B80A6D4521D /* TONIosPlaybackEngineScheduling.swift */; };
+		9DA95B3E94C14B80A6D4520E /* TONIosPlaybackEngineState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DA95B3E94C14B80A6D4521E /* TONIosPlaybackEngineState.swift */; };
 		A96593CAFA69437EF52834D7 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 28FF38A94675D6E6914B5747 /* PrivacyInfo.xcprivacy */; };
+		AB11E970C91B4475A043F9BA /* TONIosDownloadActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 238CB9F512BF4EEE90807B7B /* TONIosDownloadActivityManager.swift */; };
+		ADE95B3E94C14B80A6D45201 /* TONDownloadActivityRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADE95B3E94C14B80A6D45211 /* TONDownloadActivityRuntime.swift */; };
 		B18059E884C0ABDD17F3DC3D /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		ECC12DA03F1F45859D1C2F1C /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F25BEF4DEB40E9809CC87B /* noop-file.swift */; };
 		FEF8B29800A64A7EBDBD698A /* TONDownloadActivity.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0500CCB83F7D4BB284E0FAA3 /* TONDownloadActivity.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, CodeSignOnCopy, ); }; };
-		0F667EC744934C538555C320 /* TONDownloadActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C9D03B9E3FD4920A7E9ACB6 /* TONDownloadActivityAttributes.swift */; };
-		AB11E970C91B4475A043F9BA /* TONIosDownloadActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 238CB9F512BF4EEE90807B7B /* TONIosDownloadActivityManager.swift */; };
-		8402D722B8D2496094242507 /* TONDownloadActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C9D03B9E3FD4920A7E9ACB6 /* TONDownloadActivityAttributes.swift */; };
-		3172675C025943B895C34496 /* TONDownloadLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81F722F8A6744264A92498F2 /* TONDownloadLiveActivity.swift */; };
-		15467DBB7B8849199A097C32 /* TONDownloadActivityBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD051035D1A343D081E5EFB8 /* TONDownloadActivityBundle.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		1980623E2F9B403D9AF00113 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F6144FAF2BAE45398A45308D;
+			remoteInfo = TONDownloadActivity;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		E1135B43A8534F949FA7CCAA /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				FEF8B29800A64A7EBDBD698A /* TONDownloadActivity.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		0500CCB83F7D4BB284E0FAA3 /* TONDownloadActivity.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = undefined; name = TONDownloadActivity.appex; path = TONDownloadActivity.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		0C9D03B9E3FD4920A7E9ACB6 /* TONDownloadActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TONDownloadActivityAttributes.swift; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* TON.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TON.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FAF1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = TON/AppDelegate.h; sourceTree = "<group>"; };
 		13B07FB01A68108700A75B9A /* AppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AppDelegate.mm; path = TON/AppDelegate.mm; sourceTree = "<group>"; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = TON/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = TON/Info.plist; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = TON/main.m; sourceTree = "<group>"; };
+		238CB9F512BF4EEE90807B7B /* TONIosDownloadActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TONIosDownloadActivityManager.swift; sourceTree = "<group>"; };
 		28FF38A94675D6E6914B5747 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = TON/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		58A95B3E94C14B80A6D45111 /* TON/TONIosBackgroundDownloadModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/TONIosBackgroundDownloadModels.swift; sourceTree = "<group>"; };
-		58A95B3E94C14B80A6D45112 /* TON/TONIosBackgroundDownloadsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/TONIosBackgroundDownloadsManager.swift; sourceTree = "<group>"; };
-		58A95B3E94C14B80A6D45113 /* TON/IosBackgroundDownloads.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/IosBackgroundDownloads.swift; sourceTree = "<group>"; };
-		58A95B3E94C14B80A6D45114 /* TON/IosBackgroundDownloadsBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TON/IosBackgroundDownloadsBridge.m; sourceTree = "<group>"; };
+		51AF544ECF54450ABF0F15D7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		58A95B3E94C14B80A6D45111 /* TONIosBackgroundDownloadModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/TONIosBackgroundDownloadModels.swift; sourceTree = "<group>"; };
+		58A95B3E94C14B80A6D45112 /* TONIosBackgroundDownloadsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/TONIosBackgroundDownloadsManager.swift; sourceTree = "<group>"; };
+		58A95B3E94C14B80A6D45113 /* IosBackgroundDownloads.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/IosBackgroundDownloads.swift; sourceTree = "<group>"; };
+		58A95B3E94C14B80A6D45114 /* IosBackgroundDownloadsBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TON/IosBackgroundDownloadsBridge.m; sourceTree = "<group>"; };
 		58EEBF8E8E6FB1BC6CAF49B5 /* libPods-TON.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-TON.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		69DD7A40C39A4F8DAE0CC6BF /* TON-Bridging-Header.h */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.h; name = "TON-Bridging-Header.h"; path = "TON/TON-Bridging-Header.h"; sourceTree = "<group>"; };
-		6AA95B3E94C14B80A6D45111 /* TON/TONIosPlaybackTrack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/TONIosPlaybackTrack.swift; sourceTree = "<group>"; };
-		6AA95B3E94C14B80A6D45112 /* TON/TONIosPlaybackEngineManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/TONIosPlaybackEngineManager.swift; sourceTree = "<group>"; };
-		6AA95B3E94C14B80A6D45113 /* TON/IosPlaybackEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/IosPlaybackEngine.swift; sourceTree = "<group>"; };
-		6AA95B3E94C14B80A6D45114 /* TON/IosPlaybackEngineBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TON/IosPlaybackEngineBridge.m; sourceTree = "<group>"; };
+		6AA95B3E94C14B80A6D45111 /* TONIosPlaybackTrack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/TONIosPlaybackTrack.swift; sourceTree = "<group>"; };
+		6AA95B3E94C14B80A6D45112 /* TONIosPlaybackEngineManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/TONIosPlaybackEngineManager.swift; sourceTree = "<group>"; };
+		6AA95B3E94C14B80A6D45113 /* IosPlaybackEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/IosPlaybackEngine.swift; sourceTree = "<group>"; };
+		6AA95B3E94C14B80A6D45114 /* IosPlaybackEngineBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TON/IosPlaybackEngineBridge.m; sourceTree = "<group>"; };
 		6C2E3173556A471DD304B334 /* Pods-TON.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TON.debug.xcconfig"; path = "Target Support Files/Pods-TON/Pods-TON.debug.xcconfig"; sourceTree = "<group>"; };
 		7A4D352CD337FB3A3BF06240 /* Pods-TON.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TON.release.xcconfig"; path = "Target Support Files/Pods-TON/Pods-TON.release.xcconfig"; sourceTree = "<group>"; };
-		7BA95B3E94C14B80A6D45111 /* TON/TONIosLoudnessAnalyzerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/TONIosLoudnessAnalyzerManager.swift; sourceTree = "<group>"; };
-		7BA95B3E94C14B80A6D45112 /* TON/IosLoudnessAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/IosLoudnessAnalyzer.swift; sourceTree = "<group>"; };
-		7BA95B3E94C14B80A6D45113 /* TON/IosLoudnessAnalyzerBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TON/IosLoudnessAnalyzerBridge.m; sourceTree = "<group>"; };
-		8CA95B3E94C14B80A6D45111 /* TON/IosAudioNormalizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/IosAudioNormalizer.swift; sourceTree = "<group>"; };
-		8CA95B3E94C14B80A6D45112 /* TON/IosAudioNormalizerBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TON/IosAudioNormalizerBridge.m; sourceTree = "<group>"; };
+		7BA95B3E94C14B80A6D45111 /* TONIosLoudnessAnalyzerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/TONIosLoudnessAnalyzerManager.swift; sourceTree = "<group>"; };
+		7BA95B3E94C14B80A6D45112 /* IosLoudnessAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/IosLoudnessAnalyzer.swift; sourceTree = "<group>"; };
+		7BA95B3E94C14B80A6D45113 /* IosLoudnessAnalyzerBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TON/IosLoudnessAnalyzerBridge.m; sourceTree = "<group>"; };
+		81F722F8A6744264A92498F2 /* TONDownloadLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TONDownloadLiveActivity.swift; sourceTree = "<group>"; };
+		8CA95B3E94C14B80A6D45111 /* IosAudioNormalizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/IosAudioNormalizer.swift; sourceTree = "<group>"; };
+		8CA95B3E94C14B80A6D45112 /* IosAudioNormalizerBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TON/IosAudioNormalizerBridge.m; sourceTree = "<group>"; };
+		9DA95B3E94C14B80A6D45211 /* TONIosBackgroundDownloadsSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/TONIosBackgroundDownloadsSession.swift; sourceTree = "<group>"; };
+		9DA95B3E94C14B80A6D45212 /* TONIosBackgroundDownloadsDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/TONIosBackgroundDownloadsDelegate.swift; sourceTree = "<group>"; };
+		9DA95B3E94C14B80A6D45213 /* TONIosLoudnessAnalyzerTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/TONIosLoudnessAnalyzerTask.swift; sourceTree = "<group>"; };
+		9DA95B3E94C14B80A6D45214 /* LoudnessIntegrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/LoudnessIntegrator.swift; sourceTree = "<group>"; };
+		9DA95B3E94C14B80A6D45215 /* LoudnessBiquadFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/LoudnessBiquadFilter.swift; sourceTree = "<group>"; };
+		9DA95B3E94C14B80A6D45216 /* IosPlaybackEngineQueueBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/IosPlaybackEngineQueueBridge.swift; sourceTree = "<group>"; };
+		9DA95B3E94C14B80A6D45217 /* IosPlaybackEngineAudioBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/IosPlaybackEngineAudioBridge.swift; sourceTree = "<group>"; };
+		9DA95B3E94C14B80A6D45218 /* IosAudioNormalizerRemux.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/IosAudioNormalizerRemux.swift; sourceTree = "<group>"; };
+		9DA95B3E94C14B80A6D45219 /* IosAudioNormalizerOperations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/IosAudioNormalizerOperations.swift; sourceTree = "<group>"; };
+		9DA95B3E94C14B80A6D4521A /* TONIosPlaybackEngineQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/TONIosPlaybackEngineQueue.swift; sourceTree = "<group>"; };
+		9DA95B3E94C14B80A6D4521B /* TONIosPlaybackEngineAudio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/TONIosPlaybackEngineAudio.swift; sourceTree = "<group>"; };
+		9DA95B3E94C14B80A6D4521C /* TONIosPlaybackEngineSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/TONIosPlaybackEngineSession.swift; sourceTree = "<group>"; };
+		9DA95B3E94C14B80A6D4521D /* TONIosPlaybackEngineScheduling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/TONIosPlaybackEngineScheduling.swift; sourceTree = "<group>"; };
+		9DA95B3E94C14B80A6D4521E /* TONIosPlaybackEngineState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/TONIosPlaybackEngineState.swift; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = TON/SplashScreen.storyboard; sourceTree = "<group>"; };
+		AD051035D1A343D081E5EFB8 /* TONDownloadActivityBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TONDownloadActivityBundle.swift; sourceTree = "<group>"; };
+		ADE95B3E94C14B80A6D45211 /* TONDownloadActivityRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TONDownloadActivityRuntime.swift; sourceTree = "<group>"; };
 		B1F25BEF4DEB40E9809CC87B /* noop-file.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = "noop-file.swift"; path = "TON/noop-file.swift"; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-TON/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		0500CCB83F7D4BB284E0FAA3 /* TONDownloadActivity.appex */ = {isa = PBXFileReference; name = "TONDownloadActivity.appex"; path = "TONDownloadActivity.appex"; sourceTree = BUILT_PRODUCTS_DIR; fileEncoding = undefined; lastKnownFileType = undefined; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; };
-		0C9D03B9E3FD4920A7E9ACB6 /* TONDownloadActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TONDownloadActivityAttributes.swift; sourceTree = "<group>"; };
-		AD051035D1A343D081E5EFB8 /* TONDownloadActivityBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TONDownloadActivityBundle.swift; sourceTree = "<group>"; };
-		238CB9F512BF4EEE90807B7B /* TONIosDownloadActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TONIosDownloadActivityManager.swift; sourceTree = "<group>"; };
-		51AF544ECF54450ABF0F15D7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		81F722F8A6744264A92498F2 /* TONDownloadLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TONDownloadLiveActivity.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -102,23 +156,37 @@
 				13B07FB01A68108700A75B9A /* AppDelegate.mm */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
-				8CA95B3E94C14B80A6D45111 /* TON/IosAudioNormalizer.swift */,
-				8CA95B3E94C14B80A6D45112 /* TON/IosAudioNormalizerBridge.m */,
-				58A95B3E94C14B80A6D45113 /* TON/IosBackgroundDownloads.swift */,
-				58A95B3E94C14B80A6D45114 /* TON/IosBackgroundDownloadsBridge.m */,
-				7BA95B3E94C14B80A6D45112 /* TON/IosLoudnessAnalyzer.swift */,
-				7BA95B3E94C14B80A6D45113 /* TON/IosLoudnessAnalyzerBridge.m */,
-				6AA95B3E94C14B80A6D45113 /* TON/IosPlaybackEngine.swift */,
-				6AA95B3E94C14B80A6D45114 /* TON/IosPlaybackEngineBridge.m */,
+				8CA95B3E94C14B80A6D45111 /* IosAudioNormalizer.swift */,
+				9DA95B3E94C14B80A6D45218 /* IosAudioNormalizerRemux.swift */,
+				9DA95B3E94C14B80A6D45219 /* IosAudioNormalizerOperations.swift */,
+				8CA95B3E94C14B80A6D45112 /* IosAudioNormalizerBridge.m */,
+				58A95B3E94C14B80A6D45113 /* IosBackgroundDownloads.swift */,
+				9DA95B3E94C14B80A6D45211 /* TONIosBackgroundDownloadsSession.swift */,
+				9DA95B3E94C14B80A6D45212 /* TONIosBackgroundDownloadsDelegate.swift */,
+				58A95B3E94C14B80A6D45114 /* IosBackgroundDownloadsBridge.m */,
+				7BA95B3E94C14B80A6D45112 /* IosLoudnessAnalyzer.swift */,
+				9DA95B3E94C14B80A6D45213 /* TONIosLoudnessAnalyzerTask.swift */,
+				9DA95B3E94C14B80A6D45214 /* LoudnessIntegrator.swift */,
+				9DA95B3E94C14B80A6D45215 /* LoudnessBiquadFilter.swift */,
+				7BA95B3E94C14B80A6D45113 /* IosLoudnessAnalyzerBridge.m */,
+				6AA95B3E94C14B80A6D45113 /* IosPlaybackEngine.swift */,
+				9DA95B3E94C14B80A6D45216 /* IosPlaybackEngineQueueBridge.swift */,
+				9DA95B3E94C14B80A6D45217 /* IosPlaybackEngineAudioBridge.swift */,
+				6AA95B3E94C14B80A6D45114 /* IosPlaybackEngineBridge.m */,
 				13B07FB71A68108700A75B9A /* main.m */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
 				B1F25BEF4DEB40E9809CC87B /* noop-file.swift */,
-				58A95B3E94C14B80A6D45111 /* TON/TONIosBackgroundDownloadModels.swift */,
+				58A95B3E94C14B80A6D45111 /* TONIosBackgroundDownloadModels.swift */,
 				69DD7A40C39A4F8DAE0CC6BF /* TON-Bridging-Header.h */,
-				58A95B3E94C14B80A6D45112 /* TON/TONIosBackgroundDownloadsManager.swift */,
-				7BA95B3E94C14B80A6D45111 /* TON/TONIosLoudnessAnalyzerManager.swift */,
-				6AA95B3E94C14B80A6D45112 /* TON/TONIosPlaybackEngineManager.swift */,
-				6AA95B3E94C14B80A6D45111 /* TON/TONIosPlaybackTrack.swift */,
+				58A95B3E94C14B80A6D45112 /* TONIosBackgroundDownloadsManager.swift */,
+				7BA95B3E94C14B80A6D45111 /* TONIosLoudnessAnalyzerManager.swift */,
+				6AA95B3E94C14B80A6D45112 /* TONIosPlaybackEngineManager.swift */,
+				9DA95B3E94C14B80A6D4521A /* TONIosPlaybackEngineQueue.swift */,
+				9DA95B3E94C14B80A6D4521B /* TONIosPlaybackEngineAudio.swift */,
+				9DA95B3E94C14B80A6D4521C /* TONIosPlaybackEngineSession.swift */,
+				9DA95B3E94C14B80A6D4521D /* TONIosPlaybackEngineScheduling.swift */,
+				9DA95B3E94C14B80A6D4521E /* TONIosPlaybackEngineState.swift */,
+				6AA95B3E94C14B80A6D45111 /* TONIosPlaybackTrack.swift */,
 				28FF38A94675D6E6914B5747 /* PrivacyInfo.xcprivacy */,
 			);
 			name = TON;
@@ -182,6 +250,20 @@
 			path = TON/Supporting;
 			sourceTree = "<group>";
 		};
+		BD844E8BB96F487E86FB8329 /* TONDownloadActivity */ = {
+			isa = PBXGroup;
+			children = (
+				0C9D03B9E3FD4920A7E9ACB6 /* TONDownloadActivityAttributes.swift */,
+				AD051035D1A343D081E5EFB8 /* TONDownloadActivityBundle.swift */,
+				238CB9F512BF4EEE90807B7B /* TONIosDownloadActivityManager.swift */,
+				ADE95B3E94C14B80A6D45211 /* TONDownloadActivityRuntime.swift */,
+				51AF544ECF54450ABF0F15D7 /* Info.plist */,
+				81F722F8A6744264A92498F2 /* TONDownloadLiveActivity.swift */,
+			);
+			name = TONDownloadActivity;
+			path = "../native/ios/download-activity";
+			sourceTree = "<group>";
+		};
 		D65327D7A22EEC0BE12398D9 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
@@ -197,19 +279,6 @@
 				92DBD88DE9BF7D494EA9DA96 /* TON */,
 			);
 			name = ExpoModulesProviders;
-			sourceTree = "<group>";
-		};
-		BD844E8BB96F487E86FB8329 /* TONDownloadActivity */ = {
-			isa = PBXGroup;
-			children = (
-				0C9D03B9E3FD4920A7E9ACB6 /* TONDownloadActivityAttributes.swift */,
-				AD051035D1A343D081E5EFB8 /* TONDownloadActivityBundle.swift */,
-				238CB9F512BF4EEE90807B7B /* TONIosDownloadActivityManager.swift */,
-				51AF544ECF54450ABF0F15D7 /* Info.plist */,
-				81F722F8A6744264A92498F2 /* TONDownloadLiveActivity.swift */,
-			);
-			name = TONDownloadActivity;
-			path = ../native/ios/download-activity;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -239,13 +308,9 @@
 			productReference = 13B07F961A680F5B00A75B9A /* TON.app */;
 			productType = "com.apple.product-type.application";
 		};
-		F6144FAF2BAE45398A45308D /* "TONDownloadActivity" */ = {
+		F6144FAF2BAE45398A45308D /* TONDownloadActivity */ = {
 			isa = PBXNativeTarget;
-			name = "TONDownloadActivity";
-			productName = "TONDownloadActivity";
-			productReference = 0500CCB83F7D4BB284E0FAA3;
-			productType = "com.apple.product-type.app-extension";
-			buildConfigurationList = C992536ECD6E4FC497A6F955;
+			buildConfigurationList = C992536ECD6E4FC497A6F955 /* Build configuration list for PBXNativeTarget "TONDownloadActivity" */;
 			buildPhases = (
 				63CF047103914E49A2346E5A /* Sources */,
 				4CE469989FD44F0CA4838990 /* Frameworks */,
@@ -254,6 +319,10 @@
 			);
 			dependencies = (
 			);
+			name = TONDownloadActivity;
+			productName = TONDownloadActivity;
+			productReference = 0500CCB83F7D4BB284E0FAA3 /* TONDownloadActivity.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -285,7 +354,7 @@
 			projectRoot = "";
 			targets = (
 				13B07F861A680F5B00A75B9A /* TON */,
-				F6144FAF2BAE45398A45308D /* "TONDownloadActivity" */,
+				F6144FAF2BAE45398A45308D /* TONDownloadActivity */,
 			);
 		};
 /* End PBXProject section */
@@ -392,6 +461,7 @@
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/EXConstants.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/ExpoConstants_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXNotifications/ExpoNotifications_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/EXTaskManager/ExpoTaskManager_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoFileSystem/ExpoFileSystem_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoLocalization/ExpoLocalization_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoSystemUI/ExpoSystemUI_privacy.bundle",
@@ -408,6 +478,7 @@
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXConstants.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoConstants_privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoNotifications_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoTaskManager_privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoFileSystem_privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoLocalization_privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoSystemUI_privacy.bundle",
@@ -432,23 +503,38 @@
 			files = (
 				13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
-				58A95B3E94C14B80A6D45104 /* TON/IosBackgroundDownloadsBridge.m in Sources */,
+				58A95B3E94C14B80A6D45104 /* IosBackgroundDownloadsBridge.m in Sources */,
 				B18059E884C0ABDD17F3DC3D /* ExpoModulesProvider.swift in Sources */,
-				58A95B3E94C14B80A6D45103 /* TON/IosBackgroundDownloads.swift in Sources */,
-				7BA95B3E94C14B80A6D45103 /* TON/IosLoudnessAnalyzerBridge.m in Sources */,
-				7BA95B3E94C14B80A6D45102 /* TON/IosLoudnessAnalyzer.swift in Sources */,
-				8CA95B3E94C14B80A6D45102 /* TON/IosAudioNormalizerBridge.m in Sources */,
-				8CA95B3E94C14B80A6D45101 /* TON/IosAudioNormalizer.swift in Sources */,
-				6AA95B3E94C14B80A6D45104 /* TON/IosPlaybackEngineBridge.m in Sources */,
-				6AA95B3E94C14B80A6D45103 /* TON/IosPlaybackEngine.swift in Sources */,
+				58A95B3E94C14B80A6D45103 /* IosBackgroundDownloads.swift in Sources */,
+				7BA95B3E94C14B80A6D45103 /* IosLoudnessAnalyzerBridge.m in Sources */,
+				7BA95B3E94C14B80A6D45102 /* IosLoudnessAnalyzer.swift in Sources */,
+				8CA95B3E94C14B80A6D45102 /* IosAudioNormalizerBridge.m in Sources */,
+				8CA95B3E94C14B80A6D45101 /* IosAudioNormalizer.swift in Sources */,
+				9DA95B3E94C14B80A6D45208 /* IosAudioNormalizerRemux.swift in Sources */,
+				9DA95B3E94C14B80A6D45209 /* IosAudioNormalizerOperations.swift in Sources */,
+				6AA95B3E94C14B80A6D45104 /* IosPlaybackEngineBridge.m in Sources */,
+				6AA95B3E94C14B80A6D45103 /* IosPlaybackEngine.swift in Sources */,
+				9DA95B3E94C14B80A6D45206 /* IosPlaybackEngineQueueBridge.swift in Sources */,
+				9DA95B3E94C14B80A6D45207 /* IosPlaybackEngineAudioBridge.swift in Sources */,
 				ECC12DA03F1F45859D1C2F1C /* noop-file.swift in Sources */,
-				58A95B3E94C14B80A6D45101 /* TON/TONIosBackgroundDownloadModels.swift in Sources */,
-				58A95B3E94C14B80A6D45102 /* TON/TONIosBackgroundDownloadsManager.swift in Sources */,
-				7BA95B3E94C14B80A6D45101 /* TON/TONIosLoudnessAnalyzerManager.swift in Sources */,
-				6AA95B3E94C14B80A6D45102 /* TON/TONIosPlaybackEngineManager.swift in Sources */,
-				6AA95B3E94C14B80A6D45101 /* TON/TONIosPlaybackTrack.swift in Sources */,
+				58A95B3E94C14B80A6D45101 /* TONIosBackgroundDownloadModels.swift in Sources */,
+				58A95B3E94C14B80A6D45102 /* TONIosBackgroundDownloadsManager.swift in Sources */,
+				9DA95B3E94C14B80A6D45201 /* TONIosBackgroundDownloadsSession.swift in Sources */,
+				9DA95B3E94C14B80A6D45202 /* TONIosBackgroundDownloadsDelegate.swift in Sources */,
+				7BA95B3E94C14B80A6D45101 /* TONIosLoudnessAnalyzerManager.swift in Sources */,
+				9DA95B3E94C14B80A6D45203 /* TONIosLoudnessAnalyzerTask.swift in Sources */,
+				9DA95B3E94C14B80A6D45204 /* LoudnessIntegrator.swift in Sources */,
+				9DA95B3E94C14B80A6D45205 /* LoudnessBiquadFilter.swift in Sources */,
+				6AA95B3E94C14B80A6D45102 /* TONIosPlaybackEngineManager.swift in Sources */,
+				9DA95B3E94C14B80A6D4520A /* TONIosPlaybackEngineQueue.swift in Sources */,
+				9DA95B3E94C14B80A6D4520B /* TONIosPlaybackEngineAudio.swift in Sources */,
+				9DA95B3E94C14B80A6D4520C /* TONIosPlaybackEngineSession.swift in Sources */,
+				9DA95B3E94C14B80A6D4520D /* TONIosPlaybackEngineScheduling.swift in Sources */,
+				9DA95B3E94C14B80A6D4520E /* TONIosPlaybackEngineState.swift in Sources */,
+				6AA95B3E94C14B80A6D45101 /* TONIosPlaybackTrack.swift in Sources */,
 				0F667EC744934C538555C320 /* TONDownloadActivityAttributes.swift in Sources */,
 				AB11E970C91B4475A043F9BA /* TONIosDownloadActivityManager.swift in Sources */,
+				ADE95B3E94C14B80A6D45201 /* TONDownloadActivityRuntime.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -463,6 +549,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A3420541807B4EA78B1CFEAC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F6144FAF2BAE45398A45308D /* TONDownloadActivity */;
+			targetProxy = 1980623E2F9B403D9AF00113 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
@@ -586,7 +680,10 @@
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -641,7 +738,10 @@
 				);
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = NO;
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
@@ -650,46 +750,56 @@
 			name = Release;
 		};
 		A74D54171A064B4EA61B0D1A /* Debug */ = {
-			name = Debug;
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				INFOPLIST_FILE = ../native/ios/download-activity/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = cz.ton.player.downloads;
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1000022;
+				DEVELOPMENT_TEAM = A9TNGB88VK;
 				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "../native/ios/download-activity/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
 				MARKETING_VERSION = 1.0.22;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
+				PRODUCT_BUNDLE_IDENTIFIER = cz.ton.player.downloads;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
-				DEVELOPMENT_TEAM = A9TNGB88VK;
 			};
+			name = Debug;
 		};
 		D9027F5EEB4742DFB8595493 /* Release */ = {
-			name = Release;
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				INFOPLIST_FILE = ../native/ios/download-activity/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = cz.ton.player.downloads;
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1000022;
+				DEVELOPMENT_TEAM = A9TNGB88VK;
 				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "../native/ios/download-activity/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
 				MARKETING_VERSION = 1.0.22;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
+				PRODUCT_BUNDLE_IDENTIFIER = cz.ton.player.downloads;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
-				DEVELOPMENT_TEAM = A9TNGB88VK;
 			};
+			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
@@ -722,38 +832,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin PBXContainerItemProxy section */
-		1980623E2F9B403D9AF00113 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = F6144FAF2BAE45398A45308D;
-			remoteInfo = "TONDownloadActivity";
-		};
-/* End PBXContainerItemProxy section */
-
-/* Begin PBXTargetDependency section */
-		A3420541807B4EA78B1CFEAC /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = F6144FAF2BAE45398A45308D /* "TONDownloadActivity" */;
-			targetProxy = 1980623E2F9B403D9AF00113 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		E1135B43A8534F949FA7CCAA /* Embed Foundation Extensions */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				FEF8B29800A64A7EBDBD698A /* TONDownloadActivity.appex in Embed Foundation Extensions */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			name = "Embed Foundation Extensions";
-			dstPath = "";
-			dstSubfolderSpec = 13;
-		};
-/* End PBXCopyFilesBuildPhase section */
 	};
 	rootObject = 83CBB9F71A601CBA00E9B192 /* Project object */;
 }

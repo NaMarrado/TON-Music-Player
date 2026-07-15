@@ -1,4 +1,5 @@
 import type { Track } from '@ton/core';
+import type { SQLiteDatabase } from 'expo-sqlite';
 import { getDb } from '../database';
 
 const TRACK_COLUMNS = new Set([
@@ -16,8 +17,9 @@ export async function insertTrack(
     content_hash_sha256?: string | null;
     downloaded_at?: number | null;
   },
+  database?: SQLiteDatabase,
 ): Promise<number> {
-  const db = getDb();
+  const db = database ?? getDb();
   const result = await db.runAsync(
     `INSERT INTO tracks (
       file_path, file_hash, file_size, file_mtime,
@@ -63,8 +65,12 @@ export async function insertTrack(
   return result.lastInsertRowId;
 }
 
-export async function updateTrack(id: number, fields: Partial<Track>): Promise<void> {
-  const db = getDb();
+export async function updateTrack(
+  id: number,
+  fields: Partial<Track>,
+  database?: SQLiteDatabase,
+): Promise<void> {
+  const db = database ?? getDb();
   const entries = Object.entries(fields).filter(
     ([key]) => key !== 'id' && TRACK_COLUMNS.has(key),
   );

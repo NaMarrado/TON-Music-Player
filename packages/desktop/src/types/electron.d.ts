@@ -56,6 +56,11 @@ interface ElectronAPI {
     config: import('@ton/core').CloudStorageConfig,
   ): Promise<import('@ton/core').CloudStoragePublicConfig>;
   invoke(channel: 'cloud:test-config', config?: import('@ton/core').CloudStorageConfig): Promise<void>;
+  invoke(channel: 'cloud:get-auto-sync-status'): Promise<import('@ton/core').CloudAutoSyncStatus>;
+  invoke(
+    channel: 'cloud:set-auto-sync-enabled',
+    enabled: boolean,
+  ): Promise<import('@ton/core').CloudAutoSyncStatus>;
   invoke(channel: 'cloud:upload-missing'): Promise<import('@ton/core').CloudSyncResult | null>;
   invoke(channel: 'cloud:fetch-library'): Promise<import('@ton/core').CloudSyncResult | null>;
   invoke(channel: 'cloud:sync-now'): Promise<import('@ton/core').CloudSyncResult | null>;

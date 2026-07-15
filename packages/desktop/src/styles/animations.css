@@ -1,0 +1,41 @@
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@keyframes downloadProgressIndeterminate {
+  from { transform: translateX(-120%); }
+  to { transform: translateX(240%); }
+}
+.download-progress-indeterminate {
+  animation: downloadProgressIndeterminate 1s linear infinite;
+}
+
+.now-playing-indicator span {
+  width: 2px;
+  background: var(--white);
+  border-radius: 1px;
+  animation: barBounce 1.2s ease infinite;
+}
+.now-playing-indicator span:nth-child(1) { height: 60%; animation-delay: 0s; }
+.now-playing-indicator span:nth-child(2) { height: 100%; animation-delay: 0.15s; }
+.now-playing-indicator span:nth-child(3) { height: 40%; animation-delay: 0.3s; }
+.now-playing-indicator span:nth-child(4) { height: 80%; animation-delay: 0.45s; }
+
+@keyframes barBounce {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}
+
+@keyframes toastSlideIn {
+  from { opacity: 0; transform: translateX(40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.toast-enter {
+  animation: toastSlideIn 0.25s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fadeSlideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;
+}

@@ -1,9 +1,13 @@
-import { BrowserWindow, net } from 'electron';
+import { BrowserWindow, net, powerMonitor } from 'electron';
 import { createAppMenu } from '../menu';
 import { ensureBinaries } from '../services/binary-manager';
 import { getDownloadQueue } from '../services/download-queue';
 import { countPerfEvent } from '../services/perf';
 import { createTray, updateTrayDownloads } from '../tray';
+import {
+  getDesktopCloudAutoSyncRuntime,
+  startDesktopCloudAutoSync,
+} from '../services/cloud-sync/auto-sync-runtime';
 
 export function attachWindowCloseBehavior(
   mainWindow: BrowserWindow,
@@ -11,7 +15,8 @@ export function attachWindowCloseBehavior(
 ): void {
   mainWindow.on('close', (event) => {
     const queue = getDownloadQueue();
-    if (queue.hasActive() && !shouldForceQuit()) {
+    const keepAliveForCloud = getDesktopCloudAutoSyncRuntime().shouldKeepApplicationAlive();
+    if ((queue.hasActive() || keepAliveForCloud) && !shouldForceQuit()) {
       event.preventDefault();
       mainWindow.hide();
     }
@@ -28,11 +33,20 @@ export function setupBackgroundServices(
   ensureDesktopBinaries(mainWindow);
   const stopQueueSubscriptions = attachQueueDrivenUpdates();
   const stopNetworkMonitoring = startAdaptiveNetworkMonitoring();
+  const stopCloudAutoSync = startDesktopCloudAutoSync();
+  const cloudRuntime = getDesktopCloudAutoSyncRuntime();
+  const handleResume = () => cloudRuntime.notifyResume();
+  const handleSuspend = () => cloudRuntime.notifySuspend();
+  powerMonitor.on('resume', handleResume);
+  powerMonitor.on('suspend', handleSuspend);
   updateTrayDownloads(mainWindow);
 
   return () => {
     stopQueueSubscriptions();
     stopNetworkMonitoring();
+    powerMonitor.off('resume', handleResume);
+    powerMonitor.off('suspend', handleSuspend);
+    stopCloudAutoSync();
   };
 }
 

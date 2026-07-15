@@ -1,0 +1,31 @@
+export function buildDesktopNamespaces(
+  sidebar: Record<string, string>,
+  nowPlayingBar: Record<string, string>,
+  playbackControls: Record<string, string>,
+  volumeSlider: Record<string, string>,
+  queuePanel: Record<string, string>,
+  home: Record<string, string>,
+  search: Record<string, string>,
+  library: Record<string, string>,
+  downloads: Record<string, string>,
+  settings: Record<string, string>,
+  artists: Record<string, string>,
+  playlist: Record<string, string>,
+  artist: Record<string, string>,
+) {
+  return {
+    'components/layout/sidebar': sidebar,
+    'components/layout/now-playing-bar': nowPlayingBar,
+    'components/player/playback-controls': playbackControls,
+    'components/player/volume-slider': volumeSlider,
+    'components/player/queue-panel': queuePanel,
+    'pages/home': home,
+    'pages/search': search,
+    'pages/library': library,
+    'pages/downloads': downloads,
+    'pages/settings': settings,
+    'pages/artists': artists,
+    'pages/playlist': playlist,
+    'pages/artist': artist,
+  };
+}

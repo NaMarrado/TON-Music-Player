@@ -53,6 +53,8 @@ export const ALLOWED_INVOKE_CHANNELS = [
   'cloud:get-config',
   'cloud:save-config',
   'cloud:test-config',
+  'cloud:get-auto-sync-status',
+  'cloud:set-auto-sync-enabled',
   'cloud:upload-missing',
   'cloud:fetch-library',
   'cloud:sync-now',
@@ -86,6 +88,8 @@ export const ALLOWED_ON_CHANNELS = [
   'menu:settings',
   'binaries:status',
   'cloud:progress',
+  'cloud:state',
+  'cloud:applied',
   'search:source-results',
 ] as const;
 

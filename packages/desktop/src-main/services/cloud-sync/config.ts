@@ -5,13 +5,14 @@ import type {
   CloudStorageJurisdiction,
   CloudStoragePublicConfig,
 } from '@ton/core';
-import { normalizeCloudPrefix } from '@ton/core';
+import { normalizeCloudPrefix, sha256Hex } from '@ton/core';
 import { getDb } from '../database';
 
 const CONFIG_KEY = 'cloud_r2_config';
 const SECRET_KEY = 'cloud_r2_secret_access_key';
 const DEVICE_ID_KEY = 'cloud_r2_device_id';
 const LAST_REVISION_KEY = 'cloud_r2_last_revision';
+const AUTO_SYNC_ENABLED_KEY = 'cloud_auto_sync_enabled';
 
 function getSetting(key: string): string {
   const row = getDb().prepare('SELECT value FROM settings WHERE key = ?').get(key) as { value: string } | undefined;
@@ -67,6 +68,90 @@ export function getDesktopCloudLastRevision(): string {
 
 export function setDesktopCloudLastRevision(revision: string): void {
   setSetting(LAST_REVISION_KEY, revision);
+}
+
+export function getDesktopCloudAutoSyncEnabled(): boolean {
+  const raw = getSetting(AUTO_SYNC_ENABLED_KEY);
+  // Missing means enabled so upgrades receive the requested opt-out behavior.
+  return raw === '' || raw === 'true' || raw === '1';
+}
+
+export function setDesktopCloudAutoSyncEnabled(enabled: boolean): void {
+  setSetting(AUTO_SYNC_ENABLED_KEY, enabled ? 'true' : 'false');
+}
+
+export function getDesktopCloudScopeId(
+  config: Pick<CloudStorageConfig, 'accountId' | 'bucket' | 'prefix' | 'jurisdiction'>,
+): string {
+  return sha256Hex(JSON.stringify({
+    accountId: config.accountId.trim(),
+    bucket: config.bucket.trim(),
+    prefix: normalizeCloudPrefix(config.prefix),
+    jurisdiction: normalizeJurisdiction(config.jurisdiction),
+  }));
+}
+
+export function activateDesktopCloudScope(config: CloudStorageConfig): string {
+  const db = getDb();
+  const scopeId = getDesktopCloudScopeId(config);
+  db.transaction(() => {
+    const control = db.prepare(`
+      SELECT active_scope_id, generation
+      FROM cloud_sync_control
+      WHERE id = 1
+    `).get() as { active_scope_id: string; generation: number } | undefined;
+    const scopeChanged = (control?.active_scope_id ?? '') !== scopeId;
+
+    db.prepare(`
+      INSERT OR IGNORE INTO cloud_sync_state (scope_id, needs_full_reconcile)
+      VALUES (?, 1)
+    `).run(scopeId);
+    db.prepare(`
+      INSERT INTO cloud_sync_outbox (
+        scope_id, entity_type, entity_key, local_id, operation,
+        payload_json, generation, created_at, updated_at
+      )
+      SELECT ?, entity_type, entity_key, local_id, operation,
+        payload_json, generation, created_at, updated_at
+      FROM cloud_sync_outbox
+      WHERE scope_id = ''
+      ON CONFLICT(scope_id, entity_type, entity_key) DO UPDATE SET
+        local_id = CASE WHEN excluded.generation >= cloud_sync_outbox.generation
+          THEN excluded.local_id ELSE cloud_sync_outbox.local_id END,
+        operation = CASE WHEN excluded.generation >= cloud_sync_outbox.generation
+          THEN excluded.operation ELSE cloud_sync_outbox.operation END,
+        payload_json = CASE WHEN excluded.generation >= cloud_sync_outbox.generation
+          THEN excluded.payload_json ELSE cloud_sync_outbox.payload_json END,
+        generation = MAX(cloud_sync_outbox.generation, excluded.generation),
+        updated_at = MAX(cloud_sync_outbox.updated_at, excluded.updated_at)
+    `).run(scopeId);
+    db.prepare(`DELETE FROM cloud_sync_outbox WHERE scope_id = ''`).run();
+    db.prepare(`
+      UPDATE cloud_sync_control
+      SET active_scope_id = ?, generation = generation + ?
+      WHERE id = 1
+    `).run(scopeId, scopeChanged ? 1 : 0);
+
+    if (scopeChanged) {
+      const nextGeneration = (control?.generation ?? 0) + 1;
+      db.prepare(`
+        INSERT INTO cloud_sync_outbox (
+          scope_id, entity_type, entity_key, operation, generation
+        ) VALUES (?, 'library', 'full', 'reconcile', ?)
+        ON CONFLICT(scope_id, entity_type, entity_key) DO UPDATE SET
+          operation = 'reconcile',
+          generation = excluded.generation,
+          updated_at = strftime('%s','now')
+      `).run(scopeId, nextGeneration);
+      db.prepare(`
+        UPDATE cloud_sync_state
+        SET needs_full_reconcile = 1, etag = NULL, last_error = NULL,
+            next_retry_at = NULL
+        WHERE scope_id = ?
+      `).run(scopeId);
+    }
+  })();
+  return scopeId;
 }
 
 export function getDesktopCloudConfig(): CloudStorageConfig | null {
@@ -139,6 +224,7 @@ export function saveDesktopCloudConfig(config: CloudStorageConfig): CloudStorage
   if (config.secretAccessKey.trim() || !existingSecret) {
     setSetting(SECRET_KEY, encryptSecret(normalized.secretAccessKey));
   }
+  activateDesktopCloudScope(normalized);
   return {
     accountId: normalized.accountId,
     bucket: normalized.bucket,

@@ -5,6 +5,8 @@ import {
   type HistoricalQueueCompletionRow,
   type HistoricalTrackDownloadRow,
 } from '../../packages/mobile/src/services/migrations/008-downloaded-at.ts';
+import { migrate011 } from '../../packages/mobile/src/services/migrations/011-schema-drift-repair.ts';
+import type { SQLiteDatabase } from 'expo-sqlite';
 
 const ADDED_AT = 1_720_000_000;
 
@@ -127,4 +129,29 @@ test('requires a mutual one-to-one track and queue match', () => {
     ),
     [],
   );
+});
+
+test('repairs schema drift even when the original migration was already recorded', async () => {
+  const executedSql: string[] = [];
+  const db = {
+    execAsync: async (sql: string) => {
+      executedSql.push(sql);
+    },
+    getAllAsync: async (sql: string) => {
+      if (sql === 'PRAGMA table_info(tracks)') {
+        return [{ name: 'id' }];
+      }
+      if (sql === 'PRAGMA table_info(download_queue)') {
+        return [{ name: 'id' }];
+      }
+      return [];
+    },
+    runAsync: async () => undefined,
+  } as unknown as SQLiteDatabase;
+
+  await migrate011(db);
+
+  assert.ok(executedSql.includes('ALTER TABLE tracks ADD COLUMN downloaded_at INTEGER;'));
+  assert.ok(executedSql.includes('ALTER TABLE download_queue ADD COLUMN resolved_source_id TEXT;'));
+  assert.ok(executedSql.some((sql) => sql.includes('CREATE TRIGGER tracks_fts_update')));
 });

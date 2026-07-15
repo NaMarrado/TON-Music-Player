@@ -16,14 +16,13 @@ import { LanguageCard } from './language-card';
 import { LibraryTransferProgressModal } from '../../components/library-transfer-progress-modal';
 import { LoudnessCard } from './loudness-card';
 import { SettingsGroup } from './primitives';
-import { SpotifyCard } from './spotify-card';
-import { CloudCard } from './cloud-card';
 import { CommunityCard } from './community-card';
 import { DownloadQualityCard } from './download-quality-card';
 import { UpdateCard } from './update-card';
 import { useSettingsScreen } from './use-settings-screen';
 import { usePlaylistStore } from '../../stores/playlist-store';
 import { useScreenTopPadding } from '../../hooks/use-screen-top-padding';
+import { SettingsConnectionsGroup } from './settings-connections-group';
 
 export function SettingsScreen() {
   const { t } = useTranslation('settings');
@@ -37,12 +36,12 @@ export function SettingsScreen() {
   const playlists = usePlaylistStore((state) => state.playlists);
   const detectedLang = detectDeviceLanguage();
   const topPadding = useScreenTopPadding(16);
+  const controller = useSettingsScreen();
   const {
     analyzeAll,
     appVersion,
     cancelAnalysis,
     cancelTransfer,
-    cancelCloudTask,
     checkForUpdates,
     exportLibrary,
     failedCount,
@@ -53,42 +52,18 @@ export function SettingsScreen() {
     isExportingLibrary,
     isImportingLibrary,
     isPreparingUpdate,
-    cloudBusy,
-    cloudCanRun,
-    cloudConnectedLabel,
-    cloudError,
-    cloudForm,
-    cloudHasSecret,
-    cloudLoaded,
-    cloudProgress,
-    cloudProgressLabel,
-    cloudResult,
-    cloudResultLabel,
     language,
     openExportPicker,
-    loadSpotifyCreds,
-    loadCloudConfig,
     openAvailableUpdate,
-    saveSpotifyCreds,
-    saveAndTestCloud,
     setShowExportPicker,
     showExportPicker,
-    setSpotifyId,
-    setSpotifySecret,
-    syncCloud,
-    updateCloudForm,
-    uploadCloudMissing,
-    fetchCloud,
     progress,
     stats,
-    spotifyId,
-    spotifyLoaded,
-    spotifySecret,
     transferProgress,
     updateResult,
     downloadQualityProfile,
     setDownloadQualityProfile,
-  } = useSettingsScreen();
+  } = controller;
 
   const updateStatusText =
     updateResult == null
@@ -216,88 +191,7 @@ export function SettingsScreen() {
         />
       </SettingsGroup>
 
-      <SettingsGroup label={t('connectionsGroup')}>
-        <SpotifyCard
-          title={t('spotifySection')}
-          description={t('spotifyDescription')}
-          tapToEditLabel={t('spotifyTapToEdit')}
-          spotifyIdLabel={t('spotifyId')}
-          spotifyIdPlaceholder={t('spotifyIdPlaceholder')}
-          spotifySecretLabel={t('spotifySecret')}
-          spotifySecretPlaceholder={t('spotifySecretPlaceholder')}
-          saveLabel={tc('save')}
-          helpTitle={t('spotifyHelpTitle')}
-          helpSteps={[
-            t('spotifyHelpStep1'),
-            t('spotifyHelpStep2'),
-            t('spotifyHelpStep3'),
-            t('spotifyHelpStep4'),
-            t('spotifyHelpStep5'),
-            t('spotifyHelpStep6'),
-          ]}
-          spotifyLoaded={spotifyLoaded}
-          spotifyId={spotifyId}
-          spotifySecret={spotifySecret}
-          onLoad={loadSpotifyCreds}
-          onSave={saveSpotifyCreds}
-          onSpotifyIdChange={setSpotifyId}
-          onSpotifySecretChange={setSpotifySecret}
-        />
-        <CloudCard
-          canRun={cloudCanRun}
-          connectedLabel={cloudConnectedLabel}
-          description={t('cloudDescription')}
-          failedLabel={cloudError}
-          form={cloudForm}
-          hasSecret={cloudHasSecret}
-          helpTitle={t('cloudHelpTitle')}
-          helpSteps={[
-            t('cloudHelpStep1'),
-            t('cloudHelpStep2'),
-            t('cloudHelpStep3'),
-            t('cloudHelpStep4'),
-            t('cloudHelpStep5'),
-            t('cloudHelpStep6'),
-            t('cloudHelpStep7'),
-            t('cloudHelpStep8'),
-            t('cloudHelpStep9'),
-            t('cloudHelpStep10'),
-          ]}
-          isBusy={cloudBusy}
-          loaded={cloudLoaded}
-          loadLabel={t('cloudTapToEdit')}
-          progress={cloudProgress}
-          progressLabel={cloudProgressLabel}
-          result={cloudResult}
-          resultLabel={cloudResultLabel}
-          labels={{
-            accountId: t('cloudAccountId'),
-            bucket: t('cloudBucket'),
-            prefix: t('cloudPrefix'),
-            jurisdiction: t('cloudJurisdiction'),
-            jurisdiction_default: t('cloudJurisdictionDefault'),
-            jurisdiction_eu: t('cloudJurisdictionEu'),
-            jurisdiction_fedramp: t('cloudJurisdictionFedramp'),
-            accessKeyId: t('cloudAccessKeyId'),
-            secretAccessKey: t('cloudSecretAccessKey'),
-            secretStored: t('cloudSecretStored'),
-            saveTest: t('cloudSaveTest'),
-            uploadMissing: t('cloudUploadMissing'),
-            fetchLibrary: t('cloudFetchLibrary'),
-            syncNow: t('cloudSyncNow'),
-            cancel: tc('cancel'),
-            working: t('cloudWorking'),
-          }}
-          onCancel={cancelCloudTask}
-          onFetch={fetchCloud}
-          onLoad={loadCloudConfig}
-          onSaveTest={saveAndTestCloud}
-          onSync={syncCloud}
-          onUpdate={updateCloudForm}
-          onUpload={uploadCloudMissing}
-          title={t('cloudSection')}
-        />
-      </SettingsGroup>
+      <SettingsConnectionsGroup controller={controller} t={t} tc={tc} />
 
       <SettingsGroup label={t('aboutSection')}>
         <AboutCard

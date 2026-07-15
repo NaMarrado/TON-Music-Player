@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type {
   CloudStorageConfig,
   CloudStorageJurisdiction,
@@ -8,14 +8,18 @@ import type {
 import { normalizeCloudStorageErrorKey } from '@ton/core';
 import { useTranslation } from 'react-i18next';
 import {
-  cancelMobileCloudSync,
-  fetchCloudLibrary,
   getMobileCloudSyncConfig,
   saveMobileCloudSyncConfig,
-  syncCloudLibrary,
   testMobileCloudConnection,
-  uploadMissingLocalToCloud,
 } from '../../services/cloud-sync';
+import {
+  cancelMobileCloudAutoSyncRun,
+  getMobileCloudAutoSyncStatus,
+  notifyMobileCloudConfigChanged,
+  runMobileCloudManualTask,
+  setMobileCloudAutoSyncEnabled,
+  subscribeMobileCloudAutoSyncStatus,
+} from '../../services/cloud-sync/auto-sync';
 import { reconcileLibraryTracks } from '../../stores/library-store';
 import { loadPlaylists } from '../../stores/playlist-store';
 
@@ -58,11 +62,15 @@ export function useCloudSyncSettings() {
   const [cloudResult, setCloudResult] = useState<CloudSyncResult | null>(null);
   const [cloudError, setCloudError] = useState<string | null>(null);
   const [cloudConnected, setCloudConnected] = useState(false);
-  const cancelRef = useRef(false);
+  const [cloudAutoSyncStatus, setCloudAutoSyncStatus] = useState(
+    getMobileCloudAutoSyncStatus,
+  );
 
   const updateCloudForm = useCallback((patch: Partial<CloudForm>) => {
     setCloudForm((state) => ({ ...state, ...patch }));
   }, []);
+
+  useEffect(() => subscribeMobileCloudAutoSyncStatus(setCloudAutoSyncStatus), []);
 
   const loadCloudConfig = useCallback(async () => {
     if (cloudLoaded) {
@@ -99,6 +107,9 @@ export function useCloudSyncSettings() {
     setCloudResult(null);
     setCloudProgress({ phase: 'testing', current: 0, total: 1, uploaded: 0, downloaded: 0, skipped: 0, failed: 0 });
     try {
+      // Stop a run bound to the previous bucket/prefix before credentials are
+      // replaced, so it cannot apply the old scope after this save.
+      cancelMobileCloudAutoSyncRun();
       const saved = await saveMobileCloudSyncConfig(buildConfig());
       setCloudHasSecret(saved.hasSecretAccessKey);
       setCloudForm({
@@ -109,6 +120,7 @@ export function useCloudSyncSettings() {
         secretAccessKey: '',
         jurisdiction: saved.jurisdiction,
       });
+      await notifyMobileCloudConfigChanged();
       await testMobileCloudConnection();
       setCloudConnected(true);
     } catch (error) {
@@ -122,7 +134,6 @@ export function useCloudSyncSettings() {
   const runCloudTask = useCallback(async (
     task: 'upload' | 'fetch' | 'sync',
   ) => {
-    cancelRef.current = false;
     let keepProgress = false;
     setCloudBusy(true);
     setCloudError(null);
@@ -131,12 +142,7 @@ export function useCloudSyncSettings() {
     setCloudProgress(null);
     try {
       const onProgress = (progress: CloudSyncProgress) => setCloudProgress(progress);
-      const shouldCancel = () => cancelRef.current;
-      const result = task === 'upload'
-        ? await uploadMissingLocalToCloud(onProgress, shouldCancel)
-        : task === 'fetch'
-          ? await fetchCloudLibrary(onProgress, shouldCancel)
-          : await syncCloudLibrary(onProgress);
+      const result = await runMobileCloudManualTask(task, onProgress);
       setCloudResult(result);
       if (!result) {
         keepProgress = true;
@@ -157,7 +163,6 @@ export function useCloudSyncSettings() {
       }
     } finally {
       setCloudBusy(false);
-      cancelRef.current = false;
       if (!keepProgress) {
         setCloudProgress(null);
       }
@@ -165,9 +170,17 @@ export function useCloudSyncSettings() {
   }, [t]);
 
   const cancelCloudTask = useCallback(() => {
-    cancelRef.current = true;
-    cancelMobileCloudSync();
+    cancelMobileCloudAutoSyncRun();
   }, []);
+
+  const toggleCloudAutoSync = useCallback(async (enabled: boolean) => {
+    setCloudError(null);
+    try {
+      await setMobileCloudAutoSyncEnabled(enabled);
+    } catch (error) {
+      setCloudError(formatCloudError(error, t));
+    }
+  }, [t]);
 
   const cloudCanRun = Boolean(
     cloudForm.accountId
@@ -203,10 +216,46 @@ export function useCloudSyncSettings() {
     });
   }, [cloudResult, t]);
 
+  const cloudAutoSyncStatusLabel = useMemo(() => {
+    const state = t(`cloudAutoSyncState_${cloudAutoSyncStatus.state}`);
+    if (!cloudAutoSyncStatus.lastErrorKey) {
+      return state;
+    }
+    return `${state}: ${t(cloudAutoSyncStatus.lastErrorKey, {
+      defaultValue: cloudAutoSyncStatus.lastErrorKey,
+    })}`;
+  }, [cloudAutoSyncStatus.lastErrorKey, cloudAutoSyncStatus.state, t]);
+
+  const cloudAutoSyncDetailsLabel = useMemo(() => {
+    const lastSuccess = cloudAutoSyncStatus.lastSuccessAt == null
+      ? '—'
+      : new Date(
+        cloudAutoSyncStatus.lastSuccessAt < 10_000_000_000
+          ? cloudAutoSyncStatus.lastSuccessAt * 1000
+          : cloudAutoSyncStatus.lastSuccessAt,
+      ).toLocaleString();
+    const nextRetry = cloudAutoSyncStatus.nextRetryAt == null
+      ? '—'
+      : new Date(
+        cloudAutoSyncStatus.nextRetryAt < 10_000_000_000
+          ? cloudAutoSyncStatus.nextRetryAt * 1000
+          : cloudAutoSyncStatus.nextRetryAt,
+      ).toLocaleString();
+    return t('cloudAutoSyncDetails', {
+      pendingChanges: cloudAutoSyncStatus.pendingChanges,
+      pendingDownloads: cloudAutoSyncStatus.pendingDownloads,
+      lastSuccess,
+      nextRetry,
+    });
+  }, [cloudAutoSyncStatus, t]);
+
   return {
     cancelCloudTask,
     cloudCanRun,
     cloudConnectedLabel: cloudConnected ? t('cloudConnected') : null,
+    cloudAutoSyncDetailsLabel,
+    cloudAutoSyncEnabled: cloudAutoSyncStatus.enabled,
+    cloudAutoSyncStatusLabel,
     cloudError,
     cloudForm,
     cloudHasSecret,
@@ -220,6 +269,7 @@ export function useCloudSyncSettings() {
     loadCloudConfig,
     saveAndTestCloud,
     syncCloud: () => void runCloudTask('sync'),
+    toggleCloudAutoSync,
     updateCloudForm,
     uploadCloudMissing: () => void runCloudTask('upload'),
   };

@@ -2,12 +2,7 @@ import type Database from 'better-sqlite3';
 import { PERSISTED_SETTING_DEFAULTS } from '@ton/core';
 
 export function seedDefaults(db: Database.Database): void {
-  const count = db.prepare('SELECT COUNT(*) as c FROM settings').get() as { c: number };
-  if (count.c > 0) {
-    return;
-  }
-
-  const insert = db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)');
+  const insert = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)');
   const insertAll = db.transaction(() => {
     for (const [key, value] of Object.entries(PERSISTED_SETTING_DEFAULTS)) {
       insert.run(key, String(value));
