@@ -207,7 +207,11 @@ export class DesktopR2Client {
     bodyHash: string,
     options: CloudConditionalWriteOptions = {},
   ): Promise<CloudConditionalWriteResult> {
-    const headers: Record<string, string> = { 'content-type': contentType };
+    const fileSize = (await fs.promises.stat(filePath)).size;
+    const headers: Record<string, string> = {
+      'content-length': String(fileSize),
+      'content-type': contentType,
+    };
     const ifMatch = normalizeCloudObjectEtag(options.ifMatch);
     if (ifMatch) {
       headers['if-match'] = ifMatch;

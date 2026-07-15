@@ -3,6 +3,7 @@ export interface PendingCloudObjectUpload {
   filePath: string;
   contentType: string;
   hash: string;
+  progressGroup?: string;
 }
 
 export interface PendingCloudObjectUploadAdapter {
@@ -32,6 +33,16 @@ export async function uploadPendingCloudObjects(
   ) => void,
 ): Promise<PendingCloudObjectUploadResult> {
   const pending = targets.filter((target) => !completedKeys.has(target.key));
+  const remainingByProgressGroup = new Map<string, number>();
+  for (const target of pending) {
+    if (!target.progressGroup) continue;
+    remainingByProgressGroup.set(
+      target.progressGroup,
+      (remainingByProgressGroup.get(target.progressGroup) ?? 0) + 1,
+    );
+  }
+  const progressTotal = remainingByProgressGroup.size;
+  let progressCurrent = 0;
   const result: PendingCloudObjectUploadResult = { uploaded: 0, skipped: 0 };
   for (let index = 0; index < pending.length; index += 1) {
     const target = pending[index];
@@ -44,7 +55,16 @@ export async function uploadPendingCloudObjects(
       if (status === 'uploaded') result.uploaded += 1;
       else result.skipped += 1;
     }
-    onProgress?.(index + 1, pending.length, result);
+    if (target.progressGroup) {
+      const remaining = (remainingByProgressGroup.get(target.progressGroup) ?? 1) - 1;
+      if (remaining <= 0) {
+        remainingByProgressGroup.delete(target.progressGroup);
+        progressCurrent += 1;
+      } else {
+        remainingByProgressGroup.set(target.progressGroup, remaining);
+      }
+    }
+    onProgress?.(progressCurrent, progressTotal, result);
   }
   return result;
 }

@@ -132,7 +132,7 @@
   "cloudPhase_testing": "Wird getestet",
   "cloudPhase_hashing": "Hashes werden berechnet",
   "cloudPhase_reading-manifest": "Manifest wird gelesen",
-  "cloudPhase_uploading": "Wird hochgeladen",
+  "cloudPhase_uploading": "Dateien werden hochgeladen",
   "cloudPhase_downloading": "Wird heruntergeladen",
   "cloudPhase_writing-manifest": "Manifest wird geschrieben",
   "cloudPhase_importing": "Wird importiert",

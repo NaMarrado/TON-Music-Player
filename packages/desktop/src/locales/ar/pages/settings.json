@@ -132,7 +132,7 @@
   "cloudPhase_testing": "اختبار",
   "cloudPhase_hashing": "التجزئة",
   "cloudPhase_reading-manifest": "بيان القراءة",
-  "cloudPhase_uploading": "جارٍ الرفع",
+  "cloudPhase_uploading": "جارٍ رفع الملفات",
   "cloudPhase_downloading": "جارٍ التنزيل",
   "cloudPhase_writing-manifest": "كتابة البيان",
   "cloudPhase_importing": "استيراد",

@@ -132,7 +132,7 @@
   "cloudPhase_testing": "בוחן",
   "cloudPhase_hashing": "האשינג",
   "cloudPhase_reading-manifest": "מניפסט קריאה",
-  "cloudPhase_uploading": "מעלה",
+  "cloudPhase_uploading": "מעלה קבצים",
   "cloudPhase_downloading": "מוריד",
   "cloudPhase_writing-manifest": "כתיבת מניפסט",
   "cloudPhase_importing": "מייבא",

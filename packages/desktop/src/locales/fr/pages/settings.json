@@ -132,7 +132,7 @@
   "cloudPhase_testing": "Test",
   "cloudPhase_hashing": "Calcul des empreintes",
   "cloudPhase_reading-manifest": "Lecture du manifeste",
-  "cloudPhase_uploading": "Envoi",
+  "cloudPhase_uploading": "Envoi des fichiers",
   "cloudPhase_downloading": "Téléchargement",
   "cloudPhase_writing-manifest": "Écriture du manifeste",
   "cloudPhase_importing": "Importation",

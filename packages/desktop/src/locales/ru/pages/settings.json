@@ -132,7 +132,7 @@
   "cloudPhase_testing": "Тестирование",
   "cloudPhase_hashing": "Хеширование",
   "cloudPhase_reading-manifest": "Чтение манифеста",
-  "cloudPhase_uploading": "Загрузка",
+  "cloudPhase_uploading": "Загрузка файлов",
   "cloudPhase_downloading": "Загрузка",
   "cloudPhase_writing-manifest": "Написание манифеста",
   "cloudPhase_importing": "Импорт",

@@ -132,7 +132,7 @@
   "cloudPhase_testing": "测试",
   "cloudPhase_hashing": "散列",
   "cloudPhase_reading-manifest": "阅读清单",
-  "cloudPhase_uploading": "上传中",
+  "cloudPhase_uploading": "上传文件",
   "cloudPhase_downloading": "正在下载",
   "cloudPhase_writing-manifest": "编写清单",
   "cloudPhase_importing": "输入",
