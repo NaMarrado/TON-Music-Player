@@ -30,5 +30,27 @@
   "importLoading": "Načítání playlistu...",
   "importAll": "Stáhnout",
   "importFormat": "Formát",
-  "importSuccess": "Playlist vytvořen s {{count}} skladbami"
+  "importSuccess": "Playlist vytvořen s {{count}} skladbami",
+  "failureReasons": {
+    "accessRequired": "Toto video na YouTube vyžaduje přístup, který TON nemá.",
+    "ageRestricted": "Toto video na YouTube je věkově omezené a nelze ho stáhnout.",
+    "authorizationRequired": "Zdroj vyžaduje přístup, který TON nemá.",
+    "conversion": "Převod zvuku selhal před uložením souboru.",
+    "copyrightRestricted": "Toto video na YouTube není dostupné kvůli omezení autorských práv.",
+    "fileSave": "Stažený zvukový soubor se nepodařilo uložit.",
+    "invalidAudio": "Zdroj vrátil neplatný nebo zablokovaný zvukový soubor.",
+    "network": "Stahování selhalo kvůli problému se síťovým připojením.",
+    "noCompatibleAudio": "Pro tuto položku není dostupný kompatibilní zvukový stream M4A.",
+    "noDownloadUrl": "Zdroj neposkytl adresu URL zvuku ke stažení.",
+    "noMatch": "Pro tuto skladbu nebyla nalezena vhodná shoda na YouTube.",
+    "privateVideo": "Toto video na YouTube je soukromé a nelze ho stáhnout.",
+    "rateLimited": "Zdroj dočasně omezuje počet stahování. Zkuste to později.",
+    "regionRestricted": "Toto video na YouTube není ve vaší oblasti dostupné.",
+    "rejectedLink": "Zdroj odmítl odkaz ke stažení. Pomocí Opakovat požádejte o nový odkaz.",
+    "sourceUnavailable": "Zdroj je dočasně nedostupný. Zkuste to později.",
+    "unavailableVideo": "Toto video na YouTube není dostupné nebo bylo odstraněno.",
+    "unknown": "Stahování neočekávaně selhalo. Zkuste ho spustit znovu pomocí Opakovat.",
+    "urlUnavailable": "Adresa URL ke stažení už není dostupná.",
+    "verificationRequired": "YouTube před stažením tohoto videa vyžaduje ověření."
+  }
 }

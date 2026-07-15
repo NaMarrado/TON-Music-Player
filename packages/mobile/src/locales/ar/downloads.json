@@ -34,5 +34,27 @@
   "resolvingPlaylist": "جارٍ تحميل قائمة التشغيل...",
   "queueingPlaylistProgress": "مسارات قائمة الانتظار {{current}} / {{total}}",
   "invalidPlaylistUrl": "عنوان URL لقائمة التشغيل غير صالح",
-  "tabLabel": "التنزيلات"
+  "tabLabel": "التنزيلات",
+  "failureReasons": {
+    "accessRequired": "يتطلب فيديو YouTube هذا صلاحية وصول غير متاحة لـ TON.",
+    "ageRestricted": "يخضع فيديو YouTube هذا لتقييد عمري ولا يمكن تنزيله.",
+    "authorizationRequired": "يتطلب المصدر صلاحية وصول غير متاحة لـ TON.",
+    "conversion": "فشل تحويل الصوت قبل حفظ الملف.",
+    "copyrightRestricted": "فيديو YouTube هذا غير متاح بسبب قيود حقوق النشر.",
+    "fileSave": "تعذر حفظ ملف الصوت الذي تم تنزيله.",
+    "invalidAudio": "أعاد المصدر ملف صوت غير صالح أو محظور.",
+    "network": "فشل التنزيل بسبب مشكلة في اتصال الشبكة.",
+    "noCompatibleAudio": "لا يتوفر بث صوت M4A متوافق لهذا العنصر.",
+    "noDownloadUrl": "لم يوفر المصدر رابط صوت قابلاً للتنزيل.",
+    "noMatch": "لم يتم العثور على نتيجة YouTube مناسبة لهذه الأغنية.",
+    "privateVideo": "فيديو YouTube هذا خاص ولا يمكن تنزيله.",
+    "rateLimited": "يحد المصدر من التنزيلات مؤقتًا. حاول مرة أخرى لاحقًا.",
+    "regionRestricted": "فيديو YouTube هذا غير متاح في منطقتك.",
+    "rejectedLink": "رفض المصدر رابط التنزيل. استخدم إعادة المحاولة لطلب رابط جديد.",
+    "sourceUnavailable": "المصدر غير متاح مؤقتًا. حاول مرة أخرى لاحقًا.",
+    "unavailableVideo": "فيديو YouTube هذا غير متاح أو تمت إزالته.",
+    "unknown": "فشل التنزيل بشكل غير متوقع. استخدم إعادة المحاولة.",
+    "urlUnavailable": "لم يعد رابط التنزيل متاحًا.",
+    "verificationRequired": "يتطلب YouTube التحقق قبل تنزيل هذا الفيديو."
+  }
 }

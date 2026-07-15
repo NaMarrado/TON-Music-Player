@@ -30,5 +30,27 @@
   "importLoading": "Loading playlist...",
   "importAll": "Download",
   "importFormat": "Format",
-  "importSuccess": "Playlist created with {{count}} tracks"
+  "importSuccess": "Playlist created with {{count}} tracks",
+  "failureReasons": {
+    "accessRequired": "This YouTube video requires access that TON does not have.",
+    "ageRestricted": "This YouTube video is age restricted and cannot be downloaded.",
+    "authorizationRequired": "The source requires access that TON does not have.",
+    "conversion": "Audio conversion failed before the file could be saved.",
+    "copyrightRestricted": "This YouTube video is unavailable because of a copyright restriction.",
+    "fileSave": "The downloaded audio file could not be saved.",
+    "invalidAudio": "The source returned an invalid or blocked audio file.",
+    "network": "The download failed because of a network connection problem.",
+    "noCompatibleAudio": "No compatible M4A audio stream is available for this item.",
+    "noDownloadUrl": "The source did not provide a downloadable audio URL.",
+    "noMatch": "No suitable YouTube match was found for this song.",
+    "privateVideo": "This YouTube video is private and cannot be downloaded.",
+    "rateLimited": "The source is temporarily rate limiting downloads. Try again later.",
+    "regionRestricted": "This YouTube video is not available in your region.",
+    "rejectedLink": "The source rejected the download link. Use Retry to request a new link.",
+    "sourceUnavailable": "The source is temporarily unavailable. Try again later.",
+    "unavailableVideo": "This YouTube video is unavailable or has been removed.",
+    "unknown": "The download failed unexpectedly. Use Retry to try again.",
+    "urlUnavailable": "The download URL is no longer available.",
+    "verificationRequired": "YouTube requires verification before this video can be downloaded."
+  }
 }

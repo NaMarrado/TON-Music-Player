@@ -34,5 +34,27 @@
   "resolvingPlaylist": "Cargando lista...",
   "queueingPlaylistProgress": "Añadiendo canciones {{current}} / {{total}}",
   "invalidPlaylistUrl": "La URL de la lista no es válida",
-  "tabLabel": "Descargas"
+  "tabLabel": "Descargas",
+  "failureReasons": {
+    "accessRequired": "Este video de YouTube requiere un acceso que TON no tiene.",
+    "ageRestricted": "Este video de YouTube tiene restricción de edad y no se puede descargar.",
+    "authorizationRequired": "La fuente requiere un acceso que TON no tiene.",
+    "conversion": "La conversión de audio falló antes de guardar el archivo.",
+    "copyrightRestricted": "Este video de YouTube no está disponible por una restricción de derechos de autor.",
+    "fileSave": "No se pudo guardar el archivo de audio descargado.",
+    "invalidAudio": "La fuente devolvió un archivo de audio no válido o bloqueado.",
+    "network": "La descarga falló por un problema de conexión de red.",
+    "noCompatibleAudio": "No hay un flujo de audio M4A compatible para este elemento.",
+    "noDownloadUrl": "La fuente no proporcionó una URL de audio descargable.",
+    "noMatch": "No se encontró una coincidencia adecuada en YouTube para esta canción.",
+    "privateVideo": "Este video de YouTube es privado y no se puede descargar.",
+    "rateLimited": "La fuente está limitando temporalmente las descargas. Inténtalo más tarde.",
+    "regionRestricted": "Este video de YouTube no está disponible en tu región.",
+    "rejectedLink": "La fuente rechazó el enlace de descarga. Usa Reintentar para solicitar uno nuevo.",
+    "sourceUnavailable": "La fuente no está disponible temporalmente. Inténtalo más tarde.",
+    "unavailableVideo": "Este video de YouTube no está disponible o fue eliminado.",
+    "unknown": "La descarga falló inesperadamente. Usa Reintentar para volver a intentarlo.",
+    "urlUnavailable": "La URL de descarga ya no está disponible.",
+    "verificationRequired": "YouTube requiere verificación antes de descargar este video."
+  }
 }

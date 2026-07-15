@@ -1,4 +1,4 @@
-import type { SupportedLanguage } from '@ton/core';
+import type { LocaleResourceObject, SupportedLanguage } from '@ton/core';
 import homeEn from './en/home.json';
 import homeCs from './cs/home.json';
 import libraryEn from './en/library.json';
@@ -117,7 +117,7 @@ import artistZh from './zh/artist.json';
 import albumZh from './zh/album.json';
 import nowPlayingZh from './zh/now-playing.json';
 
-export const mobileResources: Record<SupportedLanguage, Record<string, Record<string, string>>> = {
+export const mobileResources: Record<SupportedLanguage, Record<string, LocaleResourceObject>> = {
   en: {
     home: homeEn,
     library: libraryEn,

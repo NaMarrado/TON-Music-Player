@@ -30,5 +30,27 @@
   "importLoading": "Chargement de la playlist...",
   "importAll": "Télécharger",
   "importFormat": "Format",
-  "importSuccess": "Playlist créée avec {{count}} titres"
+  "importSuccess": "Playlist créée avec {{count}} titres",
+  "failureReasons": {
+    "accessRequired": "Cette vidéo YouTube nécessite un accès dont TON ne dispose pas.",
+    "ageRestricted": "Cette vidéo YouTube est soumise à une limite d’âge et ne peut pas être téléchargée.",
+    "authorizationRequired": "La source nécessite un accès dont TON ne dispose pas.",
+    "conversion": "La conversion audio a échoué avant l’enregistrement du fichier.",
+    "copyrightRestricted": "Cette vidéo YouTube est indisponible en raison d’une restriction de droits d’auteur.",
+    "fileSave": "Le fichier audio téléchargé n’a pas pu être enregistré.",
+    "invalidAudio": "La source a renvoyé un fichier audio invalide ou bloqué.",
+    "network": "Le téléchargement a échoué en raison d’un problème de connexion réseau.",
+    "noCompatibleAudio": "Aucun flux audio M4A compatible n’est disponible pour cet élément.",
+    "noDownloadUrl": "La source n’a fourni aucune URL audio téléchargeable.",
+    "noMatch": "Aucune correspondance YouTube appropriée n’a été trouvée pour ce morceau.",
+    "privateVideo": "Cette vidéo YouTube est privée et ne peut pas être téléchargée.",
+    "rateLimited": "La source limite temporairement les téléchargements. Réessayez plus tard.",
+    "regionRestricted": "Cette vidéo YouTube n’est pas disponible dans votre région.",
+    "rejectedLink": "La source a refusé le lien de téléchargement. Utilisez Réessayer pour en demander un nouveau.",
+    "sourceUnavailable": "La source est temporairement indisponible. Réessayez plus tard.",
+    "unavailableVideo": "Cette vidéo YouTube est indisponible ou a été supprimée.",
+    "unknown": "Le téléchargement a échoué de manière inattendue. Utilisez Réessayer.",
+    "urlUnavailable": "L’URL de téléchargement n’est plus disponible.",
+    "verificationRequired": "YouTube exige une vérification avant le téléchargement de cette vidéo."
+  }
 }

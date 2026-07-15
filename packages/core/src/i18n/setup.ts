@@ -21,6 +21,7 @@ import {
   directionalTextPostProcessor,
   prepareLocaleResources,
 } from './text-direction';
+import type { LocaleResourceObject } from './types';
 
 export const DEFAULT_LANGUAGE: SupportedLanguage = 'en';
 export const FALLBACK_LANGUAGE: SupportedLanguage = 'en';
@@ -30,7 +31,7 @@ export type { SupportedLanguage } from './languages';
 
 type I18nPlugin = Module | ThirdPartyModule | BackendModule | LanguageDetectorModule;
 
-const commonResources: Record<SupportedLanguage, { common: Record<string, string> }> = {
+const commonResources: Record<SupportedLanguage, { common: LocaleResourceObject }> = {
   en: { common: prepareLocaleResources('en', commonEn) },
   cs: { common: prepareLocaleResources('cs', commonCs) },
   es: { common: prepareLocaleResources('es', commonEs) },

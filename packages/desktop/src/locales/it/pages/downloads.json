@@ -30,5 +30,27 @@
   "importLoading": "Caricamento playlist...",
   "importAll": "Scarica",
   "importFormat": "Formato",
-  "importSuccess": "Playlist creata con {{count}} brani"
+  "importSuccess": "Playlist creata con {{count}} brani",
+  "failureReasons": {
+    "accessRequired": "Questo video di YouTube richiede un accesso che TON non possiede.",
+    "ageRestricted": "Questo video di YouTube ha limiti di età e non può essere scaricato.",
+    "authorizationRequired": "La fonte richiede un accesso che TON non possiede.",
+    "conversion": "La conversione audio non è riuscita prima del salvataggio del file.",
+    "copyrightRestricted": "Questo video di YouTube non è disponibile per una restrizione di copyright.",
+    "fileSave": "Impossibile salvare il file audio scaricato.",
+    "invalidAudio": "La fonte ha restituito un file audio non valido o bloccato.",
+    "network": "Il download non è riuscito a causa di un problema di rete.",
+    "noCompatibleAudio": "Nessun flusso audio M4A compatibile è disponibile per questo elemento.",
+    "noDownloadUrl": "La fonte non ha fornito un URL audio scaricabile.",
+    "noMatch": "Non è stata trovata una corrispondenza YouTube adatta per questo brano.",
+    "privateVideo": "Questo video di YouTube è privato e non può essere scaricato.",
+    "rateLimited": "La fonte sta limitando temporaneamente i download. Riprova più tardi.",
+    "regionRestricted": "Questo video di YouTube non è disponibile nella tua regione.",
+    "rejectedLink": "La fonte ha rifiutato il link di download. Usa Riprova per richiederne uno nuovo.",
+    "sourceUnavailable": "La fonte è temporaneamente non disponibile. Riprova più tardi.",
+    "unavailableVideo": "Questo video di YouTube non è disponibile o è stato rimosso.",
+    "unknown": "Il download non è riuscito in modo imprevisto. Usa Riprova.",
+    "urlUnavailable": "L’URL di download non è più disponibile.",
+    "verificationRequired": "YouTube richiede una verifica prima di scaricare questo video."
+  }
 }

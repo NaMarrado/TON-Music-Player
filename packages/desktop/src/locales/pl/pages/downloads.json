@@ -30,5 +30,27 @@
   "importLoading": "Ładowanie playlisty...",
   "importAll": "Pobierz",
   "importFormat": "Format",
-  "importSuccess": "Playlista utworzona z utworów {{count}}"
+  "importSuccess": "Playlista utworzona z utworów {{count}}",
+  "failureReasons": {
+    "accessRequired": "Ten film w YouTube wymaga dostępu, którego TON nie ma.",
+    "ageRestricted": "Ten film w YouTube ma ograniczenie wiekowe i nie można go pobrać.",
+    "authorizationRequired": "Źródło wymaga dostępu, którego TON nie ma.",
+    "conversion": "Konwersja dźwięku nie powiodła się przed zapisaniem pliku.",
+    "copyrightRestricted": "Ten film w YouTube jest niedostępny z powodu ograniczeń praw autorskich.",
+    "fileSave": "Nie udało się zapisać pobranego pliku audio.",
+    "invalidAudio": "Źródło zwróciło nieprawidłowy lub zablokowany plik audio.",
+    "network": "Pobieranie nie powiodło się z powodu problemu z połączeniem sieciowym.",
+    "noCompatibleAudio": "Dla tego elementu nie jest dostępny zgodny strumień audio M4A.",
+    "noDownloadUrl": "Źródło nie udostępniło adresu URL audio do pobrania.",
+    "noMatch": "Nie znaleziono odpowiedniego wyniku w YouTube dla tego utworu.",
+    "privateVideo": "Ten film w YouTube jest prywatny i nie można go pobrać.",
+    "rateLimited": "Źródło tymczasowo ogranicza pobieranie. Spróbuj ponownie później.",
+    "regionRestricted": "Ten film w YouTube nie jest dostępny w Twoim regionie.",
+    "rejectedLink": "Źródło odrzuciło link pobierania. Użyj opcji Ponów, aby uzyskać nowy link.",
+    "sourceUnavailable": "Źródło jest tymczasowo niedostępne. Spróbuj ponownie później.",
+    "unavailableVideo": "Ten film w YouTube jest niedostępny lub został usunięty.",
+    "unknown": "Pobieranie nieoczekiwanie się nie powiodło. Użyj opcji Ponów.",
+    "urlUnavailable": "Adres URL pobierania nie jest już dostępny.",
+    "verificationRequired": "YouTube wymaga weryfikacji przed pobraniem tego filmu."
+  }
 }

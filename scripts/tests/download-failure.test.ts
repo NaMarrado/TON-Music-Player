@@ -1,7 +1,14 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
+import type { LocaleResourceObject } from '../../packages/core/src/i18n/types.ts';
+import { createI18nInstance } from '../../packages/core/src/i18n/setup.ts';
+import { addPreparedResourceBundle } from '../../packages/core/src/i18n/text-direction.ts';
+import type { SupportedLanguage } from '../../packages/core/src/i18n/languages.ts';
 import {
   AGE_RESTRICTED_DOWNLOAD_MESSAGE,
+  getDownloadFailureReason,
+  getDownloadFailureTranslationKey,
   isAgeRestrictedDownloadError,
   toDownloadFailureMessage,
 } from '../../packages/core/src/utils/download-failure.ts';
@@ -15,6 +22,11 @@ test('recognizes common YouTube age restriction messages', () => {
   assert.equal(
     toDownloadFailureMessage('This video may be inappropriate for some users. Confirm your age.'),
     AGE_RESTRICTED_DOWNLOAD_MESSAGE,
+  );
+  assert.equal(getDownloadFailureReason(AGE_RESTRICTED_DOWNLOAD_MESSAGE), 'ageRestricted');
+  assert.equal(
+    getDownloadFailureTranslationKey(AGE_RESTRICTED_DOWNLOAD_MESSAGE),
+    'failureReasons.ageRestricted',
   );
 });
 
@@ -50,4 +62,27 @@ test('keeps the existing initial attempt plus two automatic retries', () => {
   assert.equal(DOWNLOAD_RETRY_MAX + 1, 3);
   assert.equal(shouldRetryQueueFailure(AGE_RESTRICTED_DOWNLOAD_MESSAGE), false);
   assert.equal(shouldRetryQueueFailure('Network request failed'), true);
+});
+
+test('resolves localized download failures in every supported language', async () => {
+  const languages: SupportedLanguage[] = [
+    'en', 'cs', 'de', 'es', 'fr', 'it', 'pl', 'pt', 'ru', 'ja', 'zh', 'ar', 'he',
+  ];
+  const instance = createI18nInstance();
+
+  for (const language of languages) {
+    const localeUrl = new URL(
+      `../../packages/desktop/src/locales/${language}/pages/downloads.json`,
+      import.meta.url,
+    );
+    const resources = JSON.parse(readFileSync(localeUrl, 'utf8')) as LocaleResourceObject;
+    addPreparedResourceBundle(instance, language, 'downloads-test', resources);
+    await instance.changeLanguage(language);
+
+    const translated = instance.t('failureReasons.ageRestricted', { ns: 'downloads-test' });
+    const expected = (resources.failureReasons as LocaleResourceObject).ageRestricted;
+    assert.equal(typeof expected, 'string');
+    assert.equal(translated.includes(expected), true, language);
+    assert.notEqual(translated, 'failureReasons.ageRestricted', language);
+  }
 });

@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { getDownloadFailureTranslationKey } from '@ton/core';
 import { useTranslation } from 'react-i18next';
 import { cancelDownload, retryDownload, useDownloadItem } from '../../stores/download-store';
 import { AutoMarqueeText } from '../../components/auto-marquee-text';
@@ -60,7 +61,7 @@ export const DownloadRow = memo(function DownloadRow({ itemId }: { itemId: numbe
             style={{ fontSize: 10, lineHeight: 13, color: '#ef4444', marginTop: 2 }}
             numberOfLines={2}
           >
-            {item.error}
+            {t(getDownloadFailureTranslationKey(item.error))}
           </Text>
         )}
       </View>

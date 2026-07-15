@@ -30,5 +30,27 @@
   "importLoading": "正在加载播放列表...",
   "importAll": "下载",
   "importFormat": "格式",
-  "importSuccess": "使用 {{count}} 曲目创建的播放列表"
+  "importSuccess": "使用 {{count}} 曲目创建的播放列表",
+  "failureReasons": {
+    "accessRequired": "此 YouTube 视频需要 TON 不具备的访问权限。",
+    "ageRestricted": "此 YouTube 视频有年龄限制，无法下载。",
+    "authorizationRequired": "来源需要 TON 不具备的访问权限。",
+    "conversion": "保存文件前音频转换失败。",
+    "copyrightRestricted": "此 YouTube 视频因版权限制而无法使用。",
+    "fileSave": "无法保存已下载的音频文件。",
+    "invalidAudio": "来源返回了无效或被阻止的音频文件。",
+    "network": "由于网络连接问题，下载失败。",
+    "noCompatibleAudio": "此项目没有可用的兼容 M4A 音频流。",
+    "noDownloadUrl": "来源未提供可下载的音频 URL。",
+    "noMatch": "未在 YouTube 上找到与此歌曲匹配的合适结果。",
+    "privateVideo": "此 YouTube 视频为私密视频，无法下载。",
+    "rateLimited": "来源暂时限制下载。请稍后重试。",
+    "regionRestricted": "此 YouTube 视频在你所在的地区不可用。",
+    "rejectedLink": "来源拒绝了下载链接。请使用“重试”请求新链接。",
+    "sourceUnavailable": "来源暂时不可用。请稍后重试。",
+    "unavailableVideo": "此 YouTube 视频不可用或已被删除。",
+    "unknown": "下载意外失败。请使用“重试”再试一次。",
+    "urlUnavailable": "下载 URL 已不可用。",
+    "verificationRequired": "下载此视频前，YouTube 要求进行验证。"
+  }
 }
