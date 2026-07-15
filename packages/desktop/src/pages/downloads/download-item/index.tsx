@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import type { DownloadItem } from '@ton/core';
+import { getDownloadFailureTranslationKey, type DownloadItem } from '@ton/core';
 import { DownloadItemActions } from './actions';
 import { DownloadArtwork } from './download-artwork';
 import { DownloadProgressBar } from './progress-bar';
@@ -63,7 +63,7 @@ export const DownloadItemRow = memo(function DownloadItemRow({ item, t }: Downlo
                 WebkitLineClamp: 2,
               }}
             >
-              {item.error_message}
+              {t(getDownloadFailureTranslationKey(item.error_message))}
             </div>
           )}
           {isActive && <DownloadProgressBar item={item} />}

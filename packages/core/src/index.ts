@@ -13,8 +13,14 @@ export { debounce } from './utils/debounce';
 export { hashBuffer } from './utils/hash';
 export {
   AGE_RESTRICTED_DOWNLOAD_MESSAGE,
+  getDownloadFailureReason,
+  getDownloadFailureTranslationKey,
   isAgeRestrictedDownloadError,
   toDownloadFailureMessage,
+} from './utils/download-failure';
+export type {
+  DownloadFailureReason,
+  DownloadFailureTranslationKey,
 } from './utils/download-failure';
 export {
   APP_NAME,
@@ -220,4 +226,9 @@ export {
   isolateDirectionalText,
   prepareLocaleResources,
 } from './i18n/text-direction';
-export type { LocaleResources, I18nConfig } from './i18n/types';
+export type {
+  I18nConfig,
+  LocaleResourceObject,
+  LocaleResources,
+  LocaleResourceValue,
+} from './i18n/types';

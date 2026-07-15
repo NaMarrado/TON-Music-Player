@@ -34,5 +34,27 @@
   "resolvingPlaylist": "A carregar playlist...",
   "queueingPlaylistProgress": "A adicionar faixas {{current}} / {{total}}",
   "invalidPlaylistUrl": "URL de playlist inválido",
-  "tabLabel": "Transferências"
+  "tabLabel": "Transferências",
+  "failureReasons": {
+    "accessRequired": "Este vídeo do YouTube requer um acesso que o TON não possui.",
+    "ageRestricted": "Este vídeo do YouTube tem restrição de idade e não pode ser baixado.",
+    "authorizationRequired": "A fonte requer um acesso que o TON não possui.",
+    "conversion": "A conversão de áudio falhou antes de o arquivo ser salvo.",
+    "copyrightRestricted": "Este vídeo do YouTube está indisponível devido a uma restrição de direitos autorais.",
+    "fileSave": "Não foi possível salvar o arquivo de áudio baixado.",
+    "invalidAudio": "A fonte retornou um arquivo de áudio inválido ou bloqueado.",
+    "network": "O download falhou devido a um problema de conexão de rede.",
+    "noCompatibleAudio": "Não há um fluxo de áudio M4A compatível disponível para este item.",
+    "noDownloadUrl": "A fonte não forneceu uma URL de áudio disponível para download.",
+    "noMatch": "Nenhuma correspondência adequada foi encontrada no YouTube para esta música.",
+    "privateVideo": "Este vídeo do YouTube é privado e não pode ser baixado.",
+    "rateLimited": "A fonte está limitando temporariamente os downloads. Tente novamente mais tarde.",
+    "regionRestricted": "Este vídeo do YouTube não está disponível na sua região.",
+    "rejectedLink": "A fonte rejeitou o link de download. Use Tentar novamente para solicitar um novo link.",
+    "sourceUnavailable": "A fonte está temporariamente indisponível. Tente novamente mais tarde.",
+    "unavailableVideo": "Este vídeo do YouTube está indisponível ou foi removido.",
+    "unknown": "O download falhou inesperadamente. Use Tentar novamente.",
+    "urlUnavailable": "A URL de download não está mais disponível.",
+    "verificationRequired": "O YouTube exige verificação antes que este vídeo possa ser baixado."
+  }
 }

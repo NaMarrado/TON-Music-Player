@@ -30,5 +30,27 @@
   "importLoading": "Playlist wird geladen...",
   "importAll": "Herunterladen",
   "importFormat": "Format",
-  "importSuccess": "Playlist mit {{count}} Titeln erstellt"
+  "importSuccess": "Playlist mit {{count}} Titeln erstellt",
+  "failureReasons": {
+    "accessRequired": "Dieses YouTube-Video erfordert einen Zugriff, über den TON nicht verfügt.",
+    "ageRestricted": "Dieses YouTube-Video ist altersbeschränkt und kann nicht heruntergeladen werden.",
+    "authorizationRequired": "Die Quelle erfordert einen Zugriff, über den TON nicht verfügt.",
+    "conversion": "Die Audiokonvertierung ist vor dem Speichern der Datei fehlgeschlagen.",
+    "copyrightRestricted": "Dieses YouTube-Video ist wegen einer Urheberrechtsbeschränkung nicht verfügbar.",
+    "fileSave": "Die heruntergeladene Audiodatei konnte nicht gespeichert werden.",
+    "invalidAudio": "Die Quelle hat eine ungültige oder blockierte Audiodatei zurückgegeben.",
+    "network": "Der Download ist wegen eines Netzwerkproblems fehlgeschlagen.",
+    "noCompatibleAudio": "Für dieses Element ist kein kompatibler M4A-Audiostream verfügbar.",
+    "noDownloadUrl": "Die Quelle hat keine herunterladbare Audio-URL bereitgestellt.",
+    "noMatch": "Für diesen Titel wurde kein passender Treffer auf YouTube gefunden.",
+    "privateVideo": "Dieses YouTube-Video ist privat und kann nicht heruntergeladen werden.",
+    "rateLimited": "Die Quelle begrenzt Downloads vorübergehend. Versuche es später erneut.",
+    "regionRestricted": "Dieses YouTube-Video ist in deiner Region nicht verfügbar.",
+    "rejectedLink": "Die Quelle hat den Download-Link abgelehnt. Fordere mit Wiederholen einen neuen Link an.",
+    "sourceUnavailable": "Die Quelle ist vorübergehend nicht verfügbar. Versuche es später erneut.",
+    "unavailableVideo": "Dieses YouTube-Video ist nicht verfügbar oder wurde entfernt.",
+    "unknown": "Der Download ist unerwartet fehlgeschlagen. Versuche es mit Wiederholen erneut.",
+    "urlUnavailable": "Die Download-URL ist nicht mehr verfügbar.",
+    "verificationRequired": "YouTube verlangt eine Bestätigung, bevor dieses Video heruntergeladen werden kann."
+  }
 }

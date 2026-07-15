@@ -34,5 +34,27 @@
   "resolvingPlaylist": "טוען רשימת השמעה...",
   "queueingPlaylistProgress": "תור רצועות {{current}} / {{total}}",
   "invalidPlaylistUrl": "כתובת אתר לא חוקית של פלייליסט",
-  "tabLabel": "הורדות"
+  "tabLabel": "הורדות",
+  "failureReasons": {
+    "accessRequired": "סרטון YouTube זה דורש הרשאה שאינה זמינה ל-TON.",
+    "ageRestricted": "סרטון YouTube זה מוגבל לפי גיל ולא ניתן להוריד אותו.",
+    "authorizationRequired": "המקור דורש הרשאה שאינה זמינה ל-TON.",
+    "conversion": "המרת השמע נכשלה לפני שמירת הקובץ.",
+    "copyrightRestricted": "סרטון YouTube זה אינו זמין עקב הגבלת זכויות יוצרים.",
+    "fileSave": "לא ניתן היה לשמור את קובץ השמע שהורד.",
+    "invalidAudio": "המקור החזיר קובץ שמע לא תקין או חסום.",
+    "network": "ההורדה נכשלה עקב בעיה בחיבור לרשת.",
+    "noCompatibleAudio": "אין זרם שמע M4A תואם זמין עבור פריט זה.",
+    "noDownloadUrl": "המקור לא סיפק כתובת שמע זמינה להורדה.",
+    "noMatch": "לא נמצאה התאמה מתאימה ב-YouTube עבור השיר הזה.",
+    "privateVideo": "סרטון YouTube זה פרטי ולא ניתן להוריד אותו.",
+    "rateLimited": "המקור מגביל הורדות באופן זמני. נסה שוב מאוחר יותר.",
+    "regionRestricted": "סרטון YouTube זה אינו זמין באזור שלך.",
+    "rejectedLink": "המקור דחה את קישור ההורדה. השתמש בניסיון חוזר כדי לבקש קישור חדש.",
+    "sourceUnavailable": "המקור אינו זמין באופן זמני. נסה שוב מאוחר יותר.",
+    "unavailableVideo": "סרטון YouTube זה אינו זמין או הוסר.",
+    "unknown": "ההורדה נכשלה באופן בלתי צפוי. השתמש בניסיון חוזר.",
+    "urlUnavailable": "כתובת ההורדה אינה זמינה עוד.",
+    "verificationRequired": "YouTube דורש אימות לפני שניתן להוריד סרטון זה."
+  }
 }

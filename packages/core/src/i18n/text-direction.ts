@@ -1,4 +1,5 @@
 import type { PostProcessorModule, TOptions, i18n } from 'i18next';
+import type { LocaleResourceObject } from './types';
 
 type SupportedLanguage = 'en' | 'cs' | 'es' | 'de' | 'fr' | 'pt' | 'it' | 'pl' | 'ru' | 'ja' | 'ar' | 'he' | 'zh';
 type LanguageDirection = 'ltr' | 'rtl';
@@ -68,12 +69,20 @@ export function isolateDirectionalText(
 
 export function prepareLocaleResources(
   language: SupportedLanguage,
-  resources: Record<string, string>,
-): Record<string, string> {
-  const prepared = { ...resources };
+  resources: LocaleResourceObject,
+): LocaleResourceObject {
+  const prepared: LocaleResourceObject = {};
   const pluralCategories = LANGUAGE_PLURAL_CATEGORIES[language];
 
   for (const [key, value] of Object.entries(resources)) {
+    prepared[key] = typeof value === 'string'
+      ? value
+      : prepareLocaleResources(language, value);
+
+    if (typeof value !== 'string') {
+      continue;
+    }
+
     const match = key.match(PLURAL_SUFFIX_PATTERN);
     if (!match || match[2] !== 'other') {
       continue;
@@ -92,7 +101,7 @@ export function addPreparedResourceBundle(
   instance: i18n,
   language: SupportedLanguage,
   namespace: string,
-  resources: Record<string, string>,
+  resources: LocaleResourceObject,
 ): void {
   instance.addResourceBundle(
     language,

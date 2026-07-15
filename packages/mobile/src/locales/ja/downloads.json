@@ -34,5 +34,27 @@
   "resolvingPlaylist": "プレイリストを読み込んでいます...",
   "queueingPlaylistProgress": "キューイングトラック {{current}} / {{total}}",
   "invalidPlaylistUrl": "無効なプレイリスト URL",
-  "tabLabel": "ダウンロード"
+  "tabLabel": "ダウンロード",
+  "failureReasons": {
+    "accessRequired": "このYouTube動画には、TONが持っていないアクセス権が必要です。",
+    "ageRestricted": "このYouTube動画には年齢制限があるため、ダウンロードできません。",
+    "authorizationRequired": "配信元には、TONが持っていないアクセス権が必要です。",
+    "conversion": "ファイルを保存する前に音声の変換に失敗しました。",
+    "copyrightRestricted": "このYouTube動画は著作権の制限により利用できません。",
+    "fileSave": "ダウンロードした音声ファイルを保存できませんでした。",
+    "invalidAudio": "配信元から無効またはブロックされた音声ファイルが返されました。",
+    "network": "ネットワーク接続の問題によりダウンロードに失敗しました。",
+    "noCompatibleAudio": "この項目には互換性のあるM4A音声ストリームがありません。",
+    "noDownloadUrl": "配信元からダウンロード可能な音声URLが提供されませんでした。",
+    "noMatch": "この曲に一致する適切なYouTube動画が見つかりませんでした。",
+    "privateVideo": "このYouTube動画は非公開のため、ダウンロードできません。",
+    "rateLimited": "配信元が一時的にダウンロードを制限しています。後でもう一度お試しください。",
+    "regionRestricted": "このYouTube動画はお住まいの地域では利用できません。",
+    "rejectedLink": "配信元がダウンロードリンクを拒否しました。再試行して新しいリンクを取得してください。",
+    "sourceUnavailable": "配信元は一時的に利用できません。後でもう一度お試しください。",
+    "unavailableVideo": "このYouTube動画は利用できないか、削除されています。",
+    "unknown": "ダウンロードが予期せず失敗しました。再試行してください。",
+    "urlUnavailable": "ダウンロードURLは利用できなくなりました。",
+    "verificationRequired": "この動画をダウンロードする前にYouTubeでの確認が必要です。"
+  }
 }

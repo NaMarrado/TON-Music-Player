@@ -1,17 +1,19 @@
+import type { LocaleResourceObject } from '@ton/core';
+
 export function buildDesktopNamespaces(
-  sidebar: Record<string, string>,
-  nowPlayingBar: Record<string, string>,
-  playbackControls: Record<string, string>,
-  volumeSlider: Record<string, string>,
-  queuePanel: Record<string, string>,
-  home: Record<string, string>,
-  search: Record<string, string>,
-  library: Record<string, string>,
-  downloads: Record<string, string>,
-  settings: Record<string, string>,
-  artists: Record<string, string>,
-  playlist: Record<string, string>,
-  artist: Record<string, string>,
+  sidebar: LocaleResourceObject,
+  nowPlayingBar: LocaleResourceObject,
+  playbackControls: LocaleResourceObject,
+  volumeSlider: LocaleResourceObject,
+  queuePanel: LocaleResourceObject,
+  home: LocaleResourceObject,
+  search: LocaleResourceObject,
+  library: LocaleResourceObject,
+  downloads: LocaleResourceObject,
+  settings: LocaleResourceObject,
+  artists: LocaleResourceObject,
+  playlist: LocaleResourceObject,
+  artist: LocaleResourceObject,
 ) {
   return {
     'components/layout/sidebar': sidebar,

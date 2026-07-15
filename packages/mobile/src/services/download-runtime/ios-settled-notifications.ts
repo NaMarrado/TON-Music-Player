@@ -1,4 +1,5 @@
 import * as Notifications from 'expo-notifications';
+import { getDownloadFailureTranslationKey } from '@ton/core';
 import i18n from '../../i18n';
 import { claimQueueItemSettledNotification } from '../download-queue/db';
 import {
@@ -22,7 +23,7 @@ let handlerInitialized = false;
 
 function getNotificationBody(payload: DownloadNotificationPayload): string {
   if (payload.error?.trim()) {
-    return payload.error;
+    return i18n.t(`downloads:${getDownloadFailureTranslationKey(payload.error)}`);
   }
 
   if (payload.artist.trim()) {

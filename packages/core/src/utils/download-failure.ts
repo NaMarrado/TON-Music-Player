@@ -1,6 +1,53 @@
 export const AGE_RESTRICTED_DOWNLOAD_MESSAGE =
   'This YouTube video is age restricted and cannot be downloaded.';
 
+export type DownloadFailureReason =
+  | 'accessRequired'
+  | 'ageRestricted'
+  | 'authorizationRequired'
+  | 'conversion'
+  | 'copyrightRestricted'
+  | 'fileSave'
+  | 'invalidAudio'
+  | 'network'
+  | 'noCompatibleAudio'
+  | 'noDownloadUrl'
+  | 'noMatch'
+  | 'privateVideo'
+  | 'rateLimited'
+  | 'regionRestricted'
+  | 'rejectedLink'
+  | 'sourceUnavailable'
+  | 'unavailableVideo'
+  | 'unknown'
+  | 'urlUnavailable'
+  | 'verificationRequired';
+
+export type DownloadFailureTranslationKey = `failureReasons.${DownloadFailureReason}`;
+
+const DOWNLOAD_FAILURE_MESSAGES: Record<DownloadFailureReason, string> = {
+  accessRequired: 'This YouTube video requires access that TON does not have.',
+  ageRestricted: AGE_RESTRICTED_DOWNLOAD_MESSAGE,
+  authorizationRequired: 'The source requires access that TON does not have.',
+  conversion: 'Audio conversion failed before the file could be saved.',
+  copyrightRestricted: 'This YouTube video is unavailable because of a copyright restriction.',
+  fileSave: 'The downloaded audio file could not be saved.',
+  invalidAudio: 'The source returned an invalid or blocked audio file.',
+  network: 'The download failed because of a network connection problem.',
+  noCompatibleAudio: 'No compatible M4A audio stream is available for this item.',
+  noDownloadUrl: 'The source did not provide a downloadable audio URL.',
+  noMatch: 'No suitable YouTube match was found for this song.',
+  privateVideo: 'This YouTube video is private and cannot be downloaded.',
+  rateLimited: 'The source is temporarily rate limiting downloads. Try again later.',
+  regionRestricted: 'This YouTube video is not available in your region.',
+  rejectedLink: 'The source rejected the download link. Use Retry to request a new link.',
+  sourceUnavailable: 'The source is temporarily unavailable. Try again later.',
+  unavailableVideo: 'This YouTube video is unavailable or has been removed.',
+  unknown: 'The download failed unexpectedly. Use Retry to try again.',
+  urlUnavailable: 'The download URL is no longer available.',
+  verificationRequired: 'YouTube requires verification before this video can be downloaded.',
+};
+
 const AGE_RESTRICTED_PATTERNS = [
   /age[- ]restricted/i,
   /confirm your age/i,
@@ -39,96 +86,110 @@ export function isAgeRestrictedDownloadError(error: unknown): boolean {
   return AGE_RESTRICTED_PATTERNS.some((pattern) => pattern.test(message));
 }
 
-export function toDownloadFailureMessage(error: unknown): string {
+export function getDownloadFailureReason(error: unknown): DownloadFailureReason {
   const message = getRawFailureMessage(error);
 
   if (isAgeRestrictedDownloadError(message)) {
-    return AGE_RESTRICTED_DOWNLOAD_MESSAGE;
+    return 'ageRestricted';
   }
 
   if (/private video|video is private|this video is private/i.test(message)) {
-    return 'This YouTube video is private and cannot be downloaded.';
+    return 'privateVideo';
   }
 
   if (/copyright (?:claim|restriction)|blocked.*copyright|copyright.*blocked/i.test(message)) {
-    return 'This YouTube video is unavailable because of a copyright restriction.';
+    return 'copyrightRestricted';
   }
 
   if (/not available in your (?:country|region)|geo(?:graphically)?[- ]blocked/i.test(message)) {
-    return 'This YouTube video is not available in your region.';
+    return 'regionRestricted';
   }
 
-  if (/members[- ]only|premium content|join this channel/i.test(message)) {
-    return 'This YouTube video requires access that TON does not have.';
+  if (/members[- ]only|premium content|join this channel|video requires access/i.test(message)) {
+    return 'accessRequired';
   }
 
   if (
     /video unavailable|video is unavailable|video is not available|content isn't available|has been removed|deleted video|this video has been removed/i
       .test(message)
   ) {
-    return 'This YouTube video is unavailable or has been removed.';
+    return 'unavailableVideo';
   }
 
   if (
     /no youtube match found|no contents found in search response|search returned no (?:result|track)/i
       .test(message)
   ) {
-    return 'No suitable YouTube match was found for this song.';
+    return 'noMatch';
   }
 
   if (/no download url|missing final url|returned no final url/i.test(message)) {
-    return 'The source did not provide a downloadable audio URL.';
+    return 'noDownloadUrl';
   }
 
   if (
     /no compatible (?:aac|m4a)|incompatible (?:aac|m4a)|incompatible_download_mime|compatible m4a file|requested format is not available|no video formats found/i
       .test(message)
   ) {
-    return 'No compatible M4A audio stream is available for this item.';
+    return 'noCompatibleAudio';
   }
 
   if (/\bHTTP 429\b|rate[- ]limit|too many requests|provider_rate_limited/i.test(message)) {
-    return 'The source is temporarily rate limiting downloads. Try again later.';
+    return 'rateLimited';
   }
 
   if (/\bHTTP (?:404|410)\b|url is no longer available/i.test(message)) {
-    return 'The download URL is no longer available.';
+    return 'urlUnavailable';
   }
 
-  if (/\bHTTP 5\d\d\b|service unavailable|bad gateway/i.test(message)) {
-    return 'The source is temporarily unavailable. Try again later.';
+  if (/\bHTTP 5\d\d\b|service unavailable|bad gateway|source is temporarily unavailable/i.test(message)) {
+    return 'sourceUnavailable';
   }
 
-  if (/\bHTTP 401\b|unauthorized/i.test(message)) {
-    return 'The source requires access that TON does not have.';
+  if (/\bHTTP 401\b|unauthorized|source requires access/i.test(message)) {
+    return 'authorizationRequired';
   }
 
-  if (/sign in to confirm you(?:'|’)re not a bot|bot verification/i.test(message)) {
-    return 'YouTube requires verification before this video can be downloaded.';
+  if (/sign in to confirm you(?:'|’)re not a bot|bot verification|youtube requires verification/i.test(message)) {
+    return 'verificationRequired';
   }
 
-  if (/provider_exhausted|\bHTTP 403\b|forbidden|download link.*rejected/i.test(message)) {
-    return 'The source rejected the download link. Use Retry to request a new link.';
+  if (/provider_exhausted|\bHTTP 403\b|forbidden|rejected the download link|download link.*rejected/i.test(message)) {
+    return 'rejectedLink';
   }
 
-  if (/network request failed|network.*(?:lost|offline)|timed? out|timeout|econn|enotfound/i.test(message)) {
-    return 'The download failed because of a network connection problem.';
+  if (/network request failed|network.*(?:lost|offline|connection)|timed? out|timeout|econn|enotfound/i.test(message)) {
+    return 'network';
   }
 
-  if (/download too small|invalid or blocked audio|likely blocked/i.test(message)) {
-    return 'The source returned an invalid or blocked audio file.';
+  if (/download too small|invalid or blocked audio|likely blocked|returned an invalid or blocked/i.test(message)) {
+    return 'invalidAudio';
   }
 
-  if (/ffmpeg|aac conversion|conversion produced|transcod/i.test(message)) {
-    return 'Audio conversion failed before the file could be saved.';
+  if (/ffmpeg|aac conversion|conversion produced|transcod|audio conversion failed/i.test(message)) {
+    return 'conversion';
   }
 
-  if (/cannot read downloaded file|downloaded file not found|enoent/i.test(message)) {
-    return 'The downloaded audio file could not be saved.';
+  if (/cannot read downloaded file|downloaded file not found|enoent|audio file could not be saved/i.test(message)) {
+    return 'fileSave';
+  }
+
+  return 'unknown';
+}
+
+export function getDownloadFailureTranslationKey(error: unknown): DownloadFailureTranslationKey {
+  return `failureReasons.${getDownloadFailureReason(error)}`;
+}
+
+export function toDownloadFailureMessage(error: unknown): string {
+  const message = getRawFailureMessage(error);
+  const reason = getDownloadFailureReason(message);
+  if (reason !== 'unknown') {
+    return DOWNLOAD_FAILURE_MESSAGES[reason];
   }
 
   const detail = getSafeFailureDetail(message);
   return detail
     ? `Download failed: ${detail}`
-    : 'The download failed unexpectedly. Use Retry to try again.';
+    : DOWNLOAD_FAILURE_MESSAGES.unknown;
 }
