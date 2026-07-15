@@ -568,7 +568,7 @@
 				CODE_SIGN_ENTITLEMENTS = TON/TON.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1000027;
+				CURRENT_PROJECT_VERSION = 1000028;
 				DEVELOPMENT_TEAM = A9TNGB88VK;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -581,7 +581,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.27;
+				MARKETING_VERSION = 1.0.28;
 				OTHER_LDFLAGS = "$(inherited)";
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = cz.ton.player;
@@ -604,7 +604,7 @@
 				CODE_SIGN_ENTITLEMENTS = TON/TON.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1000027;
+				CURRENT_PROJECT_VERSION = 1000028;
 				DEVELOPMENT_TEAM = A9TNGB88VK;
 				INFOPLIST_FILE = TON/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
@@ -612,7 +612,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.27;
+				MARKETING_VERSION = 1.0.28;
 				OTHER_LDFLAGS = "$(inherited)";
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = cz.ton.player;
@@ -754,7 +754,7 @@
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1000027;
+				CURRENT_PROJECT_VERSION = 1000028;
 				DEVELOPMENT_TEAM = A9TNGB88VK;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "../native/ios/download-activity/Info.plist";
@@ -764,7 +764,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.27;
+				MARKETING_VERSION = 1.0.28;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = cz.ton.player.downloads;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -780,7 +780,7 @@
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1000027;
+				CURRENT_PROJECT_VERSION = 1000028;
 				DEVELOPMENT_TEAM = A9TNGB88VK;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "../native/ios/download-activity/Info.plist";
@@ -790,7 +790,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.27;
+				MARKETING_VERSION = 1.0.28;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = cz.ton.player.downloads;
 				PRODUCT_NAME = "$(TARGET_NAME)";
