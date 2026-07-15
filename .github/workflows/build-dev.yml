@@ -161,6 +161,13 @@ jobs:
             exit 1
           fi
           kill "$APP_PID" || true
+          for _ in {1..5}; do
+            if ! kill -0 "$APP_PID" 2>/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          kill -KILL "$APP_PID" 2>/dev/null || true
           wait "$APP_PID" || true
 
       - name: Smoke start Linux app
