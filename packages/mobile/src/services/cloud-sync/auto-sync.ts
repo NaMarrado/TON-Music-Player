@@ -96,6 +96,7 @@ export function stopMobileCloudAutoSync(): void {
   runtime.networkSubscription = null;
   runtime.coordinator = null;
   runtime.configuredContextCache = null;
+  runtime.currentProgress = null;
   runtime.lastObservedGeneration = -1;
   runtime.initialized = false;
 }
@@ -133,6 +134,7 @@ export async function notifyMobileCloudConfigChanged(): Promise<void> {
   const restartForeground = runtime.foregroundStarted;
   const previousScopeId = runtime.configuredContextCache?.scopeId ?? null;
   runtime.statusPersistenceSuspended = true;
+  runtime.currentProgress = null;
   stopForegroundCoordinator();
   runtime.currentController?.abort();
   runtime.coordinator?.cancelActive();

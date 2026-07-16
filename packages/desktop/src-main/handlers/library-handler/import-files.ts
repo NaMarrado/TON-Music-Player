@@ -6,6 +6,10 @@ import { getFileStatsAsync } from '../../services/file-scanner';
 import { readTrackMetadataOffthread } from '../../services/metadata-reader';
 import { scheduleLibraryLoudnessAnalysis } from './loudness';
 import {
+  createMarkTrackImportedStatement,
+  getCurrentImportTimestamp,
+} from '../../services/library-import-timestamp';
+import {
   buildTrackInsertParams,
   createEnsureInLibraryStatement,
   createLibraryTrackInsertStatement,
@@ -39,6 +43,8 @@ export async function handleLibraryImportFiles(): Promise<LibraryImportFilesResu
   const libraryDir = getLibraryDir();
   const insertStmt = createLibraryTrackInsertStatement(db, { ignoreDuplicates: true });
   const ensureLibraryStmt = createEnsureInLibraryStatement(db);
+  const markImportedStmt = createMarkTrackImportedStatement(db);
+  const importedAt = getCurrentImportTimestamp();
 
   const insertedIds: number[] = [];
   let imported = 0;
@@ -63,6 +69,7 @@ export async function handleLibraryImportFiles(): Promise<LibraryImportFilesResu
       }
     }
 
+    markImportedStmt.run(importedAt, trackId);
     insertedIds.push(trackId);
     imported++;
   }

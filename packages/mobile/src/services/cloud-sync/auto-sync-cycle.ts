@@ -1,5 +1,6 @@
 import {
   buildCloudV2ManifestObjectKey,
+  type CloudSyncProgress,
   type CloudSyncOrigin,
 } from '@ton/core';
 import {
@@ -14,6 +15,7 @@ import { MobileR2Client } from './r2-client';
 import { mobileAutoSyncRuntime as runtime } from './auto-sync-state';
 import {
   classifyError,
+  emitStatus,
   errorKey,
   getConfiguredContext,
   refreshPendingStatus,
@@ -52,6 +54,11 @@ async function runCycle(origin: CloudSyncOrigin): Promise<{
     const manual = origin === 'manual' ? runtime.pendingManualRun : null;
     if (manual?.cancelled) throw new Error('cloud_sync_cancelled');
     const requestedMode = manual?.mode ?? 'sync';
+    const onProgress = (progress: CloudSyncProgress) => {
+      runtime.currentProgress = progress;
+      manual?.onProgress?.(progress);
+      emitStatus();
+    };
     const mode = requestedMode === 'fetch' && outbox.length > 0 ? 'sync' : requestedMode;
     if (origin !== 'manual'
         && outbox.length === 0
@@ -73,12 +80,22 @@ async function runCycle(origin: CloudSyncOrigin): Promise<{
       mode,
       origin,
       allowAudioDownloads: origin === 'manual' || runtime.unmeteredNetwork,
-      onProgress: manual?.onProgress,
+      onProgress,
       signal: controller.signal,
     });
     if (manual) manual.result = result;
     return refreshPendingStatus(config);
   } catch (error) {
+    if (classifyError(error) !== 'cancelled') {
+      runtime.currentProgress = {
+        ...(runtime.currentProgress ?? {
+          current: 0, total: 0, uploaded: 0, downloaded: 0, skipped: 0, failed: 0,
+        }),
+        phase: 'failed',
+        failed: Math.max(1, runtime.currentProgress?.failed ?? 0),
+      };
+      emitStatus();
+    }
     if (classifyError(error) !== 'cancelled' && !leaseLost) {
       await updateMobileCloudPersistedState(scopeId, { last_error: errorKey(error) }).catch(() => {});
     }

@@ -44,6 +44,11 @@ export async function applyMobileV2Publication(input: {
       applyProtection,
       options.origin === 'manual' ? 'user-visible' : 'background',
       true,
+      {
+        scopeId,
+        manifestRevision: applicableManifest.revision,
+        retryFailed: options.origin === 'manual',
+      },
     );
     result.downloaded += fetched.downloaded;
     result.skipped += fetched.skipped;

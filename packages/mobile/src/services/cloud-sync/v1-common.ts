@@ -83,16 +83,38 @@ export async function downloadVerifiedCloudFile(
   expectedHash: string,
   signal?: AbortSignal,
 ): Promise<void> {
+  const separator = destinationUri.lastIndexOf('/');
+  if (separator >= 0) {
+    await FileSystem.makeDirectoryAsync(destinationUri.slice(0, separator + 1), {
+      intermediates: true,
+    });
+  }
   const temporaryUri = `${destinationUri}.part-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  let downloadedUri: string | null = null;
   try {
-    await client.downloadFile(objectKey, temporaryUri, signal);
-    const actualHash = await hashFileSha256(temporaryUri);
+    downloadedUri = await client.downloadFile(objectKey, temporaryUri, signal);
+    const downloadedInfo = await FileSystem.getInfoAsync(downloadedUri);
+    if (!downloadedInfo.exists) {
+      throw new Error('cloud_sync_downloaded_file_missing');
+    }
+    const actualHash = await hashFileSha256(downloadedUri);
     if (actualHash.toLowerCase() !== expectedHash.toLowerCase()) {
       throw new Error('cloud_sync_hash_mismatch');
     }
-    await FileSystem.moveAsync({ from: temporaryUri, to: destinationUri });
+    const destinationInfo = await FileSystem.getInfoAsync(destinationUri);
+    if (destinationInfo.exists) {
+      const destinationHash = await hashFileSha256(destinationUri);
+      if (destinationHash.toLowerCase() === expectedHash.toLowerCase()) {
+        return;
+      }
+      await FileSystem.deleteAsync(destinationUri, { idempotent: true });
+    }
+    await FileSystem.moveAsync({ from: downloadedUri, to: destinationUri });
   } finally {
     await FileSystem.deleteAsync(temporaryUri, { idempotent: true }).catch(() => {});
+    if (downloadedUri && downloadedUri !== temporaryUri) {
+      await FileSystem.deleteAsync(downloadedUri, { idempotent: true }).catch(() => {});
+    }
   }
 }
 

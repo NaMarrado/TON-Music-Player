@@ -7,6 +7,10 @@ import type { TrackMetaEntry } from '../../playlist-helpers';
 import { getExistingLibraryHashes } from '../hashes';
 import type { ImportedPlaylistTrack } from '../types';
 import {
+  createMarkTrackImportedStatement,
+  getCurrentImportTimestamp,
+} from '../../../services/library-import-timestamp';
+import {
   applySavedMetadata,
   attachImportedTracks,
   scheduleImportedTrackLoudness,
@@ -33,6 +37,8 @@ export async function importFolderTracks(
   const playlistId = Number(playlistResult.lastInsertRowid);
 
   const libraryDir = getLibraryDir();
+  const markImportedStmt = createMarkTrackImportedStatement(db);
+  const importedAt = getCurrentImportTimestamp();
 
   const insertStmt = db.prepare(`
     INSERT OR IGNORE INTO tracks (
@@ -102,6 +108,7 @@ export async function importFolderTracks(
       trackId = existing.id;
     }
 
+    markImportedStmt.run(importedAt, trackId);
     imported.push({ trackId });
   }
 

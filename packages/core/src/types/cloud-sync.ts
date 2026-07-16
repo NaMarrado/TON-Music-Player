@@ -162,6 +162,8 @@ export interface CloudAutoSyncStatus {
   lastSuccessAt: number | null;
   lastErrorKey: string | null;
   nextRetryAt: number | null;
+  /** Ephemeral current/last run progress. It is never persisted. */
+  progress?: CloudSyncProgress | null;
 }
 
 export type CloudConditionalJsonReadResult<T> =

@@ -252,20 +252,22 @@ export function useCloudSyncSettings() {
     && (cloudForm.secretAccessKey || cloudHasSecret),
   );
 
+  const displayedCloudProgress = cloudProgress ?? cloudAutoSyncStatus.progress ?? null;
+
   const cloudProgressLabel = useMemo(() => {
-    if (!cloudProgress) {
+    if (!displayedCloudProgress) {
       return null;
     }
     return t('cloudProgress', {
-      phase: t(`cloudPhase_${cloudProgress.phase}`),
-      current: cloudProgress.current,
-      total: cloudProgress.total,
-      uploaded: cloudProgress.uploaded,
-      downloaded: cloudProgress.downloaded,
-      skipped: cloudProgress.skipped,
-      failed: cloudProgress.failed,
+      phase: t(`cloudPhase_${displayedCloudProgress.phase}`),
+      current: displayedCloudProgress.current,
+      total: displayedCloudProgress.total,
+      uploaded: displayedCloudProgress.uploaded,
+      downloaded: displayedCloudProgress.downloaded,
+      skipped: displayedCloudProgress.skipped,
+      failed: displayedCloudProgress.failed,
     });
-  }, [cloudProgress, t]);
+  }, [displayedCloudProgress, t]);
 
   const cloudResultLabel = useMemo(() => {
     if (!cloudResult) {
@@ -327,7 +329,7 @@ export function useCloudSyncSettings() {
     cloudHasSecret,
     cloudLoaded,
     cloudBusy,
-    cloudProgress,
+    cloudProgress: displayedCloudProgress,
     cloudProgressLabel,
     cloudResult,
     cloudResultLabel,

@@ -25,12 +25,16 @@ export function isUnmetered(state: NetInfoState): boolean {
 }
 
 export function publicStatus(): CloudAutoSyncStatus {
+  const withProgress = (status: CloudAutoSyncStatus): CloudAutoSyncStatus => ({
+    ...status,
+    progress: runtime.currentProgress,
+  });
   if (runtime.baseStatus.state === 'idle'
       && runtime.baseStatus.pendingDownloads > 0
       && runtime.networkOnline && !runtime.unmeteredNetwork) {
-    return { ...runtime.baseStatus, state: 'waiting-for-wifi' };
+    return withProgress({ ...runtime.baseStatus, state: 'waiting-for-wifi' });
   }
-  return { ...runtime.baseStatus };
+  return withProgress(runtime.baseStatus);
 }
 
 export function emitStatus(): void {

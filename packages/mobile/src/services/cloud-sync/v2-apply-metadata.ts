@@ -4,6 +4,7 @@ import { reconcileLibraryTracks } from '../../stores/library-store';
 import { loadPlaylists, reloadLoadedPlaylistDetails } from '../../stores/playlist-store';
 import { getMobileCloudProtectedEntities, withMobileCloudOutboxSuppressed } from './local-state';
 import { fileExists } from './v1-common';
+import { resolveAvailablePlaylistTrackIds } from './playlist-memberships';
 import { normalizeDownloadedAt, throwIfAborted } from './v2-common';
 import { applyTombstones } from './v2-tombstones';
 
@@ -79,6 +80,7 @@ export async function applyManifestWithoutAudio(
      WHERE content_hash_sha256 IS NOT NULL AND content_hash_sha256 != ''`,
   );
   const existingByHash = new Map(existing.map((row) => [row.content_hash_sha256, row]));
+  const existingIdByHash = new Map(existing.map((row) => [row.content_hash_sha256, row.id]));
   const pendingDownloads = liveTracks.reduce(
     (count, record) => count + (existingByHash.has(record.content_hash_sha256) ? 0 : 1), 0,
   );
@@ -137,20 +139,19 @@ export async function applyManifestWithoutAudio(
           entry.cover_hash_sha256 == null ? 1 : 0,
         ],
       );
-      if (!entry.track_hashes.every((hash) => existingByHash.has(hash))) continue;
       const playlist = await db.getFirstAsync<{ id: number }>(
         'SELECT id FROM playlists WHERE cloud_id = ?', [entry.cloud_id],
       );
       if (!playlist) continue;
       await db.runAsync('DELETE FROM playlist_tracks WHERE playlist_id = ?', [playlist.id]);
-      for (let position = 0; position < entry.track_hashes.length; position += 1) {
-        const trackId = existingByHash.get(entry.track_hashes[position])?.id;
-        if (trackId != null) {
-          await db.runAsync(
-            'INSERT INTO playlist_tracks(playlist_id, track_id, position) VALUES (?, ?, ?)',
-            [playlist.id, trackId, position],
-          );
-        }
+      const trackIds = resolveAvailablePlaylistTrackIds(
+        entry.track_hashes, existingIdByHash,
+      );
+      for (let position = 0; position < trackIds.length; position += 1) {
+        await db.runAsync(
+          'INSERT INTO playlist_tracks(playlist_id, track_id, position) VALUES (?, ?, ?)',
+          [playlist.id, trackIds[position], position],
+        );
       }
     }
   });

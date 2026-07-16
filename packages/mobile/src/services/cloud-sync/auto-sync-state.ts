@@ -32,6 +32,7 @@ export const mobileAutoSyncRuntime = {
     nextRetryAt: null,
   } as CloudAutoSyncStatus,
   currentController: null as AbortController | null,
+  currentProgress: null as CloudSyncProgress | null,
   activeCyclePromise: null as Promise<CycleResult> | null,
   pendingManualRun: null as PendingManualRun | null,
   appState: AppState.currentState as AppStateStatus,

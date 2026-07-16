@@ -247,7 +247,7 @@ export class MobileR2Client {
     return 'uploaded';
   }
 
-  async downloadFile(key: string, destinationUri: string, signal?: AbortSignal): Promise<void> {
+  async downloadFile(key: string, destinationUri: string, signal?: AbortSignal): Promise<string> {
     if (signal?.aborted) {
       throw new Error('cloud_sync_cancelled');
     }
@@ -264,6 +264,7 @@ export class MobileR2Client {
       throw new Error('cloud_sync_cancelled');
     }
     await assertFileSystemStatus(result.status);
+    return result.uri;
   }
 
   async testConnection(signal?: AbortSignal): Promise<void> {

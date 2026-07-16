@@ -3,6 +3,7 @@ import { ensureArtworkDir } from '../cover-art';
 import { ensureMusicDir } from '../downloader/filesystem';
 import { scheduleMobileJob } from '../job-scheduler';
 import { setMobileCloudLastRevision } from './config';
+import type { MobileCloudDownloadFailureContext } from './download-failures';
 import { MobileR2Client } from './r2-client';
 import {
   EMPTY_RESULT,
@@ -25,6 +26,7 @@ export async function fetchCloudLibrary(
   applyProtection?: CloudFetchApplyProtection,
   priority: 'user-visible' | 'background' = 'user-visible',
   alreadyScheduled = false,
+  failureContext?: MobileCloudDownloadFailureContext,
 ): Promise<CloudSyncResult> {
   const run = async (): Promise<CloudSyncResult> => {
     throwIfCancelled(shouldCancel);
@@ -37,20 +39,21 @@ export async function fetchCloudLibrary(
     await ensureArtworkDir();
     const trackIdByHash = await fetchV1Tracks({
       client, manifest, result, onProgress, shouldCancel, abortSignal, applyProtection,
+      failureContext,
     });
     emitProgress(onProgress, {
       phase: 'importing', total: manifest.playlists.length,
-      downloaded: result.downloaded, skipped: result.skipped,
+      downloaded: result.downloaded, skipped: result.skipped, failed: result.failed,
     });
     await fetchV1Playlists({
       client, manifest, trackIdByHash, result,
-      shouldCancel, abortSignal, applyProtection,
+      shouldCancel, abortSignal, applyProtection, onProgress,
     });
     throwIfCancelled(shouldCancel);
     await setMobileCloudLastRevision(manifest.revision);
     emitProgress(onProgress, {
       phase: 'done', current: 1, total: 1,
-      downloaded: result.downloaded, skipped: result.skipped,
+      downloaded: result.downloaded, skipped: result.skipped, failed: result.failed,
     });
     return result;
   };

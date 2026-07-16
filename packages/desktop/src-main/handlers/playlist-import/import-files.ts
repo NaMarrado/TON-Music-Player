@@ -7,6 +7,10 @@ import { getLibraryDir, ensureInLibraryAsync } from '../../services/library-path
 import { readTrackMetadata } from '../../services/metadata-reader';
 import { analyzeLoudnessBatch } from '../playlist-helpers';
 import type { ImportedPlaylistTrack } from './types';
+import {
+  createMarkTrackImportedStatement,
+  getCurrentImportTimestamp,
+} from '../../services/library-import-timestamp';
 
 async function pickAudioFiles(): Promise<string[]> {
   const win = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0];
@@ -32,6 +36,8 @@ export async function handleImportFiles(playlistId: number): Promise<{ imported:
 
   const db = getDb();
   const libraryDir = getLibraryDir();
+  const markImportedStmt = createMarkTrackImportedStatement(db);
+  const importedAt = getCurrentImportTimestamp();
 
   const insertStmt = db.prepare(`
     INSERT OR IGNORE INTO tracks (
@@ -83,6 +89,7 @@ export async function handleImportFiles(playlistId: number): Promise<{ imported:
       trackId = existing.id;
     }
 
+    markImportedStmt.run(importedAt, trackId);
     imported.push({ trackId });
   }
 
