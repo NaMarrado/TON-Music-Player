@@ -93,6 +93,10 @@ export function SettingsConnectionsGroup({
         cleanupStatus={cloudCleanupStatus}
         description={t('cloudDescription')}
         failedLabel={cloudError}
+        formatCleanupPlaylistChange={(removed, remaining) => t('cloudCleanupPlaylistRemoved', {
+          removed,
+          remaining,
+        })}
         form={cloudForm}
         hasSecret={cloudHasSecret}
         helpTitle={t('cloudHelpTitle')}
@@ -135,6 +139,10 @@ export function SettingsConnectionsGroup({
           cleanupSpace: t('cloudCleanupSpace', { size: formatSize(cloudCleanupPreview?.reclaimableBytes ?? 0) }),
           cleanupWarning: t('cloudCleanupWarning'),
           cleanupConfirm: t('cloudCleanupConfirm', { count: cloudCleanupPreview?.cloudOnlyTracks ?? 0 }),
+          cleanupTrackLabel: t('cloudCleanupTrackLabel'),
+          cleanupPlaylistLabel: t('cloudCleanupPlaylistLabel'),
+          cleanupFailureLabel: t('cloudCleanupFailureLabel'),
+          cleanupUnknownTrack: t('cloudCleanupUnknownTrack'),
         }}
         onCancel={cancelCloudTask}
         onCleanup={runCloudCleanup}

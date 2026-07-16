@@ -1,4 +1,7 @@
 import { getDb } from '../database';
+import type { CloudR2CleanupFailureSummary } from '@ton/core';
+
+const FAILURE_DELETE_BATCH_SIZE = 200;
 
 export interface MobileCloudDownloadFailureContext {
   scopeId: string;
@@ -54,4 +57,45 @@ export async function clearMobileCloudDownloadFailure(
      WHERE scope_id = ? AND content_hash_sha256 = ?`,
     [context.scopeId, contentHash],
   );
+}
+
+export async function listMobileCloudDownloadFailures(
+  scopeId: string,
+): Promise<CloudR2CleanupFailureSummary[]> {
+  const rows = await getDb().getAllAsync<{
+    content_hash_sha256: string;
+    error_message: string;
+    failed_at: number;
+  }>(
+    `SELECT content_hash_sha256, error_message, failed_at
+     FROM cloud_sync_download_failures
+     WHERE scope_id = ?
+     ORDER BY failed_at DESC, content_hash_sha256 ASC`,
+    [scopeId],
+  );
+  return rows.map((row) => ({
+    contentHash: row.content_hash_sha256.toLowerCase(),
+    errorMessage: row.error_message,
+    failedAt: row.failed_at,
+  }));
+}
+
+export async function clearMobileCloudDownloadFailures(
+  scopeId: string,
+  contentHashes: string[],
+): Promise<void> {
+  const uniqueHashes = [...new Set(contentHashes.map((hash) => hash.toLowerCase()))];
+  if (uniqueHashes.length === 0) return;
+  const db = getDb();
+  await db.withTransactionAsync(async () => {
+    for (let offset = 0; offset < uniqueHashes.length; offset += FAILURE_DELETE_BATCH_SIZE) {
+      const batch = uniqueHashes.slice(offset, offset + FAILURE_DELETE_BATCH_SIZE);
+      const placeholders = batch.map(() => '?').join(', ');
+      await db.runAsync(
+        `DELETE FROM cloud_sync_download_failures
+         WHERE scope_id = ? AND content_hash_sha256 IN (${placeholders})`,
+        [scopeId, ...batch],
+      );
+    }
+  });
 }

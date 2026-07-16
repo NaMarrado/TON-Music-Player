@@ -1,4 +1,4 @@
-import type { PlaybackQueueSourceDescriptor, QueueItem, Track } from '@ton/core';
+import type { PlaybackQueueSourceDescriptor, Track } from '@ton/core';
 import { usePlaybackStore } from '../../../stores/playback-store';
 import { useQueueStore } from '../../../stores/queue-store';
 import { getTrackById } from '../../db-queries';
@@ -15,6 +15,7 @@ import {
 import { incrementPlayCount, runFirstPlaySetup } from '../player-runtime';
 import { trackToRntp } from '../track-mapping';
 import { initializeVolumeBoost } from '../volume';
+import { createPlaybackQueuePlan } from '../queue-plan';
 
 export async function playTracks(
   tracks: Track[],
@@ -27,28 +28,14 @@ export async function playTracks(
 
   const previousGeneration = useQueueStore.getState().generation;
   const generation = previousGeneration + 1;
-  const originalItems: QueueItem[] = tracks.map((track, index) => ({
-    id: `${track.id}-g${generation}-i${index}`,
-    track_id: track.id,
-    added_by: 'user' as const,
-    playlist_track_id: 'playlist_track_id' in track
-      ? Number(track.playlist_track_id)
-      : undefined,
-  }));
-  const trackByItemId = new Map(originalItems.map((item, index) => [item.id, tracks[index]]));
   const shuffleEnabled = usePlaybackStore.getState().shuffle;
-  let items = [...originalItems];
-  let currentIndex = startIndex;
-
-  if (shuffleEnabled && items.length > 1) {
-    const selected = items[startIndex];
-    const remaining = items.filter((_, index) => index !== startIndex);
-    shuffleQueueItems(remaining);
-    items = [selected, ...remaining];
-    currentIndex = 0;
-  }
-
-  const selectedTrack = trackByItemId.get(items[currentIndex]?.id ?? '') ?? tracks[startIndex];
+  const {
+    currentIndex,
+    items,
+    originalItems,
+    selectedTrack,
+    trackByItemId,
+  } = createPlaybackQueuePlan(tracks, startIndex, generation, shuffleEnabled);
 
   useQueueStore.setState({
     items,
@@ -161,13 +148,6 @@ export async function seek(seconds: number): Promise<void> {
   const clamped = Math.max(0, Math.min(seconds, upper));
   usePlaybackStore.setState({ position: clamped });
   await seekPlayback(clamped);
-}
-
-function shuffleQueueItems<T>(items: T[]): void {
-  for (let index = items.length - 1; index > 0; index -= 1) {
-    const randomIndex = Math.floor(Math.random() * (index + 1));
-    [items[index], items[randomIndex]] = [items[randomIndex], items[index]];
-  }
 }
 
 async function ensurePlaybackStarted(): Promise<boolean> {

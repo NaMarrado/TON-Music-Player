@@ -8,8 +8,10 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Feather } from '@expo/vector-icons';
+import { FlatList } from 'react-native';
+import { formatSize, type CloudR2CleanupPreview } from '@ton/core';
 
 const INPUT_STYLE = {
   borderRadius: 12,
@@ -177,17 +179,42 @@ export function CloudPill({
 
 export function CloudCleanupModal({
   busy,
+  formatPlaylistChange,
   labels,
   onAbort,
   onClose,
   onConfirm,
+  preview,
 }: {
   busy: boolean;
+  formatPlaylistChange: (removed: number, remaining: number) => string;
   labels: Record<string, string>;
   onAbort: () => void;
   onClose: () => void;
   onConfirm: () => void;
+  preview: CloudR2CleanupPreview;
 }) {
+  const items = useMemo(() => [
+    ...preview.tracks.map((track) => ({
+      key: `track:${track.contentHash}`,
+      kind: labels.cleanupTrackLabel,
+      title: track.title || labels.cleanupUnknownTrack,
+      detail: [track.artist, formatSize(track.size)].filter(Boolean).join(' · '),
+    })),
+    ...preview.playlists.map((playlist) => ({
+      key: `playlist:${playlist.cloudId}`,
+      kind: labels.cleanupPlaylistLabel,
+      title: playlist.name,
+      detail: formatPlaylistChange(playlist.removedTracks, playlist.remainingTracks),
+    })),
+    ...preview.failuresToClear.map((failure) => ({
+      key: `failure:${failure.contentHash}`,
+      kind: labels.cleanupFailureLabel,
+      title: failure.errorMessage,
+      detail: failure.contentHash.slice(0, 12),
+    })),
+  ], [formatPlaylistChange, labels, preview]);
+
   return (
     <Modal transparent visible animationType="fade" onRequestClose={busy ? undefined : onClose}>
       <View className="flex-1 items-center justify-center px-5" style={{ backgroundColor: 'rgba(0,0,0,0.78)' }}>
@@ -197,6 +224,26 @@ export function CloudCleanupModal({
           <Text className="text-text-primary text-sm mb-2">{labels.cleanupSongs}</Text>
           <Text className="text-text-secondary text-sm mb-2">{labels.cleanupPlaylists}</Text>
           <Text className="text-text-secondary text-sm mb-4">{labels.cleanupSpace}</Text>
+          {items.length > 0 && (
+            <FlatList
+              data={items}
+              keyExtractor={(item) => item.key}
+              style={{ maxHeight: 280, marginBottom: 16 }}
+              contentContainerStyle={{ gap: 6 }}
+              initialNumToRender={12}
+              maxToRenderPerBatch={16}
+              windowSize={5}
+              renderItem={({ item }) => (
+                <View className="border border-border bg-bg-deep px-3 py-2" style={{ borderRadius: 10 }}>
+                  <Text className="text-text-muted text-[10px] uppercase">{item.kind}</Text>
+                  <Text className="text-text-primary text-sm mt-0.5" numberOfLines={1}>{item.title}</Text>
+                  {item.detail && (
+                    <Text className="text-text-secondary text-xs mt-0.5" numberOfLines={1}>{item.detail}</Text>
+                  )}
+                </View>
+              )}
+            />
+          )}
           <Text className="text-red-400 text-xs leading-5 mb-5">{labels.cleanupWarning}</Text>
           <View className="flex-row justify-end">
             <Pressable

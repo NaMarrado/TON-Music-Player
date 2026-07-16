@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { CloudAutoSyncStatus, CloudR2CleanupPreview } from '@ton/core';
 import { Dialog } from '../../components/ui/dialog';
+import { VirtualizedList } from '../../components/player/virtualized-list';
 import type { Translator } from './cloud-section-types';
 import { cloudAutoSyncStateKey } from './cloud-section-utils';
 
@@ -107,6 +108,29 @@ export function CloudCleanupDialog({
   preview: CloudR2CleanupPreview;
   t: Translator;
 }) {
+  const cleanupItems = [
+    ...preview.tracks.map((track) => ({
+      key: `track:${track.contentHash}`,
+      kind: t('cloudCleanupTrackLabel'),
+      title: track.title || t('cloudCleanupUnknownTrack'),
+      detail: [track.artist, formatSize(track.size)].filter(Boolean).join(' · '),
+    })),
+    ...preview.playlists.map((playlist) => ({
+      key: `playlist:${playlist.cloudId}`,
+      kind: t('cloudCleanupPlaylistLabel'),
+      title: playlist.name,
+      detail: t('cloudCleanupPlaylistRemoved', {
+        removed: playlist.removedTracks,
+        remaining: playlist.remainingTracks,
+      }),
+    })),
+    ...preview.failuresToClear.map((failure) => ({
+      key: `failure:${failure.contentHash}`,
+      kind: t('cloudCleanupFailureLabel'),
+      title: failure.errorMessage,
+      detail: failure.contentHash.slice(0, 12),
+    })),
+  ];
   return (
     <Dialog open onClose={busy ? () => {} : onCancel} title={t('cloudCleanupTitle')}>
       <div className="flex flex-col gap-2" style={{ marginBottom: '22px' }}>
@@ -119,6 +143,35 @@ export function CloudCleanupDialog({
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
           {t('cloudCleanupSpace', { size: formatSize(preview.reclaimableBytes) })}
         </p>
+        {cleanupItems.length > 0 && (
+          <VirtualizedList
+            className="overflow-y-auto"
+            style={{ height: '260px', marginTop: '10px' }}
+            contentStyle={{ display: 'flex', flexDirection: 'column', gap: '6px' }}
+            estimateSize={58}
+            overscan={8}
+            items={cleanupItems}
+            keyExtractor={(item) => item.key}
+            renderItem={(item) => (
+              <div style={{
+                background: 'var(--bg-deep)', border: '1px solid var(--border)',
+                borderRadius: '8px', minHeight: '52px', padding: '7px 10px',
+              }}>
+                <p style={{ color: 'var(--text-dim)', fontSize: '0.62rem', textTransform: 'uppercase' }}>
+                  {item.kind}
+                </p>
+                <p className="truncate" style={{ color: 'var(--text-primary)', fontSize: '0.78rem' }}>
+                  {item.title}
+                </p>
+                {item.detail && (
+                  <p className="truncate" style={{ color: 'var(--text-secondary)', fontSize: '0.7rem' }}>
+                    {item.detail}
+                  </p>
+                )}
+              </div>
+            )}
+          />
+        )}
         <p style={{ color: '#f87171', fontSize: '0.8rem', lineHeight: 1.55, marginTop: '8px' }}>
           {t('cloudCleanupWarning')}
         </p>

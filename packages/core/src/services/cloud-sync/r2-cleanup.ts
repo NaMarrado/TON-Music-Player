@@ -1,6 +1,7 @@
 import type {
   CloudLibraryManifestV2,
   CloudR2CleanupPreview,
+  CloudR2CleanupFailureSummary,
   CloudR2ObjectInfo,
 } from '../../types/cloud-sync';
 import { sha256Hex } from './r2-signing';
@@ -33,6 +34,7 @@ export interface BuildCloudR2CleanupPlanInput {
   deviceId: string;
   now?: number;
   random?: number;
+  failures?: CloudR2CleanupFailureSummary[];
 }
 
 function normalizeHashes(hashes: Iterable<string>): string[] {
@@ -79,6 +81,11 @@ export function buildCloudR2CleanupPlan(
       .filter((record) => !record.deleted && !localHashSet.has(record.content_hash_sha256))
       .map((record) => record.content_hash_sha256),
   );
+  const liveTrackByHash = new Map(
+    input.manifest.tracks
+      .filter((record) => !record.deleted)
+      .map((record) => [record.content_hash_sha256, record]),
+  );
 
   let counter = input.manifest.max_counter;
   let affectedPlaylists = 0;
@@ -123,6 +130,35 @@ export function buildCloudR2CleanupPlan(
     (sum, key) => sum + (objectSizeByKey.get(key) ?? 0),
     0,
   );
+  const trackSummaries = [...cloudOnlyHashes].sort().map((hash) => {
+    const record = liveTrackByHash.get(hash);
+    if (!record || record.deleted) throw new Error(`Missing live cleanup track ${hash}`);
+    return {
+      contentHash: hash,
+      title: record.entry.metadata.title,
+      artist: record.entry.metadata.artist,
+      objectKey: record.entry.object_key,
+      size: objectSizeByKey.get(record.entry.object_key) ?? record.entry.file_size ?? 0,
+    };
+  });
+  const playlistSummaries = input.manifest.playlists.flatMap((record) => {
+    if (record.deleted) return [];
+    const removedTracks = record.entry.track_hashes.filter((hash) => cloudOnlyHashes.has(hash)).length;
+    if (removedTracks === 0) return [];
+    return [{
+      cloudId: record.cloud_id,
+      name: record.entry.name,
+      removedTracks,
+      remainingTracks: record.entry.track_hashes.length - removedTracks,
+    }];
+  });
+  const finalLiveHashes = new Set(
+    manifest.tracks.filter((record) => !record.deleted).map((record) => record.content_hash_sha256),
+  );
+  const failuresToClear = (input.failures ?? []).filter((failure) => {
+    const hash = failure.contentHash.trim().toLowerCase();
+    return cloudOnlyHashes.has(hash) || localHashSet.has(hash) || !finalLiveHashes.has(hash);
+  });
   const previewToken = sha256Hex(JSON.stringify({
     storageScope: input.storageScope,
     etag: input.manifestEtag,
@@ -141,6 +177,9 @@ export function buildCloudR2CleanupPlan(
       affectedPlaylists,
       objectsToDelete: objectKeysToDelete.length,
       reclaimableBytes,
+      tracks: trackSummaries,
+      playlists: playlistSummaries,
+      failuresToClear,
     },
     manifestEtag: input.manifestEtag,
     localFingerprint,

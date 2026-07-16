@@ -3,7 +3,10 @@ import type { CloudLibraryManifestV2, CloudSyncResult } from '@ton/core';
 import { getDb } from '../database';
 import { getLibraryDir } from '../library-paths';
 import { DesktopR2Client } from './r2-client';
-import { applyCloudPlaylistsV2 } from './v2-apply-playlists';
+import {
+  applyCloudPlaylistsV2,
+  prepareCloudPlaylistShellsV2,
+} from './v2-apply-playlists';
 import { applyCloudTracksV2 } from './v2-apply-tracks';
 import { throwIfV2Cancelled, type CloudMirrorRow, type V2SyncOptions } from './v2-types';
 
@@ -29,6 +32,15 @@ export async function applyCloudManifestV2(
     mirrorRows.filter((row) => row.entity_type === 'playlist')
       .map((row) => [row.entity_key, row.record_json]),
   );
+  prepareCloudPlaylistShellsV2({
+    scopeId,
+    manifest,
+    options,
+    capturedGeneration,
+    playlistMirror,
+  });
+  options.onMetadataApplied?.();
+  await new Promise<void>((resolve) => setTimeout(resolve, 0));
   const tracks = await applyCloudTracksV2(
     client, scopeId, manifest, result, options, capturedGeneration, trackMirror,
   );

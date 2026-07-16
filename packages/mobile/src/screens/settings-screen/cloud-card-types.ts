@@ -42,6 +42,7 @@ export type CloudCardProps = {
   result: CloudSyncResult | null;
   resultLabel: string | null;
   labels: Record<string, string>;
+  formatCleanupPlaylistChange: (removed: number, remaining: number) => string;
   onCancel: () => void;
   onCleanup: () => Promise<'completed' | 'stale' | 'cancelled'>;
   onFetch: () => void;

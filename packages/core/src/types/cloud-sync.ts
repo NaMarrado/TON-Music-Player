@@ -235,6 +235,27 @@ export interface CloudR2ObjectInfo {
   size: number;
 }
 
+export interface CloudR2CleanupTrackSummary {
+  contentHash: string;
+  title: string | null;
+  artist: string | null;
+  objectKey: string;
+  size: number;
+}
+
+export interface CloudR2CleanupPlaylistSummary {
+  cloudId: string;
+  name: string;
+  removedTracks: number;
+  remainingTracks: number;
+}
+
+export interface CloudR2CleanupFailureSummary {
+  contentHash: string;
+  errorMessage: string;
+  failedAt: number;
+}
+
 export interface CloudR2CleanupPreview {
   previewToken: string;
   localTracks: number;
@@ -243,6 +264,9 @@ export interface CloudR2CleanupPreview {
   affectedPlaylists: number;
   objectsToDelete: number;
   reclaimableBytes: number;
+  tracks: CloudR2CleanupTrackSummary[];
+  playlists: CloudR2CleanupPlaylistSummary[];
+  failuresToClear: CloudR2CleanupFailureSummary[];
 }
 
 export interface CloudR2CleanupResult {

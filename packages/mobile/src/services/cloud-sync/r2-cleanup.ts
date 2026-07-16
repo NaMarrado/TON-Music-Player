@@ -29,6 +29,10 @@ import { getConfiguredContext } from './auto-sync-status';
 import { ensureTrackContentHash } from './v1-common';
 import { storeEntityMirror } from './v2-mirror';
 import { MobileR2Client, MobileR2PreconditionFailedError } from './r2-client';
+import {
+  clearMobileCloudDownloadFailures,
+  listMobileCloudDownloadFailures,
+} from './download-failures';
 
 type ProgressCallback = (progress: CloudSyncProgress) => void;
 
@@ -72,7 +76,7 @@ async function buildCurrentPlan(
   onProgress?: ProgressCallback,
   signal?: AbortSignal,
 ): Promise<CloudR2CleanupPlan> {
-  const { config } = await getConfiguredContext();
+  const { config, scopeId } = await getConfiguredContext();
   const client = new MobileR2Client(config);
   const localHashes = await collectLocalHashes(onProgress, signal);
   throwIfAborted(signal);
@@ -83,7 +87,10 @@ async function buildCurrentPlan(
   if (!manifest || read.status !== 'ok' || !read.etag) {
     throw new Error('cloud_cleanup_manifest_missing');
   }
-  const objects = await client.listObjects(`${normalizeCloudPrefix(config.prefix)}/`, signal);
+  const [objects, failures] = await Promise.all([
+    client.listObjects(`${normalizeCloudPrefix(config.prefix)}/`, signal),
+    listMobileCloudDownloadFailures(scopeId),
+  ]);
   throwIfAborted(signal);
   return buildCloudR2CleanupPlan({
     manifest,
@@ -98,6 +105,7 @@ async function buildCurrentPlan(
     objects,
     prefix: config.prefix,
     deviceId: await getMobileCloudDeviceId(),
+    failures,
   });
 }
 
@@ -195,6 +203,10 @@ export async function executeCloudCleanup(
       next_retry_at: null,
     });
     await setMobileCloudLastRevision(current.manifest.revision);
+    await clearMobileCloudDownloadFailures(
+      scopeId,
+      current.preview.failuresToClear.map((failure) => failure.contentHash),
+    );
     await client.putJson(
       buildCloudV2CommitObjectKey(config.prefix, current.manifest.revision),
       current.manifest,

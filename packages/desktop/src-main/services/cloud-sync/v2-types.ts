@@ -12,6 +12,7 @@ export type V2SyncOptions = {
   signal?: AbortSignal;
   force?: boolean;
   mode?: 'upload' | 'fetch' | 'sync';
+  onMetadataApplied?: () => void;
 };
 
 export type SerializedTrack = {

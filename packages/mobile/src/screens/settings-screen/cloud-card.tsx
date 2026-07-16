@@ -21,6 +21,7 @@ export function CloudCard({
   cleanupStatus,
   description,
   failedLabel,
+  formatCleanupPlaylistChange,
   form,
   hasSecret,
   helpSteps,
@@ -200,6 +201,7 @@ export function CloudCard({
       {showCleanup && cleanupPreview && (
         <CloudCleanupModal
           busy={isBusy}
+          formatPlaylistChange={formatCleanupPlaylistChange}
           labels={labels}
           onAbort={onCancel}
           onClose={() => setShowCleanup(false)}
@@ -208,6 +210,7 @@ export function CloudCard({
               if (outcome !== 'stale') setShowCleanup(false);
             });
           }}
+          preview={cleanupPreview}
         />
       )}
     </>

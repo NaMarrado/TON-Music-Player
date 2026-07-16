@@ -96,6 +96,9 @@ class DesktopCloudAutoSyncRuntime {
               signal: this.activeAbortController?.signal,
               mode,
               force: origin === 'manual',
+              onMetadataApplied: () => {
+                broadcastCloudEvent('cloud:applied', { phase: 'metadata' });
+              },
               onProgress: (progress) => {
                 broadcastCloudEvent('cloud:progress', progress);
                 this.progressListeners.forEach((listener) => listener(progress));

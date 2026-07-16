@@ -28,6 +28,63 @@ type PlaylistApplyInput = {
   trackIdByHash: Map<string, number>;
 };
 
+type PlaylistShellInput = Pick<
+  PlaylistApplyInput,
+  'scopeId' | 'manifest' | 'options' | 'capturedGeneration' | 'playlistMirror'
+>;
+
+export function prepareCloudPlaylistShellsV2(input: PlaylistShellInput): void {
+  const { scopeId, manifest, options, capturedGeneration, playlistMirror } = input;
+  const db = getDb();
+  const protection = readCloudApplyProtection(scopeId, capturedGeneration);
+  const records = manifest.playlists.filter((record) => (
+    (options.force || playlistMirror.get(record.cloud_id) !== JSON.stringify(record))
+    && !protection.protectAll
+    && !protection.playlistCloudIds.has(record.cloud_id)
+  ));
+  const findTrack = db.prepare(
+    'SELECT id FROM tracks WHERE content_hash_sha256 = ? ORDER BY id LIMIT 1',
+  );
+
+  setDesktopCloudOutboxSuppressed(() => {
+    db.transaction(() => {
+      const upsert = db.prepare(`
+        INSERT INTO playlists (
+          cloud_id, name, description, cover_path, is_smart, smart_rules,
+          sort_order, created_at, updated_at
+        ) VALUES (?, ?, ?, NULL, ?, ?, ?, ?, ?)
+        ON CONFLICT(cloud_id) DO UPDATE SET
+          name = excluded.name, description = excluded.description,
+          is_smart = excluded.is_smart, smart_rules = excluded.smart_rules,
+          sort_order = excluded.sort_order, updated_at = excluded.updated_at
+      `);
+      const findPlaylist = db.prepare('SELECT id FROM playlists WHERE cloud_id = ?');
+      const clearMembership = db.prepare('DELETE FROM playlist_tracks WHERE playlist_id = ?');
+      const insertMembership = db.prepare(`
+        INSERT INTO playlist_tracks (playlist_id, track_id, position) VALUES (?, ?, ?)
+      `);
+
+      for (const record of records) {
+        if (record.deleted) {
+          db.prepare('DELETE FROM playlists WHERE cloud_id = ?').run(record.cloud_id);
+          continue;
+        }
+        const entry = record.entry;
+        upsert.run(
+          entry.cloud_id, entry.name, entry.description, entry.is_smart ? 1 : 0,
+          entry.smart_rules, entry.sort_order, entry.created_at, entry.updated_at,
+        );
+        const playlist = findPlaylist.get(entry.cloud_id) as { id: number };
+        clearMembership.run(playlist.id);
+        entry.track_hashes.forEach((hash, position) => {
+          const track = findTrack.get(hash) as { id: number } | undefined;
+          if (track) insertMembership.run(playlist.id, track.id, position);
+        });
+      }
+    })();
+  });
+}
+
 export async function applyCloudPlaylistsV2(input: PlaylistApplyInput): Promise<void> {
   const {
     client, scopeId, manifest, result, options, capturedGeneration,
@@ -125,13 +182,13 @@ export async function applyCloudPlaylistsV2(input: PlaylistApplyInput): Promise<
         const playlist = db.prepare('SELECT id FROM playlists WHERE cloud_id = ?')
           .get(entry.cloud_id) as { id: number };
         db.prepare('DELETE FROM playlist_tracks WHERE playlist_id = ?').run(playlist.id);
-        let position = 0;
-        for (const hash of entry.track_hashes) {
+        for (let position = 0; position < entry.track_hashes.length; position += 1) {
+          const hash = entry.track_hashes[position];
           const trackId = trackIdByHash.get(hash);
           if (trackId != null) {
             db.prepare(`
               INSERT INTO playlist_tracks (playlist_id, track_id, position) VALUES (?, ?, ?)
-            `).run(playlist.id, trackId, position++);
+            `).run(playlist.id, trackId, position);
           }
         }
         result.importedPlaylists += 1;

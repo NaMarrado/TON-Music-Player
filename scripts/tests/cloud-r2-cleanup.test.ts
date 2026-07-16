@@ -97,6 +97,10 @@ test('57 local and 110 cloud tracks produce 53 cloud-only tracks', () => {
     deviceId: 'desktop',
     now: 100,
     random: 0,
+    failures: [
+      { contentHash: hashes[57], errorMessage: 'missing object', failedAt: 10 },
+      { contentHash: hashes[0], errorMessage: 'repaired locally', failedAt: 11 },
+    ],
   });
 
   assert.equal(plan.preview.localTracks, 57);
@@ -105,6 +109,24 @@ test('57 local and 110 cloud tracks produce 53 cloud-only tracks', () => {
   assert.equal(plan.preview.affectedPlaylists, 1);
   assert.equal(plan.preview.objectsToDelete, 53);
   assert.equal(plan.preview.reclaimableBytes, 53_000);
+  assert.equal(plan.preview.tracks.length, 53);
+  assert.deepEqual(plan.preview.tracks[0], {
+    contentHash: hashes[57],
+    title: hashes[57],
+    artist: null,
+    objectKey: entries[57].object_key,
+    size: 1_000,
+  });
+  assert.deepEqual(plan.preview.playlists, [{
+    cloudId: 'playlist-1',
+    name: 'Keep me',
+    removedTracks: 2,
+    remainingTracks: 2,
+  }]);
+  assert.deepEqual(
+    plan.preview.failuresToClear.map((failure) => failure.contentHash),
+    [hashes[57], hashes[0]],
+  );
   const updated = plan.manifest.playlists[0];
   assert.ok(updated && !updated.deleted);
   assert.deepEqual(updated.entry.track_hashes, [hashes[0], hashes[1]]);
