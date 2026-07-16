@@ -40,12 +40,14 @@ export async function syncCloudLibraryV2ForDesktop(
   const state = readDesktopCloudSyncState(scopeId);
   const durableOutbox = readDesktopCloudOutbox(scopeId);
   const requestedMode = options.mode ?? 'sync';
-  let mode = requestedMode === 'fetch' && durableOutbox.length > 0 ? 'sync' : requestedMode;
-  let shouldUpload = mode !== 'fetch';
+  const mode = requestedMode;
+  const shouldUpload = mode !== 'fetch';
   const shouldApply = mode !== 'upload';
-  let outbox = shouldUpload ? durableOutbox : [];
-  let capturedGeneration = outbox.reduce((max, item) => Math.max(max, item.generation), 0);
-  let fullReconcile = shouldUpload && Boolean(
+  const outbox = shouldUpload ? durableOutbox : [];
+  const capturedGeneration = durableOutbox.reduce(
+    (max, item) => Math.max(max, item.generation), 0,
+  );
+  const fullReconcile = shouldUpload && Boolean(
     options.force || state.needs_full_reconcile
     || outbox.some((item) => item.operation === 'reconcile'),
   );
@@ -55,12 +57,15 @@ export async function syncCloudLibraryV2ForDesktop(
 
   const initialRead = await client.getJsonConditional<CloudLibraryManifestV2>(v2Key, {
     ifNoneMatch: conditionalManifestEtag(
-      Boolean(options.force), fullReconcile, outbox.length, state.etag,
+      Boolean(options.force) || (shouldApply && state.pending_downloads > 0),
+      fullReconcile,
+      shouldApply ? durableOutbox.length : outbox.length,
+      state.etag,
     ),
     signal: options.signal,
   });
   throwIfV2Cancelled(options);
-  if (initialRead.status === 'not-modified' && outbox.length === 0 && !fullReconcile) {
+  if (initialRead.status === 'not-modified' && durableOutbox.length === 0 && !fullReconcile) {
     if (!state.activation_marker_confirmed) {
       await ensureV2ActivationMarker(client, config, scopeId, options.signal);
     }
@@ -81,13 +86,6 @@ export async function syncCloudLibraryV2ForDesktop(
   let bootstrappingFromV1 = false;
   if (initialRead.status === 'ok' && !remote) throw new Error('cloud_sync_invalid_v2_manifest');
   if (createV2) {
-    if (!shouldUpload) {
-      mode = 'sync';
-      shouldUpload = true;
-      outbox = durableOutbox;
-      capturedGeneration = outbox.reduce((max, item) => Math.max(max, item.generation), 0);
-      fullReconcile = true;
-    }
     const bootstrap = await bootstrapMissingV2Manifest({
       client, config, scopeId, state, deviceId, options,
     });
@@ -149,7 +147,7 @@ export async function syncCloudLibraryV2ForDesktop(
     );
   }
   throwIfV2Cancelled(options);
-  if (shouldUpload) acknowledgeDesktopCloudOutbox(scopeId, capturedGeneration);
+  acknowledgeDesktopCloudOutbox(scopeId, capturedGeneration);
   throwIfV2Cancelled(options);
   updateDesktopCloudSyncState(scopeId, {
     revision: mode === 'upload' ? state.revision : published.revision,

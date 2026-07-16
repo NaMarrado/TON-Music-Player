@@ -65,6 +65,32 @@ export function getDesktopCloudGeneration(): number {
   return row?.generation ?? 0;
 }
 
+export function getDesktopCloudMissingMirroredEntityCount(scopeId: string): number {
+  const row = getDb().prepare(`
+    SELECT
+      (SELECT COUNT(*)
+       FROM cloud_sync_entities AS entity
+       WHERE entity.scope_id = ?
+         AND entity.entity_type = 'track'
+         AND entity.is_deleted = 0
+         AND NOT EXISTS (
+           SELECT 1 FROM tracks
+           WHERE lower(tracks.content_hash_sha256) = lower(entity.entity_key)
+         ))
+      +
+      (SELECT COUNT(*)
+       FROM cloud_sync_entities AS entity
+       WHERE entity.scope_id = ?
+         AND entity.entity_type = 'playlist'
+         AND entity.is_deleted = 0
+         AND NOT EXISTS (
+           SELECT 1 FROM playlists
+           WHERE playlists.cloud_id = entity.entity_key
+         )) AS count
+  `).get(scopeId, scopeId) as { count: number } | undefined;
+  return row?.count ?? 0;
+}
+
 export function acknowledgeDesktopCloudOutbox(scopeId: string, generation: number): void {
   getDb().prepare(`
     DELETE FROM cloud_sync_outbox

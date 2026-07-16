@@ -51,7 +51,7 @@
   "cloudAutoSyncDisabledDescription": "Auto Sync je vypnutý. Synchronizace proběhne pouze pomocí ručních tlačítek níže.",
   "cloudAudioOverCellular": "Synchronizovat audio přes mobilní data",
   "cloudAudioOverCellularDescription": "Povolí stahování audia z cloudu přes mobilní data. Metadata a playlisty se synchronizují na každé síti.",
-"cloudAutoSyncDetails": "Čekající změny: {{pendingChanges}} · Skladby čekající na Wi-Fi: {{pendingDownloads}} · Poslední sync: {{lastSuccess}} · Další pokus: {{nextRetry}}",
+"cloudAutoSyncDetails": "Lokální změny k nahrání: {{pendingChanges}} · Čekající stažení: {{pendingDownloads}} · Poslední sync: {{lastSuccess}}",
   "cloudAutoSyncState_idle": "Aktuální",
   "cloudAutoSyncState_syncing": "Synchronizuji",
   "cloudAutoSyncState_offline": "Offline",

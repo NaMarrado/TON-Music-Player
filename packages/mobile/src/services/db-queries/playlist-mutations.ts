@@ -1,4 +1,5 @@
 import type { Playlist } from '@ton/core';
+import type { SQLiteDatabase } from 'expo-sqlite';
 import { getDb } from '../database';
 
 export interface RemovedPlaylistTrack {
@@ -39,8 +40,9 @@ export async function createPlaylist(
 export async function updatePlaylist(
   id: number,
   fields: Partial<Pick<Playlist, 'name' | 'description' | 'cover_path'>>,
+  database?: SQLiteDatabase,
 ): Promise<void> {
-  const db = getDb();
+  const db = database ?? getDb();
   const entries = Object.entries(fields).filter(([, value]) => value !== undefined);
   if (entries.length === 0) {
     return;

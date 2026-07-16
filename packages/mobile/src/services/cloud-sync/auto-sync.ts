@@ -50,7 +50,9 @@ export async function startMobileCloudAutoSync(): Promise<void> {
   }
   runtime.initialized = true;
   try {
-    await recoverMobileCloudControl();
+    // No cycle can be alive before this runtime is initialized. Any persisted
+    // lease therefore belongs to a process that exited before releasing it.
+    await recoverMobileCloudControl(true);
     const [enabled, audioOverCellular, config, initialNetwork] = await Promise.all([
       getMobileCloudAutoSyncEnabled(), getMobileCloudAudioOverCellularEnabled(),
       getMobileCloudConfig(), NetInfo.fetch(),
@@ -187,6 +189,9 @@ export async function runMobileCloudManualTask(
   mode: MobileCloudSyncMode,
   onProgress?: (progress: CloudSyncProgress) => void,
 ): Promise<CloudSyncResult | null> {
+  if (!runtime.activeCyclePromise && !runtime.currentController) {
+    await recoverMobileCloudControl(true);
+  }
   const config = await getMobileCloudConfig();
   if (config) {
     const scopeId = await ensureMobileCloudScope(config);

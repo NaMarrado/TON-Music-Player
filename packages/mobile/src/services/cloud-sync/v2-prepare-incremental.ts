@@ -38,6 +38,7 @@ async function serializeIncrementalTrack(
   const objectKey = buildCloudContentAudioObjectKey(config.prefix, contentHash, ext);
   uploads.set(objectKey, {
     filePath: track.file_path, contentType: contentTypeForExtension(ext), hash: contentHash,
+    progressGroup: contentHash,
   });
   let artworkHash: string | null = null;
   let artworkObjectKey: string | null = null;
@@ -51,6 +52,7 @@ async function serializeIncrementalTrack(
       filePath: track.cover_art_path,
       contentType: contentTypeForExtension(artworkExt),
       hash: artworkHash,
+      progressGroup: contentHash,
     });
   }
   return {
@@ -120,7 +122,10 @@ export async function prepareIncrementalManifest(
       const ext = getFileExtension(playlist.cover_path, null);
       coverObjectKey = buildCloudContentArtworkObjectKey(config.prefix, coverHash, ext);
       uploads.set(coverObjectKey, {
-        filePath: playlist.cover_path, contentType: contentTypeForExtension(ext), hash: coverHash,
+        filePath: playlist.cover_path,
+        contentType: contentTypeForExtension(ext),
+        hash: coverHash,
+        progressGroup: null,
       });
     }
     const trackHashes = (playlistTracksById.get(playlistId) ?? [])

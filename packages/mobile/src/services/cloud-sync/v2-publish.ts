@@ -108,7 +108,7 @@ export async function publishMobileV2Head(input: {
         result, options.onProgress, signal,
       );
     }
-    if (remoteRead.status !== 'missing' && !needsLocal) {
+    if (!needsLocal && (remoteRead.status !== 'missing' || options.mode === 'fetch')) {
       published = remote;
       publishedEtag = currentEtag;
       break;

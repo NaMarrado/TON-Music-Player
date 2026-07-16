@@ -51,7 +51,7 @@
   "cloudAutoSyncDisabledDescription": "自动同步已关闭。仅在使用下方手动按钮时进行同步。",
   "cloudAudioOverCellular": "使用移动数据同步音频",
   "cloudAudioOverCellularDescription": "允许通过移动数据下载云端音频。元数据和播放列表仍会在任何网络上同步。",
-"cloudAutoSyncDetails": "待处理更改：{{pendingChanges}} · 等待 Wi-Fi 的音频曲目：{{pendingDownloads}} · 上次同步：{{lastSuccess}} · 下次重试：{{nextRetry}}",
+"cloudAutoSyncDetails": "待上传的本地更改：{{pendingChanges}} · 待下载：{{pendingDownloads}} · 上次同步：{{lastSuccess}}",
   "cloudAutoSyncState_idle": "已是最新",
   "cloudAutoSyncState_syncing": "正在同步",
   "cloudAutoSyncState_offline": "离线",

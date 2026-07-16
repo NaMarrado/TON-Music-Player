@@ -336,18 +336,10 @@ export function useCloudSyncSettings() {
           ? cloudAutoSyncStatus.lastSuccessAt * 1000
           : cloudAutoSyncStatus.lastSuccessAt,
       ).toLocaleString();
-    const nextRetry = cloudAutoSyncStatus.nextRetryAt == null
-      ? '—'
-      : new Date(
-        cloudAutoSyncStatus.nextRetryAt < 10_000_000_000
-          ? cloudAutoSyncStatus.nextRetryAt * 1000
-          : cloudAutoSyncStatus.nextRetryAt,
-      ).toLocaleString();
     return t('cloudAutoSyncDetails', {
       pendingChanges: cloudAutoSyncStatus.pendingChanges,
       pendingDownloads: cloudAutoSyncStatus.pendingDownloads,
       lastSuccess,
-      nextRetry,
     });
   }, [cloudAutoSyncStatus, t]);
 
@@ -376,7 +368,7 @@ export function useCloudSyncSettings() {
     runCloudCleanup,
     refreshCloudLocalState,
     saveAndTestCloud,
-    syncCloud: () => void runCloudTask('sync'),
+    syncCloud: () => void runCloudTask('fetch'),
     toggleCloudAutoSync,
     toggleCloudAudioOverCellular,
     updateCloudForm,

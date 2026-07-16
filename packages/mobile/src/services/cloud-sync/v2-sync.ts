@@ -21,6 +21,7 @@ import { storeEntityMirror } from './v2-mirror';
 import { prepareLocalManifest } from './v2-prepare-full';
 import { prepareIncrementalManifest } from './v2-prepare-incremental';
 import { publishMobileV2Head } from './v2-publish';
+import { shouldRunManualCloudRepair } from './manual-repair-policy';
 
 export type { MobileCloudSyncMode, MobileCloudV2SyncOptions } from './v2-common';
 
@@ -36,13 +37,16 @@ export async function runMobileCloudV2Sync(
       const result: CloudSyncResult = { ...EMPTY_RESULT };
       const scopeId = await ensureMobileCloudScope(config);
       const state = await getMobileCloudPersistedState(scopeId);
-      const outbox = mode === 'fetch' ? [] : await getMobileCloudOutbox(scopeId);
-      const maxGeneration = outbox.reduce(
+      const durableOutbox = await getMobileCloudOutbox(scopeId);
+      const outbox = mode === 'fetch' ? [] : durableOutbox;
+      const maxGeneration = durableOutbox.reduce(
         (max, row) => Math.max(max, row.generation), 0,
       );
       const deviceId = await getMobileCloudDeviceId();
       const client = new MobileR2Client(config);
-      const manualRecovery = options.origin === 'manual' && mode !== 'fetch';
+      // Full object verification is intentionally reserved for the explicit
+      // "Upload missing local" action. A normal manual sync must stay incremental.
+      const manualRecovery = shouldRunManualCloudRepair(options.origin, mode);
       const needsLocal = mode !== 'fetch'
         && (manualRecovery || outbox.length > 0 || state.needs_full_reconcile === 1);
       const prepared = needsLocal
@@ -80,6 +84,9 @@ export async function runMobileCloudV2Sync(
       if (mode !== 'upload') {
         await storeEntityMirror(scopeId, publication.published, maxGeneration, signal);
       }
+      // A successful cloud-authoritative fetch resolves local mutations that
+      // existed when it started. Mutations created concurrently have a newer
+      // generation and remain queued for an explicit upload.
       if (maxGeneration > 0) await acknowledgeMobileCloudOutbox(scopeId, maxGeneration);
       throwIfAborted(signal);
       await updateMobileCloudPersistedState(scopeId, {

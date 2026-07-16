@@ -51,7 +51,7 @@
   "cloudAutoSyncDisabledDescription": "Автосинхронизация выключена. Синхронизация выполняется только с помощью ручных кнопок ниже.",
   "cloudAudioOverCellular": "Синхронизировать аудио через мобильную сеть",
   "cloudAudioOverCellularDescription": "Разрешает загрузку аудио из облака через мобильную сеть. Метаданные и плейлисты синхронизируются в любой сети.",
-"cloudAutoSyncDetails": "Ожидающие изменения: {{pendingChanges}} · Аудиотреки ожидают Wi-Fi: {{pendingDownloads}} · Последняя синхронизация: {{lastSuccess}} · Следующая попытка: {{nextRetry}}",
+"cloudAutoSyncDetails": "Локальные изменения для загрузки: {{pendingChanges}} · Ожидающие загрузки: {{pendingDownloads}} · Последняя синхронизация: {{lastSuccess}}",
   "cloudAutoSyncState_idle": "Актуально",
   "cloudAutoSyncState_syncing": "Синхронизация",
   "cloudAutoSyncState_offline": "Нет сети",

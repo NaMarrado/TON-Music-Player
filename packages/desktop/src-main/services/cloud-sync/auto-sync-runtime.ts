@@ -11,6 +11,7 @@ import { scheduleMainProcessJob } from '../job-scheduler';
 import {
   getActiveDesktopCloudScope,
   getDesktopCloudGeneration,
+  getDesktopCloudMissingMirroredEntityCount,
   readDesktopCloudAutoSyncStatus,
   readDesktopCloudSyncState,
   updateDesktopCloudSyncState,
@@ -87,7 +88,12 @@ class DesktopCloudAutoSyncRuntime {
         try {
           const scopeId = getActiveDesktopCloudScope();
           const beforeRevision = scopeId ? readDesktopCloudSyncState(scopeId).revision : null;
-          const mode = origin === 'manual' ? this.requestedManualMode : 'sync';
+          const missingMirroredEntities = scopeId
+            ? getDesktopCloudMissingMirroredEntityCount(scopeId)
+            : 0;
+          // Automatic sync mirrors R2 to this device. Local uploads remain an
+          // explicit `Upload missing local` action.
+          const mode = origin === 'manual' ? this.requestedManualMode : 'fetch';
           const result = await scheduleMainProcessJob({
             kind: 'cloud-sync',
             lane: 'network',
@@ -95,7 +101,9 @@ class DesktopCloudAutoSyncRuntime {
             run: () => syncCloudLibraryV2ForDesktop({
               signal: this.activeAbortController?.signal,
               mode,
-              force: origin === 'manual',
+              // Full reconciliation is an explicit upload-repair operation;
+              // a regular manual sync should process only durable changes.
+              force: origin === 'manual' || missingMirroredEntities > 0,
               onMetadataApplied: () => {
                 broadcastCloudEvent('cloud:applied', { phase: 'metadata' });
               },

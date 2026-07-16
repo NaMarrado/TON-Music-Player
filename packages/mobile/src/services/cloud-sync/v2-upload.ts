@@ -12,6 +12,36 @@ import {
   type PreparedLocalManifest,
 } from './v2-common';
 
+type PreparedUpload = PreparedLocalManifest['uploads'] extends Map<string, infer Upload>
+  ? Upload
+  : never;
+
+function createTrackProgress(uploads: PreparedUpload[]): {
+  total: number;
+  complete: (upload: PreparedUpload) => number;
+} {
+  const remaining = new Map<string, number>();
+  for (const upload of uploads) {
+    if (!upload.progressGroup) continue;
+    remaining.set(upload.progressGroup, (remaining.get(upload.progressGroup) ?? 0) + 1);
+  }
+  let completed = 0;
+  return {
+    total: remaining.size,
+    complete: (upload) => {
+      if (!upload.progressGroup) return completed;
+      const next = (remaining.get(upload.progressGroup) ?? 1) - 1;
+      if (next <= 0) {
+        remaining.delete(upload.progressGroup);
+        completed += 1;
+      } else {
+        remaining.set(upload.progressGroup, next);
+      }
+      return completed;
+    },
+  };
+}
+
 export function liveManifestObjectKeys(manifest: CloudLibraryManifestV2): Set<string> {
   const keys = new Set<string>();
   for (const record of manifest.tracks) {
@@ -39,7 +69,8 @@ export async function uploadPreparedObjects(
   const uploads = [...prepared.uploads.entries()].filter(
     ([key]) => referencedKeys.has(key) && !attemptedKeys.has(key),
   );
-  emitProgress(onProgress, { phase: 'uploading', total: uploads.length });
+  const progress = createTrackProgress(uploads.map(([, upload]) => upload));
+  emitProgress(onProgress, { phase: 'uploading', total: progress.total });
   for (let index = 0; index < uploads.length; index += 1) {
     throwIfAborted(signal);
     const [key, upload] = uploads[index];
@@ -50,7 +81,7 @@ export async function uploadPreparedObjects(
     else result.skipped += 1;
     attemptedKeys.add(key);
     emitProgress(onProgress, {
-      phase: 'uploading', current: index + 1, total: uploads.length,
+      phase: 'uploading', current: progress.complete(upload), total: progress.total,
       uploaded: result.uploaded, skipped: result.skipped,
     });
   }
@@ -76,18 +107,24 @@ export async function repairMissingPublishedObjects(
       .filter((record): record is Extract<CloudPlaylistRecordV2, { deleted: false }> => !record.deleted)
       .map((record) => [record.cloud_id, record.entry]),
   );
-  const targets = new Map<string, { filePath: string; contentType: string; hash: string }>();
+  const targets = new Map<string, PreparedUpload>();
   for (const record of remote.tracks) {
     if (record.deleted) continue;
     const local = localTracks.get(record.content_hash_sha256);
     if (!local) continue;
     const audio = prepared.uploads.get(local.object_key);
-    if (audio) targets.set(record.entry.object_key, audio);
+    if (audio) targets.set(record.entry.object_key, {
+      ...audio,
+      progressGroup: record.content_hash_sha256,
+    });
     if (local.artwork_hash_sha256
         && local.artwork_hash_sha256 === record.entry.artwork_hash_sha256
         && local.artwork_object_key && record.entry.artwork_object_key) {
       const artwork = prepared.uploads.get(local.artwork_object_key);
-      if (artwork) targets.set(record.entry.artwork_object_key, artwork);
+      if (artwork) targets.set(record.entry.artwork_object_key, {
+        ...artwork,
+        progressGroup: record.content_hash_sha256,
+      });
     }
   }
   for (const record of remote.playlists) {
@@ -97,10 +134,11 @@ export async function repairMissingPublishedObjects(
         || local.cover_hash_sha256 !== record.entry.cover_hash_sha256
         || !local.cover_object_key || !record.entry.cover_object_key) continue;
     const cover = prepared.uploads.get(local.cover_object_key);
-    if (cover) targets.set(record.entry.cover_object_key, cover);
+    if (cover) targets.set(record.entry.cover_object_key, { ...cover, progressGroup: null });
   }
   const pending = [...targets.entries()].filter(([key]) => !attemptedKeys.has(key));
-  emitProgress(onProgress, { phase: 'uploading', total: pending.length });
+  const progress = createTrackProgress(pending.map(([, upload]) => upload));
+  emitProgress(onProgress, { phase: 'uploading', total: progress.total });
   for (let index = 0; index < pending.length; index += 1) {
     throwIfAborted(signal);
     const [key, upload] = pending[index];
@@ -115,7 +153,7 @@ export async function repairMissingPublishedObjects(
     }
     attemptedKeys.add(key);
     emitProgress(onProgress, {
-      phase: 'uploading', current: index + 1, total: pending.length,
+      phase: 'uploading', current: progress.complete(upload), total: progress.total,
       uploaded: result.uploaded, skipped: result.skipped,
     });
   }

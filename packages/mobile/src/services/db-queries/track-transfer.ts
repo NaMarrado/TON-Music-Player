@@ -1,4 +1,5 @@
 import type { ExportTrackEntry, Track } from '@ton/core';
+import type { SQLiteDatabase } from 'expo-sqlite';
 import { getDb } from '../database';
 
 type TrackAssetRow = Pick<Track, 'id' | 'file_path' | 'cover_art_path' | 'in_library'>;
@@ -96,8 +97,8 @@ export async function getTrackAssetRowsByIds(ids: number[]): Promise<TrackAssetR
   );
 }
 
-export async function getAllTrackAssetRows(): Promise<TrackAssetRow[]> {
-  const db = getDb();
+export async function getAllTrackAssetRows(database?: SQLiteDatabase): Promise<TrackAssetRow[]> {
+  const db = database ?? getDb();
   return db.getAllAsync<TrackAssetRow>(
     `SELECT id, file_path, cover_art_path, in_library
      FROM tracks`,

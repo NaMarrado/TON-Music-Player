@@ -5,6 +5,7 @@ import {
 } from '@ton/core';
 import {
   acquireMobileCloudLease,
+  getMobileCloudMissingMirroredEntityCount,
   getMobileCloudOutbox,
   getMobileCloudPersistedState,
   releaseMobileCloudLease,
@@ -82,16 +83,21 @@ async function runCycle(origin: CloudSyncOrigin): Promise<{
     }
   };
   try {
-    const state = await getMobileCloudPersistedState(scopeId);
-    const outbox = await getMobileCloudOutbox(scopeId);
+    const [state, outbox, missingMirroredEntities] = await Promise.all([
+      getMobileCloudPersistedState(scopeId),
+      getMobileCloudOutbox(scopeId),
+      getMobileCloudMissingMirroredEntityCount(scopeId),
+    ]);
     const manual = origin === 'manual' ? runtime.pendingManualRun : null;
     if (manual?.cancelled) throw new Error('cloud_sync_cancelled');
-    const requestedMode = manual?.mode ?? 'sync';
+    // Sync is cloud-authoritative. Uploading local changes is an explicit
+    // separate action (`Upload missing local`).
+    const requestedMode = manual?.mode ?? 'fetch';
     const onProgress = reportProgress;
-    const mode = requestedMode === 'fetch' && outbox.length > 0 ? 'sync' : requestedMode;
+    const mode = requestedMode;
     if (origin !== 'manual'
         && outbox.length === 0
-        && state.needs_full_reconcile === 0
+        && missingMirroredEntities === 0
         && state.activation_marker_confirmed === 1
         && !((state.pending_downloads > 0 || state.pending_assets > 0)
           && (runtime.unmeteredNetwork || runtime.audioOverCellular))

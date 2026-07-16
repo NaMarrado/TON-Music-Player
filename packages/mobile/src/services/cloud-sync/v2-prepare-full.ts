@@ -27,14 +27,23 @@ export async function prepareLocalManifest(
       filePath: local.track.file_path,
       contentType: contentTypeForExtension(ext),
       hash: local.contentHash,
+      progressGroup: local.contentHash,
     });
   }
+  const artworkProgressGroups = new Map(
+    built.localTracks
+      .filter((local) => local.artworkHash)
+      .map((local) => [local.artworkHash as string, local.contentHash]),
+  );
   for (const artwork of built.localArtworks) {
     const ext = getFileExtension(artwork.filePath, null);
     const key = buildCloudContentArtworkObjectKey(config.prefix, artwork.hash, ext);
     artworkKeys.set(artwork.hash, key);
     uploads.set(key, {
-      filePath: artwork.filePath, contentType: artwork.contentType, hash: artwork.hash,
+      filePath: artwork.filePath,
+      contentType: artwork.contentType,
+      hash: artwork.hash,
+      progressGroup: artworkProgressGroups.get(artwork.hash) ?? null,
     });
   }
   const tracks = built.manifest.tracks.map((entry) => ({

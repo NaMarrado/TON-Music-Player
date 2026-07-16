@@ -57,7 +57,7 @@ export function registerCloudSyncHandlers(): void {
   ));
   ipcMain.handle('cloud:upload-missing', () => runCloudTask('upload'));
   ipcMain.handle('cloud:fetch-library', () => runCloudTask('fetch'));
-  ipcMain.handle('cloud:sync-now', () => runCloudTask('sync'));
+  ipcMain.handle('cloud:sync-now', () => runCloudTask('fetch'));
   ipcMain.handle('cloud:preview-cleanup', () => (
     previewDesktopCloudCleanup(broadcastProgress)
   ));

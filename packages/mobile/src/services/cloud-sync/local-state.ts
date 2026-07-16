@@ -106,6 +106,35 @@ export async function getMobileCloudPendingCount(scopeId?: string): Promise<numb
   return row?.count ?? 0;
 }
 
+export async function getMobileCloudMissingMirroredEntityCount(
+  scopeId: string,
+): Promise<number> {
+  const row = await getDb().getFirstAsync<{ count: number }>(
+    `SELECT
+       (SELECT COUNT(*)
+        FROM cloud_sync_entities AS entity
+        WHERE entity.scope_id = ?
+          AND entity.entity_type = 'track'
+          AND entity.deleted = 0
+          AND NOT EXISTS (
+            SELECT 1 FROM tracks
+            WHERE lower(tracks.content_hash_sha256) = lower(entity.entity_key)
+          ))
+       +
+       (SELECT COUNT(*)
+        FROM cloud_sync_entities AS entity
+        WHERE entity.scope_id = ?
+          AND entity.entity_type = 'playlist'
+          AND entity.deleted = 0
+          AND NOT EXISTS (
+            SELECT 1 FROM playlists
+            WHERE playlists.cloud_id = entity.entity_key
+          )) AS count`,
+    [scopeId, scopeId],
+  );
+  return row?.count ?? 0;
+}
+
 export async function getMobileCloudJournalGeneration(): Promise<number> {
   const row = await getDb().getFirstAsync<{ generation: number }>(
     'SELECT generation FROM cloud_sync_control WHERE id = 1',
@@ -258,7 +287,9 @@ export async function renewMobileCloudLease(
   return result.changes > 0;
 }
 
-export async function recoverMobileCloudControl(): Promise<void> {
+export async function recoverMobileCloudControl(
+  releaseLeaseFromPreviousProcess = false,
+): Promise<void> {
   const now = Math.floor(Date.now() / 1000);
   // Suppression is transaction-scoped. An older build may nevertheless have
   // crashed after persisting the flag, so clear it unconditionally at startup.
@@ -272,7 +303,7 @@ export async function recoverMobileCloudControl(): Promise<void> {
      SET lease_owner = NULL,
          lease_expires_at = NULL
      WHERE id = 1
-       AND (lease_owner IS NULL OR lease_expires_at IS NULL OR lease_expires_at <= ?)`,
-    [now],
+       AND (? = 1 OR lease_owner IS NULL OR lease_expires_at IS NULL OR lease_expires_at <= ?)`,
+    [releaseLeaseFromPreviousProcess ? 1 : 0, now],
   );
 }

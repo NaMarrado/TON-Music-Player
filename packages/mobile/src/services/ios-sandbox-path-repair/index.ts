@@ -1,6 +1,13 @@
 import { Platform } from 'react-native';
-import { repairPlaylistCoverSandboxPaths } from './playlist-cover-paths';
-import { repairTrackSandboxPaths } from './track-paths';
+import { withMobileCloudOutboxSuppressed } from '../cloud-sync/local-state';
+import {
+  applyPlaylistCoverSandboxPathRepairs,
+  collectPlaylistCoverSandboxPathRepairs,
+} from './playlist-cover-paths';
+import {
+  applyTrackSandboxPathRepairs,
+  collectTrackSandboxPathRepairs,
+} from './track-paths';
 
 let repairPromise: Promise<void> | null = null;
 
@@ -14,10 +21,16 @@ export async function repairIosSandboxPaths(): Promise<void> {
   }
 
   repairPromise = (async () => {
-    await Promise.all([
-      repairTrackSandboxPaths(),
-      repairPlaylistCoverSandboxPaths(),
+    const [trackRepairs, playlistRepairs] = await Promise.all([
+      collectTrackSandboxPathRepairs(),
+      collectPlaylistCoverSandboxPathRepairs(),
     ]);
+    if (trackRepairs.length === 0 && playlistRepairs.length === 0) return;
+
+    await withMobileCloudOutboxSuppressed(async (db) => {
+      await applyTrackSandboxPathRepairs(db, trackRepairs);
+      await applyPlaylistCoverSandboxPathRepairs(db, playlistRepairs);
+    });
   })().finally(() => {
     repairPromise = null;
   });

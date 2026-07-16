@@ -1,9 +1,16 @@
+import type { SQLiteDatabase } from 'expo-sqlite';
 import { getAllTrackAssetRows, updateTrack } from '../db-queries';
 import { shouldRewriteSandboxPath } from './path-utils';
 
-export async function repairTrackSandboxPaths(): Promise<number> {
+interface TrackSandboxPathRepair {
+  id: number;
+  filePath: string | null;
+  coverArtPath: string | null;
+}
+
+export async function collectTrackSandboxPathRepairs(): Promise<TrackSandboxPathRepair[]> {
   const trackRows = await getAllTrackAssetRows();
-  let repairedCount = 0;
+  const repairs: TrackSandboxPathRepair[] = [];
 
   for (const track of trackRows) {
     const [nextFilePath, nextCoverArtPath] = await Promise.all([
@@ -15,12 +22,24 @@ export async function repairTrackSandboxPaths(): Promise<number> {
       continue;
     }
 
-    await updateTrack(track.id, {
-      ...(nextFilePath ? { file_path: nextFilePath } : {}),
-      ...(nextCoverArtPath ? { cover_art_path: nextCoverArtPath } : {}),
+    repairs.push({
+      id: track.id,
+      filePath: nextFilePath,
+      coverArtPath: nextCoverArtPath,
     });
-    repairedCount += 1;
   }
 
-  return repairedCount;
+  return repairs;
+}
+
+export async function applyTrackSandboxPathRepairs(
+  database: SQLiteDatabase,
+  repairs: TrackSandboxPathRepair[],
+): Promise<void> {
+  for (const repair of repairs) {
+    await updateTrack(repair.id, {
+      ...(repair.filePath ? { file_path: repair.filePath } : {}),
+      ...(repair.coverArtPath ? { cover_art_path: repair.coverArtPath } : {}),
+    }, database);
+  }
 }

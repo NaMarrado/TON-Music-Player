@@ -30,7 +30,12 @@ export interface MobileCloudV2SyncOptions {
 
 export interface PreparedLocalManifest {
   manifest: CloudLibraryManifestV2;
-  uploads: Map<string, { filePath: string; contentType: string; hash: string }>;
+  uploads: Map<string, {
+    filePath: string;
+    contentType: string;
+    hash: string;
+    progressGroup: string | null;
+  }>;
   trackEntryByLocalId: Map<number, CloudTrackEntry>;
   playlistEntryByLocalId: Map<number, CloudPlaylistEntry>;
   incremental: boolean;

@@ -19,8 +19,10 @@ export function isOnline(state: NetInfoState): boolean {
 
 export function isUnmetered(state: NetInfoState): boolean {
   const details = state.details as { isConnectionExpensive?: boolean } | null;
-  if (details?.isConnectionExpensive === true) return false;
+  // iOS may mark Wi-Fi (notably Personal Hotspot and Low Data Mode) as
+  // expensive. It is still Wi-Fi for the user's explicit sync policy.
   if (state.type === 'wifi' || state.type === 'ethernet') return true;
+  if (details?.isConnectionExpensive === true) return false;
   return details?.isConnectionExpensive === false && state.type !== 'cellular';
 }
 
