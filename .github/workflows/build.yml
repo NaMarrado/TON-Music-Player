@@ -1,4 +1,4 @@
-name: "MAIN: Build"
+name: 'MAIN: Build'
 
 on:
   push:
@@ -57,7 +57,7 @@ env:
 
 jobs:
   prepare-release:
-    name: "MAIN: Prepare release"
+    name: 'MAIN: Prepare release'
     if: >-
       ${{
         github.event_name == 'push' &&
@@ -113,7 +113,7 @@ jobs:
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
 
   metadata:
-    name: "MAIN: Release metadata"
+    name: 'MAIN: Release metadata'
     needs: prepare-release
     if: >-
       ${{
@@ -176,7 +176,7 @@ jobs:
           echo "release=${RELEASE}" >> "$GITHUB_OUTPUT"
 
   release-draft:
-    name: "MAIN: Create draft release"
+    name: 'MAIN: Create draft release'
     needs: metadata
     if: ${{ needs.metadata.outputs.release == 'true' && github.event_name == 'push' }}
     runs-on: ubuntu-24.04
@@ -199,7 +199,7 @@ jobs:
           fi
 
   desktop:
-    name: "MAIN: Desktop (${{ matrix.id }})"
+    name: 'MAIN: Desktop (${{ matrix.id }})'
     needs:
       - metadata
       - release-draft
@@ -393,7 +393,7 @@ jobs:
           gh release upload "v${VERSION}" "$DESTINATION" --clobber
 
   android:
-    name: "MAIN: Android"
+    name: 'MAIN: Android'
     needs:
       - metadata
       - release-draft
@@ -544,7 +544,7 @@ jobs:
           gh release upload "v${VERSION}" "$DESTINATION" --clobber
 
   ios-validate:
-    name: "MAIN: iOS validate"
+    name: 'MAIN: iOS validate'
     needs: metadata
     if: ${{ needs.metadata.result == 'success' && (github.event_name != 'workflow_dispatch' || github.event.inputs.target == 'all' || github.event.inputs.target == 'ios') }}
     continue-on-error: true
@@ -603,7 +603,7 @@ jobs:
             build
 
   publish-release:
-    name: "MAIN: Publish GitHub Release"
+    name: 'MAIN: Publish GitHub Release'
     needs:
       - metadata
       - release-draft
@@ -713,8 +713,42 @@ jobs:
           node scripts/release/validate-update-manifest.mjs /tmp/ton-update.json --live
           test "$(node -p "require('/tmp/ton-update.json').version")" = "$VERSION"
 
+  sync-release-to-dev:
+    name: 'MAIN: Sync release commits to dev'
+    needs:
+      - publish-release
+    if: ${{ needs.publish-release.result == 'success' && github.event_name == 'push' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository history
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Fast-forward dev to the published main commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main dev
+
+          if ! git merge-base --is-ancestor origin/dev origin/main; then
+            echo "dev advanced while the release was building; refusing to overwrite it." >&2
+            exit 1
+          fi
+
+          if [ "$(git rev-parse origin/dev)" = "$(git rev-parse origin/main)" ]; then
+            echo "dev already matches main."
+            exit 0
+          fi
+
+          git checkout --detach origin/main
+          git push origin HEAD:dev
+
   cleanup-failed-release:
-    name: "MAIN: Clean failed draft release"
+    name: 'MAIN: Clean failed draft release'
     needs:
       - metadata
       - release-draft
