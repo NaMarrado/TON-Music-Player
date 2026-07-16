@@ -1,23 +1,23 @@
 {
-  "version": "1.0.28",
-  "detailsUrl": "https://github.com/NaMarrado/TON-Music-Player/releases/tag/v1.0.28",
+  "version": "1.0.29",
+  "detailsUrl": "https://github.com/NaMarrado/TON-Music-Player/releases/tag/v1.0.29",
   "notes": "TON checks GitHub Releases for updates.",
   "desktop": {
     "darwin": {
-      "url": "https://github.com/NaMarrado/TON-Music-Player/releases/download/v1.0.28/TON-macos.dmg",
+      "url": "https://github.com/NaMarrado/TON-Music-Player/releases/download/v1.0.29/TON-macos.dmg",
       "fileName": "TON-macos.dmg"
     },
     "win32": {
-      "url": "https://github.com/NaMarrado/TON-Music-Player/releases/download/v1.0.28/TON-windows.exe",
+      "url": "https://github.com/NaMarrado/TON-Music-Player/releases/download/v1.0.29/TON-windows.exe",
       "fileName": "TON-windows.exe"
     },
     "linux": {
-      "url": "https://github.com/NaMarrado/TON-Music-Player/releases/download/v1.0.28/TON-linux.AppImage",
+      "url": "https://github.com/NaMarrado/TON-Music-Player/releases/download/v1.0.29/TON-linux.AppImage",
       "fileName": "TON-linux.AppImage"
     }
   },
   "android": {
-    "url": "https://github.com/NaMarrado/TON-Music-Player/releases/download/v1.0.28/TON-android.apk",
+    "url": "https://github.com/NaMarrado/TON-Music-Player/releases/download/v1.0.29/TON-android.apk",
     "fileName": "TON-android.apk"
   }
 }
