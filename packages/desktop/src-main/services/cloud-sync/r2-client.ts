@@ -21,6 +21,12 @@ function requestHeaders(headers: Record<string, string>): Record<string, string>
   return rest;
 }
 
+function requestUrl(signedUrl: string): string {
+  const endpoint = process.env.TON_R2_TEST_ENDPOINT?.trim().replace(/\/+$/, '');
+  if (!endpoint) return signedUrl;
+  return `${endpoint}${signedUrl.replace(/^https:\/\/[^/]+/, '')}`;
+}
+
 async function assertOk(response: Response): Promise<void> {
   if (response.ok) {
     return;
@@ -66,7 +72,7 @@ export class DesktopR2Client {
       key,
       headers: { 'cache-control': 'no-cache' },
     });
-    const response = await fetch(signed.url, {
+    const response = await fetch(requestUrl(signed.url), {
       method: signed.method,
       headers: requestHeaders(signed.headers),
       signal,
@@ -98,7 +104,7 @@ export class DesktopR2Client {
       key,
       headers,
     });
-    const response = await fetch(signed.url, {
+    const response = await fetch(requestUrl(signed.url), {
       method: signed.method,
       headers: requestHeaders(signed.headers),
       signal: options.signal as AbortSignal | undefined,
@@ -142,7 +148,7 @@ export class DesktopR2Client {
         query,
         headers: { 'cache-control': 'no-cache' },
       });
-      const response = await fetch(signed.url, {
+      const response = await fetch(requestUrl(signed.url), {
         method: signed.method,
         headers: requestHeaders(signed.headers),
         signal,
@@ -182,7 +188,7 @@ export class DesktopR2Client {
       headers,
       body,
     });
-    const response = await fetch(signed.url, {
+    const response = await fetch(requestUrl(signed.url), {
       method: signed.method,
       headers: requestHeaders(signed.headers),
       body,
@@ -200,7 +206,7 @@ export class DesktopR2Client {
 
   async deleteObject(key: string, signal?: AbortSignal): Promise<void> {
     const signed = signR2Request({ config: this.config, method: 'DELETE', key });
-    const response = await fetch(signed.url, {
+    const response = await fetch(requestUrl(signed.url), {
       method: signed.method,
       headers: requestHeaders(signed.headers),
       signal,
@@ -236,7 +242,7 @@ export class DesktopR2Client {
       headers,
       bodyHash,
     });
-    const response = await fetch(signed.url, {
+    const response = await fetch(requestUrl(signed.url), {
       method: signed.method,
       headers: requestHeaders(signed.headers),
       body: fs.createReadStream(filePath) as unknown as RequestInit['body'],
@@ -255,7 +261,7 @@ export class DesktopR2Client {
 
   async downloadFile(key: string, destinationPath: string, signal?: AbortSignal): Promise<void> {
     const signed = signR2Request({ config: this.config, method: 'GET', key });
-    const response = await fetch(signed.url, {
+    const response = await fetch(requestUrl(signed.url), {
       method: signed.method,
       headers: requestHeaders(signed.headers),
       signal,
@@ -282,7 +288,7 @@ export class DesktopR2Client {
       headers: { 'content-type': 'text/plain; charset=utf-8' },
       body,
     });
-    const response = await fetch(signed.url, {
+    const response = await fetch(requestUrl(signed.url), {
       method: signed.method,
       headers: requestHeaders(signed.headers),
       body,

@@ -81,3 +81,4 @@ Baseline: `bd8f46a`
 - 2026-07-16: isolated cleanup and large-library harness passed 10/10 scenarios, including 1,600-track pre-enabled/runtime shuffle, exact order restore, 10,000-track filtering, playlist-first batching, and concrete cleanup preview rows. No network or R2 credentials were used.
 - 2026-07-16: shared cleanup executor passed stale CAS, cancel before CAS, cancel after CAS, and partial object-delete scenarios against a local fake adapter. No network or R2 credentials were used.
 - 2026-07-16: playback event audit fixed the single-track native queue ID mismatch and made Android state events validate a native snapshot against the current queue generation.
+- 2026-07-16: local S3-compatible R2 harness served a five-track/four-playlist fixture; the real desktop R2 client completed manifest GET with ETag, connection-test PUT, and object listing through the explicit localhost-only endpoint override.

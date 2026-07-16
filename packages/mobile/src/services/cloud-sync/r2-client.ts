@@ -16,6 +16,13 @@ function requestHeaders(headers: Record<string, string>): Record<string, string>
   return rest;
 }
 
+const TEST_R2_ENDPOINT = process.env.EXPO_PUBLIC_TON_R2_TEST_ENDPOINT?.trim().replace(/\/+$/, '');
+
+function requestUrl(signedUrl: string): string {
+  if (!TEST_R2_ENDPOINT) return signedUrl;
+  return `${TEST_R2_ENDPOINT}${signedUrl.replace(/^https:\/\/[^/]+/, '')}`;
+}
+
 export type ConditionalJsonResult<T> =
   | { status: 'ok'; value: T; etag: string }
   | { status: 'not-modified'; etag: string | null }
@@ -61,7 +68,7 @@ export class MobileR2Client {
       key,
       headers: { 'cache-control': 'no-cache' },
     });
-    const response = await fetch(signed.url, {
+    const response = await fetch(requestUrl(signed.url), {
       method: signed.method,
       headers: requestHeaders(signed.headers),
       signal,
@@ -94,7 +101,7 @@ export class MobileR2Client {
       key,
       headers,
     });
-    const response = await fetch(signed.url, {
+    const response = await fetch(requestUrl(signed.url), {
       method: signed.method,
       headers: requestHeaders(signed.headers),
       signal,
@@ -142,7 +149,7 @@ export class MobileR2Client {
         query,
         headers: { 'cache-control': 'no-cache' },
       });
-      const response = await fetch(signed.url, {
+      const response = await fetch(requestUrl(signed.url), {
         method: signed.method,
         headers: requestHeaders(signed.headers),
         signal,
@@ -180,7 +187,7 @@ export class MobileR2Client {
       headers,
       body,
     });
-    const response = await fetch(signed.url, {
+    const response = await fetch(requestUrl(signed.url), {
       method: signed.method,
       headers: requestHeaders(signed.headers),
       body,
@@ -195,7 +202,7 @@ export class MobileR2Client {
 
   async deleteObject(key: string, signal?: AbortSignal): Promise<void> {
     const signed = signR2Request({ config: this.config, method: 'DELETE', key });
-    const response = await fetch(signed.url, {
+    const response = await fetch(requestUrl(signed.url), {
       method: signed.method,
       headers: requestHeaders(signed.headers),
       signal,
@@ -227,7 +234,7 @@ export class MobileR2Client {
       headers,
       bodyHash,
     });
-    const task = FileSystem.createUploadTask(signed.url, fileUri, {
+    const task = FileSystem.createUploadTask(requestUrl(signed.url), fileUri, {
       httpMethod: 'PUT',
       uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
       headers: requestHeaders(signed.headers),
@@ -252,7 +259,7 @@ export class MobileR2Client {
       throw new Error('cloud_sync_cancelled');
     }
     const signed = signR2Request({ config: this.config, method: 'GET', key });
-    const task = FileSystem.createDownloadResumable(signed.url, destinationUri, {
+    const task = FileSystem.createDownloadResumable(requestUrl(signed.url), destinationUri, {
       headers: requestHeaders(signed.headers),
     });
     const abort = () => { void task.cancelAsync(); };
@@ -277,7 +284,7 @@ export class MobileR2Client {
       headers: { 'content-type': 'text/plain; charset=utf-8' },
       body,
     });
-    const response = await fetch(signed.url, {
+    const response = await fetch(requestUrl(signed.url), {
       method: signed.method,
       headers: requestHeaders(signed.headers),
       body,
