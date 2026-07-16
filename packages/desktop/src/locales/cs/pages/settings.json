@@ -83,7 +83,7 @@
   "cloudAutoSyncState_disabled": "Vypnuto",
   "cloudAutoSyncState_unconfigured": "R2 není nastavené",
   "cloudAutoSyncPendingChanges": "Čeká {{count}} změn",
-  "cloudAutoSyncPendingDownloads": "Na Wi-Fi čeká {{count}} skladeb",
+  "cloudAutoSyncPendingDownloads": "{{count}} skladeb čeká na stažení",
   "cloudAutoSyncLastSuccess": "Poslední sync: {{time}}",
   "cloudAutoSyncNextRetry": "Další pokus: {{time}}",
   "cloudAccountId": "Account ID",

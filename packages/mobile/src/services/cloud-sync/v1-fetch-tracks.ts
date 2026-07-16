@@ -1,4 +1,5 @@
 import * as FileSystem from 'expo-file-system';
+import { compareCloudTracksForLibrary } from '@ton/core';
 import type { CloudLibraryManifestV1, CloudSyncResult } from '@ton/core';
 import { getDb } from '../database';
 import { insertTrack } from '../db-queries';
@@ -259,10 +260,11 @@ export async function fetchV1Tracks(input: {
   const deferredFailures = failureContext
     ? await prepareMobileCloudDownloadFailures(failureContext)
     : new Set<string>();
-  emitProgress(onProgress, { phase: 'downloading', total: manifest.tracks.length });
-  for (let index = 0; index < manifest.tracks.length; index += 1) {
+  const orderedTracks = [...manifest.tracks].sort(compareCloudTracksForLibrary);
+  emitProgress(onProgress, { phase: 'downloading', total: orderedTracks.length });
+  for (let index = 0; index < orderedTracks.length; index += 1) {
     throwIfFetchCancelled(shouldCancel, abortSignal);
-    const track = manifest.tracks[index];
+    const track = orderedTracks[index];
     const existing = existingByHash.get(track.content_hash_sha256);
     const hasLocalAudio = existing ? await fileExists(existing.file_path) : false;
     try {
@@ -323,7 +325,7 @@ export async function fetchV1Tracks(input: {
       }
     } finally {
       emitProgress(onProgress, {
-        phase: 'downloading', current: index + 1, total: manifest.tracks.length,
+        phase: 'downloading', current: index + 1, total: orderedTracks.length,
         downloaded: result.downloaded, skipped: result.skipped, failed: result.failed,
         message: track.metadata.title ?? undefined,
       });

@@ -83,7 +83,7 @@
   "cloudAutoSyncState_disabled": "オフ",
   "cloudAutoSyncState_unconfigured": "R2が設定されていません",
   "cloudAutoSyncPendingChanges": "{{count}}件の変更が保留中",
-  "cloudAutoSyncPendingDownloads": "{{count}}曲がWi-Fiを待機中",
+  "cloudAutoSyncPendingDownloads": "{{count}}曲がダウンロード待ち",
   "cloudAutoSyncLastSuccess": "最終同期: {{time}}",
   "cloudAutoSyncNextRetry": "次の再試行: {{time}}",
   "cloudAccountId": "アカウントID",

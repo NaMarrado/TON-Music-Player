@@ -17,6 +17,7 @@ export const ALLOWED_INVOKE_CHANNELS = [
   'playlist:list',
   'playlist:get',
   'playlist:get-track-memberships',
+  'playlist:get-track-memberships-batch',
   'playlist:create',
   'playlist:update',
   'playlist:delete',

@@ -83,7 +83,7 @@
   "cloudAutoSyncState_disabled": "Выключено",
   "cloudAutoSyncState_unconfigured": "R2 не настроен",
   "cloudAutoSyncPendingChanges": "Ожидает изменений: {{count}}",
-  "cloudAutoSyncPendingDownloads": "{{count}} треков ожидают Wi-Fi",
+  "cloudAutoSyncPendingDownloads": "{{count}} треков ожидают скачивания",
   "cloudAutoSyncLastSuccess": "Последняя синхронизация: {{time}}",
   "cloudAutoSyncNextRetry": "Следующая попытка: {{time}}",
   "cloudAccountId": "Идентификатор аккаунта",

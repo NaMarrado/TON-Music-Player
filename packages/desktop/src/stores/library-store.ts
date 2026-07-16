@@ -201,6 +201,26 @@ export async function reconcileLibraryTracks(
   await scheduleLibraryReconcile();
 }
 
+export async function mergeLibraryTrackSummaries(trackIds: number[]): Promise<void> {
+  const uniqueIds = [...new Set(trackIds)];
+  if (uniqueIds.length === 0) return;
+  const incoming = await window.api.invoke('library:list-summary-by-ids', uniqueIds) as LibraryTrack[];
+  if (incoming.length === 0) return;
+  useLibraryStore.setState((state) => {
+    const byId = new Map(state.tracks.map((track) => [track.id, track]));
+    incoming.forEach((track) => byId.set(track.id, track));
+    return {
+      tracks: [...byId.values()].sort((left, right) => (
+        right.added_at - left.added_at
+        || (left.content_hash_sha256 ?? '').localeCompare(right.content_hash_sha256 ?? '')
+        || right.id - left.id
+      )),
+      hasLoaded: true,
+      isStale: false,
+    };
+  });
+}
+
 /** Mark a track as played in the in-memory store (keeps recently-played section fresh). */
 export function markTrackPlayed(trackId: number): void {
   const { tracks } = useLibraryStore.getState();

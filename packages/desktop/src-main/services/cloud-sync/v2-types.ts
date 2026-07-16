@@ -13,6 +13,7 @@ export type V2SyncOptions = {
   force?: boolean;
   mode?: 'upload' | 'fetch' | 'sync';
   onMetadataApplied?: () => void;
+  onTracksApplied?: (trackIds: number[]) => void;
 };
 
 export type SerializedTrack = {

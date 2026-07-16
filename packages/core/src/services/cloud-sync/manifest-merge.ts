@@ -9,6 +9,14 @@ import type {
 import { normalizeContentHash } from './manifest-keys';
 import { compareCloudEntityVersions, normalizeLamportCounter } from './manifest-records';
 
+export function compareCloudTracksForLibrary(
+  left: CloudTrackEntry,
+  right: CloudTrackEntry,
+): number {
+  return right.added_at - left.added_at
+    || left.content_hash_sha256.localeCompare(right.content_hash_sha256);
+}
+
 function stableRecordString(value: CloudTrackRecordV2 | CloudPlaylistRecordV2): string {
   return value.deleted ? `${value.deleted_at}` : JSON.stringify(value.entry);
 }
@@ -155,7 +163,7 @@ export function mergeCloudLibraryManifests(
     device_id: local.device_id,
     revision: local.revision,
     library_track_hashes: [...tracks.keys()],
-    tracks: [...tracks.values()].sort((left, right) => right.added_at - left.added_at),
+    tracks: [...tracks.values()].sort(compareCloudTracksForLibrary),
     playlists: [...playlists.values()].sort((left, right) => (
       left.sort_order - right.sort_order || right.updated_at - left.updated_at
     )),

@@ -26,6 +26,7 @@ export {
 export {
   mergeCloudLibraryManifests,
   mergeCloudLibraryManifestsV2,
+  compareCloudTracksForLibrary,
   type MergeCloudLibraryManifestsV2Options,
 } from './manifest-merge';
 export {

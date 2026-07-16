@@ -99,6 +99,9 @@ class DesktopCloudAutoSyncRuntime {
               onMetadataApplied: () => {
                 broadcastCloudEvent('cloud:applied', { phase: 'metadata' });
               },
+              onTracksApplied: (trackIds) => {
+                broadcastCloudEvent('cloud:applied', { phase: 'track-batch', trackIds });
+              },
               onProgress: (progress) => {
                 broadcastCloudEvent('cloud:progress', progress);
                 this.progressListeners.forEach((listener) => listener(progress));
@@ -114,7 +117,11 @@ class DesktopCloudAutoSyncRuntime {
               importedPlaylists: result.importedPlaylists,
             });
           }
-          return { pendingChanges: remaining, pendingDownloads: 0 };
+          const persisted = scopeId ? readDesktopCloudSyncState(scopeId) : null;
+          return {
+            pendingChanges: remaining,
+            pendingDownloads: persisted?.pending_downloads ?? 0,
+          };
         } finally {
           this.activeAbortController = null;
           this.resolveActiveCycle?.();

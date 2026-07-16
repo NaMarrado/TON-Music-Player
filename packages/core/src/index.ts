@@ -180,6 +180,7 @@ export {
   createCloudLiveTrackRecordV2,
   createSha256Hasher,
   compareCloudEntityVersions,
+  compareCloudTracksForLibrary,
   convertCloudLibraryManifestV1ToV2,
   getCloudStorageErrorKey,
   isCloudStoragePreconditionFailedError,

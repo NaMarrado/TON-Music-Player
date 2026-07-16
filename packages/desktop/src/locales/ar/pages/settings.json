@@ -83,7 +83,7 @@
   "cloudAutoSyncState_disabled": "متوقفة",
   "cloudAutoSyncState_unconfigured": "لم يتم إعداد R2",
   "cloudAutoSyncPendingChanges": "{{count}} تغييرات معلقة",
-  "cloudAutoSyncPendingDownloads": "{{count}} مسارات تنتظر Wi-Fi",
+  "cloudAutoSyncPendingDownloads": "{{count}} مسارات بانتظار التنزيل",
   "cloudAutoSyncLastSuccess": "آخر مزامنة: {{time}}",
   "cloudAutoSyncNextRetry": "المحاولة التالية: {{time}}",
   "cloudAccountId": "معرف الحساب",

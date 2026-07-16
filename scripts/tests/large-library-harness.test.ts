@@ -3,6 +3,7 @@ import test from 'node:test';
 import type { CloudTrackEntry, PlaylistTrackEntry, Track } from '../../packages/core/src/index.ts';
 import {
   buildCloudR2CleanupPlan,
+  compareCloudTracksForLibrary,
   createCloudLivePlaylistRecordV2,
   createCloudLiveTrackRecordV2,
   getFilteredPlaylistTracks,
@@ -143,6 +144,16 @@ test('10,000-track playlist filtering and persisted sort inputs are viewport-ind
     getFilteredPlaylistTracks(tracks, '', null, 'asc').map((item) => item.playlist_track_id),
     tracks.map((item) => item.playlist_track_id),
   );
+});
+
+test('cloud transfer order matches Library order so incoming batches do not shift the viewport', () => {
+  const entries = [track(2), track(0), track(1)].map(cloudEntry);
+  entries[0].added_at = 100;
+  entries[1].added_at = 300;
+  entries[2].added_at = 200;
+
+  const ordered = entries.sort(compareCloudTracksForLibrary);
+  assert.deepEqual(ordered.map((entry) => entry.added_at), [300, 200, 100]);
 });
 
 test('isolated 1,600-track cloud cleanup produces concrete rows without network access', () => {

@@ -63,6 +63,15 @@ export function createCloudAutoSyncTables(db: Database.Database): void {
       updated_at INTEGER NOT NULL DEFAULT (strftime('%s','now'))
     );
 
+    CREATE TABLE IF NOT EXISTS cloud_sync_download_failures (
+      scope_id TEXT NOT NULL,
+      content_hash_sha256 TEXT NOT NULL,
+      manifest_revision TEXT NOT NULL,
+      error_message TEXT NOT NULL,
+      failed_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
+      PRIMARY KEY (scope_id, content_hash_sha256)
+    );
+
     INSERT OR IGNORE INTO cloud_sync_control (id) VALUES (1);
     UPDATE cloud_sync_control
     SET suppress_outbox = 0, lease_owner = NULL, lease_expires_at = NULL
@@ -74,6 +83,8 @@ export function createCloudAutoSyncTables(db: Database.Database): void {
       ON cloud_sync_entities(scope_id, is_deleted);
     CREATE INDEX IF NOT EXISTS idx_cloud_sync_blob_gc_eligible
       ON cloud_sync_blob_gc(scope_id, eligible_at);
+    CREATE INDEX IF NOT EXISTS idx_cloud_sync_download_failures_revision
+      ON cloud_sync_download_failures(scope_id, manifest_revision);
 
     UPDATE playlists
     SET cloud_id = 'playlist-' || lower(hex(randomblob(16)))

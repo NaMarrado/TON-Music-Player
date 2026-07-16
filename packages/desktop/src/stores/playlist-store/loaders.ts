@@ -96,10 +96,35 @@ export async function mergeCompletedTrackIntoPlaylists(
   if (currentPlaylistId == null || !uniqueIds.includes(currentPlaylistId)) return;
   const incoming = memberships.filter((row) => row.playlist_id === currentPlaylistId);
   if (incoming.length === 0) return;
-  const incomingIds = new Set(incoming.map((row) => row.playlist_track_id));
+  const incomingPositions = new Set(incoming.map((row) => row.position));
   usePlaylistStore.setState((state) => ({
     currentTracks: [
-      ...state.currentTracks.filter((row) => !incomingIds.has(row.playlist_track_id)),
+      ...state.currentTracks.filter((row) => !incomingPositions.has(
+        (row as PlaylistTrackEntry & { position?: number }).position ?? -1,
+      )),
+      ...incoming,
+    ].sort((left, right) => (
+      ((left as PlaylistTrackEntry & { position?: number }).position ?? Number.MAX_SAFE_INTEGER)
+      - ((right as PlaylistTrackEntry & { position?: number }).position ?? Number.MAX_SAFE_INTEGER)
+    )),
+  }));
+}
+
+export async function mergeCloudTrackBatchIntoCurrentPlaylist(trackIds: number[]): Promise<void> {
+  const currentPlaylistId = usePlaylistStore.getState().currentPlaylist?.id;
+  if (currentPlaylistId == null || trackIds.length === 0) return;
+  const incoming = await invokeIpc(
+    'playlist:get-track-memberships-batch',
+    [...new Set(trackIds)],
+    currentPlaylistId,
+  ) as Array<PlaylistTrackEntry & { playlist_id: number; position: number }>;
+  if (incoming.length === 0) return;
+  const incomingPositions = new Set(incoming.map((row) => row.position));
+  usePlaylistStore.setState((state) => ({
+    currentTracks: [
+      ...state.currentTracks.filter((row) => !incomingPositions.has(
+        (row as PlaylistTrackEntry & { position?: number }).position ?? -1,
+      )),
       ...incoming,
     ].sort((left, right) => (
       ((left as PlaylistTrackEntry & { position?: number }).position ?? Number.MAX_SAFE_INTEGER)

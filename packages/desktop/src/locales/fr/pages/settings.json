@@ -83,7 +83,7 @@
   "cloudAutoSyncState_disabled": "Désactivée",
   "cloudAutoSyncState_unconfigured": "R2 n’est pas configuré",
   "cloudAutoSyncPendingChanges": "{{count}} changements en attente",
-  "cloudAutoSyncPendingDownloads": "{{count}} morceaux attendent le Wi-Fi",
+  "cloudAutoSyncPendingDownloads": "{{count}} morceaux en attente de téléchargement",
   "cloudAutoSyncLastSuccess": "Dernière synchronisation : {{time}}",
   "cloudAutoSyncNextRetry": "Prochain essai : {{time}}",
   "cloudAccountId": "ID du compte",

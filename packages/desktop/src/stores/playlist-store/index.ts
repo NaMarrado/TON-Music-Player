@@ -5,6 +5,7 @@ export {
   reloadPlaylistViews,
   loadSmartPlaylistTracks,
   mergeCompletedTrackIntoPlaylists,
+  mergeCloudTrackBatchIntoCurrentPlaylist,
 } from './loaders';
 export {
   addTracksToPlaylist,

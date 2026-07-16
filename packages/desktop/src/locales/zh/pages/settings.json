@@ -83,7 +83,7 @@
   "cloudAutoSyncState_disabled": "已关闭",
   "cloudAutoSyncState_unconfigured": "尚未配置 R2",
   "cloudAutoSyncPendingChanges": "{{count}} 项更改待处理",
-  "cloudAutoSyncPendingDownloads": "{{count}} 首曲目正在等待 Wi-Fi",
+  "cloudAutoSyncPendingDownloads": "{{count}} 首曲目等待下载",
   "cloudAutoSyncLastSuccess": "上次同步：{{time}}",
   "cloudAutoSyncNextRetry": "下次重试：{{time}}",
   "cloudAccountId": "账户ID",

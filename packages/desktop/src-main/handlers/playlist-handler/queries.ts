@@ -64,4 +64,20 @@ export function registerPlaylistQueryHandlers(): void {
     },
   );
 
+  ipcMain.handle(
+    'playlist:get-track-memberships-batch',
+    (_event, trackIds: number[], playlistId: number) => {
+      if (trackIds.length === 0) return [];
+      const db = getDb();
+      const placeholders = trackIds.map(() => '?').join(',');
+      return db.prepare(
+        `SELECT t.*, pt.id AS playlist_track_id, pt.playlist_id, pt.position
+         FROM playlist_tracks pt
+         JOIN tracks t ON t.id = pt.track_id
+         WHERE pt.playlist_id = ? AND pt.track_id IN (${placeholders})
+         ORDER BY pt.position`,
+      ).all(playlistId, ...trackIds);
+    },
+  );
+
 }

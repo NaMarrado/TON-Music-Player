@@ -158,9 +158,9 @@ export async function syncCloudLibraryV2ForDesktop(
     last_success_at: Date.now(),
     last_error: null,
     next_retry_at: null,
-    needs_full_reconcile: shouldUpload ? 0 : state.needs_full_reconcile,
+    needs_full_reconcile: shouldApply ? 0 : state.needs_full_reconcile,
     pending_remote_revision: mode === 'upload' ? published.revision : null,
-    pending_downloads: 0,
+    pending_downloads: shouldApply ? result.failed : state.pending_downloads,
   });
   setDesktopCloudLastRevision(published.revision);
   result.revision = published.revision;

@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { compareCloudTracksForLibrary } from '@ton/core';
 import type { CloudLibraryManifestV1, CloudSyncResult } from '@ton/core';
 import { getDb } from '../database';
 import { findNonCollidingFileAsync, getLibraryDir } from '../library-paths';
@@ -40,10 +41,11 @@ export async function fetchV1Tracks(
   `);
   await fs.promises.mkdir(getLibraryDir(), { recursive: true });
 
-  emitProgress(onProgress, { phase: 'downloading', total: manifest.tracks.length });
-  for (let index = 0; index < manifest.tracks.length; index += 1) {
+  const orderedTracks = [...manifest.tracks].sort(compareCloudTracksForLibrary);
+  emitProgress(onProgress, { phase: 'downloading', total: orderedTracks.length });
+  for (let index = 0; index < orderedTracks.length; index += 1) {
     throwIfCancelled(shouldCancel);
-    const track = manifest.tracks[index];
+    const track = orderedTracks[index];
     const existingTrackId = trackIdByHash.get(track.content_hash_sha256);
     if (existingTrackId != null) {
       const downloadedAt = normalizeDownloadedAt(track.downloaded_at);
@@ -87,7 +89,7 @@ export async function fetchV1Tracks(
       result.importedTracks += 1;
     }
     emitProgress(onProgress, {
-      phase: 'downloading', current: index + 1, total: manifest.tracks.length,
+      phase: 'downloading', current: index + 1, total: orderedTracks.length,
       downloaded: result.downloaded, skipped: result.skipped,
     });
   }

@@ -25,6 +25,10 @@ import {
   setDesktopCloudLastRevision,
 } from './config';
 import { ensureTrackContentHash } from './v1-local-manifest';
+import {
+  clearDesktopCloudDownloadFailures,
+  listDesktopCloudDownloadFailures,
+} from './download-failures';
 import { DesktopR2Client } from './r2-client';
 import { requireConfig } from './sync-common';
 
@@ -82,7 +86,10 @@ async function buildCurrentPlan(
   if (!manifest || read.status !== 'ok' || !read.etag) {
     throw new Error('cloud_cleanup_manifest_missing');
   }
-  const objects = await client.listObjects(`${normalizeCloudPrefix(config.prefix)}/`, signal);
+  const [objects, failures] = await Promise.all([
+    client.listObjects(`${normalizeCloudPrefix(config.prefix)}/`, signal),
+    Promise.resolve(listDesktopCloudDownloadFailures(getActiveDesktopCloudScope() ?? '')),
+  ]);
   throwIfAborted(signal);
   return buildCloudR2CleanupPlan({
     manifest,
@@ -97,6 +104,7 @@ async function buildCurrentPlan(
     objects,
     prefix: config.prefix,
     deviceId: getDesktopCloudDeviceId(),
+    failures,
   });
 }
 
@@ -191,6 +199,10 @@ export async function executeDesktopCloudCleanup(
     },
     commitLocalState: async (plan, etag) => {
       storeDesktopCleanupMirror(scopeId, plan.manifest, etag);
+      clearDesktopCloudDownloadFailures(
+        scopeId,
+        plan.preview.failuresToClear.map((failure) => failure.contentHash),
+      );
     },
     writeCommit: (plan, executionSignal) => client.putJson(
       buildCloudV2CommitObjectKey(config.prefix, plan.manifest.revision),

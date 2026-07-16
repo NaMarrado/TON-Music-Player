@@ -83,7 +83,7 @@
   "cloudAutoSyncState_disabled": "Aus",
   "cloudAutoSyncState_unconfigured": "R2 ist nicht eingerichtet",
   "cloudAutoSyncPendingChanges": "{{count}} Änderungen ausstehend",
-  "cloudAutoSyncPendingDownloads": "{{count}} Titel warten auf WLAN",
+  "cloudAutoSyncPendingDownloads": "{{count}} Titel warten auf den Download",
   "cloudAutoSyncLastSuccess": "Letzte Synchronisierung: {{time}}",
   "cloudAutoSyncNextRetry": "Nächster Versuch: {{time}}",
   "cloudAccountId": "Konto-ID",

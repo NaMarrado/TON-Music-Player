@@ -83,7 +83,7 @@
   "cloudAutoSyncState_disabled": "כבוי",
   "cloudAutoSyncState_unconfigured": "R2 אינו מוגדר",
   "cloudAutoSyncPendingChanges": "{{count}} שינויים ממתינים",
-  "cloudAutoSyncPendingDownloads": "{{count}} רצועות ממתינות ל-Wi-Fi",
+  "cloudAutoSyncPendingDownloads": "{{count}} רצועות ממתינות להורדה",
   "cloudAutoSyncLastSuccess": "סנכרון אחרון: {{time}}",
   "cloudAutoSyncNextRetry": "הניסיון הבא: {{time}}",
   "cloudAccountId": "מזהה חשבון",

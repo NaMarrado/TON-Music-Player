@@ -65,6 +65,7 @@ export {
   createCloudLivePlaylistRecordV2,
   createCloudLiveTrackRecordV2,
   compareCloudEntityVersions,
+  compareCloudTracksForLibrary,
   convertCloudLibraryManifestV1ToV2,
   mergeCloudLibraryManifests,
   mergeCloudLibraryManifestsV2,
