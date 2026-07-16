@@ -1,5 +1,28 @@
 import * as FileSystem from 'expo-file-system';
+import { sanitizeFilename } from '@ton/core';
 import { getFileExtension } from './naming';
+
+const PORTABLE_EXTENSION = /^\.[a-z0-9]{1,10}$/i;
+
+function encodeFileUriSegment(value: string): string {
+  return encodeURIComponent(value).replace(/[!'()*]/g, (character) => (
+    `%${character.charCodeAt(0).toString(16).toUpperCase()}`
+  ));
+}
+
+export function buildLocalFileUri(
+  directoryUri: string,
+  preferredFileName: string,
+  fallbackStem = 'file',
+): string {
+  const extension = getFileExtension(preferredFileName);
+  const rawStem = extension
+    ? preferredFileName.slice(0, -extension.length)
+    : preferredFileName;
+  const stem = sanitizeFilename(rawStem) || sanitizeFilename(fallbackStem) || 'file';
+  const safeExtension = PORTABLE_EXTENSION.test(extension) ? extension.toLowerCase() : '';
+  return `${directoryUri}${encodeFileUriSegment(`${stem}${safeExtension}`)}`;
+}
 
 export async function yieldToUiAsync(): Promise<void> {
   await new Promise<void>((resolve) => setTimeout(resolve, 0));
@@ -26,16 +49,18 @@ export async function ensureUniqueLocalFilePathAsync(
   fileHash: string,
 ): Promise<string> {
   const ext = getFileExtension(preferredFileName);
-  const stem = ext ? preferredFileName.slice(0, -ext.length) : preferredFileName;
-  let candidate = `${directoryUri}${preferredFileName}`;
+  const rawStem = ext ? preferredFileName.slice(0, -ext.length) : preferredFileName;
+  const stem = sanitizeFilename(rawStem) || fileHash;
+  const safeExt = PORTABLE_EXTENSION.test(ext) ? ext.toLowerCase() : '';
+  let candidate = buildLocalFileUri(directoryUri, `${stem}${safeExt}`, fileHash);
   let index = 0;
 
   while ((await FileSystem.getInfoAsync(candidate)).exists) {
     index += 1;
-    candidate =
-      index === 1
-        ? `${directoryUri}${stem}_${fileHash.slice(0, 8)}${ext}`
-        : `${directoryUri}${stem}_${fileHash.slice(0, 8)}_${index}${ext}`;
+    const suffix = index === 1
+      ? `_${fileHash.slice(0, 8)}`
+      : `_${fileHash.slice(0, 8)}_${index}`;
+    candidate = buildLocalFileUri(directoryUri, `${stem}${suffix}${safeExt}`, fileHash);
   }
 
   return candidate;

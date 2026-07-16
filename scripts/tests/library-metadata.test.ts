@@ -9,6 +9,7 @@ import {
   summarizeTrackFileSizes,
 } from '../../packages/core/src/utils/track-metadata.ts';
 import { getFilteredTracks } from '../../packages/core/src/utils/store-helpers/library.ts';
+import { sanitizeFilename } from '../../packages/core/src/utils/sanitize-filename.ts';
 
 test('formats the TON completion timestamp as a calendar day only', () => {
   const middayUtc = Date.UTC(2026, 6, 14, 12) / 1000;
@@ -80,6 +81,40 @@ test('filters library tracks by normalized artist and album artist names', () =>
     getFilteredTracks(rows, 'nocopyrightsounds', 'added_at', 'asc').map((track) => track.id),
     [2],
   );
+});
+
+test('filters tracks by punctuation without losing normalized text matching', () => {
+  const rows = [
+    { id: 1, title: '#BrooklynBloodPop!', artist: 'SyKo', album_artist: null },
+    { id: 2, title: '100% Real', artist: 'Someone Else', album_artist: null },
+    { id: 3, title: 'Plain Track', artist: 'NerdOut!', album_artist: null },
+  ] as Track[];
+
+  assert.deepEqual(
+    getFilteredTracks(rows, '#', 'added_at', 'asc').map((track) => track.id),
+    [1],
+  );
+  assert.deepEqual(
+    getFilteredTracks(rows, '!', 'added_at', 'asc').map((track) => track.id),
+    [1, 3],
+  );
+  assert.deepEqual(
+    getFilteredTracks(rows, '%', 'added_at', 'asc').map((track) => track.id),
+    [2],
+  );
+  assert.deepEqual(
+    getFilteredTracks(rows, 'brooklynbloodpop', 'added_at', 'asc').map((track) => track.id),
+    [1],
+  );
+});
+
+test('creates portable filenames without URL or filesystem reserved symbols', () => {
+  assert.equal(
+    sanitizeFilename('SyKo - #BrooklynBloodPop! 100%?'),
+    'SyKo - BrooklynBloodPop 100',
+  );
+  assert.equal(sanitizeFilename('CON.txt'), '_CON.txt');
+  assert.equal(sanitizeFilename('  ...  '), '');
 });
 
 function cloudTrack(downloadedAt: number | null, updatedAt: number): CloudTrackEntry {

@@ -4,6 +4,7 @@ import {
   searchYouTube,
   type AudioStrategyName,
 } from '../youtube-search';
+import { buildLocalFileUri } from '../library-transfer/file-helpers';
 import { MUSIC_DIR } from './filesystem';
 import type { DownloadFormat, DownloadInput } from './types';
 
@@ -103,7 +104,7 @@ export async function resolveDownloadSource(
   );
 
   const ext = getFileExtension(mimeType);
-  const filePath = `${MUSIC_DIR}${safeName}${ext}`;
+  const filePath = buildLocalFileUri(MUSIC_DIR, `${safeName || 'Track'}${ext}`, videoId);
   const format = ext.replace('.', '') as DownloadFormat;
 
   return {

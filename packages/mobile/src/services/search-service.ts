@@ -255,7 +255,8 @@ async function searchPlaylists(
   offset: number,
 ): Promise<SearchPage> {
   const ftsQuery = buildSearchFtsQuery(query);
-  if (!ftsQuery) return { results: [], hasMore: false };
+  const literalQuery = query.trim();
+  if (!ftsQuery && !literalQuery) return { results: [], hasMore: false };
   const db = getDb();
   const rows = await db.getAllAsync<{
     track_id: number;
@@ -266,8 +267,8 @@ async function searchPlaylists(
     cover_art_path: string | null;
     file_path: string;
     playlist_name: string;
-  }>(
-    `SELECT t.id as track_id, t.title, t.artist, t.album, t.duration_ms,
+  }>(ftsQuery
+    ? `SELECT t.id as track_id, t.title, t.artist, t.album, t.duration_ms,
             t.cover_art_path, t.file_path, p.name as playlist_name
      FROM playlist_tracks pt
      JOIN tracks t ON t.id = pt.track_id
@@ -275,8 +276,25 @@ async function searchPlaylists(
      JOIN playlists p ON p.id = pt.playlist_id
      WHERE tracks_fts MATCH ?
      ORDER BY bm25(tracks_fts, 10.0, 6.0, 3.0, 4.0, 1.0), t.id
-     LIMIT ? OFFSET ?`,
-    [ftsQuery, limit + 1, offset],
+     LIMIT ? OFFSET ?`
+    : `SELECT t.id as track_id, t.title, t.artist, t.album, t.duration_ms,
+            t.cover_art_path, t.file_path, p.name as playlist_name
+       FROM playlist_tracks pt
+       JOIN tracks t ON t.id = pt.track_id
+       JOIN playlists p ON p.id = pt.playlist_id
+       WHERE instr(COALESCE(t.title, ''), ?) > 0
+          OR instr(COALESCE(t.artist, ''), ?) > 0
+          OR instr(COALESCE(t.album, ''), ?) > 0
+          OR instr(COALESCE(t.album_artist, ''), ?) > 0
+          OR instr(COALESCE(p.name, ''), ?) > 0
+       ORDER BY t.id
+       LIMIT ? OFFSET ?`,
+    ftsQuery
+      ? [ftsQuery, limit + 1, offset]
+      : [
+          literalQuery, literalQuery, literalQuery, literalQuery, literalQuery,
+          limit + 1, offset,
+        ],
   );
 
   return {

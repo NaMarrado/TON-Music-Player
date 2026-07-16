@@ -2,6 +2,7 @@ import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { Platform } from 'react-native';
 import { requestDirectoryUriAsync } from './android-storage-access';
+import { buildLocalFileUri } from './file-helpers';
 
 type AndroidDirectoryTarget = {
   kind: 'android-directory';
@@ -33,7 +34,7 @@ export async function requestLibraryExportOutputTargetAsync(
   const exportsDirectory = await ensureExportsDirectoryAsync();
   return {
     kind: 'share-sheet',
-    fileUri: `${exportsDirectory}${fileName}`,
+    fileUri: buildLocalFileUri(exportsDirectory, fileName, 'TON Export'),
   };
 }
 

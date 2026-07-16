@@ -84,6 +84,7 @@ export {
   getArtists,
   getMostPlayed,
   getRecentlyPlayed,
+  matchesTrackFilter,
   relevanceScore,
   getVisibleResults,
   getSourceCounts,

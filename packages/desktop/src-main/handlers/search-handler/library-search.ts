@@ -13,20 +13,32 @@ export async function searchLocalTracks(
 ): Promise<SearchPageResult> {
   const db = getDb();
   const ftsQuery = buildSearchFtsQuery(query);
+  const literalQuery = query.trim();
   const pageSize = limit || 100;
 
-  if (!ftsQuery) return { results: [], hasMore: false };
+  if (!ftsQuery && !literalQuery) return { results: [], hasMore: false };
 
   try {
-    const rows = db
-      .prepare(
+    const rows = (ftsQuery
+      ? db.prepare(
          `SELECT t.* FROM tracks t
          JOIN tracks_fts fts ON fts.rowid = t.id
          WHERE tracks_fts MATCH ?
          ORDER BY bm25(tracks_fts, 10.0, 6.0, 3.0, 4.0, 1.0), t.id
          LIMIT ? OFFSET ?`,
-      )
-      .all(ftsQuery, pageSize + 1, offset) as Array<{
+        ).all(ftsQuery, pageSize + 1, offset)
+      : db.prepare(
+         `SELECT t.* FROM tracks t
+          WHERE instr(COALESCE(t.title, ''), ?) > 0
+             OR instr(COALESCE(t.artist, ''), ?) > 0
+             OR instr(COALESCE(t.album, ''), ?) > 0
+             OR instr(COALESCE(t.album_artist, ''), ?) > 0
+          ORDER BY t.id
+          LIMIT ? OFFSET ?`,
+        ).all(
+          literalQuery, literalQuery, literalQuery, literalQuery,
+          pageSize + 1, offset,
+        )) as Array<{
       id: number;
       title: string | null;
       artist: string | null;
@@ -62,13 +74,14 @@ export async function searchPlaylistTracks(
 ): Promise<SearchPageResult> {
   const db = getDb();
   const ftsQuery = buildSearchFtsQuery(query);
+  const literalQuery = query.trim();
   const pageSize = limit || 100;
 
-  if (!ftsQuery) return { results: [], hasMore: false };
+  if (!ftsQuery && !literalQuery) return { results: [], hasMore: false };
 
   try {
-    const rows = db
-      .prepare(
+    const rows = (ftsQuery
+      ? db.prepare(
         `SELECT t.*, p.name AS playlist_name FROM tracks t
          JOIN tracks_fts fts ON fts.rowid = t.id
          JOIN playlist_tracks pt ON pt.track_id = t.id
@@ -76,8 +89,22 @@ export async function searchPlaylistTracks(
          WHERE tracks_fts MATCH ?
          ORDER BY bm25(tracks_fts, 10.0, 6.0, 3.0, 4.0, 1.0), t.id
          LIMIT ? OFFSET ?`,
-      )
-      .all(ftsQuery, pageSize + 1, offset) as Array<{
+        ).all(ftsQuery, pageSize + 1, offset)
+      : db.prepare(
+         `SELECT t.*, p.name AS playlist_name FROM tracks t
+          JOIN playlist_tracks pt ON pt.track_id = t.id
+          JOIN playlists p ON p.id = pt.playlist_id
+          WHERE instr(COALESCE(t.title, ''), ?) > 0
+             OR instr(COALESCE(t.artist, ''), ?) > 0
+             OR instr(COALESCE(t.album, ''), ?) > 0
+             OR instr(COALESCE(t.album_artist, ''), ?) > 0
+             OR instr(COALESCE(p.name, ''), ?) > 0
+          ORDER BY t.id
+          LIMIT ? OFFSET ?`,
+        ).all(
+          literalQuery, literalQuery, literalQuery, literalQuery, literalQuery,
+          pageSize + 1, offset,
+        )) as Array<{
       id: number;
       title: string | null;
       artist: string | null;

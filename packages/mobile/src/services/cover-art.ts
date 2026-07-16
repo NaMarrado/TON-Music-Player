@@ -1,5 +1,5 @@
 import * as FileSystem from 'expo-file-system';
-import { sanitizeFilename } from '@ton/core';
+import { buildLocalFileUri } from './library-transfer/file-helpers';
 
 const ARTWORK_DIR = `${FileSystem.documentDirectory}artwork/`;
 
@@ -15,9 +15,8 @@ export async function downloadCoverArt(
   filename: string,
 ): Promise<string> {
   await ensureArtworkDir();
-  const safeName = sanitizeFilename(filename);
   const ext = url.includes('.png') ? '.png' : '.jpg';
-  const destPath = `${ARTWORK_DIR}${safeName}${ext}`;
+  const destPath = buildLocalFileUri(ARTWORK_DIR, `${filename}${ext}`, 'cover');
 
   const info = await FileSystem.getInfoAsync(destPath);
   if (info.exists) return destPath;

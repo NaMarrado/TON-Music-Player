@@ -167,11 +167,25 @@ export async function searchTracksFts(
   offset = 0,
 ): Promise<Track[]> {
   const ftsQuery = buildSearchFtsQuery(query);
-  if (!ftsQuery) {
+  const literalQuery = query.trim();
+  if (!ftsQuery && !literalQuery) {
     return [];
   }
 
   const db = getDb();
+
+  if (!ftsQuery) {
+    return db.getAllAsync<Track>(
+      `SELECT t.* FROM tracks t
+       WHERE instr(COALESCE(t.title, ''), ?) > 0
+          OR instr(COALESCE(t.artist, ''), ?) > 0
+          OR instr(COALESCE(t.album, ''), ?) > 0
+          OR instr(COALESCE(t.album_artist, ''), ?) > 0
+       ORDER BY t.id
+       LIMIT ? OFFSET ?`,
+      [literalQuery, literalQuery, literalQuery, literalQuery, limit, offset],
+    );
+  }
 
   return db.getAllAsync<Track>(
     `SELECT t.* FROM tracks t

@@ -11,15 +11,8 @@ export function getFilteredTracks<
 ): T[] {
   let result = [...tracks];
 
-  const query = normalizeLibraryFilterValue(filterQuery);
-  if (query) {
-    result = result.filter(
-      (track) =>
-        normalizeLibraryFilterValue(track.title).includes(query) ||
-        normalizeLibraryFilterValue(track.artist).includes(query) ||
-        normalizeLibraryFilterValue(track.album_artist).includes(query) ||
-        normalizeLibraryFilterValue(track.album).includes(query),
-    );
+  if (normalizeTrackFilterValue(filterQuery)) {
+    result = result.filter((track) => matchesTrackFilter(track, filterQuery));
   }
 
   const dir = sortOrder === 'asc' ? 1 : -1;
@@ -45,12 +38,33 @@ export function getFilteredTracks<
   return result;
 }
 
-function normalizeLibraryFilterValue(value: string | null | undefined): string {
+function normalizeTrackFilterValue(value: string | null | undefined): string {
   return (value ?? '')
     .normalize('NFKD')
     .replace(/\p{Mark}/gu, '')
     .toLowerCase()
-    .replace(/[^\p{Letter}\p{Number}]+/gu, '');
+    .replace(/\s+/gu, ' ')
+    .trim();
+}
+
+function compactTrackFilterValue(value: string): string {
+  return value.replace(/[^\p{Letter}\p{Number}]+/gu, '');
+}
+
+export function matchesTrackFilter(
+  track: Pick<Track, 'title' | 'artist' | 'album_artist' | 'album'>,
+  filterQuery: string,
+): boolean {
+  const query = normalizeTrackFilterValue(filterQuery);
+  if (!query) return true;
+  const compactQuery = compactTrackFilterValue(query);
+
+  return [track.title, track.artist, track.album_artist, track.album].some((value) => {
+    const normalizedValue = normalizeTrackFilterValue(value);
+    if (normalizedValue.includes(query)) return true;
+    return compactQuery.length > 0
+      && compactTrackFilterValue(normalizedValue).includes(compactQuery);
+  });
 }
 
 export function getArtists(
