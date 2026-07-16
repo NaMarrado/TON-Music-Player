@@ -28,14 +28,14 @@ export function DownloadsPage() {
   const totalActive = activeItems.length + queuedItems.length;
 
   const sections = [
-    failedItems.length > 0
-      ? { key: 'failed', label: t('error'), items: failedItems }
-      : null,
     activeItems.length > 0
       ? { key: 'active', label: t('active'), items: activeItems }
       : null,
     queuedItems.length > 0
       ? { key: 'queued', label: t('queued'), items: queuedItems }
+      : null,
+    failedItems.length > 0
+      ? { key: 'failed', label: t('error'), items: failedItems }
       : null,
     completedItems.length > 0
       ? { key: 'completed', label: t('completed'), items: completedItems }

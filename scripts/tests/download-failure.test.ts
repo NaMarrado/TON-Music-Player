@@ -12,8 +12,13 @@ import {
   isAgeRestrictedDownloadError,
   toDownloadFailureMessage,
 } from '../../packages/core/src/utils/download-failure.ts';
-import { DOWNLOAD_RETRY_MAX } from '../../packages/core/src/utils/constants.ts';
+import {
+  DOWNLOAD_RETRY_DELAY_MS,
+  DOWNLOAD_RETRY_MAX,
+} from '../../packages/core/src/utils/constants.ts';
+import { getDownloadSlotsToFill } from '../../packages/core/src/utils/download-queue-policy.ts';
 import { shouldRetryQueueFailure } from '../../packages/mobile/src/services/download-queue/failure-policy.ts';
+import { getRetryDelay } from '../../packages/mobile/src/services/download-queue/timing.ts';
 
 test('recognizes common YouTube age restriction messages', () => {
   assert.equal(isAgeRestrictedDownloadError('Sign in to confirm your age'), true);
@@ -62,6 +67,15 @@ test('keeps the existing initial attempt plus two automatic retries', () => {
   assert.equal(DOWNLOAD_RETRY_MAX + 1, 3);
   assert.equal(shouldRetryQueueFailure(AGE_RESTRICTED_DOWNLOAD_MESSAGE), false);
   assert.equal(shouldRetryQueueFailure('Network request failed'), true);
+  assert.equal(getRetryDelay(), DOWNLOAD_RETRY_DELAY_MS);
+  assert.equal(getRetryDelay(), 5_000);
+});
+
+test('fills exactly two concurrent download slots', () => {
+  assert.equal(getDownloadSlotsToFill(0), 2);
+  assert.equal(getDownloadSlotsToFill(1), 1);
+  assert.equal(getDownloadSlotsToFill(2), 0);
+  assert.equal(getDownloadSlotsToFill(3), 0);
 });
 
 test('resolves localized download failures in every supported language', async () => {

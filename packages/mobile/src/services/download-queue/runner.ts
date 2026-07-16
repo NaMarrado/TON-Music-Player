@@ -1,9 +1,8 @@
-import { MAX_CONCURRENT_DOWNLOADS } from '@ton/core';
+import { getDownloadSlotsToFill, MAX_CONCURRENT_DOWNLOADS } from '@ton/core';
 import { downloadTrack } from '../downloader';
 import { stopDownloadBackgroundWorkIfIdle } from '../download-runtime';
 import { updateQueueItemFormat, updateQueueItemProgress, updateQueueItemStatus } from './db';
 import { startIosBackgroundQueueItem } from './ios-background';
-import { getScheduleDelay } from './timing';
 import {
   markQueueItemActive,
   releaseQueueItemActive,
@@ -34,34 +33,21 @@ export function resolveIdleWaiters(queue: QueueRunnerFacade): void {
 
 export function processNextInQueue(queue: QueueRunnerFacade): void {
   const { runtime } = queue;
-  if (!runtime.online || runtime.activeCount >= MAX_CONCURRENT_DOWNLOADS) {
+  if (!runtime.online) {
     return;
   }
 
-  const next = runtime.items.find((item) => item.status === 'pending');
-  if (!next) {
-    return;
-  }
-
-  const delayMs = getScheduleDelay(runtime.activeCount, runtime.consecutiveErrors);
-  if (delayMs > 0) {
-    if (runtime.scheduleTimer) {
-      return;
+  let slotsToFill = getDownloadSlotsToFill(runtime.activeCount);
+  while (slotsToFill > 0) {
+    const next = runtime.items.find((item) => item.status === 'pending');
+    if (!next || !startQueueItem(queue, next.id)) {
+      break;
     }
-    console.log(
-      `[DL-QUEUE] Delaying next download by ${Math.round(delayMs / 1000)}s (errors: ${runtime.consecutiveErrors})`,
-    );
-    runtime.scheduleTimer = setTimeout(() => {
-      runtime.scheduleTimer = null;
-      startQueueItem(queue, next.id);
-    }, delayMs);
-    return;
+    slotsToFill -= 1;
   }
-
-  startQueueItem(queue, next.id);
 }
 
-export function startQueueItem(queue: QueueRunnerFacade, itemId: number): void {
+export function startQueueItem(queue: QueueRunnerFacade, itemId: number): boolean {
   const { runtime } = queue;
   const latest = runtime.items.find((entry) => entry.id === itemId);
   if (
@@ -70,7 +56,7 @@ export function startQueueItem(queue: QueueRunnerFacade, itemId: number): void {
     runtime.activeCount >= MAX_CONCURRENT_DOWNLOADS ||
     latest.status !== 'pending'
   ) {
-    return;
+    return false;
   }
 
   markQueueItemActive(runtime, itemId);
@@ -87,7 +73,7 @@ export function startQueueItem(queue: QueueRunnerFacade, itemId: number): void {
   queue.notify();
 
   if (startIosBackgroundQueueItem(queue, itemId)) {
-    return;
+    return true;
   }
 
   void processQueueItem(queue, itemId).finally(() => {
@@ -95,6 +81,7 @@ export function startQueueItem(queue: QueueRunnerFacade, itemId: number): void {
     queue.processNext();
     resolveIdleWaiters(queue);
   });
+  return true;
 }
 
 export async function processQueueItem(

@@ -1,6 +1,5 @@
 import {
   DOWNLOAD_RETRY_MAX,
-  isAgeRestrictedDownloadError,
   toDownloadFailureMessage,
 } from '@ton/core';
 import {
@@ -11,6 +10,7 @@ import {
   updateQueueItemStatus,
 } from './db';
 import { shouldRetryQueueFailure } from './failure-policy';
+import { getRetryDelay } from './timing';
 import { clearProgressTracking } from './progress';
 import type { QueueRuntimeState } from './runtime';
 import { replaceQueueItem, updateQueueItem } from './mutations';
@@ -73,8 +73,6 @@ export async function completeQueueItem(
     format: format ?? current.format,
     trackId,
   }));
-  runtime.consecutiveErrors = 0;
-
   const affectedPlaylistIds = await settlePlaylistImportQueueItem(itemId, trackId);
   await mergeCompletedTrackIntoPlaylists(trackId, affectedPlaylistIds);
 
@@ -94,18 +92,8 @@ export async function failQueueItem(
     return;
   }
 
-  const isAgeRestricted = isAgeRestrictedDownloadError(message);
   const displayMessage = toDownloadFailureMessage(message);
-  if (!isAgeRestricted) {
-    runtime.consecutiveErrors += 1;
-  }
-  console.log(
-    '[DL-QUEUE] Download FAILED (consecutive:',
-    runtime.consecutiveErrors,
-    '): item',
-    itemId,
-    message,
-  );
+  console.log('[DL-QUEUE] Download FAILED: item', itemId, message);
 
   const current = runtime.items.find((entry) => entry.id === itemId);
   if (!current) {
@@ -142,14 +130,11 @@ export async function failQueueItem(
       void requeueQueueItem(itemId);
       queue.notify();
       queue.processNext();
-    }, nextRetryCount * 10_000);
+    }, getRetryDelay());
     return;
   }
 
   clearProgressTracking(runtime, itemId);
-  if (isAgeRestricted) {
-    runtime.consecutiveErrors = 0;
-  }
   updateQueueItem(runtime, itemId, (existing) => ({
     ...existing,
     status: 'error',

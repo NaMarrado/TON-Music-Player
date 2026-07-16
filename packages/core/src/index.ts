@@ -11,6 +11,7 @@ export type { TrackFileSizeSummary } from './utils/track-metadata';
 export { slugify } from './utils/slugify';
 export { debounce } from './utils/debounce';
 export { hashBuffer } from './utils/hash';
+export { getDownloadSlotsToFill } from './utils/download-queue-policy';
 export {
   AGE_RESTRICTED_DOWNLOAD_MESSAGE,
   getDownloadFailureReason,
@@ -30,8 +31,6 @@ export {
   MAX_CONCURRENT_DOWNLOADS,
   DOWNLOAD_RETRY_MAX,
   DOWNLOAD_RETRY_DELAY_MS,
-  DOWNLOAD_DELAY_MIN_MS,
-  DOWNLOAD_DELAY_MAX_MS,
   SEARCH_DEBOUNCE_MS,
   SEARCH_RESULTS_LIMIT,
   GAPLESS_CROSSFADE_MS,

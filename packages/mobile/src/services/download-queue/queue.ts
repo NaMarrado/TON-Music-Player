@@ -110,11 +110,6 @@ export class MobileDownloadQueue {
       return;
     }
 
-    if (this.runtime.scheduleTimer) {
-      clearTimeout(this.runtime.scheduleTimer);
-      this.runtime.scheduleTimer = null;
-    }
-
     const ids = targets.map((item) => item.id);
     const activeRuntimeIds = new Set(targets
       .filter((item) => (

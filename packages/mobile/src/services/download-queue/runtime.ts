@@ -9,8 +9,6 @@ export interface QueueRuntimeState {
   activeCount: number;
   listeners: Set<QueueListener>;
   online: boolean;
-  consecutiveErrors: number;
-  scheduleTimer: ReturnType<typeof setTimeout> | null;
   progressNotifyTimer: ReturnType<typeof setTimeout> | null;
   publishedProgress: Map<number, number>;
   persistedProgress: Map<number, number>;
@@ -28,8 +26,6 @@ export function createQueueRuntimeState(): QueueRuntimeState {
     activeCount: 0,
     listeners: new Set<QueueListener>(),
     online: true,
-    consecutiveErrors: 0,
-    scheduleTimer: null,
     progressNotifyTimer: null,
     publishedProgress: new Map<number, number>(),
     persistedProgress: new Map<number, number>(),

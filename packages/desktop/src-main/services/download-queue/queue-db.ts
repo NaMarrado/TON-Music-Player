@@ -122,10 +122,17 @@ export function resetDownloadsToPending(ids: Iterable<number>): void {
   }
 }
 
-export function getNextPendingDownload(): DownloadItem | undefined {
+export function getNextPendingDownload(excludedIds: Iterable<number> = []): DownloadItem | undefined {
+  const excluded = [...excludedIds].filter(Number.isInteger);
+  const exclusion = excluded.length > 0
+    ? ` AND id NOT IN (${excluded.map(() => '?').join(', ')})`
+    : '';
   return getDb().prepare(
-    "SELECT * FROM download_queue WHERE status = 'pending' ORDER BY priority DESC, created_at ASC LIMIT 1",
-  ).get() as DownloadItem | undefined;
+    `SELECT * FROM download_queue
+     WHERE status = 'pending'${exclusion}
+     ORDER BY priority DESC, created_at ASC
+     LIMIT 1`,
+  ).get(...excluded) as DownloadItem | undefined;
 }
 
 export function markDownloadAsStarting(id: number): void {

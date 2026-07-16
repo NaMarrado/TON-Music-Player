@@ -27,8 +27,6 @@ export const SUPPORTED_AUDIO_EXTENSIONS = [
 export const MAX_CONCURRENT_DOWNLOADS = 2;
 export const DOWNLOAD_RETRY_MAX = 2;
 export const DOWNLOAD_RETRY_DELAY_MS = 5000;
-export const DOWNLOAD_DELAY_MIN_MS = 3000;
-export const DOWNLOAD_DELAY_MAX_MS = 8000;
 
 export const SEARCH_DEBOUNCE_MS = 300;
 export const SEARCH_RESULTS_LIMIT = 50;
