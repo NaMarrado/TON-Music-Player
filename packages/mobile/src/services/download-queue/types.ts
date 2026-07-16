@@ -18,6 +18,7 @@ export interface QueueItem {
   format: DownloadFormat | null;
   retryCount: number;
   trackId: number | null;
+  playlistSourcePositions: number[];
 }
 
 export type QueueListener = (items: QueueItem[]) => void;
@@ -42,4 +43,5 @@ export interface QueueRow {
   error_message: string | null;
   completed_at: number | null;
   settled_notification_sent_at: number | null;
+  spotify_playlist_positions_csv: string | null;
 }

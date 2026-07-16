@@ -16,6 +16,7 @@ import {
   clearNonActiveDownloads,
   countPendingOrActiveDownloads,
   getNextPendingDownload,
+  getSpotifyPlaylistSourcePositions,
   insertDownloadRequest,
   listDownloads,
   markAllCancellableDownloadsCancelled,
@@ -185,11 +186,13 @@ export class DownloadQueue {
               return;
             }
 
+            const playlistSourcePositions = getSpotifyPlaylistSourcePositions(nextDownload.id);
             markDownloadError(nextDownload.id, message);
             callbacks.onError({
               id: nextDownload.id,
               error: message,
               retryable: true,
+              playlistSourcePositions,
             });
           })
           .finally(() => {

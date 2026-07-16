@@ -1,6 +1,15 @@
 import type { DownloadInput } from '../downloader';
 import type { QueueItem, QueueRow } from './types';
 
+function parseSpotifyPlaylistPositions(value: string | null | undefined): number[] {
+  if (!value) return [];
+  return [...new Set(value
+    .split(',')
+    .map((position) => Number(position) + 1)
+    .filter((position) => Number.isSafeInteger(position) && position > 0))]
+    .sort((left, right) => left - right);
+}
+
 function normalizeHydratedStatus(status: string): QueueItem['status'] {
   if (
     status === 'pending'
@@ -28,6 +37,7 @@ export function createPendingQueueItem(
     format: null,
     retryCount: 0,
     trackId: null,
+    playlistSourcePositions: [],
   };
 }
 
@@ -57,6 +67,9 @@ export function hydrateQueueItem(row: QueueRow): QueueItem {
     format: row.format,
     retryCount: row.retry_count,
     trackId: null,
+    playlistSourcePositions: parseSpotifyPlaylistPositions(
+      row.spotify_playlist_positions_csv,
+    ),
   };
 }
 

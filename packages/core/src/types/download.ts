@@ -20,6 +20,7 @@ export interface DownloadItem {
   priority: number;
   created_at: number;
   completed_at: number | null;
+  playlist_source_positions?: number[];
 }
 
 export type DownloadSource = 'youtube' | 'spotify' | 'soundcloud';
@@ -69,6 +70,7 @@ export interface DownloadErrorEvent {
   id: number;
   error: string;
   retryable: boolean;
+  playlistSourcePositions?: number[];
 }
 
 export interface SpotifyPlaylistTrack {

@@ -16,6 +16,10 @@ export const DownloadRow = memo(function DownloadRow({ itemId }: { itemId: numbe
   const isError = item.status === 'error';
   const isDone = item.status === 'completed';
   const canCancel = item.status === 'pending' || isActive;
+  const playlistPositionLabel = item.input.source === 'spotify'
+    && item.playlistSourcePositions.length > 0
+    ? `Spotify playlist · ${item.playlistSourcePositions.map((position) => `#${position}`).join(', ')}`
+    : null;
 
   return (
     <View
@@ -62,6 +66,14 @@ export const DownloadRow = memo(function DownloadRow({ itemId }: { itemId: numbe
             numberOfLines={2}
           >
             {t(getDownloadFailureTranslationKey(item.error))}
+          </Text>
+        )}
+        {isError && playlistPositionLabel && (
+          <Text
+            style={{ fontSize: 10, lineHeight: 13, color: '#8f8f8f', marginTop: 2 }}
+            numberOfLines={2}
+          >
+            {playlistPositionLabel}
           </Text>
         )}
       </View>

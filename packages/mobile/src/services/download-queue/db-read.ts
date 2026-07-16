@@ -1,17 +1,43 @@
 import { getDb } from '../database';
 import type { QueueRow } from './types';
 
+const QUEUE_ROWS_WITH_SPOTIFY_POSITIONS_SQL = `
+  SELECT dq.*,
+    (
+      SELECT GROUP_CONCAT(pii.source_position)
+      FROM playlist_import_items pii
+      JOIN playlist_import_sources pis ON pis.id = pii.import_source_id
+      WHERE pii.queue_id = dq.id AND pis.source = 'spotify'
+    ) AS spotify_playlist_positions_csv
+  FROM download_queue dq`;
+
 export async function getStoredQueueRows(): Promise<QueueRow[]> {
   return getDb().getAllAsync<QueueRow>(
-    'SELECT * FROM download_queue ORDER BY priority DESC, created_at ASC',
+    `${QUEUE_ROWS_WITH_SPOTIFY_POSITIONS_SQL}
+     ORDER BY dq.priority DESC, dq.created_at ASC`,
   );
 }
 
 export async function getResumableQueueRows(): Promise<QueueRow[]> {
   return getDb().getAllAsync<QueueRow>(
-    `SELECT * FROM download_queue WHERE status IN ('pending', 'downloading', 'retrying')
-     ORDER BY priority DESC, created_at ASC`,
+    `${QUEUE_ROWS_WITH_SPOTIFY_POSITIONS_SQL}
+     WHERE dq.status IN ('pending', 'downloading', 'retrying')
+     ORDER BY dq.priority DESC, dq.created_at ASC`,
   );
+}
+
+export async function getSpotifyPlaylistSourcePositions(queueId: number): Promise<number[]> {
+  const rows = await getDb().getAllAsync<{ source_position: number }>(
+    `SELECT DISTINCT pii.source_position
+     FROM playlist_import_items pii
+     JOIN playlist_import_sources pis ON pis.id = pii.import_source_id
+     WHERE pii.queue_id = ? AND pis.source = 'spotify'
+     ORDER BY pii.source_position ASC`,
+    [queueId],
+  );
+  return rows
+    .map((row) => row.source_position + 1)
+    .filter((position) => Number.isSafeInteger(position) && position > 0);
 }
 
 export async function backfillCompletedQueueItemFormats(): Promise<void> {

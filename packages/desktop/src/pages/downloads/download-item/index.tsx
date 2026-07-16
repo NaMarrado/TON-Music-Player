@@ -16,6 +16,10 @@ export const DownloadItemRow = memo(function DownloadItemRow({ item, t }: Downlo
   const isActive = ['downloading', 'resolving', 'converting'].includes(item.status);
   const isFailed = item.status === 'error';
   const isDone = item.status === 'done';
+  const playlistPositionLabel = item.source === 'spotify'
+    && item.playlist_source_positions?.length
+    ? `Spotify playlist · ${item.playlist_source_positions.map((position) => `#${position}`).join(', ')}`
+    : null;
 
   return (
     <div
@@ -64,6 +68,18 @@ export const DownloadItemRow = memo(function DownloadItemRow({ item, t }: Downlo
               }}
             >
               {t(getDownloadFailureTranslationKey(item.error_message))}
+            </div>
+          )}
+          {isFailed && playlistPositionLabel && (
+            <div
+              style={{
+                color: 'var(--text-secondary)',
+                fontSize: '0.7rem',
+                lineHeight: 1.35,
+                marginTop: '2px',
+              }}
+            >
+              {playlistPositionLabel}
             </div>
           )}
           {isActive && <DownloadProgressBar item={item} />}

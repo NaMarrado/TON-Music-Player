@@ -4,6 +4,7 @@ import {
 } from '@ton/core';
 import {
   completeQueueItemRecord,
+  getSpotifyPlaylistSourcePositions,
   requeueQueueItem,
   updateQueueItemFormat,
   updateQueueItemRetry,
@@ -134,12 +135,14 @@ export async function failQueueItem(
     return;
   }
 
+  const playlistSourcePositions = await getSpotifyPlaylistSourcePositions(itemId);
   clearProgressTracking(runtime, itemId);
   updateQueueItem(runtime, itemId, (existing) => ({
     ...existing,
     status: 'error',
     progress: 0,
     error: displayMessage,
+    playlistSourcePositions,
   }));
   await updateQueueItemStatus(itemId, 'error', displayMessage);
 }

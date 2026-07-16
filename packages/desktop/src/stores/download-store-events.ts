@@ -73,6 +73,7 @@ export function subscribeToDownloadEvents(): () => void {
       ...entry,
       status: 'error',
       error_message: event.error,
+      playlist_source_positions: event.playlistSourcePositions ?? [],
     }));
     if (!wasPatched) {
       void loadDownloads();

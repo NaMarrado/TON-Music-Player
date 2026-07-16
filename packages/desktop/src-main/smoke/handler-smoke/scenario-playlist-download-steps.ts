@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { findBestMatch, type LoadedPlaylistImport } from '@ton/core';
 import { getDb } from '../../services/database';
+import { getSpotifyPlaylistSourcePositions } from '../../services/download-queue/queue-db';
 import { replaceDesktopPlaylistImportSnapshot } from '../../services/playlist-import/snapshot';
 import {
   assignDesktopPlaylistImportQueues,
@@ -106,6 +107,10 @@ export async function runPlaylistDownloadImportChecks(
     },
     { importItemIds: [snapshot.items[1].id], queueId: queueY },
   ]);
+  assert(
+    getSpotifyPlaylistSourcePositions(queueX).join(',') === '1,3',
+    'Expected Spotify queue diagnostics to expose one-based source playlist positions',
+  );
 
   const insertTrack = db.prepare(
     `INSERT INTO tracks (file_path, title, artist, spotify_id, in_library)

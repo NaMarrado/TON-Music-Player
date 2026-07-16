@@ -1,6 +1,29 @@
 import type { DownloadItem, DownloadRequest } from '@ton/core';
 import { getDb } from '../database';
 
+type DownloadRowWithPositions = DownloadItem & {
+  spotify_playlist_positions_csv: string | null;
+};
+
+function parseSpotifyPlaylistPositions(value: string | null): number[] {
+  if (!value) return [];
+  return [...new Set(value
+    .split(',')
+    .map((position) => Number(position) + 1)
+    .filter((position) => Number.isSafeInteger(position) && position > 0))]
+    .sort((left, right) => left - right);
+}
+
+const DOWNLOADS_WITH_SPOTIFY_POSITIONS_SQL = `
+  SELECT dq.*,
+    (
+      SELECT GROUP_CONCAT(pii.source_position)
+      FROM playlist_import_items pii
+      JOIN playlist_import_sources pis ON pis.id = pii.import_source_id
+      WHERE pii.queue_id = dq.id AND pis.source = 'spotify'
+    ) AS spotify_playlist_positions_csv
+  FROM download_queue dq`;
+
 function resolveQualityProfile(request: DownloadRequest): DownloadItem['quality_profile'] {
   if (request.quality_profile === 'best_compatible') {
     return request.quality_profile;
@@ -100,9 +123,24 @@ export function clearNonActiveDownloads(): void {
 }
 
 export function listDownloads(): DownloadItem[] {
-  return getDb().prepare(
-    'SELECT * FROM download_queue ORDER BY priority DESC, created_at ASC',
-  ).all() as DownloadItem[];
+  const rows = getDb().prepare(
+    `${DOWNLOADS_WITH_SPOTIFY_POSITIONS_SQL}
+     ORDER BY dq.priority DESC, dq.created_at ASC`,
+  ).all() as DownloadRowWithPositions[];
+  return rows.map(({ spotify_playlist_positions_csv: positions, ...item }) => ({
+    ...item,
+    playlist_source_positions: parseSpotifyPlaylistPositions(positions),
+  }));
+}
+
+export function getSpotifyPlaylistSourcePositions(queueId: number): number[] {
+  const row = getDb().prepare(
+    `SELECT GROUP_CONCAT(pii.source_position) AS positions
+     FROM playlist_import_items pii
+     JOIN playlist_import_sources pis ON pis.id = pii.import_source_id
+     WHERE pii.queue_id = ? AND pis.source = 'spotify'`,
+  ).get(queueId) as { positions: string | null } | undefined;
+  return parseSpotifyPlaylistPositions(row?.positions ?? null);
 }
 
 export function countPendingOrActiveDownloads(): number {
