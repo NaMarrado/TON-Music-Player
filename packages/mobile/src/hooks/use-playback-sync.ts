@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import {
   handleQueueEnded,
   syncActiveTrack,
@@ -15,6 +15,7 @@ import {
 import { schedulePlaybackQueueSourceReconcile } from '../services/playback-bridge/queue-source-reconcile';
 import { useLibraryStore } from '../stores/library-store';
 import { usePlaylistStore } from '../stores/playlist-store';
+import { useQueueStore } from '../stores/queue-store';
 
 const QUEUE_EVENTS = [
   PlaybackEvent.PlaybackActiveTrackChanged,
@@ -31,6 +32,20 @@ export function usePlaybackSync({ enabled }: UsePlaybackSyncOptions): void {
   const lastActiveIndexRef = useRef<number | null>(null);
   const lastActiveTrackIdRef = useRef<string | number | null>(null);
   const lastPlaybackStateRef = useRef<PlaybackRuntimeStateSnapshot['state'] | null>(null);
+  const syncAuthoritativePlaybackState = useCallback(async (): Promise<void> => {
+    const expectedGeneration = useQueueStore.getState().generation;
+    try {
+      const [playbackState, activeTrack] = await Promise.all([
+        getPlaybackState(),
+        getActivePlaybackTrack(),
+      ]);
+      if (useQueueStore.getState().generation !== expectedGeneration) return;
+      lastPlaybackStateRef.current = playbackState.state;
+      syncPlaybackState({ ...playbackState, trackId: activeTrack?.id });
+    } catch {
+      // A newer native queue snapshot will replace this transient state.
+    }
+  }, []);
 
   usePlaybackRuntimeEvents(
     [...QUEUE_EVENTS],
@@ -56,7 +71,12 @@ export function usePlaybackSync({ enabled }: UsePlaybackSyncOptions): void {
           break;
         case PlaybackEvent.PlaybackState:
           if ('state' in event) {
-            syncPlaybackState(event);
+            if (event.trackId != null) {
+              lastPlaybackStateRef.current = event.state;
+              syncPlaybackState(event);
+            } else {
+              void syncAuthoritativePlaybackState();
+            }
           }
           break;
       }
@@ -106,7 +126,7 @@ export function usePlaybackSync({ enabled }: UsePlaybackSyncOptions): void {
           && playbackState.state !== lastPlaybackStateRef.current
         ) {
           lastPlaybackStateRef.current = playbackState.state;
-          syncPlaybackState(playbackState);
+          syncPlaybackState({ ...playbackState, trackId: activeTrack?.id });
         }
       } catch {
         // Ignore transient player readiness errors during startup/background transitions.

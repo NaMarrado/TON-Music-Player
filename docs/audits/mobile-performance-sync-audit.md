@@ -21,7 +21,7 @@ Baseline: `bd8f46a`
 - [x] Throttle progress updates and avoid full Library/playlist reloads per track.
 - [x] Add `Sync audio over mobile data`, default off; metadata still syncs online.
 - [x] Replace `up/down` with localized `uploaded/downloaded` wording.
-- [ ] Replace raw numeric boolean-like statuses with human-readable labels.
+- [x] Replace raw numeric boolean-like statuses with human-readable labels and explicit track counts.
 
 ## Playback And Shuffle
 
@@ -64,7 +64,7 @@ Baseline: `bd8f46a`
 - [x] Core, desktop, and mobile TypeScript checks.
 - [x] Playback and shuffle tests, including 1,600-track sources.
 - [x] Cloud fixture tests with 1,600 and 10,000 tracks.
-- [ ] Cleanup fixture, conflict, cancel, and partial-delete tests.
+- [x] Cleanup fixture, conflict, cancel, and partial-delete tests.
 - [ ] Desktop production build.
 - [ ] Android debug and release builds.
 - [ ] iOS simulator build.
@@ -79,3 +79,5 @@ Baseline: `bd8f46a`
 - 2026-07-16: `pnpm locales:validate` passed for all locale sets.
 - 2026-07-16: core, desktop, and mobile TypeScript checks passed.
 - 2026-07-16: isolated cleanup and large-library harness passed 10/10 scenarios, including 1,600-track pre-enabled/runtime shuffle, exact order restore, 10,000-track filtering, playlist-first batching, and concrete cleanup preview rows. No network or R2 credentials were used.
+- 2026-07-16: shared cleanup executor passed stale CAS, cancel before CAS, cancel after CAS, and partial object-delete scenarios against a local fake adapter. No network or R2 credentials were used.
+- 2026-07-16: playback event audit fixed the single-track native queue ID mismatch and made Android state events validate a native snapshot against the current queue generation.

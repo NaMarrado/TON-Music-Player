@@ -32,6 +32,12 @@ export {
   type CloudR2CleanupPlan,
 } from './r2-cleanup';
 export {
+  executeCloudR2CleanupPlan,
+  type CloudR2CleanupAbortSignal,
+  type CloudR2CleanupExecutionAdapter,
+  type CloudR2CleanupExecutionOptions,
+} from './r2-cleanup-execution';
+export {
   buildCloudAudioObjectKey,
   buildCloudArtworkObjectKey,
   buildCloudContentArtworkObjectKey,

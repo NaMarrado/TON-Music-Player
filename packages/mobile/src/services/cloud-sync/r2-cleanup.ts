@@ -9,6 +9,7 @@ import {
   buildCloudR2CleanupPlan,
   buildCloudV2CommitObjectKey,
   buildCloudV2ManifestObjectKey,
+  executeCloudR2CleanupPlan,
   normalizeCloudPrefix,
   parseCloudLibraryManifestV2,
 } from '@ton/core';
@@ -171,77 +172,55 @@ export async function executeCloudCleanup(
     const scopeId = await ensureMobileCloudScope(config);
     const client = new MobileR2Client(config);
     emitProgress(onProgress, { phase: 'cleaning', total: current.objectKeysToDelete.length });
-    let etag: string | null = null;
-    try {
-      const write = await client.putJsonConditional(
-        buildCloudV2ManifestObjectKey(config.prefix),
-        current.manifest,
-        { ifMatch: current.manifestEtag, signal: controller.signal },
-      );
-      etag = write.etag;
-    } catch (error) {
-      if (error instanceof MobileR2PreconditionFailedError) {
-        return staleResult(onProgress, controller.signal);
-      }
-      throw error;
-    }
-    if (!etag) {
-      const verified = await client.getJsonConditional<CloudLibraryManifestV2>(
-        buildCloudV2ManifestObjectKey(config.prefix), undefined, controller.signal,
-      );
-      if (verified.status !== 'ok' || !verified.etag) throw new Error('cloud_sync_missing_etag');
-      etag = verified.etag;
-    }
-    const generation = await getMobileCloudJournalGeneration();
-    await storeEntityMirror(scopeId, current.manifest, generation, controller.signal);
-    await updateMobileCloudPersistedState(scopeId, {
-      revision: current.manifest.revision,
-      etag,
-      lamport_counter: current.manifest.max_counter,
-      last_success_at: Math.floor(Date.now() / 1000),
-      last_error: null,
-      next_retry_at: null,
-    });
-    await setMobileCloudLastRevision(current.manifest.revision);
-    await clearMobileCloudDownloadFailures(
-      scopeId,
-      current.preview.failuresToClear.map((failure) => failure.contentHash),
-    );
-    await client.putJson(
-      buildCloudV2CommitObjectKey(config.prefix, current.manifest.revision),
-      current.manifest,
-      controller.signal,
-    ).catch(() => undefined);
+    const result = await executeCloudR2CleanupPlan(current, {
+      publishManifest: async (plan, signal) => {
+        try {
+          const write = await client.putJsonConditional(
+            buildCloudV2ManifestObjectKey(config.prefix),
+            plan.manifest,
+            { ifMatch: plan.manifestEtag, signal },
+          );
+          if (write.etag) return { status: 'ok', etag: write.etag };
+        } catch (error) {
+          if (error instanceof MobileR2PreconditionFailedError) return { status: 'stale' };
+          throw error;
+        }
+        const verified = await client.getJsonConditional<CloudLibraryManifestV2>(
+          buildCloudV2ManifestObjectKey(config.prefix), undefined, signal,
+        );
+        if (verified.status !== 'ok' || !verified.etag) throw new Error('cloud_sync_missing_etag');
+        return { status: 'ok', etag: verified.etag };
+      },
+      commitLocalState: async (plan, etag, signal) => {
+        const generation = await getMobileCloudJournalGeneration();
+        await storeEntityMirror(scopeId, plan.manifest, generation, signal);
+        await updateMobileCloudPersistedState(scopeId, {
+          revision: plan.manifest.revision,
+          etag,
+          lamport_counter: plan.manifest.max_counter,
+          last_success_at: Math.floor(Date.now() / 1000),
+          last_error: null,
+          next_retry_at: null,
+        });
+        await setMobileCloudLastRevision(plan.manifest.revision);
+        await clearMobileCloudDownloadFailures(
+          scopeId,
+          plan.preview.failuresToClear.map((failure) => failure.contentHash),
+        );
+      },
+      writeCommit: (plan, signal) => client.putJson(
+        buildCloudV2CommitObjectKey(config.prefix, plan.manifest.revision),
+        plan.manifest,
+        signal,
+      ),
+      deleteObject: (key, signal) => client.deleteObject(key, signal),
+    }, { signal: controller.signal, onProgress });
 
-    let deletedObjects = 0;
-    let failedObjects = 0;
-    let freedBytes = 0;
-    for (let index = 0; index < current.objectKeysToDelete.length; index += 1) {
-      throwIfAborted(controller.signal);
-      const key = current.objectKeysToDelete[index];
-      try {
-        await client.deleteObject(key, controller.signal);
-        deletedObjects += 1;
-        freedBytes += current.objectSizeByKey.get(key) ?? 0;
-      } catch (error) {
-        throwIfAborted(controller.signal);
-        failedObjects += 1;
-      }
-      emitProgress(onProgress, {
-        phase: 'cleaning', current: index + 1, total: current.objectKeysToDelete.length,
-        failed: failedObjects,
-      });
+    if (result.status === 'stale') {
+      return staleResult(onProgress, controller.signal);
     }
     cachedPlans.clear();
-    return {
-      status: 'completed',
-      deletedTracks: current.preview.cloudOnlyTracks,
-      updatedPlaylists: current.preview.affectedPlaylists,
-      deletedObjects,
-      failedObjects,
-      freedBytes,
-      revision: current.manifest.revision,
-    };
+    return result;
   } finally {
     if (leaseAcquired) await releaseMobileCloudLease(owner).catch(() => undefined);
     if (runtime.currentController === controller) runtime.currentController = null;

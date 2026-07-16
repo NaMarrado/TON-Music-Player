@@ -51,7 +51,7 @@
   "cloudAutoSyncDisabledDescription": "自動同期は無効です。同期は下の手動ボタンを使用した場合のみ実行されます。",
   "cloudAudioOverCellular": "モバイルデータで音声を同期",
   "cloudAudioOverCellularDescription": "モバイルデータでクラウド音声をダウンロードします。メタデータとプレイリストはどのネットワークでも同期されます。",
-"cloudAutoSyncDetails": "保留中: {{pendingChanges}} · Wi-Fi待機: {{pendingDownloads}} · 最終同期: {{lastSuccess}} · 次回再試行: {{nextRetry}}",
+"cloudAutoSyncDetails": "保留中の変更: {{pendingChanges}} · Wi-Fi待機中のオーディオ曲: {{pendingDownloads}} · 最終同期: {{lastSuccess}} · 次回再試行: {{nextRetry}}",
   "cloudAutoSyncState_idle": "最新",
   "cloudAutoSyncState_syncing": "同期中",
   "cloudAutoSyncState_offline": "オフライン",

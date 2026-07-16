@@ -10,6 +10,7 @@ import {
   buildCloudR2CleanupPlan,
   buildCloudV2CommitObjectKey,
   buildCloudV2ManifestObjectKey,
+  executeCloudR2CleanupPlan,
   normalizeCloudPrefix,
   parseCloudLibraryManifestV2,
 } from '@ton/core';
@@ -172,12 +173,34 @@ export async function executeDesktopCloudCleanup(
   emitProgress(onProgress, {
     phase: 'cleaning', total: current.objectKeysToDelete.length,
   });
-  const write = await client.putJsonConditional(
-    buildCloudV2ManifestObjectKey(config.prefix),
-    current.manifest,
-    { ifMatch: current.manifestEtag, signal },
-  );
-  if (write.status === 'precondition-failed') {
+  const result = await executeCloudR2CleanupPlan(current, {
+    publishManifest: async (plan, executionSignal) => {
+      const write = await client.putJsonConditional(
+        buildCloudV2ManifestObjectKey(config.prefix),
+        plan.manifest,
+        { ifMatch: plan.manifestEtag, signal: executionSignal },
+      );
+      if (write.status === 'precondition-failed') return { status: 'stale' };
+      if (write.etag) return { status: 'ok', etag: write.etag };
+      const verified = await client.getJsonConditional<CloudLibraryManifestV2>(
+        buildCloudV2ManifestObjectKey(config.prefix),
+        { signal: executionSignal },
+      );
+      if (verified.status !== 'ok' || !verified.etag) throw new Error('cloud_sync_missing_etag');
+      return { status: 'ok', etag: verified.etag };
+    },
+    commitLocalState: async (plan, etag) => {
+      storeDesktopCleanupMirror(scopeId, plan.manifest, etag);
+    },
+    writeCommit: (plan, executionSignal) => client.putJson(
+      buildCloudV2CommitObjectKey(config.prefix, plan.manifest.revision),
+      plan.manifest,
+      executionSignal,
+    ),
+    deleteObject: (key, executionSignal) => client.deleteObject(key, executionSignal),
+  }, { signal, onProgress });
+
+  if (result.status === 'stale') {
     const refreshed = await buildCurrentPlan(onProgress, signal);
     cachedPlans.clear();
     cachedPlans.set(refreshed.preview.previewToken, refreshed);
@@ -187,49 +210,6 @@ export async function executeDesktopCloudCleanup(
       refreshedPreview: refreshed.preview,
     };
   }
-  let etag = write.etag;
-  if (!etag) {
-    const verified = await client.getJsonConditional<CloudLibraryManifestV2>(
-      buildCloudV2ManifestObjectKey(config.prefix),
-      { signal },
-    );
-    if (verified.status !== 'ok' || !verified.etag) throw new Error('cloud_sync_missing_etag');
-    etag = verified.etag;
-  }
-  storeDesktopCleanupMirror(scopeId, current.manifest, etag);
-  await client.putJson(
-    buildCloudV2CommitObjectKey(config.prefix, current.manifest.revision),
-    current.manifest,
-    signal,
-  ).catch(() => undefined);
-
-  let deletedObjects = 0;
-  let failedObjects = 0;
-  let freedBytes = 0;
-  for (let index = 0; index < current.objectKeysToDelete.length; index += 1) {
-    throwIfAborted(signal);
-    const key = current.objectKeysToDelete[index];
-    try {
-      await client.deleteObject(key, signal);
-      deletedObjects += 1;
-      freedBytes += current.objectSizeByKey.get(key) ?? 0;
-    } catch (error) {
-      throwIfAborted(signal);
-      failedObjects += 1;
-    }
-    emitProgress(onProgress, {
-      phase: 'cleaning', current: index + 1, total: current.objectKeysToDelete.length,
-      failed: failedObjects,
-    });
-  }
   cachedPlans.clear();
-  return {
-    status: 'completed',
-    deletedTracks: current.preview.cloudOnlyTracks,
-    updatedPlaylists: current.preview.affectedPlaylists,
-    deletedObjects,
-    failedObjects,
-    freedBytes,
-    revision: current.manifest.revision,
-  };
+  return result;
 }

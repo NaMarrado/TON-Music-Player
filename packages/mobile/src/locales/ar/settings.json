@@ -51,7 +51,7 @@
   "cloudAutoSyncDisabledDescription": "المزامنة التلقائية متوقفة. لن تتم المزامنة إلا باستخدام الأزرار اليدوية أدناه.",
   "cloudAudioOverCellular": "مزامنة الصوت عبر بيانات الهاتف",
   "cloudAudioOverCellularDescription": "السماح بتنزيل الصوت السحابي عبر بيانات الهاتف. تستمر مزامنة البيانات الوصفية وقوائم التشغيل على أي شبكة.",
-"cloudAutoSyncDetails": "معلق: {{pendingChanges}} · ينتظر Wi-Fi: {{pendingDownloads}} · آخر مزامنة: {{lastSuccess}} · المحاولة التالية: {{nextRetry}}",
+"cloudAutoSyncDetails": "تغييرات معلقة: {{pendingChanges}} · مقاطع صوتية تنتظر Wi-Fi: {{pendingDownloads}} · آخر مزامنة: {{lastSuccess}} · المحاولة التالية: {{nextRetry}}",
   "cloudAutoSyncState_idle": "محدّث",
   "cloudAutoSyncState_syncing": "جارٍ المزامنة",
   "cloudAutoSyncState_offline": "غير متصل",

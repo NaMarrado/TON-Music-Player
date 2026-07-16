@@ -51,7 +51,7 @@
   "cloudAutoSyncDisabledDescription": "La sincronizzazione automatica è disattivata. La sincronizzazione avviene solo tramite i pulsanti manuali qui sotto.",
   "cloudAudioOverCellular": "Sincronizza audio tramite dati mobili",
   "cloudAudioOverCellularDescription": "Consente di scaricare audio dal cloud tramite dati mobili. Metadati e playlist si sincronizzano su qualsiasi rete.",
-"cloudAutoSyncDetails": "In attesa: {{pendingChanges}} · Attende il Wi-Fi: {{pendingDownloads}} · Ultima sincronizzazione: {{lastSuccess}} · Prossimo tentativo: {{nextRetry}}",
+"cloudAutoSyncDetails": "Modifiche in attesa: {{pendingChanges}} · Brani audio in attesa del Wi-Fi: {{pendingDownloads}} · Ultima sincronizzazione: {{lastSuccess}} · Prossimo tentativo: {{nextRetry}}",
   "cloudAutoSyncState_idle": "Aggiornato",
   "cloudAutoSyncState_syncing": "Sincronizzazione",
   "cloudAutoSyncState_offline": "Offline",

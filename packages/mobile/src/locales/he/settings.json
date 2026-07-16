@@ -51,7 +51,7 @@
   "cloudAutoSyncDisabledDescription": "סנכרון אוטומטי כבוי. הסנכרון יתבצע רק באמצעות הכפתורים הידניים למטה.",
   "cloudAudioOverCellular": "סנכרון שמע דרך נתונים סלולריים",
   "cloudAudioOverCellularDescription": "מאפשר הורדת שמע מהענן דרך נתונים סלולריים. מטא-נתונים ופלייליסטים מסתנכרנים בכל רשת.",
-"cloudAutoSyncDetails": "ממתינים: {{pendingChanges}} · ממתינים ל-Wi-Fi: {{pendingDownloads}} · סנכרון אחרון: {{lastSuccess}} · ניסיון הבא: {{nextRetry}}",
+"cloudAutoSyncDetails": "שינויים ממתינים: {{pendingChanges}} · רצועות שמע ממתינות ל-Wi-Fi: {{pendingDownloads}} · סנכרון אחרון: {{lastSuccess}} · ניסיון הבא: {{nextRetry}}",
   "cloudAutoSyncState_idle": "מעודכן",
   "cloudAutoSyncState_syncing": "מסנכרן",
   "cloudAutoSyncState_offline": "לא מקוון",

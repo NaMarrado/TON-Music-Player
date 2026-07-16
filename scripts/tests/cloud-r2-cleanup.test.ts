@@ -7,6 +7,7 @@ import type {
 } from '../../packages/core/src/index.ts';
 import {
   buildCloudR2CleanupPlan,
+  executeCloudR2CleanupPlan,
   createCloudLivePlaylistRecordV2,
   createCloudLiveTrackRecordV2,
 } from '../../packages/core/src/index.ts';
@@ -207,4 +208,108 @@ test('R2 listing parser keeps exact object sizes and pagination token', () => {
     { key: 'ton/objects/artwork/c.jpg', size: 56 },
   ]);
   assert.equal(parsed.nextContinuationToken, 'next&page');
+});
+
+test('cleanup execution stops on stale CAS without touching local state or objects', async () => {
+  const entries = [track(hashes[0]), track(hashes[1])];
+  const plan = buildCloudR2CleanupPlan({
+    manifest: manifest(entries, []),
+    manifestEtag: 'stale-etag',
+    storageScope: 'fixture',
+    localHashes: [hashes[0]],
+    objects: entries.map((entry) => ({ key: entry.object_key, size: 1_000 })),
+    prefix: 'ton',
+    deviceId: 'fixture',
+  });
+  let committed = false;
+  let deleted = false;
+  const result = await executeCloudR2CleanupPlan(plan, {
+    publishManifest: async () => ({ status: 'stale' }),
+    commitLocalState: async () => { committed = true; },
+    deleteObject: async () => { deleted = true; },
+  });
+
+  assert.equal(result.status, 'stale');
+  assert.equal(committed, false);
+  assert.equal(deleted, false);
+});
+
+test('cleanup cancellation before CAS has no side effects', async () => {
+  const entry = track(hashes[0]);
+  const plan = buildCloudR2CleanupPlan({
+    manifest: manifest([entry], []),
+    manifestEtag: 'etag',
+    storageScope: 'fixture',
+    localHashes: [],
+    objects: [{ key: entry.object_key, size: 1_000 }],
+    prefix: 'ton',
+    deviceId: 'fixture',
+  });
+  const controller = new AbortController();
+  controller.abort();
+  let published = false;
+
+  await assert.rejects(() => executeCloudR2CleanupPlan(plan, {
+    publishManifest: async () => {
+      published = true;
+      return { status: 'ok', etag: 'new-etag' };
+    },
+    commitLocalState: async () => undefined,
+    deleteObject: async () => undefined,
+  }, { signal: controller.signal }), /cloud_sync_cancelled/);
+  assert.equal(published, false);
+});
+
+test('cleanup cancellation after CAS commits metadata and leaves objects for the next cleanup', async () => {
+  const entry = track(hashes[0]);
+  const plan = buildCloudR2CleanupPlan({
+    manifest: manifest([entry], []),
+    manifestEtag: 'etag',
+    storageScope: 'fixture',
+    localHashes: [],
+    objects: [{ key: entry.object_key, size: 1_000 }],
+    prefix: 'ton',
+    deviceId: 'fixture',
+  });
+  const controller = new AbortController();
+  let committed = false;
+  let deleted = false;
+
+  await assert.rejects(() => executeCloudR2CleanupPlan(plan, {
+    publishManifest: async () => {
+      controller.abort();
+      return { status: 'ok', etag: 'new-etag' };
+    },
+    commitLocalState: async () => { committed = true; },
+    deleteObject: async () => { deleted = true; },
+  }, { signal: controller.signal }), /cloud_sync_cancelled/);
+  assert.equal(committed, true);
+  assert.equal(deleted, false);
+});
+
+test('cleanup execution reports partial object delete failures and keeps progressing', async () => {
+  const entries = [track(hashes[0]), track(hashes[1])];
+  const plan = buildCloudR2CleanupPlan({
+    manifest: manifest(entries, []),
+    manifestEtag: 'etag',
+    storageScope: 'fixture',
+    localHashes: [],
+    objects: entries.map((entry, index) => ({ key: entry.object_key, size: (index + 1) * 1_000 })),
+    prefix: 'ton',
+    deviceId: 'fixture',
+  });
+  const progress: number[] = [];
+  const result = await executeCloudR2CleanupPlan(plan, {
+    publishManifest: async () => ({ status: 'ok', etag: 'new-etag' }),
+    commitLocalState: async () => undefined,
+    deleteObject: async (key) => {
+      if (key === entries[1].object_key) throw new Error('fixture-delete-failure');
+    },
+  }, { onProgress: (value) => progress.push(value.current) });
+
+  assert.equal(result.status, 'completed');
+  assert.equal(result.deletedObjects, 1);
+  assert.equal(result.failedObjects, 1);
+  assert.equal(result.freedBytes, 1_000);
+  assert.deepEqual(progress, [1, 2]);
 });

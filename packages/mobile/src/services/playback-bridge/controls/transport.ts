@@ -99,12 +99,14 @@ export async function playSingleTrack(track: Track): Promise<void> {
     generation,
   });
 
-  await loadPlaybackTrack(trackToRntp(track, '0'));
+  await loadPlaybackTrack(trackToRntp(track, queueItem.id));
   await playPlayback();
   await initializeVolumeBoost().catch(() => {});
   const started = await ensurePlaybackStarted();
+  if (useQueueStore.getState().generation !== generation) return;
 
   const hydratedTrack = await getTrackById(track.id).catch(() => null);
+  if (useQueueStore.getState().generation !== generation) return;
 
   usePlaybackStore.setState({
     currentTrack: hydratedTrack ?? track,
