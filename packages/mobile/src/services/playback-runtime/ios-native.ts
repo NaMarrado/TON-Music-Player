@@ -55,6 +55,14 @@ export async function setIosPlaybackQueue(tracks: PlaybackRuntimeTrack[]): Promi
   await getIosPlaybackRuntimeModule().setQueue(tracks);
 }
 
+export async function replaceIosPlaybackQueue(
+  tracks: PlaybackRuntimeTrack[],
+  startIndex: number,
+  autoplay: boolean,
+): Promise<void> {
+  await getIosPlaybackRuntimeModule().replaceQueue(tracks, startIndex, autoplay);
+}
+
 export async function addIosPlaybackTracks(tracks: PlaybackRuntimeTrack[]): Promise<void> {
   await getIosPlaybackRuntimeModule().add(tracks);
 }

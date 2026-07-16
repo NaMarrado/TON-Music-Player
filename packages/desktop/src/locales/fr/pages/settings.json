@@ -144,7 +144,7 @@
   "cloudHelpStep9": "Après la création, copiez Access Key ID et Secret Access Key dans les champs TON correspondants. Le secret ne s’affiche qu’une fois.",
   "cloudHelpStep10": "Gardez la juridiction Par défaut sauf si le bucket a été créé dans UE/FedRAMP. Utilisez le même préfixe ton sur chaque appareil, puis testez la connexion.",
   "cloudResult": "{{uploaded}} envoyés, {{downloaded}} téléchargés, {{skipped}} ignorés, {{playlists}} playlists.",
-  "cloudProgress": "{{phase}} {{current}}/{{total}} · envoi {{uploaded}} · réception {{downloaded}} · ignorés {{skipped}} · échecs {{failed}}",
+  "cloudProgress": "{{phase}} {{current}}/{{total}} · envoyés {{uploaded}} · téléchargés {{downloaded}} · ignorés {{skipped}} · échecs {{failed}}",
   "cloudPhase_idle": "Inactif",
   "cloudPhase_testing": "Test",
   "cloudPhase_hashing": "Calcul des empreintes",

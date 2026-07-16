@@ -15,6 +15,23 @@ export interface QueueItem {
 
 export type QueueSource = 'user' | 'auto' | 'smart-playlist';
 
+export type PlaybackQueueSourceKind =
+  | 'album'
+  | 'artist'
+  | 'custom'
+  | 'library'
+  | 'playlist'
+  | 'selection'
+  | 'single';
+
+export interface PlaybackQueueSourceDescriptor {
+  kind: PlaybackQueueSourceKind;
+  source_id?: number | string;
+  filter_query?: string;
+  sort_by?: string;
+  sort_order?: 'asc' | 'desc';
+}
+
 export interface QueueState {
   items: QueueItem[];
   current_index: number;

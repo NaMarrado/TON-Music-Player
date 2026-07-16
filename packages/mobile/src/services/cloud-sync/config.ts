@@ -12,6 +12,7 @@ const SECRET_KEY = 'cloud_r2_secret_access_key';
 const DEVICE_ID_KEY = 'cloud_r2_device_id';
 const LAST_REVISION_KEY = 'cloud_r2_last_revision';
 const AUTO_SYNC_ENABLED_KEY = 'cloud_auto_sync_enabled';
+const AUDIO_OVER_CELLULAR_KEY = 'sync_audio_over_cellular';
 
 function normalizeJurisdiction(value: unknown): CloudStorageJurisdiction {
   return value === 'eu' || value === 'fedramp' ? value : 'default';
@@ -43,6 +44,14 @@ export async function getMobileCloudAutoSyncEnabled(): Promise<boolean> {
 
 export async function setMobileCloudAutoSyncEnabled(enabled: boolean): Promise<void> {
   await setSetting(AUTO_SYNC_ENABLED_KEY, enabled ? 'true' : 'false');
+}
+
+export async function getMobileCloudAudioOverCellularEnabled(): Promise<boolean> {
+  return (await getSetting(AUDIO_OVER_CELLULAR_KEY)) === 'true';
+}
+
+export async function setMobileCloudAudioOverCellularEnabled(enabled: boolean): Promise<void> {
+  await setSetting(AUDIO_OVER_CELLULAR_KEY, enabled ? 'true' : 'false');
 }
 
 export function buildMobileCloudScopeId(config: Pick<

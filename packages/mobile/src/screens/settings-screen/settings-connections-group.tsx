@@ -20,6 +20,7 @@ export function SettingsConnectionsGroup({
     cancelCloudTask,
     cloudAutoSyncDetailsLabel,
     cloudAutoSyncEnabled,
+    cloudAudioOverCellular,
     cloudAutoSyncStatusLabel,
     cloudBusy,
     cloudCanRun,
@@ -48,6 +49,7 @@ export function SettingsConnectionsGroup({
     spotifySecret,
     syncCloud,
     toggleCloudAutoSync,
+    toggleCloudAudioOverCellular,
     updateCloudForm,
     uploadCloudMissing,
   } = controller;
@@ -81,6 +83,9 @@ export function SettingsConnectionsGroup({
         autoSyncEnabled={cloudAutoSyncEnabled}
         autoSyncLabel={t('cloudAutoSync')}
         autoSyncStatusLabel={cloudAutoSyncStatusLabel}
+        audioOverCellularDescription={t('cloudAudioOverCellularDescription')}
+        audioOverCellularEnabled={cloudAudioOverCellular}
+        audioOverCellularLabel={t('cloudAudioOverCellular')}
         canRun={cloudCanRun}
         connectedLabel={cloudConnectedLabel}
         cleanupChecking={cloudCleanupChecking}
@@ -138,6 +143,9 @@ export function SettingsConnectionsGroup({
         onSaveTest={saveAndTestCloud}
         onSync={syncCloud}
         onToggleAutoSync={(enabled) => { void toggleCloudAutoSync(enabled); }}
+        onToggleAudioOverCellular={(enabled) => {
+          void toggleCloudAudioOverCellular(enabled);
+        }}
         onUpdate={updateCloudForm}
         onUpload={uploadCloudMissing}
         title={t('cloudSection')}

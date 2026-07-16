@@ -144,7 +144,7 @@
   "cloudHelpStep9": "לאחר יצירת האסימון, העתק את Access Key ID אל TON Access Key ID ו- Secret Access Key אל TON Secret Access Key. הסוד מוצג רק פעם אחת.",
   "cloudHelpStep10": "השאר את תחום השיפוט כברירת מחדל, אלא אם יצרת את הדלי ב-EU/FedRAMP. השתמש באותה קידומת ton בכל מכשיר, ולאחר מכן בחר שמור ובדוק.",
   "cloudResult": "הועלה {{uploaded}}, הורד {{downloaded}}, דילג על {{skipped}}, רשימות השמעה {{playlists}}.",
-  "cloudProgress": "{{phase}} {{current}}/{{total}} · למעלה {{uploaded}} · למטה {{downloaded}} · דילג על {{skipped}} · {{failed}} נכשל",
+  "cloudProgress": "{{phase}} {{current}}/{{total}} · הועלו {{uploaded}} · הורדו {{downloaded}} · דולגו {{skipped}} · נכשלו {{failed}}",
   "cloudPhase_idle": "להתבטל",
   "cloudPhase_testing": "בוחן",
   "cloudPhase_hashing": "האשינג",

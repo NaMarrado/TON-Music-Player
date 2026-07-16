@@ -33,5 +33,14 @@
   "playlistName": "Playlist name",
   "playlistDescription": "Description",
   "playlistDescriptionPlaceholder": "Add a description...",
-  "playlistUpdated": "Playlist updated"
+  "playlistUpdated": "Playlist updated",
+  "sortTracks": "Sort tracks",
+  "sortOriginal": "Original order",
+  "sortPosition": "Position",
+  "sortTitle": "Title",
+  "sortArtist": "Artist",
+  "sortDownloaded": "Downloaded",
+  "sortDuration": "Duration",
+  "filterPlaceholder": "Filter tracks...",
+  "noResults": "No matching tracks"
 }

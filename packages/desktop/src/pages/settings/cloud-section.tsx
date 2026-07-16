@@ -272,7 +272,7 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
           className="grid gap-3"
           style={{ gridTemplateColumns: layout.compact ? '1fr' : 'repeat(2, minmax(0, 1fr))' }}
         >
-          <CloudField label={t('cloudAccountId')} value={form.accountId} onChange={(value) => setForm((state) => ({ ...state, accountId: value }))} />
+          <CloudField type="password" label={t('cloudAccountId')} value={form.accountId} onChange={(value) => setForm((state) => ({ ...state, accountId: value }))} />
           <CloudField label={t('cloudBucket')} value={form.bucket} onChange={(value) => setForm((state) => ({ ...state, bucket: value }))} />
           <CloudField label={t('cloudPrefix')} value={form.prefix} onChange={(value) => setForm((state) => ({ ...state, prefix: value }))} placeholder="ton" />
           <label style={{ display: 'block' }}>
@@ -298,7 +298,7 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
               <option value="fedramp">{t('cloudJurisdictionFedramp')}</option>
             </select>
           </label>
-          <CloudField label={t('cloudAccessKeyId')} value={form.accessKeyId} onChange={(value) => setForm((state) => ({ ...state, accessKeyId: value }))} />
+          <CloudField type="password" label={t('cloudAccessKeyId')} value={form.accessKeyId} onChange={(value) => setForm((state) => ({ ...state, accessKeyId: value }))} />
           <CloudField
             label={t('cloudSecretAccessKey')}
             value={form.secretAccessKey}

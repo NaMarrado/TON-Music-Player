@@ -51,12 +51,12 @@ export function FrequencyCard({
             accessibilityRole="switch"
             accessibilityState={{ checked: frequencyEnabled, disabled }}
             disabled={disabled}
-            value={frequencyEnabled}
+            value={controlsEnabled}
             onValueChange={(enabled) => {
               void setFrequencyEnabled(enabled);
             }}
             trackColor={{ false: '#333', true: '#555' }}
-            thumbColor={frequencyEnabled ? '#fff' : '#888'}
+            thumbColor={controlsEnabled ? '#fff' : '#888'}
           />
         )}
       />

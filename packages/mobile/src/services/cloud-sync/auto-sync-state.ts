@@ -38,6 +38,7 @@ export const mobileAutoSyncRuntime = {
   appState: AppState.currentState as AppStateStatus,
   networkOnline: true,
   unmeteredNetwork: true,
+  audioOverCellular: false,
   initialized: false,
   foregroundStarted: false,
   appStateSubscription: null as ReturnType<typeof AppState.addEventListener> | null,

@@ -34,6 +34,7 @@ export function EqualizerCard({
   const { t: tc } = useTranslation('common');
   const presetNames = Object.keys(EQ_PRESETS);
   const resolvedBands = eqBands.length > 0 ? eqBands : DEFAULT_EQ_BANDS;
+  const active = !disabled && eqEnabled;
 
   return (
     <SettingsCard>
@@ -44,10 +45,10 @@ export function EqualizerCard({
         right={(
           <Switch
             disabled={disabled}
-            value={eqEnabled}
+            value={active}
             onValueChange={toggleEq}
             trackColor={{ false: '#333', true: '#555' }}
-            thumbColor={eqEnabled ? '#fff' : '#888'}
+            thumbColor={active ? '#fff' : '#888'}
           />
         )}
       />
@@ -56,8 +57,8 @@ export function EqualizerCard({
       )}
 
       <View
-        pointerEvents={!disabled && eqEnabled ? 'auto' : 'none'}
-        style={{ opacity: !disabled && eqEnabled ? 1 : 0.35 }}
+        pointerEvents={active ? 'auto' : 'none'}
+        style={{ opacity: active ? 1 : 0.35 }}
       >
         <ScrollView
           horizontal

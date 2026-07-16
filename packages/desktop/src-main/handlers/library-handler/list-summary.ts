@@ -36,6 +36,6 @@ function queryLibrarySummary(whereClause = '', params: unknown[] = []): LibraryS
     ) AS playlist_summary ON playlist_summary.track_id = t.id
     WHERE 1 = 1
     ${whereClause}
-    ORDER BY t.added_at DESC
+    ORDER BY t.added_at DESC, COALESCE(t.content_hash_sha256, '') ASC, t.id DESC
   `).all(...params) as LibrarySummaryTrack[];
 }

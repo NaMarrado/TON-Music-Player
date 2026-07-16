@@ -104,7 +104,8 @@ export async function applyNetworkState(state: NetInfoState): Promise<void> {
   runtime.coordinator?.setOnline(runtime.networkOnline);
   emitStatus();
   if (wasOnline && runtime.networkOnline && !wasUnmetered
-      && runtime.unmeteredNetwork && runtime.appState === 'active') {
+      && (runtime.unmeteredNetwork || runtime.audioOverCellular)
+      && runtime.appState === 'active') {
     await runtime.coordinator?.runNow('auto').catch(() => {});
   }
 }

@@ -73,14 +73,16 @@ export function PillButton({
     <Pressable
       onPress={onPress}
       disabled={disabled}
-      className={`px-3.5 py-1.5 rounded-full border ${
-        active ? 'bg-white border-white' : 'bg-transparent border-border'
-      }`}
-      style={{ opacity: disabled ? 0.45 : 1 }}
+      className="items-center justify-center"
+      style={{ minHeight: 44, opacity: disabled ? 0.45 : 1 }}
     >
-      <Text className={`text-xs font-semibold ${active ? 'text-black' : 'text-text-secondary'}`}>
-        {label}
-      </Text>
+      <View className={`px-3 py-1 rounded-full border ${
+        active ? 'bg-white border-white' : 'bg-transparent border-border'
+      }`}>
+        <Text className={`text-[11px] font-semibold ${active ? 'text-black' : 'text-text-secondary'}`}>
+          {label}
+        </Text>
+      </View>
     </Pressable>
   );
 }

@@ -33,5 +33,14 @@
   "playlistName": "Nome da playlist",
   "playlistDescription": "Descrição",
   "playlistDescriptionPlaceholder": "Adicionar uma descrição...",
-  "playlistUpdated": "Playlist atualizada"
+  "playlistUpdated": "Playlist atualizada",
+  "sortTracks": "Ordenar faixas",
+  "sortOriginal": "Ordem original",
+  "sortPosition": "Posição",
+  "sortTitle": "Título",
+  "sortArtist": "Artista",
+  "sortDownloaded": "Transferido",
+  "sortDuration": "Duração",
+  "filterPlaceholder": "Filtrar faixas...",
+  "noResults": "Nenhuma faixa correspondente"
 }

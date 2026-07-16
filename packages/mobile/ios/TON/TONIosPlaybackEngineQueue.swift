@@ -19,6 +19,30 @@ extension TONIosPlaybackEngineManager {
     }
   }
 
+  func replaceQueue(
+    _ tracks: [TONIosPlaybackTrack],
+    startIndex: Int,
+    autoplay: Bool,
+    completion: @escaping (Error?) -> Void
+  ) {
+    stateQueue.async {
+      do {
+        self.queue = tracks
+        guard !tracks.isEmpty else {
+          self.resetPlaybackState(keepQueue: false)
+          completion(nil)
+          return
+        }
+        let clampedIndex = max(0, min(startIndex, tracks.count - 1))
+        try self.prepareTrack(at: clampedIndex, autoplay: autoplay)
+        completion(nil)
+      } catch {
+        self.failPlayback(error)
+        completion(error)
+      }
+    }
+  }
+
   func addTracks(_ tracks: [TONIosPlaybackTrack], completion: @escaping () -> Void) {
     stateQueue.async {
       self.queue.append(contentsOf: tracks)
@@ -70,6 +94,7 @@ extension TONIosPlaybackEngineManager {
       self.playerNode.stop()
       self.state = self.currentFile == nil ? "none" : "paused"
       self.updateNowPlayingInfo()
+      self.emitPlaybackState()
       completion()
     }
   }
@@ -82,6 +107,7 @@ extension TONIosPlaybackEngineManager {
       self.state = self.currentFile == nil ? "none" : "stopped"
       self.updateNowPlayingInfo()
       self.deactivateAudioSessionIfNeeded()
+      self.emitPlaybackState()
       completion()
     }
   }

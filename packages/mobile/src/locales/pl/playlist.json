@@ -33,5 +33,14 @@
   "playlistName": "Nazwa playlisty",
   "playlistDescription": "Opis",
   "playlistDescriptionPlaceholder": "Dodaj opis...",
-  "playlistUpdated": "Playlista zaktualizowana"
+  "playlistUpdated": "Playlista zaktualizowana",
+  "sortTracks": "Sortuj utwory",
+  "sortOriginal": "Pierwotna kolejność",
+  "sortPosition": "Pozycja",
+  "sortTitle": "Tytuł",
+  "sortArtist": "Wykonawca",
+  "sortDownloaded": "Pobrano",
+  "sortDuration": "Czas trwania",
+  "filterPlaceholder": "Filtruj utwory...",
+  "noResults": "Brak pasujących utworów"
 }

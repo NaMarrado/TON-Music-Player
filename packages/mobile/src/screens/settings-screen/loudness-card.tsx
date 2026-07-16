@@ -8,6 +8,7 @@ export function LoudnessCard({
   cancelLabel,
   title,
   description,
+  disabled = false,
   failedLabel,
   isAnalyzeDisabled,
   isAnalyzing,
@@ -24,6 +25,7 @@ export function LoudnessCard({
   cancelLabel: string;
   title: string;
   description: string;
+  disabled?: boolean;
   failedLabel: string | null;
   isAnalyzeDisabled: boolean;
   isAnalyzing: boolean;
@@ -43,12 +45,13 @@ export function LoudnessCard({
         description={description}
         right={(
           <Switch
-            value={loudnessNormEnabled}
+            disabled={disabled}
+            value={!disabled && loudnessNormEnabled}
             onValueChange={(value) => {
               void setLoudnessNormalizationEnabled(value);
             }}
             trackColor={{ false: '#333', true: '#555' }}
-            thumbColor={loudnessNormEnabled ? '#fff' : '#888'}
+            thumbColor={!disabled && loudnessNormEnabled ? '#fff' : '#888'}
           />
         )}
       />
@@ -60,7 +63,7 @@ export function LoudnessCard({
               width: 6,
               height: 6,
               borderRadius: 999,
-              backgroundColor: loudnessNormEnabled ? '#4ade80' : '#666',
+              backgroundColor: !disabled && loudnessNormEnabled ? '#4ade80' : '#666',
               marginRight: 8,
             }}
           />

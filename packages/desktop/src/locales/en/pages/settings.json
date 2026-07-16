@@ -144,7 +144,7 @@
   "cloudHelpStep9": "After creating the token, copy Access Key ID into TON Access Key ID and Secret Access Key into TON Secret Access Key. The secret is shown only once.",
   "cloudHelpStep10": "Leave Jurisdiction as Default unless you created the bucket in EU/FedRAMP. Keep Prefix as ton on every device, then Save & Test.",
   "cloudResult": "Uploaded {{uploaded}}, downloaded {{downloaded}}, skipped {{skipped}}, playlists {{playlists}}.",
-  "cloudProgress": "{{phase}} {{current}}/{{total}} · up {{uploaded}} · down {{downloaded}} · skipped {{skipped}} · failed {{failed}}",
+  "cloudProgress": "{{phase}} {{current}}/{{total}} · uploaded {{uploaded}} · downloaded {{downloaded}} · skipped {{skipped}} · failed {{failed}}",
   "cloudPhase_idle": "Idle",
   "cloudPhase_testing": "Testing",
   "cloudPhase_hashing": "Hashing",

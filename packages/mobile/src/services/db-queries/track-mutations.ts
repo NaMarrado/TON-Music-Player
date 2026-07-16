@@ -9,11 +9,12 @@ const TRACK_COLUMNS = new Set([
   'bitrate', 'sample_rate', 'format', 'cover_art_path',
   'loudness_lufs', 'loudness_gain',
   'youtube_id', 'spotify_id', 'soundcloud_id', 'source_url',
-  'last_played_at', 'rating', 'downloaded_at', 'in_library',
+  'last_played_at', 'rating', 'added_at', 'downloaded_at', 'in_library',
 ]);
 
 export async function insertTrack(
   track: Omit<Track, 'id' | 'play_count' | 'added_at' | 'downloaded_at' | 'scanned_at' | 'content_hash_sha256'> & {
+    added_at?: number | null;
     content_hash_sha256?: string | null;
     downloaded_at?: number | null;
   },
@@ -29,8 +30,8 @@ export async function insertTrack(
       bitrate, sample_rate, format, cover_art_path,
       loudness_lufs, loudness_gain,
       youtube_id, spotify_id, soundcloud_id, source_url,
-      last_played_at, rating, downloaded_at, in_library
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      last_played_at, rating, added_at, downloaded_at, in_library
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, strftime('%s','now')), ?, ?)`,
     [
       track.file_path,
       track.file_hash ?? null,
@@ -58,6 +59,7 @@ export async function insertTrack(
       track.source_url ?? null,
       track.last_played_at ?? null,
       track.rating ?? null,
+      track.added_at ?? null,
       track.downloaded_at ?? null,
       1,
     ],

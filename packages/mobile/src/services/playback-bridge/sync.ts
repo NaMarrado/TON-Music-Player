@@ -18,8 +18,14 @@ export async function syncActiveTrack(event: {
       return;
     }
 
-    useQueueStore.setState({ currentIndex: event.index });
     const item = items[event.index];
+    if (event.track && typeof event.track === 'object' && 'id' in event.track) {
+      const runtimeId = String(event.track.id ?? '');
+      if (runtimeId && runtimeId !== item?.id) {
+        return;
+      }
+    }
+    useQueueStore.setState({ currentIndex: event.index });
     trackId = item?.track_id ?? null;
   }
 
@@ -45,7 +51,16 @@ export async function syncActiveTrack(event: {
   await syncVolumeOutputToState().catch(() => {});
 }
 
-export function syncPlaybackState(event: Pick<PlaybackRuntimeStateSnapshot, 'state'>): void {
+export function syncPlaybackState(
+  event: Pick<PlaybackRuntimeStateSnapshot, 'state' | 'trackId'>,
+): void {
+  if (event.trackId != null) {
+    const { items, currentIndex } = useQueueStore.getState();
+    const currentItem = items[currentIndex];
+    if (currentItem && String(event.trackId) !== currentItem.id) {
+      return;
+    }
+  }
   usePlaybackStore.setState({ isPlaying: event.state === PlaybackStateValue.Playing });
 
   if (

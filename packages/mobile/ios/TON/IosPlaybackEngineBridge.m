@@ -14,6 +14,12 @@ RCT_EXTERN_METHOD(setQueue:(NSArray<NSDictionary *> *)tracks
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(replaceQueue:(NSArray<NSDictionary *> *)tracks
+                  startIndex:(nonnull NSNumber *)startIndex
+                  autoplay:(BOOL)autoplay
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
 RCT_EXTERN_METHOD(add:(NSArray<NSDictionary *> *)tracks
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)

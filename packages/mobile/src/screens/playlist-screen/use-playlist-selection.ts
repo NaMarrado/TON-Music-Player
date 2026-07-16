@@ -3,6 +3,7 @@ import type { PlaylistTrackEntry } from '@ton/core';
 
 export function usePlaylistSelection(tracks: PlaylistTrackEntry[]) {
   const [selectedPlaylistTrackIds, setSelectedPlaylistTrackIds] = useState<number[]>([]);
+  const [selectionRevision, setSelectionRevision] = useState(0);
   const selectedPlaylistTrackIdSet = useMemo(
     () => new Set(selectedPlaylistTrackIds),
     [selectedPlaylistTrackIds],
@@ -16,15 +17,20 @@ export function usePlaylistSelection(tracks: PlaylistTrackEntry[]) {
   const selectionActive = selectedPlaylistTrackIds.length > 0;
 
   const clearSelection = useCallback(() => {
-    setSelectedPlaylistTrackIds([]);
+    setSelectedPlaylistTrackIds((current) => {
+      if (current.length === 0) return current;
+      setSelectionRevision((revision) => revision + 1);
+      return [];
+    });
   }, []);
 
   const toggleSelection = useCallback((playlistTrackId: number) => {
-    setSelectedPlaylistTrackIds((current) => (
-      current.includes(playlistTrackId)
+    setSelectedPlaylistTrackIds((current) => {
+      setSelectionRevision((revision) => revision + 1);
+      return current.includes(playlistTrackId)
         ? current.filter((idValue) => idValue !== playlistTrackId)
-        : [...current, playlistTrackId]
-    ));
+        : [...current, playlistTrackId];
+    });
   }, []);
 
   return {
@@ -32,6 +38,7 @@ export function usePlaylistSelection(tracks: PlaylistTrackEntry[]) {
     selectedPlaylistTrackIds,
     selectedPlaylistTrackIdSet,
     selectedTracks,
+    selectionRevision,
     selectionActive,
     toggleSelection,
   };

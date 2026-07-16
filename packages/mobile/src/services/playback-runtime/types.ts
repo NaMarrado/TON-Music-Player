@@ -18,6 +18,7 @@ export interface PlaybackRuntimeProgress {
 export interface PlaybackRuntimeStateSnapshot {
   state: PlaybackRuntimeStateValue;
   error?: unknown;
+  trackId?: string | number;
 }
 
 export interface PlaybackRuntimeUpdateOptions {
@@ -26,6 +27,11 @@ export interface PlaybackRuntimeUpdateOptions {
   notificationCapabilities?: number[];
   progressUpdateEventInterval?: number;
   [key: string]: unknown;
+}
+
+export interface PlaybackRuntimeQueueOptions {
+  autoplay: boolean;
+  startIndex: number;
 }
 
 export const PlaybackEvent = {
@@ -91,6 +97,8 @@ export type PlaybackRuntimeEventPayload<T extends PlaybackRuntimeEventType> =
       lastTrack?: PlaybackRuntimeTrack | null;
       track?: PlaybackRuntimeTrack | null;
     }
+    : T extends typeof PlaybackEvent.PlaybackState
+      ? PlaybackRuntimeStateSnapshot
     : T extends typeof PlaybackEvent.PlaybackError | typeof PlaybackEvent.PlayerError
       ? { code?: string; message?: string }
       : T extends typeof PlaybackEvent.PlaybackQueueEnded

@@ -31,7 +31,9 @@ export function publicStatus(): CloudAutoSyncStatus {
   });
   if (runtime.baseStatus.state === 'idle'
       && runtime.baseStatus.pendingDownloads > 0
-      && runtime.networkOnline && !runtime.unmeteredNetwork) {
+      && runtime.networkOnline
+      && !runtime.unmeteredNetwork
+      && !runtime.audioOverCellular) {
     return withProgress({ ...runtime.baseStatus, state: 'waiting-for-wifi' });
   }
   return withProgress(runtime.baseStatus);

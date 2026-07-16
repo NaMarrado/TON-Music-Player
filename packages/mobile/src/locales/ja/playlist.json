@@ -33,5 +33,14 @@
   "playlistName": "プレイリスト名",
   "playlistDescription": "説明",
   "playlistDescriptionPlaceholder": "説明を追加...",
-  "playlistUpdated": "プレイリストが更新されました"
+  "playlistUpdated": "プレイリストが更新されました",
+  "sortTracks": "曲を並べ替え",
+  "sortOriginal": "元の順序",
+  "sortPosition": "位置",
+  "sortTitle": "タイトル",
+  "sortArtist": "アーティスト",
+  "sortDownloaded": "ダウンロード日時",
+  "sortDuration": "長さ",
+  "filterPlaceholder": "曲を絞り込む...",
+  "noResults": "一致する曲がありません"
 }

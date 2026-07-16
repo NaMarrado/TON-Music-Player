@@ -107,7 +107,7 @@ export async function applyManifestWithoutAudio(
           disc_number = ?, duration_ms = ?, genre = ?, year = ?, bitrate = ?,
           sample_rate = ?, file_size = ?, format = ?, loudness_lufs = ?, loudness_gain = ?,
           youtube_id = ?, spotify_id = ?, soundcloud_id = ?, source_url = ?, rating = ?,
-          downloaded_at = ?, cover_art_path = CASE WHEN ? = 1 THEN NULL ELSE cover_art_path END,
+          added_at = ?, downloaded_at = ?, cover_art_path = CASE WHEN ? = 1 THEN NULL ELSE cover_art_path END,
           in_library = 1 WHERE id = ?`,
         [
           entry.metadata.title, entry.metadata.artist, entry.metadata.album,
@@ -116,7 +116,7 @@ export async function applyManifestWithoutAudio(
           entry.metadata.bitrate, entry.metadata.sample_rate, entry.file_size, entry.format,
           entry.metadata.loudness_lufs, entry.metadata.loudness_gain, entry.youtube_id,
           entry.spotify_id, entry.soundcloud_id, entry.source_url, entry.metadata.rating,
-          downloadedAt, entry.artwork_hash_sha256 == null ? 1 : 0, row.id,
+          entry.added_at, downloadedAt, entry.artwork_hash_sha256 == null ? 1 : 0, row.id,
         ],
       );
     }

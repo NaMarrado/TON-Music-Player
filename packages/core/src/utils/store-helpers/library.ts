@@ -17,22 +17,27 @@ export function getFilteredTracks<
 
   const dir = sortOrder === 'asc' ? 1 : -1;
   result.sort((a, b) => {
+    let comparison = 0;
     if (sortBy === 'playlist') {
       const va = (a as T & { playlist_names?: string }).playlist_names || '';
       const vb = (b as T & { playlist_names?: string }).playlist_names || '';
-      if (!va && !vb) return 0;
-      if (!va) return 1;
-      if (!vb) return -1;
-      return va.localeCompare(vb) * dir;
+      if (!va && !vb) comparison = 0;
+      else if (!va) comparison = 1;
+      else if (!vb) comparison = -1;
+      else comparison = va.localeCompare(vb) * dir;
+    } else {
+      const va = a[sortBy as keyof Track];
+      const vb = b[sortBy as keyof Track];
+      if (va == null && vb == null) comparison = 0;
+      else if (va == null) comparison = 1;
+      else if (vb == null) comparison = -1;
+      else if (typeof va === 'string') comparison = va.localeCompare(vb as string) * dir;
+      else comparison = ((va as number) - (vb as number)) * dir;
     }
-
-    const va = a[sortBy as keyof Track];
-    const vb = b[sortBy as keyof Track];
-    if (va == null && vb == null) return 0;
-    if (va == null) return 1;
-    if (vb == null) return -1;
-    if (typeof va === 'string') return va.localeCompare(vb as string) * dir;
-    return ((va as number) - (vb as number)) * dir;
+    if (comparison !== 0) return comparison;
+    const stableA = a.content_hash_sha256 ?? a.youtube_id ?? a.spotify_id ?? a.soundcloud_id ?? '';
+    const stableB = b.content_hash_sha256 ?? b.youtube_id ?? b.spotify_id ?? b.soundcloud_id ?? '';
+    return stableA.localeCompare(stableB) || b.id - a.id;
   });
 
   return result;

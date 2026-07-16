@@ -33,5 +33,14 @@
   "playlistName": "Nombre de la lista",
   "playlistDescription": "Descripción",
   "playlistDescriptionPlaceholder": "Añade una descripción...",
-  "playlistUpdated": "Lista actualizada"
+  "playlistUpdated": "Lista actualizada",
+  "sortTracks": "Ordenar canciones",
+  "sortOriginal": "Orden original",
+  "sortPosition": "Posición",
+  "sortTitle": "Título",
+  "sortArtist": "Artista",
+  "sortDownloaded": "Descargado",
+  "sortDuration": "Duración",
+  "filterPlaceholder": "Filtrar canciones...",
+  "noResults": "No hay canciones coincidentes"
 }

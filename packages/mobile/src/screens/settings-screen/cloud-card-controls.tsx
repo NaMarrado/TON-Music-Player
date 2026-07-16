@@ -8,6 +8,8 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import { useState } from 'react';
+import { Feather } from '@expo/vector-icons';
 
 const INPUT_STYLE = {
   borderRadius: 12,
@@ -30,27 +32,43 @@ export function CloudField({
   secure?: boolean;
   value: string;
 }) {
+  const [revealed, setRevealed] = useState(false);
   return (
     <View className="mb-3">
       <Text className="text-text-secondary text-xs mb-1">{label}</Text>
-      <TextInput
-        value={value}
-        onChangeText={onChange}
-        className="bg-bg-deep text-text-primary px-3.5 text-sm border border-border"
+      <View
+        className="flex-row items-center bg-bg-deep border border-border"
         style={INPUT_STYLE}
-        placeholderTextColor="#555"
-        placeholder={placeholder}
-        autoCapitalize="none"
-        autoComplete="off"
-        autoCorrect={false}
-        importantForAutofill="no"
-        multiline={false}
-        numberOfLines={1}
-        scrollEnabled={false}
-        secureTextEntry={Boolean(secure)}
-        spellCheck={false}
-        textContentType="none"
-      />
+      >
+        <TextInput
+          value={value}
+          onChangeText={onChange}
+          className="flex-1 text-text-primary pl-3.5 text-sm"
+          style={{ height: 44, lineHeight: 18, paddingVertical: 0 }}
+          placeholderTextColor="#555"
+          placeholder={placeholder}
+          autoCapitalize="none"
+          autoComplete="off"
+          autoCorrect={false}
+          importantForAutofill="no"
+          multiline={false}
+          numberOfLines={1}
+          scrollEnabled={false}
+          secureTextEntry={Boolean(secure) && !revealed}
+          spellCheck={false}
+          textContentType="none"
+        />
+        {secure && (
+          <Pressable
+            accessibilityRole="button"
+            hitSlop={6}
+            onPress={() => setRevealed((current) => !current)}
+            style={{ alignItems: 'center', height: 44, justifyContent: 'center', width: 44 }}
+          >
+            <Feather name={revealed ? 'eye-off' : 'eye'} size={16} color="#888" />
+          </Pressable>
+        )}
+      </View>
     </View>
   );
 }
@@ -127,24 +145,32 @@ export function CloudPill({
     <Pressable
       disabled={disabled}
       onPress={onPress}
-      className={className}
+      className="items-center justify-center"
       style={{
-        borderRadius: 20,
-        minHeight: 40,
+        minHeight: 44,
         marginBottom: gridItem ? 10 : undefined,
         opacity: disabled ? 0.5 : 1,
-        paddingVertical: 9,
-        paddingHorizontal: 14,
         width: fullWidth ? '100%' : gridItem ? '48%' : undefined,
       }}
     >
-      <Text className={primary
-        ? 'text-black text-[13px] font-semibold text-center'
-        : danger
-          ? 'text-red-400 text-[13px] font-semibold text-center'
-          : 'text-text-secondary text-[13px] font-semibold text-center'}>
-        {label}
-      </Text>
+      <View
+        className={className}
+        style={{
+          alignSelf: fullWidth || gridItem ? 'stretch' : undefined,
+          borderRadius: 18,
+          minHeight: 34,
+          paddingHorizontal: 12,
+          paddingVertical: 7,
+        }}
+      >
+        <Text className={primary
+          ? 'text-black text-xs font-semibold text-center'
+          : danger
+            ? 'text-red-400 text-xs font-semibold text-center'
+            : 'text-text-secondary text-xs font-semibold text-center'}>
+          {label}
+        </Text>
+      </View>
     </Pressable>
   );
 }

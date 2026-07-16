@@ -28,12 +28,12 @@ export function ArtistScreen({ route }: Props) {
   );
 
   const handlePlay = useCallback((index: number) => {
-    playTracks(tracks, index);
-  }, [tracks]);
+    playTracks(tracks, index, { kind: 'artist', source_id: name });
+  }, [name, tracks]);
 
   const handlePlayAll = useCallback(() => {
-    if (tracks.length > 0) playTracks(tracks, 0);
-  }, [tracks]);
+    if (tracks.length > 0) playTracks(tracks, 0, { kind: 'artist', source_id: name });
+  }, [name, tracks]);
 
   const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
   const [playlistPickerTrack, setPlaylistPickerTrack] = useState<Track | null>(null);

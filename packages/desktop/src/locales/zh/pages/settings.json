@@ -144,7 +144,7 @@
   "cloudHelpStep9": "创建令牌后，将 Access Key ID 复制到 TON Access Key ID 中，将 Secret Access Key 复制到 TON Secret Access Key 中。这个秘密只显示一次。",
   "cloudHelpStep10": "除非存储桶创建在 EU/FedRAMP 中，否则请将管辖区保留为默认值。在每台设备上使用相同的 ton 前缀，然后选择保存并测试。",
   "cloudResult": "上传了{{uploaded}}，下载了{{downloaded}}，跳过了{{skipped}}，播放列表{{playlists}}。",
-  "cloudProgress": "{{phase}} {{current}}/{{total}} · 向上 {{uploaded}} · 向下 {{downloaded}} · 跳过 {{skipped}} · 失败 {{failed}}",
+  "cloudProgress": "{{phase}} {{current}}/{{total}} · 已上传 {{uploaded}} · 已下载 {{downloaded}} · 已跳过 {{skipped}} · 失败 {{failed}}",
   "cloudPhase_idle": "闲置的",
   "cloudPhase_testing": "测试",
   "cloudPhase_hashing": "散列",

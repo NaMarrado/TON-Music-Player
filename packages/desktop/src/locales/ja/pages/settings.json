@@ -144,7 +144,7 @@
   "cloudHelpStep9": "トークンを作成したら、アクセス キー ID を TON アクセス キー ID にコピーし、シークレット アクセス キーを TON シークレット アクセス キーにコピーします。シークレットは一度だけ公開されます。",
   "cloudHelpStep10": "EU/FedRAMP でバケットを作成した場合を除き、管轄区域はデフォルトのままにしておきます。すべてのデバイスでプレフィックスをトンとして保持し、保存してテストします。",
   "cloudResult": "アップロードされた {{uploaded}}、ダウンロードされた {{downloaded}}、スキップされた {{skipped}}、プレイリスト {{playlists}}。",
-  "cloudProgress": "{{phase}} {{current}}/{{total}} · アップ {{uploaded}} · ダウン {{downloaded}} · スキップされた {{skipped}} · 失敗した {{failed}}",
+  "cloudProgress": "{{phase}} {{current}}/{{total}} · アップロード済み {{uploaded}} · ダウンロード済み {{downloaded}} · スキップ {{skipped}} · 失敗 {{failed}}",
   "cloudPhase_idle": "アイドル状態",
   "cloudPhase_testing": "テスト",
   "cloudPhase_hashing": "ハッシュ化",

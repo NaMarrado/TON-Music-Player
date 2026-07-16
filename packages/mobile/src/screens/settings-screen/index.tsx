@@ -1,4 +1,5 @@
-import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
+import { useCallback, useState } from 'react';
+import { Linking, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { LUFS_TARGET_DEFAULT } from '@ton/core';
 import { useTranslation } from 'react-i18next';
 import { getMobileUpdateActionKey } from '../../services/app-update';
@@ -23,6 +24,8 @@ import { useSettingsScreen } from './use-settings-screen';
 import { usePlaylistStore } from '../../stores/playlist-store';
 import { useScreenTopPadding } from '../../hooks/use-screen-top-padding';
 import { SettingsConnectionsGroup } from './settings-connections-group';
+import { reconcileLibraryTracks } from '../../stores/library-store';
+import { loadPlaylists } from '../../stores/playlist-store';
 
 export function SettingsScreen() {
   const { t } = useTranslation('settings');
@@ -37,6 +40,7 @@ export function SettingsScreen() {
   const detectedLang = detectDeviceLanguage();
   const topPadding = useScreenTopPadding(16);
   const controller = useSettingsScreen();
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const {
     analyzeAll,
     appVersion,
@@ -63,7 +67,31 @@ export function SettingsScreen() {
     updateResult,
     downloadQualityProfile,
     setDownloadQualityProfile,
+    refreshCloudLocalState,
+    refreshDownloadQuality,
+    refreshLoudnessStats,
   } = controller;
+
+  const handleRefresh = useCallback(async () => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        reconcileLibraryTracks({ immediate: true, loadIfUninitialized: true }),
+        loadPlaylists(),
+        refreshCloudLocalState(),
+        refreshDownloadQuality(),
+        refreshLoudnessStats(),
+      ]);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [
+    isRefreshing,
+    refreshCloudLocalState,
+    refreshDownloadQuality,
+    refreshLoudnessStats,
+  ]);
 
   const updateStatusText =
     updateResult == null
@@ -97,6 +125,13 @@ export function SettingsScreen() {
     <ScrollView
       className="flex-1 bg-bg-deep"
       contentContainerStyle={{ paddingBottom: 40 }}
+      refreshControl={(
+        <RefreshControl
+          refreshing={isRefreshing}
+          onRefresh={() => { void handleRefresh(); }}
+          tintColor="#e8e8e8"
+        />
+      )}
     >
       <View className="px-4 pb-4" style={{ paddingTop: topPadding }}>
         <Text className="text-white text-2xl font-bold">{t('title')}</Text>
@@ -178,6 +213,7 @@ export function SettingsScreen() {
           cancelLabel={tc('cancel')}
           title={t('loudnessSection')}
           description={t('loudnessDescription')}
+          disabled={!audioSupport.loudness.analysisSupported}
           failedLabel={loudnessFailedText}
           isAnalyzeDisabled={!audioSupport.loudness.analysisSupported || isAnalyzing || !stats || stats.missing === 0}
           isAnalyzing={isAnalyzing}

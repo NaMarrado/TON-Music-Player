@@ -144,7 +144,7 @@
   "cloudHelpStep9": "После создания токена скопируйте идентификатор ключа доступа в идентификатор ключа доступа TON и секретный ключ доступа в секретный ключ доступа TON. Секрет раскрывается только один раз.",
   "cloudHelpStep10": "Оставьте юрисдикцию по умолчанию, если вы не создали корзину в EU/FedRAMP. Оставьте Prefix как тонну на каждом устройстве, затем сохраните и протестируйте.",
   "cloudResult": "Загрузил {{uploaded}}, скачал {{downloaded}}, пропустил {{skipped}}, плейлисты {{playlists}}.",
-  "cloudProgress": "{{phase}} {{current}}/{{total}} · вверх {{uploaded}} · вниз {{downloaded}} · пропущен {{skipped}} · не удалось {{failed}}",
+  "cloudProgress": "{{phase}} {{current}}/{{total}} · отправлено {{uploaded}} · загружено {{downloaded}} · пропущено {{skipped}} · ошибки {{failed}}",
   "cloudPhase_idle": "Праздный",
   "cloudPhase_testing": "Тестирование",
   "cloudPhase_hashing": "Хеширование",

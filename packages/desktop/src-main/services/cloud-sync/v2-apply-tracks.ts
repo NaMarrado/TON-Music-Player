@@ -162,7 +162,7 @@ export async function applyCloudTracksV2(
             album = ?, album_artist = ?, track_number = ?, disc_number = ?, duration_ms = ?,
             genre = ?, year = ?, bitrate = ?, sample_rate = ?, format = ?, cover_art_path = ?,
             loudness_lufs = ?, loudness_gain = ?, youtube_id = ?, spotify_id = ?,
-            soundcloud_id = ?, source_url = ?, rating = ?, downloaded_at = CASE
+            soundcloud_id = ?, source_url = ?, rating = ?, added_at = ?, downloaded_at = CASE
               WHEN downloaded_at IS NULL THEN ? WHEN ? IS NULL THEN downloaded_at
               ELSE MIN(downloaded_at, ?) END WHERE id = ?
         `).run(
@@ -172,7 +172,8 @@ export async function applyCloudTracksV2(
           entry.metadata.genre, entry.metadata.year, entry.metadata.bitrate, entry.metadata.sample_rate,
           entry.format, coverPath, entry.metadata.loudness_lufs, entry.metadata.loudness_gain,
           entry.youtube_id, entry.spotify_id, entry.soundcloud_id, entry.source_url,
-          entry.metadata.rating, downloadedAt, downloadedAt, downloadedAt, trackId,
+          entry.metadata.rating, entry.added_at,
+          downloadedAt, downloadedAt, downloadedAt, trackId,
         );
       }
     });

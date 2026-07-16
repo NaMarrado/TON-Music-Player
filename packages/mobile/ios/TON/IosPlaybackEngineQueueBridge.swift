@@ -24,6 +24,25 @@ extension IosPlaybackEngine {
     }
   }
 
+  @objc(replaceQueue:startIndex:autoplay:resolver:rejecter:)
+  func replaceQueue(
+    _ tracks: [[String: Any]],
+    startIndex: NSNumber,
+    autoplay: Bool,
+    resolver resolve: @escaping RCTPromiseResolveBlock,
+    rejecter reject: @escaping RCTPromiseRejectBlock
+  ) {
+    let parsedTracks = tracks.compactMap(TONIosPlaybackTrack.init(dictionary:))
+    TONIosPlaybackEngineManager.sharedManager().replaceQueue(
+      parsedTracks,
+      startIndex: startIndex.intValue,
+      autoplay: autoplay
+    ) { error in
+      if let error { reject("ios_playback_replace_queue_failed", error.localizedDescription, error); return }
+      resolve(nil)
+    }
+  }
+
   @objc(add:resolver:rejecter:)
   func add(_ tracks: [[String: Any]], resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
     let parsedTracks = tracks.compactMap(TONIosPlaybackTrack.init(dictionary:))

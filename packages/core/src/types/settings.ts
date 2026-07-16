@@ -27,6 +27,7 @@ export interface SettingsMap {
   cloud_r2_device_id: string;
   cloud_r2_last_revision: string;
   cloud_auto_sync_enabled: boolean;
+  sync_audio_over_cellular: boolean;
   schema_version: string;
 }
 
@@ -55,6 +56,7 @@ export const SETTING_DEFAULTS: SettingsMap = {
   cloud_r2_device_id: '',
   cloud_r2_last_revision: '',
   cloud_auto_sync_enabled: true,
+  sync_audio_over_cellular: false,
   schema_version: '1',
 };
 
@@ -78,5 +80,6 @@ export const PERSISTED_SETTING_DEFAULTS = {
   cloud_r2_device_id: '',
   cloud_r2_last_revision: '',
   cloud_auto_sync_enabled: true,
+  sync_audio_over_cellular: false,
   schema_version: '1',
 } satisfies Omit<SettingsMap, 'volume'>;

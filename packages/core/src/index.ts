@@ -89,7 +89,8 @@ export {
   getVisibleResults,
   getSourceCounts,
 } from './utils/store-helpers';
-export type { SortField, SortOrder } from './utils/store-helpers';
+export type { PlaylistSortField, SortField, SortOrder } from './utils/store-helpers';
+export { getFilteredPlaylistTracks } from './utils/store-helpers';
 
 export {
   detectPlaylistSource,

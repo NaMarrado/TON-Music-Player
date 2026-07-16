@@ -15,7 +15,7 @@ export function handleLibraryHomeSummary(): LibraryHomeSummary {
   ).count;
 
   const recentTracks = queryTrackSnapshots({
-    orderBy: 'ORDER BY t.added_at DESC',
+    orderBy: "ORDER BY t.added_at DESC, COALESCE(t.content_hash_sha256, '') ASC, t.id DESC",
     limit: 12,
   });
 

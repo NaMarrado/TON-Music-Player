@@ -47,7 +47,7 @@ export function queryTrackSnapshots(options: QueryTrackSnapshotsOptions = {}): T
   const {
     whereClause = '',
     params = [],
-    orderBy = 'ORDER BY t.added_at DESC',
+    orderBy = "ORDER BY t.added_at DESC, COALESCE(t.content_hash_sha256, '') ASC, t.id DESC",
     limit,
   } = options;
   const db = getDb();

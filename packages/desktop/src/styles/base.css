@@ -63,15 +63,15 @@ body::after {
 }
 
 ::-webkit-scrollbar { width: var(--desktop-scrollbar-width); }
-::-webkit-scrollbar-track { background: transparent; margin-top: 36px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: var(--bg-hover);
+  background: #3b3b3b;
   border: 3px solid transparent;
   border-right-width: 4px;
   border-radius: 999px;
   background-clip: padding-box;
 }
-::-webkit-scrollbar-thumb:hover { background: var(--bg-active); }
+::-webkit-scrollbar-thumb:hover { background: #555555; }
 .scrollbar-hidden { scrollbar-width: none; }
 .scrollbar-hidden::-webkit-scrollbar { display: none; }
 

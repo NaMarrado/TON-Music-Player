@@ -144,7 +144,7 @@
   "cloudHelpStep9": "Kopiere nach dem Erstellen Access Key ID und Secret Access Key in die entsprechenden TON-Felder. Das Secret wird nur einmal angezeigt.",
   "cloudHelpStep10": "Lass die Region auf Standard, außer der Bucket wurde in EU/FedRAMP erstellt. Verwende auf allen Geräten dasselbe Präfix ton und teste die Verbindung.",
   "cloudResult": "{{uploaded}} hochgeladen, {{downloaded}} heruntergeladen, {{skipped}} übersprungen, {{playlists}} Playlists.",
-  "cloudProgress": "{{phase}} {{current}}/{{total}} · hoch {{uploaded}} · herunter {{downloaded}} · übersprungen {{skipped}} · fehlgeschlagen {{failed}}",
+  "cloudProgress": "{{phase}} {{current}}/{{total}} · hochgeladen {{uploaded}} · heruntergeladen {{downloaded}} · übersprungen {{skipped}} · fehlgeschlagen {{failed}}",
   "cloudPhase_idle": "Inaktiv",
   "cloudPhase_testing": "Wird getestet",
   "cloudPhase_hashing": "Hashes werden berechnet",

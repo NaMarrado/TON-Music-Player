@@ -20,9 +20,11 @@ import {
   getMobileCloudAutoSyncStatus,
   notifyMobileCloudConfigChanged,
   runMobileCloudManualTask,
+  setMobileCloudAudioOverCellular,
   setMobileCloudAutoSyncEnabled,
   subscribeMobileCloudAutoSyncStatus,
 } from '../../services/cloud-sync/auto-sync';
+import { getMobileCloudAudioOverCellularEnabled } from '../../services/cloud-sync/config';
 import { reconcileLibraryTracks } from '../../stores/library-store';
 import { loadPlaylists } from '../../stores/playlist-store';
 
@@ -72,12 +74,36 @@ export function useCloudSyncSettings() {
   const [cloudAutoSyncStatus, setCloudAutoSyncStatus] = useState(
     getMobileCloudAutoSyncStatus,
   );
+  const [cloudAudioOverCellular, setCloudAudioOverCellular] = useState(false);
 
   const updateCloudForm = useCallback((patch: Partial<CloudForm>) => {
     setCloudForm((state) => ({ ...state, ...patch }));
   }, []);
 
+  const refreshCloudLocalState = useCallback(async () => {
+    const [config, audioOverCellular] = await Promise.all([
+      getMobileCloudSyncConfig(),
+      getMobileCloudAudioOverCellularEnabled(),
+    ]);
+    setCloudAudioOverCellular(audioOverCellular);
+    setCloudAutoSyncStatus(getMobileCloudAutoSyncStatus());
+    if (config) {
+      setCloudForm({
+        accountId: config.accountId,
+        bucket: config.bucket,
+        prefix: config.prefix || 'ton',
+        accessKeyId: config.accessKeyId,
+        secretAccessKey: '',
+        jurisdiction: config.jurisdiction,
+      });
+      setCloudHasSecret(config.hasSecretAccessKey);
+    }
+  }, []);
+
   useEffect(() => subscribeMobileCloudAutoSyncStatus(setCloudAutoSyncStatus), []);
+  useEffect(() => {
+    void getMobileCloudAudioOverCellularEnabled().then(setCloudAudioOverCellular);
+  }, []);
 
   const refreshCloudCleanupPreview = useCallback(async () => {
     setCloudCleanupChecking(true);
@@ -245,6 +271,17 @@ export function useCloudSyncSettings() {
     }
   }, [t]);
 
+  const toggleCloudAudioOverCellular = useCallback(async (enabled: boolean) => {
+    setCloudAudioOverCellular(enabled);
+    setCloudError(null);
+    try {
+      await setMobileCloudAudioOverCellular(enabled);
+    } catch (error) {
+      setCloudAudioOverCellular(!enabled);
+      setCloudError(formatCloudError(error, t));
+    }
+  }, [t]);
+
   const cloudCanRun = Boolean(
     cloudForm.accountId
     && cloudForm.bucket
@@ -323,6 +360,7 @@ export function useCloudSyncSettings() {
     cloudCleanupStatus,
     cloudAutoSyncDetailsLabel,
     cloudAutoSyncEnabled: cloudAutoSyncStatus.enabled,
+    cloudAudioOverCellular,
     cloudAutoSyncStatusLabel,
     cloudError,
     cloudForm,
@@ -336,9 +374,11 @@ export function useCloudSyncSettings() {
     fetchCloud: () => void runCloudTask('fetch'),
     loadCloudConfig,
     runCloudCleanup,
+    refreshCloudLocalState,
     saveAndTestCloud,
     syncCloud: () => void runCloudTask('sync'),
     toggleCloudAutoSync,
+    toggleCloudAudioOverCellular,
     updateCloudForm,
     uploadCloudMissing: () => void runCloudTask('upload'),
   };

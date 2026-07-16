@@ -1,5 +1,7 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { ScrollView, Text, View, useWindowDimensions } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { runOnJS } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -35,8 +37,17 @@ export function NowPlayingScreen() {
   const artSize = screenWidth - (ARTWORK_HORIZONTAL_INSET * 2);
 
   const handleSeek = useCallback((value: number) => {
-    seek(value);
+    return seek(value);
   }, []);
+  const handleClose = useCallback(() => navigation.goBack(), [navigation]);
+  const closeGesture = useMemo(() => Gesture.Pan()
+    .activeOffsetY(18)
+    .failOffsetX([-24, 24])
+    .onEnd((event) => {
+      if (event.translationY >= 80 && event.velocityY >= 250) {
+        runOnJS(handleClose)();
+      }
+    }), [handleClose]);
 
   if (!currentTrack) {
     return (
@@ -51,7 +62,7 @@ export function NowPlayingScreen() {
       className="flex-1 bg-bg-deep"
       style={{ paddingTop: insets.top }}
     >
-      <NowPlayingHeader title={t('title')} onBack={() => navigation.goBack()} />
+      <NowPlayingHeader title={t('title')} onBack={handleClose} />
 
       <ScrollView
         bounces={false}
@@ -63,22 +74,26 @@ export function NowPlayingScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View className="flex-grow justify-evenly">
-          <View className="items-center px-10 pt-2">
-            <TrackArtwork coverArtPath={currentTrack.cover_art_path} size={artSize} />
-          </View>
+          <GestureDetector gesture={closeGesture}>
+            <View>
+              <View className="items-center px-10 pt-2">
+                <TrackArtwork coverArtPath={currentTrack.cover_art_path} size={artSize} />
+              </View>
 
-          <View className="px-6 mt-6">
-            <AutoMarqueeText
-              active
-              text={currentTrack.title ?? tc('unknown_title')}
-              className="text-white text-xl font-bold"
-            />
-            <AutoMarqueeText
-              active
-              text={currentTrack.artist ?? tc('unknown_artist')}
-              className="text-text-secondary text-base mt-1"
-            />
-          </View>
+              <View className="px-6 mt-6">
+                <AutoMarqueeText
+                  active
+                  text={currentTrack.title ?? tc('unknown_title')}
+                  className="text-white text-xl font-bold"
+                />
+                <AutoMarqueeText
+                  active
+                  text={currentTrack.artist ?? tc('unknown_artist')}
+                  className="text-text-secondary text-base mt-1"
+                />
+              </View>
+            </View>
+          </GestureDetector>
 
           <ProgressSection position={position} duration={duration} onSeekComplete={handleSeek} />
           <PlaybackControls isPlaying={isPlaying} shuffle={shuffle} repeat={repeat} />

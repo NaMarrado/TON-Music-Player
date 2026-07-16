@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
-import { FlashList } from '@shopify/flash-list';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Keyboard, Pressable, RefreshControl, Text, View } from 'react-native';
+import { FlashList, type ListRenderItemInfo } from '@shopify/flash-list';
+import type { PlaylistTrackEntry } from '@ton/core';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import type { PlaylistParams } from '../../types/navigation';
@@ -9,7 +10,11 @@ import { TrackRow } from '../../components/track-row';
 import { EmptyState } from '../../components/empty-state';
 import { EditPlaylistModal } from '../../components/edit-playlist-modal';
 import { LibraryTransferProgressModal } from '../../components/library-transfer-progress-modal';
-import { useScreenTopPadding } from '../../hooks/use-screen-top-padding';
+import { SearchInput } from '../../components/search-input';
+import {
+  MobileFastScroller,
+  useMobileFastScroll,
+} from '../../components/mobile-fast-scroller';
 import { PlaylistHero } from './playlist-hero';
 import { PlaylistReorderControls, PlaylistTrackNumber } from './playlist-reorder-controls';
 import { PlaylistSelectionToolbar } from './playlist-selection-toolbar';
@@ -22,8 +27,8 @@ export function PlaylistScreen({ route }: Props) {
   const { t } = useTranslation('playlist');
   const { t: tc } = useTranslation('common');
   const navigation = useNavigation();
-  const topPadding = useScreenTopPadding(24);
   const [showActionsMenu, setShowActionsMenu] = useState(false);
+  const [showSortMenu, setShowSortMenu] = useState(false);
   const [reorderMode, setReorderMode] = useState(false);
   const {
     clearSelection,
@@ -35,13 +40,17 @@ export function PlaylistScreen({ route }: Props) {
     handlePlaySelection,
     handlePlayAll,
     handleMoveTrack,
+    handleRefresh,
     isExportingBundle,
     isImportingBundle,
     isLoading,
+    isRefreshing,
+    isOriginalOrder,
     loadError,
     playlist,
     selectedPlaylistTrackIds,
     selectedPlaylistTrackIdSet,
+    selectionRevision,
     setShowEditModal,
     showEditModal,
     selectionActive,
@@ -51,19 +60,31 @@ export function PlaylistScreen({ route }: Props) {
     totalDurationLabel,
     transferProgress,
     tracks,
+    sourceTrackCount,
+    filterQuery,
+    setFilterQuery,
+    applySort,
+    sortBy,
+    sortOrder,
   } = usePlaylistScreen(id, navigation);
+  const fastScroll = useMobileFastScroll<PlaylistTrackEntry>();
 
   useEffect(() => {
-    if ((selectionActive || tracks.length < 2) && reorderMode) {
+    if ((selectionActive || sourceTrackCount < 2 || !isOriginalOrder) && reorderMode) {
       setReorderMode(false);
     }
-  }, [reorderMode, selectionActive, tracks.length]);
+  }, [isOriginalOrder, reorderMode, selectionActive, sourceTrackCount]);
 
   const playlistActions = useMemo<ActionSheetOption[]>(() => [
     {
+      label: t('sortTracks'),
+      icon: 'sliders',
+      onPress: () => setShowSortMenu(true),
+    },
+    {
       label: t('reorderTracks'),
       icon: 'list',
-      disabled: tracks.length < 2 || selectionActive,
+      disabled: sourceTrackCount < 2 || selectionActive || !isOriginalOrder,
       onPress: () => setReorderMode(true),
     },
     {
@@ -95,6 +116,89 @@ export function PlaylistScreen({ route }: Props) {
     t,
     setShowEditModal,
     selectionActive,
+    isOriginalOrder,
+    sourceTrackCount,
+  ]);
+
+  const sortActions = useMemo<ActionSheetOption[]>(() => ([
+    { field: null, key: 'sortOriginal' },
+    { field: '#', key: 'sortPosition' },
+    { field: 'title', key: 'sortTitle' },
+    { field: 'artist', key: 'sortArtist' },
+    { field: 'downloaded_at', key: 'sortDownloaded' },
+    { field: 'time', key: 'sortDuration' },
+  ] as const).map(({ field, key }) => ({
+    label: `${t(key)}${sortBy === field ? (sortOrder === 'asc' ? ' ↑' : ' ↓') : ''}`,
+    icon: sortBy === field ? 'check' : 'minus',
+    onPress: () => applySort(field),
+  })), [applySort, sortBy, sortOrder, t]);
+
+  const listHeader = useMemo(() => playlist ? (
+    <>
+      <PlaylistHero
+        name={playlist.name}
+        coverPath={playlist.cover_path}
+        metaText={totalDurationLabel}
+        showPlayAll={tracks.length > 0}
+        playAllLabel={t('playAll')}
+        editLabel={t('editPlaylist')}
+        actionsDisabled={isImportingBundle || isExportingBundle}
+        topSpacing={selectionActive || reorderMode ? 12 : 8}
+        onPlayAll={handlePlayAll}
+        onOpenActions={() => setShowActionsMenu(true)}
+      />
+      <View className="pb-3">
+        <SearchInput
+          value={filterQuery}
+          onChangeText={setFilterQuery}
+          placeholder={t('filterPlaceholder')}
+        />
+      </View>
+    </>
+  ) : null, [
+    filterQuery,
+    handlePlayAll,
+    isExportingBundle,
+    isImportingBundle,
+    playlist,
+    reorderMode,
+    selectionActive,
+    setFilterQuery,
+    t,
+    totalDurationLabel,
+    tracks.length,
+  ]);
+
+  const renderTrack = useCallback(({ item, index }: ListRenderItemInfo<PlaylistTrackEntry>) => (
+    <TrackRow
+      track={item}
+      selected={selectedPlaylistTrackIdSet.has(item.playlist_track_id)}
+      selectionMode={selectionActive && !reorderMode}
+      disabled={reorderMode}
+      leadingAccessory={reorderMode ? <PlaylistTrackNumber index={index} /> : undefined}
+      rightAccessory={reorderMode ? (
+        <PlaylistReorderControls
+          isFirst={index === 0}
+          isLast={index === tracks.length - 1}
+          moveDownLabel={t('moveTrackDown')}
+          moveUpLabel={t('moveTrackUp')}
+          onMoveDown={() => { void handleMoveTrack(item.playlist_track_id, 1); }}
+          onMoveUp={() => { void handleMoveTrack(item.playlist_track_id, -1); }}
+        />
+      ) : undefined}
+      onPress={() => {
+        if (!reorderMode) handleTrackPress(item, index);
+      }}
+      onLongPress={reorderMode ? undefined : () => handleTrackLongPress(item)}
+    />
+  ), [
+    handleMoveTrack,
+    handleTrackLongPress,
+    handleTrackPress,
+    reorderMode,
+    selectedPlaylistTrackIdSet,
+    selectionActive,
+    t,
     tracks.length,
   ]);
 
@@ -148,58 +252,54 @@ export function PlaylistScreen({ route }: Props) {
         </View>
       )}
 
-      <FlashList
-        data={tracks}
-        keyExtractor={(item) => String(item.playlist_track_id)}
-        estimatedItemSize={56}
-        extraData={{ reorderMode, selectedPlaylistTrackIds }}
-        renderItem={({ item, index }) => (
-          <TrackRow
-            track={item}
-            selected={selectedPlaylistTrackIdSet.has(item.playlist_track_id)}
-            selectionMode={selectionActive && !reorderMode}
-            disabled={reorderMode}
-            leadingAccessory={reorderMode ? <PlaylistTrackNumber index={index} /> : undefined}
-            rightAccessory={reorderMode ? (
-              <PlaylistReorderControls
-                isFirst={index === 0}
-                isLast={index === tracks.length - 1}
-                moveDownLabel={t('moveTrackDown')}
-                moveUpLabel={t('moveTrackUp')}
-                onMoveDown={() => { void handleMoveTrack(item.playlist_track_id, 1); }}
-                onMoveUp={() => { void handleMoveTrack(item.playlist_track_id, -1); }}
-              />
-            ) : undefined}
-            onPress={() => {
-              if (!reorderMode) {
-                handleTrackPress(item, index);
-              }
-            }}
-            onLongPress={reorderMode ? undefined : () => handleTrackLongPress(item)}
-          />
-        )}
-        ListHeaderComponent={playlist ? (
-          <PlaylistHero
-            name={playlist.name}
-            coverPath={playlist.cover_path}
-            metaText={totalDurationLabel}
-            showPlayAll={tracks.length > 0}
-            playAllLabel={t('playAll')}
-            editLabel={t('editPlaylist')}
-            actionsDisabled={isImportingBundle || isExportingBundle}
-            topSpacing={selectionActive || reorderMode ? 24 : topPadding}
-            onPlayAll={handlePlayAll}
-            onOpenActions={() => setShowActionsMenu(true)}
-          />
-        ) : null}
-        ListEmptyComponent={isLoading || !hasLoaded ? null : <EmptyState message={t('emptyPlaylist')} />}
-      />
+      <View className="flex-1" onLayout={fastScroll.onLayout}>
+        <FlashList
+          ref={fastScroll.listRef}
+          data={tracks}
+          keyExtractor={(item) => String(item.playlist_track_id)}
+          estimatedItemSize={56}
+          drawDistance={650}
+          extraData={`${selectionRevision}:${reorderMode ? 1 : 0}`}
+          keyboardDismissMode="on-drag"
+          keyboardShouldPersistTaps="handled"
+          onContentSizeChange={fastScroll.onContentSizeChange}
+          onScroll={fastScroll.onScroll}
+          onScrollBeginDrag={Keyboard.dismiss}
+          scrollEventThrottle={32}
+          refreshControl={(
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={() => { void handleRefresh(); }}
+              tintColor="#e8e8e8"
+            />
+          )}
+          renderItem={renderTrack}
+          ListHeaderComponent={listHeader}
+          ListEmptyComponent={isLoading || !hasLoaded
+            ? null
+            : <EmptyState message={filterQuery ? t('noResults') : t('emptyPlaylist')} />}
+        />
+        <MobileFastScroller
+          contentHeight={fastScroll.contentHeight}
+          itemCount={tracks.length}
+          onScrollToOffset={fastScroll.scrollToOffset}
+          scrollOffset={fastScroll.scrollOffset}
+          viewportHeight={fastScroll.viewportHeight}
+        />
+      </View>
 
       <ActionSheet
         visible={showActionsMenu}
         title={playlist?.name}
         options={playlistActions}
         onClose={() => setShowActionsMenu(false)}
+      />
+
+      <ActionSheet
+        visible={showSortMenu}
+        title={t('sortTracks')}
+        options={sortActions}
+        onClose={() => setShowSortMenu(false)}
       />
 
       {playlist && (

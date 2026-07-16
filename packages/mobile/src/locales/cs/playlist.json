@@ -33,5 +33,14 @@
   "playlistName": "Název playlistu",
   "playlistDescription": "Popis",
   "playlistDescriptionPlaceholder": "Přidej popis...",
-  "playlistUpdated": "Playlist aktualizován"
+  "playlistUpdated": "Playlist aktualizován",
+  "sortTracks": "Seřadit skladby",
+  "sortOriginal": "Původní pořadí",
+  "sortPosition": "Pozice",
+  "sortTitle": "Název",
+  "sortArtist": "Interpret",
+  "sortDownloaded": "Staženo",
+  "sortDuration": "Délka",
+  "filterPlaceholder": "Filtrovat skladby...",
+  "noResults": "Žádné odpovídající skladby"
 }

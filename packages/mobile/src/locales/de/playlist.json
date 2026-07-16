@@ -33,5 +33,14 @@
   "playlistName": "Name der Playlist",
   "playlistDescription": "Beschreibung",
   "playlistDescriptionPlaceholder": "Beschreibung hinzufügen...",
-  "playlistUpdated": "Playlist aktualisiert"
+  "playlistUpdated": "Playlist aktualisiert",
+  "sortTracks": "Titel sortieren",
+  "sortOriginal": "Ursprüngliche Reihenfolge",
+  "sortPosition": "Position",
+  "sortTitle": "Titel",
+  "sortArtist": "Interpret",
+  "sortDownloaded": "Heruntergeladen",
+  "sortDuration": "Dauer",
+  "filterPlaceholder": "Titel filtern...",
+  "noResults": "Keine passenden Titel"
 }

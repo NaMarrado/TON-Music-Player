@@ -64,12 +64,36 @@ extension TONIosPlaybackEngineManager {
     DispatchQueue.main.async { self.eventSink?(payload) }
   }
 
+  func emitPlaybackState() {
+    var payload: [String: Any] = ["state": state]
+    if let currentIndex, currentIndex >= 0, currentIndex < queue.count {
+      payload["trackId"] = queue[currentIndex].id
+    }
+    emitEvent(type: "playback-state", extra: payload)
+  }
+
+  func emitActiveTrack() {
+    guard let currentIndex,
+          currentIndex >= 0,
+          currentIndex < queue.count else { return }
+    emitEvent(
+      type: "playback-active-track-changed",
+      extra: ["index": currentIndex, "track": queue[currentIndex].asDictionary()]
+    )
+  }
+
+  func emitPlaybackSnapshot() {
+    emitActiveTrack()
+    emitPlaybackState()
+  }
+
   func failPlayback(_ error: Error) {
     scheduleToken += 1
     if engineConfigured { playerNode.stop() }
     state = "error"
     updateNowPlayingInfo()
     deactivateAudioSessionIfNeeded()
+    emitPlaybackState()
     emitEvent(type: "playback-error", extra: ["message": error.localizedDescription])
   }
 
@@ -85,5 +109,6 @@ extension TONIosPlaybackEngineManager {
     if !keepQueue { queue = [] }
     updateNowPlayingInfo()
     deactivateAudioSessionIfNeeded()
+    emitPlaybackState()
   }
 }

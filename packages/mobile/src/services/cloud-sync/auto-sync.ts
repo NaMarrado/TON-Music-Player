@@ -7,8 +7,10 @@ import type {
 } from '@ton/core';
 import {
   getMobileCloudAutoSyncEnabled,
+  getMobileCloudAudioOverCellularEnabled,
   getMobileCloudConfig,
   setMobileCloudAutoSyncEnabled as persistMobileCloudAutoSyncEnabled,
+  setMobileCloudAudioOverCellularEnabled as persistMobileCloudAudioOverCellularEnabled,
 } from './config';
 import {
   ensureMobileCloudScope,
@@ -49,11 +51,13 @@ export async function startMobileCloudAutoSync(): Promise<void> {
   runtime.initialized = true;
   try {
     await recoverMobileCloudControl();
-    const [enabled, config, initialNetwork] = await Promise.all([
-      getMobileCloudAutoSyncEnabled(), getMobileCloudConfig(), NetInfo.fetch(),
+    const [enabled, audioOverCellular, config, initialNetwork] = await Promise.all([
+      getMobileCloudAutoSyncEnabled(), getMobileCloudAudioOverCellularEnabled(),
+      getMobileCloudConfig(), NetInfo.fetch(),
     ]);
     runtime.networkOnline = isOnline(initialNetwork);
     runtime.unmeteredNetwork = isUnmetered(initialNetwork);
+    runtime.audioOverCellular = audioOverCellular;
     runtime.configuredContextCache = config
       ? { config, scopeId: await ensureMobileCloudScope(config) }
       : null;
@@ -130,6 +134,15 @@ export async function setMobileCloudAutoSyncEnabled(enabled: boolean): Promise<v
   emitStatus();
 }
 
+export async function setMobileCloudAudioOverCellular(enabled: boolean): Promise<void> {
+  await persistMobileCloudAudioOverCellularEnabled(enabled);
+  runtime.audioOverCellular = enabled;
+  emitStatus();
+  if (enabled && runtime.networkOnline && runtime.appState === 'active') {
+    await runtime.coordinator?.runNow('auto').catch(() => {});
+  }
+}
+
 export async function notifyMobileCloudConfigChanged(): Promise<void> {
   const restartForeground = runtime.foregroundStarted;
   const previousScopeId = runtime.configuredContextCache?.scopeId ?? null;
@@ -200,8 +213,9 @@ export function cancelMobileCloudAutoSyncRun(): void {
 
 export async function runMobileCloudBackgroundSync(): Promise<void> {
   await recoverMobileCloudControl();
-  const [enabled, config, network] = await Promise.all([
-    getMobileCloudAutoSyncEnabled(), getMobileCloudConfig(), NetInfo.fetch(),
+  const [enabled, audioOverCellular, config, network] = await Promise.all([
+    getMobileCloudAutoSyncEnabled(), getMobileCloudAudioOverCellularEnabled(),
+    getMobileCloudConfig(), NetInfo.fetch(),
   ]);
   if (!enabled || !config || !isOnline(network)) return;
   const scopeId = await ensureMobileCloudScope(config);
@@ -210,5 +224,6 @@ export async function runMobileCloudBackgroundSync(): Promise<void> {
   runtime.configuredContextCache = { config, scopeId };
   runtime.networkOnline = true;
   runtime.unmeteredNetwork = isUnmetered(network);
+  runtime.audioOverCellular = audioOverCellular;
   await runBackgroundCycle();
 }

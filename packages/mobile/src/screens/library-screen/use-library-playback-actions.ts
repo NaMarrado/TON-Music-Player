@@ -1,11 +1,12 @@
 import { useCallback } from 'react';
-import type { Track } from '@ton/core';
+import type { PlaybackQueueSourceDescriptor, Track } from '@ton/core';
 import { playTracks } from '../../services/playback-bridge';
 
 export function useLibraryPlaybackActions(
   displayTracks: Track[],
   selectedTracks: Track[],
   clearSelection: () => void,
+  queueSource: PlaybackQueueSourceDescriptor,
 ) {
   const handleTrackPress = useCallback((track: Track, selectionActive: boolean, toggleSelection: (trackId: number) => void) => {
     if (selectionActive) {
@@ -15,9 +16,9 @@ export function useLibraryPlaybackActions(
 
     const currentIndex = displayTracks.findIndex((currentTrack) => currentTrack.id === track.id);
     if (currentIndex >= 0) {
-      playTracks(displayTracks, currentIndex);
+      playTracks(displayTracks, currentIndex, queueSource);
     }
-  }, [displayTracks]);
+  }, [displayTracks, queueSource]);
 
   const handleTrackLongPress = useCallback((track: Track, toggleSelection: (trackId: number) => void) => {
     toggleSelection(track.id);
@@ -28,19 +29,19 @@ export function useLibraryPlaybackActions(
       return;
     }
 
-    playTracks(selectedTracks, 0);
+    playTracks(selectedTracks, 0, { kind: 'selection' });
     clearSelection();
   }, [clearSelection, selectedTracks]);
 
   const handlePlay = useCallback((index: number) => {
-    playTracks(displayTracks, index);
-  }, [displayTracks]);
+    playTracks(displayTracks, index, queueSource);
+  }, [displayTracks, queueSource]);
 
   const handlePlayAll = useCallback(() => {
     if (displayTracks.length > 0) {
-      playTracks(displayTracks, 0);
+      playTracks(displayTracks, 0, queueSource);
     }
-  }, [displayTracks]);
+  }, [displayTracks, queueSource]);
 
   return {
     handlePlay,

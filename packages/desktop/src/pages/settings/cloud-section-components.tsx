@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { CloudAutoSyncStatus, CloudR2CleanupPreview } from '@ton/core';
 import { Dialog } from '../../components/ui/dialog';
 import type { Translator } from './cloud-section-types';
@@ -16,6 +17,8 @@ export function CloudField({
   type?: 'password' | 'text';
   value: string;
 }) {
+  const [revealed, setRevealed] = useState(false);
+  const masked = type === 'password';
   return (
     <label style={{ display: 'block' }}>
       <span style={{
@@ -24,18 +27,33 @@ export function CloudField({
       }}>
         {label}
       </span>
-      <input
-        type={type}
-        className="w-full outline-none"
-        placeholder={placeholder}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        style={{
-          background: 'var(--bg-deep)', border: '1px solid var(--border)',
-          borderRadius: 'var(--radius)', padding: '9px 12px',
-          color: 'var(--text-primary)', fontFamily: 'inherit', fontSize: '0.82rem',
-        }}
-      />
+      <span style={{ display: 'flex', position: 'relative' }}>
+        <input
+          type={masked && !revealed ? 'password' : 'text'}
+          className="w-full outline-none"
+          placeholder={placeholder}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          style={{
+            background: 'var(--bg-deep)', border: '1px solid var(--border)',
+            borderRadius: 'var(--radius)', padding: masked ? '9px 40px 9px 12px' : '9px 12px',
+            color: 'var(--text-primary)', fontFamily: 'inherit', fontSize: '0.82rem',
+          }}
+        />
+        {masked && (
+          <button
+            type="button"
+            aria-label={revealed ? 'Hide value' : 'Show value'}
+            onClick={() => setRevealed((current) => !current)}
+            style={{
+              background: 'transparent', border: 0, color: 'var(--text-secondary)',
+              cursor: 'pointer', height: '100%', padding: '0 12px', position: 'absolute', right: 0,
+            }}
+          >
+            {revealed ? '×' : '○'}
+          </button>
+        )}
+      </span>
     </label>
   );
 }

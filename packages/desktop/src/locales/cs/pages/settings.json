@@ -144,7 +144,7 @@
   "cloudHelpStep9": "Po vytvoření tokenu zkopíruj Access Key ID do TON Access Key ID a Secret Access Key do TON Secret Access Key. Secret se ukáže jen jednou.",
   "cloudHelpStep10": "Jurisdikci nech Výchozí, pokud jsi bucket nevytvořil v EU/FedRAMP. Prefix nech ton na všech zařízeních, pak Uložit a otestovat.",
   "cloudResult": "Nahráno {{uploaded}}, staženo {{downloaded}}, přeskočeno {{skipped}}, playlisty {{playlists}}.",
-  "cloudProgress": "{{phase}} {{current}}/{{total}} · up {{uploaded}} · down {{downloaded}} · skipped {{skipped}} · failed {{failed}}",
+  "cloudProgress": "{{phase}} {{current}}/{{total}} · nahráno {{uploaded}} · staženo {{downloaded}} · přeskočeno {{skipped}} · selhalo {{failed}}",
   "cloudPhase_idle": "Nečinné",
   "cloudPhase_testing": "Testuji",
   "cloudPhase_hashing": "Hashuji",

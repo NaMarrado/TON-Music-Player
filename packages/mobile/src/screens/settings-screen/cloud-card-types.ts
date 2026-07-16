@@ -20,6 +20,9 @@ export type CloudCardProps = {
   autoSyncEnabled: boolean;
   autoSyncLabel: string;
   autoSyncStatusLabel: string;
+  audioOverCellularDescription: string;
+  audioOverCellularEnabled: boolean;
+  audioOverCellularLabel: string;
   canRun: boolean;
   connectedLabel: string | null;
   cleanupChecking: boolean;
@@ -46,6 +49,7 @@ export type CloudCardProps = {
   onSaveTest: () => void;
   onSync: () => void;
   onToggleAutoSync: (enabled: boolean) => void;
+  onToggleAudioOverCellular: (enabled: boolean) => void;
   onUpdate: (patch: Partial<CloudForm>) => void;
   onUpload: () => void;
   title: string;

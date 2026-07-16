@@ -33,5 +33,14 @@
   "playlistName": "Название плейлиста",
   "playlistDescription": "Описание",
   "playlistDescriptionPlaceholder": "Добавить описание...",
-  "playlistUpdated": "Плейлист обновлен"
+  "playlistUpdated": "Плейлист обновлен",
+  "sortTracks": "Сортировать треки",
+  "sortOriginal": "Исходный порядок",
+  "sortPosition": "Позиция",
+  "sortTitle": "Название",
+  "sortArtist": "Исполнитель",
+  "sortDownloaded": "Загружено",
+  "sortDuration": "Длительность",
+  "filterPlaceholder": "Фильтр треков...",
+  "noResults": "Подходящих треков нет"
 }

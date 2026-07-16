@@ -33,5 +33,14 @@
   "playlistName": "اسم قائمة التشغيل",
   "playlistDescription": "وصف",
   "playlistDescriptionPlaceholder": "إضافة وصف...",
-  "playlistUpdated": "تم تحديث قائمة التشغيل"
+  "playlistUpdated": "تم تحديث قائمة التشغيل",
+  "sortTracks": "ترتيب المقاطع",
+  "sortOriginal": "الترتيب الأصلي",
+  "sortPosition": "الموضع",
+  "sortTitle": "العنوان",
+  "sortArtist": "الفنان",
+  "sortDownloaded": "تاريخ التنزيل",
+  "sortDuration": "المدة",
+  "filterPlaceholder": "تصفية المقاطع...",
+  "noResults": "لا توجد مقاطع مطابقة"
 }

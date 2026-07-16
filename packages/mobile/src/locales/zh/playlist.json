@@ -33,5 +33,14 @@
   "playlistName": "播放列表名称",
   "playlistDescription": "描述",
   "playlistDescriptionPlaceholder": "添加描述...",
-  "playlistUpdated": "播放列表已更新"
+  "playlistUpdated": "播放列表已更新",
+  "sortTracks": "歌曲排序",
+  "sortOriginal": "原始顺序",
+  "sortPosition": "位置",
+  "sortTitle": "标题",
+  "sortArtist": "艺术家",
+  "sortDownloaded": "下载时间",
+  "sortDuration": "时长",
+  "filterPlaceholder": "筛选歌曲...",
+  "noResults": "没有匹配的歌曲"
 }

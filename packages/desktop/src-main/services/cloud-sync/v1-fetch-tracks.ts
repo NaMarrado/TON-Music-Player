@@ -28,8 +28,15 @@ export async function fetchV1Tracks(
     WHERE content_hash_sha256 IS NOT NULL AND content_hash_sha256 != '' ORDER BY id ASC
   `).all() as Array<{ id: number; content_hash_sha256: string }>;
   const trackIdByHash = new Map(existingRows.map((row) => [row.content_hash_sha256, row.id]));
-  const fillMissingDownloadedAt = db.prepare(`
-    UPDATE tracks SET downloaded_at = ? WHERE id = ? AND downloaded_at IS NULL
+  const reconcileExistingTimestamps = db.prepare(`
+    UPDATE tracks SET
+      added_at = ?,
+      downloaded_at = CASE
+        WHEN downloaded_at IS NULL THEN ?
+        WHEN ? IS NULL THEN downloaded_at
+        ELSE MIN(downloaded_at, ?)
+      END
+    WHERE id = ?
   `);
   await fs.promises.mkdir(getLibraryDir(), { recursive: true });
 
@@ -40,7 +47,13 @@ export async function fetchV1Tracks(
     const existingTrackId = trackIdByHash.get(track.content_hash_sha256);
     if (existingTrackId != null) {
       const downloadedAt = normalizeDownloadedAt(track.downloaded_at);
-      if (downloadedAt != null) fillMissingDownloadedAt.run(downloadedAt, existingTrackId);
+      reconcileExistingTimestamps.run(
+        track.added_at,
+        downloadedAt,
+        downloadedAt,
+        downloadedAt,
+        existingTrackId,
+      );
       result.skipped += 1;
     } else {
       const destinationPath = await findNonCollidingFileAsync(getLibraryDir(), buildImportedFileName(track));
@@ -58,8 +71,8 @@ export async function fetchV1Tracks(
           title, artist, album, album_artist, track_number, disc_number,
           duration_ms, genre, year, bitrate, sample_rate, format, cover_art_path,
           loudness_lufs, loudness_gain, youtube_id, spotify_id, soundcloud_id, source_url,
-          rating, downloaded_at, in_library
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          rating, downloaded_at, added_at, in_library
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         destinationPath, null, track.content_hash_sha256, destinationStats.size, null,
         track.metadata.title, track.metadata.artist, track.metadata.album, track.metadata.album_artist,
@@ -67,7 +80,7 @@ export async function fetchV1Tracks(
         track.metadata.genre, track.metadata.year, track.metadata.bitrate, track.metadata.sample_rate,
         track.format, coverPath, track.metadata.loudness_lufs, track.metadata.loudness_gain,
         track.youtube_id, track.spotify_id, track.soundcloud_id, track.source_url,
-        track.metadata.rating, normalizeDownloadedAt(track.downloaded_at), 1,
+        track.metadata.rating, normalizeDownloadedAt(track.downloaded_at), track.added_at, 1,
       );
       trackIdByHash.set(track.content_hash_sha256, Number(insertResult.lastInsertRowid));
       result.downloaded += 1;

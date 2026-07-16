@@ -31,6 +31,7 @@ import {
 
 type ExistingCloudTrack = {
   id: number;
+  added_at: number;
   content_hash_sha256: string;
   downloaded_at: number | null;
   in_library: number;
@@ -144,7 +145,7 @@ async function updateExistingTrack(input: {
         disc_number = ?, duration_ms = ?, genre = ?, year = ?, bitrate = ?,
         sample_rate = ?, file_size = ?, format = ?, cover_art_path = ?,
         loudness_lufs = ?, loudness_gain = ?, youtube_id = ?, spotify_id = ?,
-        soundcloud_id = ?, source_url = ?, rating = ?, downloaded_at = ?, in_library = 1
+        soundcloud_id = ?, source_url = ?, rating = ?, added_at = ?, downloaded_at = ?, in_library = 1
        WHERE id = ?`,
       [
         audio.filePath, track.metadata.title, track.metadata.artist, track.metadata.album,
@@ -153,7 +154,7 @@ async function updateExistingTrack(input: {
         track.metadata.year, track.metadata.bitrate, track.metadata.sample_rate,
         audio.fileSize, audio.format, artwork.coverPath, track.metadata.loudness_lufs,
         track.metadata.loudness_gain, track.youtube_id, track.spotify_id,
-        track.soundcloud_id, track.source_url, track.metadata.rating,
+        track.soundcloud_id, track.source_url, track.metadata.rating, track.added_at,
         reconciledDownloadedAt, existing.id,
       ],
     );
@@ -222,6 +223,7 @@ async function insertMissingTrack(input: {
       source_url: track.source_url,
       last_played_at: null,
       rating: track.metadata.rating,
+      added_at: track.added_at,
       downloaded_at: normalizeDownloadedAt(track.downloaded_at),
       in_library: 1,
     }, db);
@@ -240,13 +242,14 @@ export async function fetchV1Tracks(input: {
   abortSignal?: AbortSignal;
   applyProtection?: CloudFetchApplyProtection;
   failureContext?: MobileCloudDownloadFailureContext;
+  onTrackImported?: (contentHash: string, trackId: number) => Promise<void>;
 }): Promise<Map<string, number>> {
   const {
     client, manifest, result, onProgress, shouldCancel, abortSignal,
-    applyProtection, failureContext,
+    applyProtection, failureContext, onTrackImported,
   } = input;
   const rows = await getDb().getAllAsync<ExistingCloudTrack>(
-    `SELECT id, content_hash_sha256, downloaded_at, in_library, cover_art_path,
+    `SELECT id, content_hash_sha256, added_at, downloaded_at, in_library, cover_art_path,
             file_path, file_size, format
      FROM tracks WHERE content_hash_sha256 IS NOT NULL AND content_hash_sha256 != ''
      ORDER BY id ASC`,
@@ -293,6 +296,7 @@ export async function fetchV1Tracks(input: {
         trackIdByHash.set(track.content_hash_sha256, inserted.id);
         existingByHash.set(track.content_hash_sha256, {
           id: inserted.id,
+          added_at: track.added_at,
           content_hash_sha256: track.content_hash_sha256,
           downloaded_at: normalizeDownloadedAt(track.downloaded_at),
           in_library: 1,
@@ -303,6 +307,7 @@ export async function fetchV1Tracks(input: {
         });
         result.downloaded += 1;
         result.importedTracks += 1;
+        await onTrackImported?.(track.content_hash_sha256, inserted.id);
         if (inserted.assetFailed) result.failed += 1;
       }
       if (failureContext) {
@@ -323,6 +328,13 @@ export async function fetchV1Tracks(input: {
         message: track.metadata.title ?? undefined,
       });
     }
+    if ((index + 1) % 8 === 0) {
+      await yieldToUi();
+    }
   }
   return trackIdByHash;
+}
+
+function yieldToUi(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 0));
 }

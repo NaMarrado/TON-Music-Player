@@ -17,7 +17,14 @@ export type {
 } from './playlist-import';
 export type { Album } from './album';
 export type { Artist } from './artist';
-export type { QueueItem, QueueSource, QueueState, RepeatMode } from './queue';
+export type {
+  PlaybackQueueSourceDescriptor,
+  PlaybackQueueSourceKind,
+  QueueItem,
+  QueueSource,
+  QueueState,
+  RepeatMode,
+} from './queue';
 export type {
   DownloadItem,
   DownloadSource,

@@ -57,6 +57,7 @@ export function useLoudnessAnalysis() {
     failedCount,
     isAnalyzing,
     progress,
+    refreshLoudnessStats: loadStats,
     stats,
   };
 }

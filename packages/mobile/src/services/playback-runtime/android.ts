@@ -8,6 +8,7 @@ import type {
   PlaybackRuntimeEventPayload,
   PlaybackRuntimeEventType,
   PlaybackRuntimeProgress,
+  PlaybackRuntimeQueueOptions,
   PlaybackRuntimeStateSnapshot,
   PlaybackRuntimeTrack,
   PlaybackRuntimeUpdateOptions,
@@ -47,6 +48,22 @@ export async function configureDefaultPlaybackRuntimeOptions(): Promise<void> {
 
 export async function setPlaybackQueue(tracks: PlaybackRuntimeTrack[]): Promise<void> {
   await TrackPlayer.setQueue(tracks);
+}
+
+export async function replacePlaybackQueue(
+  tracks: PlaybackRuntimeTrack[],
+  options: PlaybackRuntimeQueueOptions,
+): Promise<void> {
+  await TrackPlayer.setQueue(tracks);
+  if (!tracks.length) return;
+
+  const startIndex = Math.max(0, Math.min(options.startIndex, tracks.length - 1));
+  if (startIndex > 0) {
+    await TrackPlayer.skip(startIndex);
+  }
+  if (options.autoplay) {
+    await TrackPlayer.play();
+  }
 }
 
 export async function addPlaybackTracks(tracks: PlaybackRuntimeTrack[]): Promise<void> {

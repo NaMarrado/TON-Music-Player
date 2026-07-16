@@ -7,7 +7,7 @@ import {
   playPlayback,
   removeUpcomingPlaybackTracks,
   seekPlayback,
-  setPlaybackQueue,
+  replacePlaybackQueue,
   skipPlaybackIndex,
 } from '../playback-runtime';
 import { incrementPlayCount } from './player-runtime';
@@ -47,14 +47,13 @@ export async function syncRntpQueue(items: QueueTrackRef[]): Promise<void> {
   const wasPlaying = usePlaybackStore.getState().isPlaying;
   const prevPosition = await getPlaybackPosition().catch(() => 0);
 
-  await setPlaybackQueue(ordered);
+  await replacePlaybackQueue(ordered, {
+    autoplay: wasPlaying,
+    startIndex: currentIndex,
+  });
   if (currentIndex >= 0 && currentIndex < ordered.length) {
-    await skipPlaybackIndex(currentIndex);
     if (prevPosition > 0) {
       await seekPlayback(prevPosition);
-    }
-    if (wasPlaying) {
-      await playPlayback();
     }
   }
 }

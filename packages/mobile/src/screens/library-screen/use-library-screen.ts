@@ -28,6 +28,7 @@ export function useLibraryScreen() {
 
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -45,17 +46,23 @@ export function useLibraryScreen() {
     () => getFilteredTracks(tracks, filterQuery, sortBy, sortOrder),
     [tracks, filterQuery, sortBy, sortOrder],
   );
-  const selection = useLibrarySelection(displayTracks);
+  const queueSource = useMemo(() => ({
+    kind: 'library' as const,
+    filter_query: filterQuery || undefined,
+    sort_by: sortBy,
+    sort_order: sortOrder,
+  }), [filterQuery, sortBy, sortOrder]);
+  const selection = useLibrarySelection(displayTracks, queueSource);
 
   const handlePlay = useCallback((index: number) => {
-    playTracks(displayTracks, index);
-  }, [displayTracks]);
+    playTracks(displayTracks, index, queueSource);
+  }, [displayTracks, queueSource]);
 
   const handlePlayAll = useCallback(() => {
     if (displayTracks.length > 0) {
-      playTracks(displayTracks, 0);
+      playTracks(displayTracks, 0, queueSource);
     }
-  }, [displayTracks]);
+  }, [displayTracks, queueSource]);
 
   const handleCreatePlaylist = useCallback(async (name: string) => {
     const trimmedName = name.trim();
@@ -67,6 +74,19 @@ export function useLibraryScreen() {
     showToast(t('playlistCreated'), 'success');
     setShowCreatePlaylist(false);
   }, [t]);
+
+  const handleRefresh = useCallback(async () => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        reconcileLibraryTracks({ immediate: true, loadIfUninitialized: true }),
+        loadPlaylists(),
+      ]);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [isRefreshing]);
 
   const sortActions: ActionSheetOption[] = SORT_KEYS.map((option) => ({
     label: `${t(option.key)}${sortBy === option.field ? (sortOrder === 'asc' ? ' ↑' : ' ↓') : ''}`,
@@ -81,7 +101,9 @@ export function useLibraryScreen() {
     handleCreatePlaylist,
     handlePlay,
     handlePlayAll,
+    handleRefresh,
     isLoading,
+    isRefreshing,
     playlists,
     setShowCreatePlaylist,
     setShowSortMenu,

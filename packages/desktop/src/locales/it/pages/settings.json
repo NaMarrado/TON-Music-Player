@@ -144,7 +144,7 @@
   "cloudHelpStep9": "Dopo aver creato il token, copia Access Key ID e Secret Access Key nei rispettivi campi di TON. Il segreto viene mostrato una sola volta.",
   "cloudHelpStep10": "Lascia Giurisdizione su Predefinita, salvo bucket UE/FedRAMP. Usa lo stesso prefisso ton su ogni dispositivo, quindi tocca Salva e verifica.",
   "cloudResult": "Caricati {{uploaded}}, scaricati {{downloaded}}, ignorati {{skipped}}, playlist {{playlists}}.",
-  "cloudProgress": "{{phase}} {{current}}/{{total}} · su {{uploaded}} · giù {{downloaded}} · ignorati {{skipped}} · errori {{failed}}",
+  "cloudProgress": "{{phase}} {{current}}/{{total}} · caricati {{uploaded}} · scaricati {{downloaded}} · ignorati {{skipped}} · errori {{failed}}",
   "cloudPhase_idle": "Inattivo",
   "cloudPhase_testing": "Verifica",
   "cloudPhase_hashing": "Calcolo hash",

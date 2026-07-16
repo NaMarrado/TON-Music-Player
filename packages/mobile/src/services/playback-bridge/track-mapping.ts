@@ -2,7 +2,7 @@ import type { Track } from '@ton/core';
 import { getTracksByIds } from '../db-queries';
 import type { PlaybackRuntimeTrack } from '../playback-runtime';
 
-export type QueueTrackRef = { track_id: number };
+export type QueueTrackRef = { id?: string; track_id: number };
 
 export function trackToRntp(track: Track, uniqueSuffix?: string): PlaybackRuntimeTrack {
   return {
@@ -28,7 +28,7 @@ export async function buildRntpQueue(
   for (let index = 0; index < items.length; index++) {
     const track = trackMap.get(items[index].track_id);
     if (track) {
-      ordered.push(trackToRntp(track, `${startIndex + index}`));
+      ordered.push(trackToRntp(track, items[index].id ?? `${startIndex + index}`));
     }
   }
 

@@ -144,7 +144,7 @@
   "cloudHelpStep9": "بعد إنشاء الرمز المميز، انسخ Access Key ID إلى TON Access Key ID وSecret Access Key إلى TON Secret Access Key. السر يظهر مرة واحدة فقط",
   "cloudHelpStep10": "اترك الاختصاص على الافتراضي ما لم تنشئ الحاوية في EU/FedRAMP. استخدم البادئة ton نفسها على كل جهاز، ثم اختر حفظ واختبار.",
   "cloudResult": "تم رفع {{uploaded}}، وتنزيل {{downloaded}}، وتخطي {{skipped}}، ومزامنة {{playlists}} من قوائم التشغيل.",
-  "cloudProgress": "{{phase}} {{current}}/{{total}} · لأعلى {{uploaded}} · لأسفل {{downloaded}} · تم تخطي {{skipped}} · فشل {{failed}}",
+  "cloudProgress": "{{phase}} {{current}}/{{total}} · تم الرفع {{uploaded}} · تم التنزيل {{downloaded}} · تم التخطي {{skipped}} · فشل {{failed}}",
   "cloudPhase_idle": "عاطل",
   "cloudPhase_testing": "اختبار",
   "cloudPhase_hashing": "التجزئة",

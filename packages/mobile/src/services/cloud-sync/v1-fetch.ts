@@ -2,6 +2,12 @@ import type { CloudLibraryManifestV1, CloudSyncResult } from '@ton/core';
 import { ensureArtworkDir } from '../cover-art';
 import { ensureMusicDir } from '../downloader/filesystem';
 import { scheduleMobileJob } from '../job-scheduler';
+import { upsertTrackById } from '../../stores/library-store';
+import {
+  loadPlaylists,
+  mergeCompletedTrackIntoPlaylists,
+  reloadLoadedPlaylistDetails,
+} from '../../stores/playlist-store';
 import { setMobileCloudLastRevision } from './config';
 import type { MobileCloudDownloadFailureContext } from './download-failures';
 import { MobileR2Client } from './r2-client';
@@ -14,7 +20,11 @@ import {
   type CloudFetchApplyProtection,
   type ProgressCallback,
 } from './v1-common';
-import { fetchV1Playlists } from './v1-fetch-playlists';
+import {
+  addAvailableTrackToV1Playlists,
+  downloadV1PlaylistCovers,
+  prepareV1PlaylistShells,
+} from './v1-fetch-playlists';
 import { fetchV1Tracks } from './v1-fetch-tracks';
 import { readRemoteManifest } from './v1-remote-manifest';
 
@@ -37,17 +47,28 @@ export async function fetchCloudLibrary(
     const result: CloudSyncResult = { ...EMPTY_RESULT, revision: manifest.revision };
     await ensureMusicDir();
     await ensureArtworkDir();
-    const trackIdByHash = await fetchV1Tracks({
+    const preparedPlaylists = await prepareV1PlaylistShells({
+      manifest, result, onProgress, shouldCancel, abortSignal, applyProtection,
+    });
+    await loadPlaylists();
+    await reloadLoadedPlaylistDetails();
+    await downloadV1PlaylistCovers({
+      client, manifest, prepared: preparedPlaylists, result, shouldCancel, abortSignal,
+    });
+    await fetchV1Tracks({
       client, manifest, result, onProgress, shouldCancel, abortSignal, applyProtection,
       failureContext,
-    });
-    emitProgress(onProgress, {
-      phase: 'importing', total: manifest.playlists.length,
-      downloaded: result.downloaded, skipped: result.skipped, failed: result.failed,
-    });
-    await fetchV1Playlists({
-      client, manifest, trackIdByHash, result,
-      shouldCancel, abortSignal, applyProtection, onProgress,
+      onTrackImported: async (contentHash, trackId) => {
+        const playlistIds = await addAvailableTrackToV1Playlists({
+          prepared: preparedPlaylists,
+          contentHash,
+          trackId,
+        });
+        await Promise.all([
+          upsertTrackById(trackId),
+          mergeCompletedTrackIntoPlaylists(trackId, playlistIds),
+        ]);
+      },
     });
     throwIfCancelled(shouldCancel);
     await setMobileCloudLastRevision(manifest.revision);

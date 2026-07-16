@@ -27,6 +27,11 @@ export interface IosPlaybackRuntimeModule {
   setupPlayer(): Promise<void>;
   updateOptions(options: Record<string, unknown>): Promise<void>;
   setQueue(tracks: PlaybackRuntimeTrack[]): Promise<void>;
+  replaceQueue(
+    tracks: PlaybackRuntimeTrack[],
+    startIndex: number,
+    autoplay: boolean,
+  ): Promise<void>;
   add(tracks: PlaybackRuntimeTrack[]): Promise<void>;
   load(track: PlaybackRuntimeTrack): Promise<void>;
   play(): Promise<void>;

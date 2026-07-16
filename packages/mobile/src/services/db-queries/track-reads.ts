@@ -74,7 +74,7 @@ export async function getAllTracks(): Promise<Track[]> {
       downloaded_at,
       scanned_at
      FROM tracks
-     ORDER BY added_at DESC`,
+     ORDER BY added_at DESC, COALESCE(content_hash_sha256, '') ASC, id DESC`,
   );
 
   return rows.map((row) => ({

@@ -1,28 +1,30 @@
 import { useCallback } from 'react';
-import type { PlaylistTrackEntry } from '@ton/core';
+import type { PlaybackQueueSourceDescriptor, PlaylistTrackEntry } from '@ton/core';
 import { playTracks } from '../../services/playback-bridge';
 
 export function usePlaylistPlaybackActions(
+  playlistId: number,
   tracks: PlaylistTrackEntry[],
   selectedTracks: PlaylistTrackEntry[],
   clearSelection: () => void,
+  queueSource: PlaybackQueueSourceDescriptor,
 ) {
   const handlePlay = useCallback((index: number) => {
-    playTracks(tracks, index);
-  }, [tracks]);
+    playTracks(tracks, index, queueSource);
+  }, [queueSource, tracks]);
 
   const handlePlayAll = useCallback(() => {
     if (tracks.length > 0) {
-      playTracks(tracks, 0);
+      playTracks(tracks, 0, queueSource);
     }
-  }, [tracks]);
+  }, [queueSource, tracks]);
 
   const handlePlaySelection = useCallback(() => {
     if (selectedTracks.length === 0) {
       return;
     }
 
-    playTracks(selectedTracks, 0);
+    playTracks(selectedTracks, 0, { kind: 'selection', source_id: playlistId });
     clearSelection();
   }, [clearSelection, selectedTracks]);
 
@@ -32,8 +34,8 @@ export function usePlaylistPlaybackActions(
       return;
     }
 
-    playTracks(tracks, index);
-  }, [tracks]);
+    playTracks(tracks, index, queueSource);
+  }, [queueSource, tracks]);
 
   const handleTrackLongPress = useCallback((track: PlaylistTrackEntry, toggleSelection: (playlistTrackId: number) => void) => {
     toggleSelection(track.playlist_track_id);

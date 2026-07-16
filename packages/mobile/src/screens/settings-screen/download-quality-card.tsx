@@ -21,8 +21,8 @@ export function DownloadQualityCard({
       <View
         className="rounded-xl border px-4 py-4"
         style={{
-          borderColor: 'rgba(214, 170, 106, 0.5)',
-          backgroundColor: 'rgba(214, 170, 106, 0.08)',
+          borderColor: best ? 'rgba(214, 170, 106, 0.5)' : 'rgba(255, 255, 255, 0.08)',
+          backgroundColor: best ? 'rgba(214, 170, 106, 0.08)' : 'transparent',
         }}
       >
         <SectionHeader
@@ -36,7 +36,6 @@ export function DownloadQualityCard({
               trackColor={{ false: '#333', true: '#d6aa6a' }}
               thumbColor={best ? '#fff' : '#888'}
               ios_backgroundColor="#333"
-              style={{ transform: [{ scaleX: 1.08 }, { scaleY: 1.08 }] }}
             />
           )}
         />

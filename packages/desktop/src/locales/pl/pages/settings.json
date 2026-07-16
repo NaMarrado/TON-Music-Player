@@ -144,7 +144,7 @@
   "cloudHelpStep9": "Po utworzeniu tokena skopiuj identyfikator klucza dostępu do identyfikatora klucza dostępu TON i tajny klucz dostępu do tajnego klucza dostępu TON. Sekret pokazany jest tylko raz.",
   "cloudHelpStep10": "Pozostaw jurysdykcję jako domyślną, chyba że utworzyłeś zasobnik w EU/FedRAMP. Zachowaj prefiks jako ton na każdym urządzeniu, a następnie Zapisz i przetestuj.",
   "cloudResult": "Przesłano {{uploaded}}, pobrano {{downloaded}}, pominięto {{skipped}}, playlisty {{playlists}}.",
-  "cloudProgress": "{{phase}} {{current}}/{{total}} · w górę {{uploaded}} · w dół {{downloaded}} · pominięty {{skipped}} · niepowodzenie {{failed}}",
+  "cloudProgress": "{{phase}} {{current}}/{{total}} · wysłano {{uploaded}} · pobrano {{downloaded}} · pominięto {{skipped}} · błędy {{failed}}",
   "cloudPhase_idle": "Bezczynny",
   "cloudPhase_testing": "Testowanie",
   "cloudPhase_hashing": "Haszowanie",

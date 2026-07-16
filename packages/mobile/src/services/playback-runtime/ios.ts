@@ -3,6 +3,7 @@ import type { PlaybackRuntimeEventPayload } from './types';
 import type {
   PlaybackRuntimeEventType,
   PlaybackRuntimeProgress,
+  PlaybackRuntimeQueueOptions,
   PlaybackRuntimeStateSnapshot,
   PlaybackRuntimeTrack,
   PlaybackRuntimeUpdateOptions,
@@ -19,6 +20,7 @@ import {
   pauseIosPlayback,
   playIosPlayback,
   removeUpcomingIosPlaybackTracks,
+  replaceIosPlaybackQueue,
   seekIosPlayback,
   setIosPlaybackQueue,
   setIosPlaybackRepeatMode,
@@ -68,6 +70,13 @@ export async function configureDefaultPlaybackRuntimeOptions(): Promise<void> {
 
 export async function setPlaybackQueue(tracks: PlaybackRuntimeTrack[]): Promise<void> {
   await setIosPlaybackQueue(tracks);
+}
+
+export async function replacePlaybackQueue(
+  tracks: PlaybackRuntimeTrack[],
+  options: PlaybackRuntimeQueueOptions,
+): Promise<void> {
+  await replaceIosPlaybackQueue(tracks, options.startIndex, options.autoplay);
 }
 
 export async function addPlaybackTracks(tracks: PlaybackRuntimeTrack[]): Promise<void> {
@@ -147,7 +156,7 @@ export function usePlaybackRuntimeProgress(updateInterval = 250): PlaybackRuntim
 
   useEffect(() => {
     let cancelled = false;
-    let timer: ReturnType<typeof setInterval> | null = null;
+    let timer: ReturnType<typeof setTimeout> | null = null;
 
     const sync = async (): Promise<void> => {
       try {
@@ -159,18 +168,21 @@ export function usePlaybackRuntimeProgress(updateInterval = 250): PlaybackRuntim
         if (!cancelled) {
           setProgress((current) => current);
         }
+      } finally {
+        if (!cancelled) {
+          timer = setTimeout(() => {
+            void sync();
+          }, updateInterval);
+        }
       }
     };
 
     void sync();
-    timer = setInterval(() => {
-      void sync();
-    }, updateInterval);
 
     return () => {
       cancelled = true;
       if (timer) {
-        clearInterval(timer);
+        clearTimeout(timer);
       }
     };
   }, [updateInterval]);

@@ -22,6 +22,8 @@ import {
 } from './auto-sync-status';
 import { runMobileCloudV2Sync } from './v2-sync';
 
+const CLOUD_PROGRESS_UI_INTERVAL_MS = 125;
+
 async function runCycle(origin: CloudSyncOrigin): Promise<{
   pendingChanges: number;
   pendingDownloads: number;
@@ -48,24 +50,51 @@ async function runCycle(origin: CloudSyncOrigin): Promise<{
   const backgroundDeadline = origin === 'background'
     ? setTimeout(() => controller.abort(), 25_000)
     : null;
+  let progressTimer: ReturnType<typeof setTimeout> | null = null;
+  let pendingProgress: CloudSyncProgress | null = null;
+  let lastProgressAt = 0;
+  const publishProgress = (progress: CloudSyncProgress) => {
+    runtime.currentProgress = progress;
+    runtime.pendingManualRun?.onProgress?.(progress);
+    emitStatus();
+    lastProgressAt = Date.now();
+  };
+  const reportProgress = (progress: CloudSyncProgress) => {
+    pendingProgress = progress;
+    const terminal = progress.phase === 'done'
+      || progress.phase === 'failed'
+      || progress.phase === 'cancelled';
+    const elapsed = Date.now() - lastProgressAt;
+    if (terminal || elapsed >= CLOUD_PROGRESS_UI_INTERVAL_MS) {
+      if (progressTimer) clearTimeout(progressTimer);
+      progressTimer = null;
+      pendingProgress = null;
+      publishProgress(progress);
+      return;
+    }
+    if (!progressTimer) {
+      progressTimer = setTimeout(() => {
+        progressTimer = null;
+        const next = pendingProgress;
+        pendingProgress = null;
+        if (next) publishProgress(next);
+      }, CLOUD_PROGRESS_UI_INTERVAL_MS - elapsed);
+    }
+  };
   try {
     const state = await getMobileCloudPersistedState(scopeId);
     const outbox = await getMobileCloudOutbox(scopeId);
     const manual = origin === 'manual' ? runtime.pendingManualRun : null;
     if (manual?.cancelled) throw new Error('cloud_sync_cancelled');
     const requestedMode = manual?.mode ?? 'sync';
-    const onProgress = (progress: CloudSyncProgress) => {
-      runtime.currentProgress = progress;
-      manual?.onProgress?.(progress);
-      emitStatus();
-    };
+    const onProgress = reportProgress;
     const mode = requestedMode === 'fetch' && outbox.length > 0 ? 'sync' : requestedMode;
     if (origin !== 'manual'
         && outbox.length === 0
         && state.needs_full_reconcile === 0
         && state.activation_marker_confirmed === 1
         && !((state.pending_downloads > 0 || state.pending_assets > 0)
-          && runtime.unmeteredNetwork)
+          && (runtime.unmeteredNetwork || runtime.audioOverCellular))
         && state.last_cleanup_at != null
         && Math.floor(Date.now() / 1000) - state.last_cleanup_at < 24 * 60 * 60) {
       const poll = await new MobileR2Client(config).getJsonConditional(
@@ -79,7 +108,7 @@ async function runCycle(origin: CloudSyncOrigin): Promise<{
       config,
       mode,
       origin,
-      allowAudioDownloads: origin === 'manual' || runtime.unmeteredNetwork,
+      allowAudioDownloads: runtime.unmeteredNetwork || runtime.audioOverCellular,
       onProgress,
       signal: controller.signal,
     });
@@ -101,6 +130,10 @@ async function runCycle(origin: CloudSyncOrigin): Promise<{
     }
     throw error;
   } finally {
+    if (progressTimer) clearTimeout(progressTimer);
+    progressTimer = null;
+    if (pendingProgress) publishProgress(pendingProgress);
+    pendingProgress = null;
     if (backgroundDeadline) clearTimeout(backgroundDeadline);
     if (leaseHeartbeat) clearInterval(leaseHeartbeat);
     if (runtime.currentController === controller) runtime.currentController = null;

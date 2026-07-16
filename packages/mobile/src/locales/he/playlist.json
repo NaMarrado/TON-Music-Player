@@ -33,5 +33,14 @@
   "playlistName": "שם רשימת ההשמעה",
   "playlistDescription": "תאור",
   "playlistDescriptionPlaceholder": "הוסף תיאור...",
-  "playlistUpdated": "הפלייליסט עודכן"
+  "playlistUpdated": "הפלייליסט עודכן",
+  "sortTracks": "מיון שירים",
+  "sortOriginal": "הסדר המקורי",
+  "sortPosition": "מיקום",
+  "sortTitle": "כותרת",
+  "sortArtist": "אמן",
+  "sortDownloaded": "הורד",
+  "sortDuration": "משך",
+  "filterPlaceholder": "סינון שירים...",
+  "noResults": "אין שירים תואמים"
 }

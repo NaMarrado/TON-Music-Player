@@ -11,6 +11,7 @@ const runtime = Platform.OS === 'ios'
 export const setupPlaybackRuntimePlayer = runtime.setupPlaybackRuntimePlayer as typeof import('./android').setupPlaybackRuntimePlayer;
 export const configureDefaultPlaybackRuntimeOptions = runtime.configureDefaultPlaybackRuntimeOptions as typeof import('./android').configureDefaultPlaybackRuntimeOptions;
 export const setPlaybackQueue = runtime.setPlaybackQueue as typeof import('./android').setPlaybackQueue;
+export const replacePlaybackQueue = runtime.replacePlaybackQueue as typeof import('./android').replacePlaybackQueue;
 export const addPlaybackTracks = runtime.addPlaybackTracks as typeof import('./android').addPlaybackTracks;
 export const loadPlaybackTrack = runtime.loadPlaybackTrack as typeof import('./android').loadPlaybackTrack;
 export const playPlayback = runtime.playPlayback as typeof import('./android').playPlayback;

@@ -11,6 +11,9 @@ export function CloudCard({
   autoSyncEnabled,
   autoSyncLabel,
   autoSyncStatusLabel,
+  audioOverCellularDescription,
+  audioOverCellularEnabled,
+  audioOverCellularLabel,
   canRun,
   connectedLabel,
   cleanupChecking,
@@ -37,6 +40,7 @@ export function CloudCard({
   onSaveTest,
   onSync,
   onToggleAutoSync,
+  onToggleAudioOverCellular,
   onUpdate,
   onUpload,
   title,
@@ -80,6 +84,27 @@ export function CloudCard({
           ios_backgroundColor="#2f2f2f"
         />
       </View>
+      <View
+        className="flex-row items-center justify-between border border-border bg-bg-deep mb-3"
+        style={{ borderRadius: 14, paddingHorizontal: 12, paddingVertical: 9 }}
+      >
+        <View style={{ flex: 1, paddingRight: 12 }}>
+          <Text className="text-text-primary text-sm font-semibold">
+            {audioOverCellularLabel}
+          </Text>
+          <Text className="text-text-secondary text-xs mt-1">
+            {audioOverCellularDescription}
+          </Text>
+        </View>
+        <Switch
+          accessibilityLabel={audioOverCellularLabel}
+          value={audioOverCellularEnabled}
+          onValueChange={onToggleAudioOverCellular}
+          trackColor={{ false: '#2f2f2f', true: '#d8d8d8' }}
+          thumbColor={audioOverCellularEnabled ? '#ffffff' : '#777777'}
+          ios_backgroundColor="#2f2f2f"
+        />
+      </View>
       {!loaded ? (
         <View className="flex-row items-center">
           <Text className="text-text-muted text-xs">{loadLabel}</Text>
@@ -102,7 +127,7 @@ export function CloudCard({
           {failedLabel && (
             <Text className="text-red-300 text-xs mb-1">{failedLabel}</Text>
           )}
-          <CloudField label={labels.accountId} value={form.accountId} onChange={(accountId) => onUpdate({ accountId })} />
+          <CloudField secure label={labels.accountId} value={form.accountId} onChange={(accountId) => onUpdate({ accountId })} />
           <CloudField label={labels.bucket} value={form.bucket} onChange={(bucket) => onUpdate({ bucket })} />
           <CloudField label={labels.prefix} value={form.prefix} onChange={(prefix) => onUpdate({ prefix })} placeholder="ton" />
           <View className="mb-3">
@@ -118,7 +143,7 @@ export function CloudCard({
               ))}
             </View>
           </View>
-          <CloudField label={labels.accessKeyId} value={form.accessKeyId} onChange={(accessKeyId) => onUpdate({ accessKeyId })} />
+          <CloudField secure label={labels.accessKeyId} value={form.accessKeyId} onChange={(accessKeyId) => onUpdate({ accessKeyId })} />
           <CloudField
             label={labels.secretAccessKey}
             value={form.secretAccessKey}

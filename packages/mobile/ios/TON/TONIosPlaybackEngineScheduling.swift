@@ -25,9 +25,13 @@ extension TONIosPlaybackEngineManager {
     resumePositionSeconds = 0
     scheduledOffsetSeconds = 0
     scheduleToken += 1
-    if engineConfigured { playerNode.stop() }
+    if engineConfigured {
+      playerNode.volume = 0
+      playerNode.stop()
+    }
     state = autoplay ? "loading" : "ready"
     updateNowPlayingInfo()
+    emitPlaybackSnapshot()
     if autoplay {
       try scheduleCurrentTrack(startingAt: 0, playWhenReady: true)
     } else {
@@ -49,6 +53,7 @@ extension TONIosPlaybackEngineManager {
       handleTrackCompletion()
       return
     }
+    playerNode.volume = 0
     playerNode.stop()
     scheduleToken += 1
     let token = scheduleToken
@@ -71,10 +76,23 @@ extension TONIosPlaybackEngineManager {
       playerNode.play()
       state = "playing"
       configureRemoteCommandsIfNeeded()
+      rampPlayerVolume(for: token)
     } else if state == "playing" {
       state = "ready"
+      playerNode.volume = volume
     }
     updateNowPlayingInfo()
+    emitPlaybackSnapshot()
+  }
+
+  func rampPlayerVolume(for token: Int) {
+    let steps = 4
+    for step in 1...steps {
+      stateQueue.asyncAfter(deadline: .now() + (0.006 * Double(step))) {
+        guard token == self.scheduleToken, self.playerNode.isPlaying else { return }
+        self.playerNode.volume = self.volume * Float(step) / Float(steps)
+      }
+    }
   }
 
   func handleTrackCompletion() {
@@ -89,6 +107,7 @@ extension TONIosPlaybackEngineManager {
     state = "ended"
     updateNowPlayingInfo()
     deactivateAudioSessionIfNeeded()
+    emitPlaybackState()
     emitEvent(type: "playback-queue-ended")
   }
 

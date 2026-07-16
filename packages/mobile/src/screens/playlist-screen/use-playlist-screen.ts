@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   formatTime,
   formatTrackFileSizeSummary,
@@ -15,6 +15,7 @@ import { usePlaylistSelection } from './use-playlist-selection';
 import { usePlaylistPlaybackActions } from './use-playlist-playback-actions';
 import { usePlaylistTransferActions } from './use-playlist-transfer-actions';
 import { usePlaylistMutationActions } from './use-playlist-mutation-actions';
+import { usePlaylistViewState } from './use-playlist-view-state';
 
 export function usePlaylistScreen(
   id: number,
@@ -23,24 +24,35 @@ export function usePlaylistScreen(
   const { t } = useTranslation('playlist');
   const { t: tc } = useTranslation('common');
   const playlistDetail = usePlaylistStore((state) => state.playlistDetails[id] ?? EMPTY_PLAYLIST_DETAIL);
-  const { playlist, tracks, isLoading, hasLoaded, error } = playlistDetail;
+  const { playlist, tracks: sourceTracks, isLoading, hasLoaded, error } = playlistDetail;
   const [showEditModal, setShowEditModal] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     loadPlaylist(id);
   }, [id]);
 
-  const selection = usePlaylistSelection(tracks);
+  const viewState = usePlaylistViewState(id, sourceTracks);
+  const selection = usePlaylistSelection(viewState.displayTracks);
+  const queueSource = useMemo(() => ({
+    kind: 'playlist' as const,
+    source_id: id,
+    filter_query: viewState.filterQuery || undefined,
+    sort_by: viewState.sortBy ?? undefined,
+    sort_order: viewState.sortOrder,
+  }), [id, viewState.filterQuery, viewState.sortBy, viewState.sortOrder]);
   const playbackActions = usePlaylistPlaybackActions(
-    tracks,
+    id,
+    viewState.displayTracks,
     selection.selectedTracks,
     selection.clearSelection,
+    queueSource,
   );
   const transferActions = usePlaylistTransferActions(id, navigation, t);
   const mutationActions = usePlaylistMutationActions(
     id,
     playlist?.name ?? undefined,
-    tracks,
+    sourceTracks,
     selection.selectedPlaylistTrackIds,
     selection.clearSelection,
     navigation,
@@ -49,16 +61,26 @@ export function usePlaylistScreen(
   );
 
   const totalDurationLabel = useMemo(() => {
-    const totalDuration = tracks.reduce(
+    const totalDuration = viewState.displayTracks.reduce(
       (sum, track) => sum + (track.duration_ms ?? 0),
       0,
     );
     return [
-      tc('track', { count: tracks.length }),
+      tc('track', { count: viewState.displayTracks.length }),
       formatTime(totalDuration),
-      formatTrackFileSizeSummary(summarizeTrackFileSizes(tracks)),
+      formatTrackFileSizeSummary(summarizeTrackFileSizes(viewState.displayTracks)),
     ].join(' · ');
-  }, [tc, tracks]);
+  }, [tc, viewState.displayTracks]);
+
+  const handleRefresh = useCallback(async () => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      await loadPlaylist(id);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [id, isRefreshing]);
 
   return {
     handleDelete: mutationActions.handleDelete,
@@ -69,6 +91,7 @@ export function usePlaylistScreen(
     handlePlaySelection: playbackActions.handlePlaySelection,
     handlePlayAll: playbackActions.handlePlayAll,
     handleMoveTrack: mutationActions.handleMoveTrack,
+    handleRefresh,
     handleRemoveFromPlaylist: mutationActions.handleRemoveFromPlaylist,
     handleRemoveSelection: mutationActions.handleRemoveSelection,
     handleTrackLongPress: (track: PlaylistTrackEntry) => {
@@ -81,17 +104,26 @@ export function usePlaylistScreen(
     isExportingBundle: transferActions.isExportingBundle,
     isImportingBundle: transferActions.isImportingBundle,
     isLoading,
+    isRefreshing,
     loadError: error === 'load-failed',
     playlist,
     selectedPlaylistTrackIds: selection.selectedPlaylistTrackIds,
     selectedPlaylistTrackIdSet: selection.selectedPlaylistTrackIdSet,
     selectedTracks: selection.selectedTracks,
+    selectionRevision: selection.selectionRevision,
     selectionActive: selection.selectionActive,
     clearSelection: selection.clearSelection,
     setShowEditModal,
     showEditModal,
     transferProgress: transferActions.transferProgress,
     totalDurationLabel,
-    tracks,
+    tracks: viewState.displayTracks,
+    sourceTrackCount: sourceTracks.length,
+    filterQuery: viewState.filterQuery,
+    setFilterQuery: viewState.setFilterQuery,
+    applySort: viewState.applySort,
+    isOriginalOrder: viewState.isOriginalOrder,
+    sortBy: viewState.sortBy,
+    sortOrder: viewState.sortOrder,
   };
 }

@@ -1,5 +1,7 @@
-import { View } from 'react-native';
-import { FlashList } from '@shopify/flash-list';
+import { useCallback, useMemo } from 'react';
+import { Keyboard, RefreshControl, View } from 'react-native';
+import { FlashList, type ListRenderItemInfo } from '@shopify/flash-list';
+import type { Track } from '@ton/core';
 import { useTranslation } from 'react-i18next';
 import { TrackRow } from '../../components/track-row';
 import { EmptyState } from '../../components/empty-state';
@@ -9,6 +11,10 @@ import { CreatePlaylistModal } from './create-playlist-modal';
 import { LibraryListHeader } from './library-list-header';
 import { LibraryToolbar } from './library-toolbar';
 import { useLibraryScreen } from './use-library-screen';
+import {
+  MobileFastScroller,
+  useMobileFastScroll,
+} from '../../components/mobile-fast-scroller';
 
 export function LibraryScreen() {
   const { t } = useTranslation('library');
@@ -21,10 +27,12 @@ export function LibraryScreen() {
     handleCreatePlaylist,
     handlePlaySelection,
     handlePlayAll,
+    handleRefresh,
     handleRemoveSelection,
     handleTrackLongPress,
     handleTrackPress,
     isLoading,
+    isRefreshing,
     playlists,
     playlistPickerTrackIds,
     removePromptDescription,
@@ -33,6 +41,7 @@ export function LibraryScreen() {
     removePromptVisible,
     selectedTrackIds,
     selectedTrackIdSet,
+    selectionRevision,
     setPlaylistPickerTrackIds,
     setShowCreatePlaylist,
     setShowSortMenu,
@@ -41,8 +50,9 @@ export function LibraryScreen() {
     showSortMenu,
     sortActions,
   } = useLibraryScreen();
+  const fastScroll = useMobileFastScroll<Track>();
 
-  const listHeader = (
+  const listHeader = useMemo(() => (
     <LibraryListHeader
       playlists={playlists}
       filterQuery={filterQuery}
@@ -50,7 +60,17 @@ export function LibraryScreen() {
       onCreatePlaylist={() => setShowCreatePlaylist(true)}
       onPlayAll={handlePlayAll}
     />
-  );
+  ), [filterQuery, handlePlayAll, playlists, setShowCreatePlaylist, displayTracks]);
+
+  const renderTrack = useCallback(({ item }: ListRenderItemInfo<Track>) => (
+    <TrackRow
+      track={item}
+      selected={selectedTrackIdSet.has(item.id)}
+      selectionMode={selectionActive}
+      onPress={() => handleTrackPress(item)}
+      onLongPress={() => handleTrackLongPress(item)}
+    />
+  ), [handleTrackLongPress, handleTrackPress, selectedTrackIdSet, selectionActive]);
 
   return (
     <View className="flex-1 bg-bg-deep">
@@ -65,25 +85,41 @@ export function LibraryScreen() {
         onOpenSortMenu={() => setShowSortMenu(true)}
       />
 
-      <FlashList
-        data={displayTracks}
-        keyExtractor={(item) => String(item.id)}
-        estimatedItemSize={56}
-        extraData={selectedTrackIds}
-        ListHeaderComponent={listHeader}
-        renderItem={({ item }) => (
-          <TrackRow
-            track={item}
-            selected={selectedTrackIdSet.has(item.id)}
-            selectionMode={selectionActive}
-            onPress={() => handleTrackPress(item)}
-            onLongPress={() => handleTrackLongPress(item)}
-          />
-        )}
-        ListEmptyComponent={
-          isLoading ? null : <EmptyState message={filterQuery ? t('noResults') : t('emptyLibrary')} />
-        }
-      />
+      <View className="flex-1" onLayout={fastScroll.onLayout}>
+        <FlashList
+          ref={fastScroll.listRef}
+          data={displayTracks}
+          keyExtractor={(item) => String(item.id)}
+          estimatedItemSize={56}
+          drawDistance={650}
+          extraData={selectionRevision}
+          keyboardDismissMode="on-drag"
+          keyboardShouldPersistTaps="handled"
+          onContentSizeChange={fastScroll.onContentSizeChange}
+          onScroll={fastScroll.onScroll}
+          onScrollBeginDrag={Keyboard.dismiss}
+          scrollEventThrottle={32}
+          refreshControl={(
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={() => { void handleRefresh(); }}
+              tintColor="#e8e8e8"
+            />
+          )}
+          ListHeaderComponent={listHeader}
+          renderItem={renderTrack}
+          ListEmptyComponent={
+            isLoading ? null : <EmptyState message={filterQuery ? t('noResults') : t('emptyLibrary')} />
+          }
+        />
+        <MobileFastScroller
+          contentHeight={fastScroll.contentHeight}
+          itemCount={displayTracks.length}
+          onScrollToOffset={fastScroll.scrollToOffset}
+          scrollOffset={fastScroll.scrollOffset}
+          viewportHeight={fastScroll.viewportHeight}
+        />
+      </View>
 
       <ActionSheet
         visible={showSortMenu}
