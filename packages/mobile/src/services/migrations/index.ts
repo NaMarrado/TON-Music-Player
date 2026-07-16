@@ -12,6 +12,7 @@ import { migrate010 } from './010-cloud-v2-activation';
 import { migrate011 } from './011-schema-drift-repair';
 import { migrate012 } from './012-local-track-delete-policy';
 import { migrate013 } from './013-cloud-download-failures';
+import { migrate014 } from './014-cloud-download-retries';
 
 interface Migration {
   version: number;
@@ -32,6 +33,7 @@ const MIGRATIONS: Migration[] = [
   { version: 11, run: migrate011 },
   { version: 12, run: migrate012 },
   { version: 13, run: migrate013 },
+  { version: 14, run: migrate014 },
 ];
 
 export async function runMigrations(db: SQLiteDatabase): Promise<void> {

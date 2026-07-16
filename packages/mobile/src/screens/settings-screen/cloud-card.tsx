@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Pressable, Switch, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { SettingsCard, SectionHeader } from './primitives';
+import { CompactToggle, SettingsCard, SectionHeader } from './primitives';
 import { CloudCleanupModal, CloudField, CloudHelpModal, CloudPill } from './cloud-card-controls';
 import type { CloudCardProps } from './cloud-card-types';
 
@@ -76,13 +76,10 @@ export function CloudCard({
           <Text className="text-text-muted text-[11px] mt-1">{autoSyncStatusLabel}</Text>
           <Text className="text-text-muted text-[11px] mt-0.5">{autoSyncDetailsLabel}</Text>
         </View>
-        <Switch
+        <CompactToggle
           accessibilityLabel={autoSyncLabel}
           value={autoSyncEnabled}
           onValueChange={onToggleAutoSync}
-          trackColor={{ false: '#2f2f2f', true: '#d8d8d8' }}
-          thumbColor={autoSyncEnabled ? '#ffffff' : '#777777'}
-          ios_backgroundColor="#2f2f2f"
         />
       </View>
       <View
@@ -97,13 +94,10 @@ export function CloudCard({
             {audioOverCellularDescription}
           </Text>
         </View>
-        <Switch
+        <CompactToggle
           accessibilityLabel={audioOverCellularLabel}
           value={audioOverCellularEnabled}
           onValueChange={onToggleAudioOverCellular}
-          trackColor={{ false: '#2f2f2f', true: '#d8d8d8' }}
-          thumbColor={audioOverCellularEnabled ? '#ffffff' : '#777777'}
-          ios_backgroundColor="#2f2f2f"
         />
       </View>
       {!loaded ? (

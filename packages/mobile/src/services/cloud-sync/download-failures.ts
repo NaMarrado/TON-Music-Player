@@ -1,5 +1,6 @@
 import { getDb } from '../database';
 import type { CloudR2CleanupFailureSummary } from '@ton/core';
+import { getCloudDownloadRetryDelaySeconds } from './download-failure-policy';
 
 const FAILURE_DELETE_BATCH_SIZE = 200;
 
@@ -22,7 +23,8 @@ export async function prepareMobileCloudDownloadFailures(
   const rows = await db.getAllAsync<{ content_hash_sha256: string }>(
     `SELECT content_hash_sha256
      FROM cloud_sync_download_failures
-     WHERE scope_id = ? AND manifest_revision = ?`,
+     WHERE scope_id = ? AND manifest_revision = ?
+       AND next_retry_at > strftime('%s','now')`,
     [context.scopeId, context.manifestRevision],
   );
   return new Set(rows.map((row) => row.content_hash_sha256));
@@ -36,16 +38,52 @@ export async function recordMobileCloudDownloadFailure(
   const message = error instanceof Error && error.message
     ? error.message
     : 'cloud_sync_track_download_failed';
-  await getDb().runAsync(
-    `INSERT INTO cloud_sync_download_failures(
-       scope_id, content_hash_sha256, manifest_revision, error_message, failed_at
-     ) VALUES (?, ?, ?, ?, strftime('%s','now'))
-     ON CONFLICT(scope_id, content_hash_sha256) DO UPDATE SET
-       manifest_revision = excluded.manifest_revision,
-       error_message = excluded.error_message,
-       failed_at = excluded.failed_at`,
-    [context.scopeId, contentHash, context.manifestRevision, message.slice(0, 500)],
+  const db = getDb();
+  await db.withExclusiveTransactionAsync(async (txn) => {
+    const previous = await txn.getFirstAsync<{
+      manifest_revision: string;
+      attempt_count: number;
+    }>(
+      `SELECT manifest_revision, attempt_count
+       FROM cloud_sync_download_failures
+       WHERE scope_id = ? AND content_hash_sha256 = ?`,
+      [context.scopeId, contentHash],
+    );
+    const attemptCount = previous?.manifest_revision === context.manifestRevision
+      ? Math.min(30, previous.attempt_count + 1)
+      : 1;
+    const failedAt = Math.floor(Date.now() / 1000);
+    const nextRetryAt = failedAt + getCloudDownloadRetryDelaySeconds(attemptCount);
+    await txn.runAsync(
+      `INSERT INTO cloud_sync_download_failures(
+         scope_id, content_hash_sha256, manifest_revision, error_message,
+         failed_at, attempt_count, next_retry_at
+       ) VALUES (?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(scope_id, content_hash_sha256) DO UPDATE SET
+         manifest_revision = excluded.manifest_revision,
+         error_message = excluded.error_message,
+         failed_at = excluded.failed_at,
+         attempt_count = excluded.attempt_count,
+         next_retry_at = excluded.next_retry_at`,
+      [
+        context.scopeId, contentHash, context.manifestRevision, message.slice(0, 500),
+        failedAt, attemptCount, nextRetryAt,
+      ],
+    );
+  });
+}
+
+export async function countMobileCloudDownloadFailures(
+  scopeId: string,
+  manifestRevision: string,
+): Promise<number> {
+  const row = await getDb().getFirstAsync<{ count: number }>(
+    `SELECT COUNT(*) AS count
+     FROM cloud_sync_download_failures
+     WHERE scope_id = ? AND manifest_revision = ?`,
+    [scopeId, manifestRevision],
   );
+  return row?.count ?? 0;
 }
 
 export async function clearMobileCloudDownloadFailure(

@@ -1,6 +1,6 @@
-import { Pressable, Switch, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { setLoudnessNormalizationEnabled } from '../../services/audio-settings';
-import { SectionHeader, SettingsCard } from './primitives';
+import { CompactToggle, SectionHeader, SettingsCard } from './primitives';
 
 export function LoudnessCard({
   analyzeAllLabel,
@@ -44,14 +44,13 @@ export function LoudnessCard({
         title={title}
         description={description}
         right={(
-          <Switch
+          <CompactToggle
+            accessibilityLabel={title}
             disabled={disabled}
             value={!disabled && loudnessNormEnabled}
             onValueChange={(value) => {
               void setLoudnessNormalizationEnabled(value);
             }}
-            trackColor={{ false: '#333', true: '#555' }}
-            thumbColor={!disabled && loudnessNormEnabled ? '#fff' : '#888'}
           />
         )}
       />

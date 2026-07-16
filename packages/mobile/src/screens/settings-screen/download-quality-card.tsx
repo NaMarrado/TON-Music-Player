@@ -1,6 +1,6 @@
-import { Switch, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import type { DownloadQualityProfile } from '@ton/core';
-import { SectionHeader, SettingsCard } from './primitives';
+import { CompactToggle, SectionHeader, SettingsCard } from './primitives';
 
 export function DownloadQualityCard({
   profile,
@@ -30,12 +30,10 @@ export function DownloadQualityCard({
           title={title}
           description={description}
           right={(
-            <Switch
+            <CompactToggle
+              accessibilityLabel={title}
               value={best}
               onValueChange={(enabled) => onChange(enabled ? 'best_compatible' : 'normal')}
-              trackColor={{ false: '#333', true: '#d6aa6a' }}
-              thumbColor={best ? '#fff' : '#888'}
-              ios_backgroundColor="#333"
             />
           )}
         />

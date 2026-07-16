@@ -1,24 +1,23 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { Alert } from 'react-native';
-import type { PlaylistTrackEntry } from '@ton/core';
 import {
   deletePlaylist,
   loadPlaylist,
+  movePlaylistTrack,
   removeTrackFromPlaylist,
-  reorderPlaylistTracks,
 } from '../../stores/playlist-store';
 import { showToast } from '../../stores/toast-store';
 
 export function usePlaylistMutationActions(
   id: number,
   playlistName: string | undefined,
-  tracks: PlaylistTrackEntry[],
   selectedPlaylistTrackIds: number[],
   clearSelection: () => void,
   navigation: { goBack: () => void },
   t: (key: string, vars?: Record<string, unknown>) => string,
   tc: (key: string, vars?: Record<string, unknown>) => string,
 ) {
+  const moveInFlight = useRef(false);
   const handleDelete = useCallback(() => {
     Alert.alert(
       t('deleteTitle'),
@@ -62,26 +61,17 @@ export function usePlaylistMutationActions(
   }, [clearSelection, id, selectedPlaylistTrackIds, t]);
 
   const handleMoveTrack = useCallback(async (playlistTrackId: number, direction: -1 | 1) => {
-    const currentIndex = tracks.findIndex((track) => track.playlist_track_id === playlistTrackId);
-    const nextIndex = currentIndex + direction;
-    if (currentIndex < 0 || nextIndex < 0 || nextIndex >= tracks.length) {
-      return;
-    }
-
-    const reordered = [...tracks];
-    const [moved] = reordered.splice(currentIndex, 1);
-    reordered.splice(nextIndex, 0, moved);
-
+    if (moveInFlight.current) return;
+    moveInFlight.current = true;
     try {
-      await reorderPlaylistTracks(
-        id,
-        reordered.map((track) => track.playlist_track_id),
-      );
+      await movePlaylistTrack(id, playlistTrackId, direction);
     } catch {
       showToast(t('reorderFailed'), 'error');
       await loadPlaylist(id);
+    } finally {
+      moveInFlight.current = false;
     }
-  }, [id, t, tracks]);
+  }, [id, t]);
 
   return {
     handleDelete,

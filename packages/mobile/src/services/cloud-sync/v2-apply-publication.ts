@@ -7,6 +7,7 @@ import {
   type MobileCloudPersistedState,
 } from './local-state';
 import { applyManifestWithoutAudio } from './v2-apply-metadata';
+import { countMobileCloudDownloadFailures } from './download-failures';
 import {
   projectManifestV2ToV1,
   throwIfAborted,
@@ -60,6 +61,10 @@ export async function applyMobileV2Publication(input: {
       loadPlaylists(),
     ]);
     await reloadLoadedPlaylistDetails();
+    pendingDownloads = await countMobileCloudDownloadFailures(
+      scopeId,
+      applicableManifest.revision,
+    );
   } else {
     const pending = await applyManifestWithoutAudio(
       applicableManifest, scopeId, maxAcknowledgedGeneration, signal,

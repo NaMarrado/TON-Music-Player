@@ -3,6 +3,7 @@ import {
   addTracksToPlaylist as dbAddTracks,
   createPlaylist as dbCreatePlaylist,
   deletePlaylist as dbDeletePlaylist,
+  movePlaylistTrack as dbMovePlaylistTrack,
   removeTrackFromPlaylist as dbRemoveTrack,
   reorderPlaylistTracks as dbReorderTracks,
   updatePlaylist as dbUpdatePlaylist,
@@ -111,6 +112,51 @@ export async function reorderPlaylistTracks(
       state, playlistId, () => previousDetail,
     ));
     usePlaylistStore.setState({ playlists: previousPlaylists });
+    throw error;
+  }
+}
+
+export async function movePlaylistTrack(
+  playlistId: number,
+  playlistTrackId: number,
+  direction: -1 | 1,
+): Promise<void> {
+  const previousState = usePlaylistStore.getState();
+  const previousDetail = getPlaylistDetail(previousState, playlistId);
+  const currentIndex = previousDetail.tracks.findIndex(
+    (track) => track.playlist_track_id === playlistTrackId,
+  );
+  const nextIndex = currentIndex + direction;
+  if (currentIndex < 0 || nextIndex < 0 || nextIndex >= previousDetail.tracks.length) return;
+
+  const adjacentPlaylistTrackId = previousDetail.tracks[nextIndex].playlist_track_id;
+  const reorderedTracks = [...previousDetail.tracks];
+  [reorderedTracks[currentIndex], reorderedTracks[nextIndex]] = [
+    reorderedTracks[nextIndex],
+    reorderedTracks[currentIndex],
+  ];
+  const now = Math.floor(Date.now() / 1000);
+
+  usePlaylistStore.setState((state) => updatePlaylistDetail(state, playlistId, (detail) => ({
+    ...detail,
+    playlist: detail.playlist ? { ...detail.playlist, updated_at: now } : null,
+    tracks: reorderedTracks,
+  })));
+  usePlaylistStore.setState((state) => ({
+    playlists: state.playlists.map((playlist) => (
+      playlist.id === playlistId ? { ...playlist, updated_at: now } : playlist
+    )),
+  }));
+
+  try {
+    await dbMovePlaylistTrack(playlistId, playlistTrackId, adjacentPlaylistTrackId);
+  } catch (error) {
+    usePlaylistStore.setState((state) => updatePlaylistDetail(
+      state,
+      playlistId,
+      () => previousDetail,
+    ));
+    usePlaylistStore.setState({ playlists: previousState.playlists });
     throw error;
   }
 }

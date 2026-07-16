@@ -157,3 +157,49 @@ export async function reorderPlaylistTracks(
     );
   });
 }
+
+export async function movePlaylistTrack(
+  playlistId: number,
+  playlistTrackId: number,
+  adjacentPlaylistTrackId: number,
+): Promise<void> {
+  const db = getDb();
+  const now = Math.floor(Date.now() / 1000);
+
+  await db.withTransactionAsync(async () => {
+    const rows = await db.getAllAsync<{ id: number; position: number }>(
+      `SELECT id, position
+       FROM playlist_tracks
+       WHERE playlist_id = ? AND id IN (?, ?)`,
+      [playlistId, playlistTrackId, adjacentPlaylistTrackId],
+    );
+    const moving = rows.find((row) => row.id === playlistTrackId);
+    const adjacent = rows.find((row) => row.id === adjacentPlaylistTrackId);
+    if (!moving || !adjacent) {
+      throw new Error('Playlist track move target no longer exists.');
+    }
+
+    const minimum = await db.getFirstAsync<{ position: number | null }>(
+      'SELECT MIN(position) AS position FROM playlist_tracks WHERE playlist_id = ?',
+      [playlistId],
+    );
+    const temporaryPosition = Math.min(-1, (minimum?.position ?? 0) - 1);
+
+    await db.runAsync(
+      'UPDATE playlist_tracks SET position = ? WHERE id = ? AND playlist_id = ?',
+      [temporaryPosition, moving.id, playlistId],
+    );
+    await db.runAsync(
+      'UPDATE playlist_tracks SET position = ? WHERE id = ? AND playlist_id = ?',
+      [moving.position, adjacent.id, playlistId],
+    );
+    await db.runAsync(
+      'UPDATE playlist_tracks SET position = ? WHERE id = ? AND playlist_id = ?',
+      [adjacent.position, moving.id, playlistId],
+    );
+    await db.runAsync(
+      'UPDATE playlists SET updated_at = ? WHERE id = ?',
+      [now, playlistId],
+    );
+  });
+}

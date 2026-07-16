@@ -43,18 +43,63 @@ export function SectionHeader({
   return (
     <View className={description ? 'mb-3' : 'mb-2'}>
       <View className="flex-row items-center justify-between">
-        <View className="flex-row items-center">
+        <View className="flex-1 flex-row items-center pr-3">
           <View className="w-7 h-7 rounded-lg bg-bg-elevated items-center justify-center mr-2.5">
             <Feather name={icon} size={14} color="#888" />
           </View>
-          <Text className="text-white text-[15px] font-medium">{title}</Text>
+          <Text className="flex-1 text-white text-[15px] font-medium">{title}</Text>
         </View>
-        {right}
+        {right ? <View className="flex-shrink-0">{right}</View> : null}
       </View>
       {description && (
         <Text className="text-text-secondary text-xs mt-1.5 ml-[38px]">{description}</Text>
       )}
     </View>
+  );
+}
+
+export function CompactToggle({
+  accessibilityLabel,
+  disabled = false,
+  value,
+  onValueChange,
+}: {
+  accessibilityLabel: string;
+  disabled?: boolean;
+  value: boolean;
+  onValueChange: (value: boolean) => void;
+}) {
+  return (
+    <Pressable
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="switch"
+      accessibilityState={{ checked: value, disabled }}
+      disabled={disabled}
+      onPress={() => onValueChange(!value)}
+      className="items-center justify-center"
+      style={{ width: 46, height: 44, opacity: disabled ? 0.45 : 1 }}
+    >
+      <View
+        className="justify-center rounded-full border"
+        style={{
+          width: 38,
+          height: 22,
+          borderColor: value ? '#ffffff' : '#4a4a4a',
+          backgroundColor: value ? '#ffffff' : '#1a1a1a',
+        }}
+      >
+        <View
+          style={{
+            width: 16,
+            height: 16,
+            marginLeft: 2,
+            borderRadius: 999,
+            backgroundColor: value ? '#000000' : '#888888',
+            transform: [{ translateX: value ? 16 : 0 }],
+          }}
+        />
+      </View>
+    </Pressable>
   );
 }
 

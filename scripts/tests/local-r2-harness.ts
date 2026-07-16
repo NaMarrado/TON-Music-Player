@@ -23,7 +23,7 @@ type StoredObject = {
 const options = parseOptions(process.argv.slice(2));
 const objects = new Map<string, StoredObject>();
 const failingAudioKeys = new Set<string>();
-seedHarness(options.tracks, options.failAudioEvery);
+seedHarness(options.tracks, options.failAudioEvery, options.specialNames);
 
 const server = createServer((request, response) => {
   void handleRequest(request, response).catch((error) => {
@@ -50,6 +50,12 @@ server.listen(options.port, '127.0.0.1', () => {
 
 async function handleRequest(request: IncomingMessage, response: ServerResponse): Promise<void> {
   const url = new URL(request.url ?? '/', `http://${request.headers.host ?? 'localhost'}`);
+  if (request.method === 'POST' && url.pathname === '/__harness/restore-audio') {
+    failingAudioKeys.clear();
+    response.statusCode = 204;
+    response.end();
+    return;
+  }
   if (request.method === 'GET' && url.searchParams.get('list-type') === '2') {
     sendList(response, url.searchParams.get('prefix') ?? '');
     return;
@@ -134,19 +140,27 @@ async function handleRequest(request: IncomingMessage, response: ServerResponse)
   response.end();
 }
 
-function seedHarness(trackCount: number, failAudioEvery: number): void {
+function seedHarness(trackCount: number, failAudioEvery: number, specialNames: boolean): void {
   const baseAudio = createBaseAudio();
   const entries: CloudTrackEntry[] = [];
   for (let index = 0; index < trackCount; index += 1) {
     const body = Buffer.concat([baseAudio, Buffer.from(`TON_LOCAL_R2_FIXTURE_${index}`)]);
     const hash = sha256(body);
-    const title = `Fixture Track ${String(index + 1).padStart(5, '0')}`;
-    const artist = `Fixture Artist ${String(index % 100).padStart(3, '0')}`;
-    const objectKey = buildCloudLibraryAudioObjectKey('ton', hash, '.m4a', {
-      title,
-      artist,
-      fileName: `${title}.m4a`,
-    });
+    const useSpecialName = specialNames && index === 0;
+    const title = useSpecialName
+      ? '#BrooklynBloodPop! 100%'
+      : `Fixture Track ${String(index + 1).padStart(5, '0')}`;
+    const artist = useSpecialName
+      ? 'SyKo!'
+      : `Fixture Artist ${String(index % 100).padStart(3, '0')}`;
+    // Reproduce object keys created before portable filename sanitization.
+    const objectKey = useSpecialName
+      ? `ton/library/tracks/${artist} - ${title} [${hash.slice(0, 8)}].m4a`
+      : buildCloudLibraryAudioObjectKey('ton', hash, '.m4a', {
+          title,
+          artist,
+          fileName: `${title}.m4a`,
+        });
     storeObject(objectKey, body, 'audio/mp4');
     if (failAudioEvery > 0 && (index + 1) % failAudioEvery === 0) {
       failingAudioKeys.add(objectKey);
@@ -154,7 +168,7 @@ function seedHarness(trackCount: number, failAudioEvery: number): void {
     entries.push({
       content_hash_sha256: hash,
       object_key: objectKey,
-      file_name: `${title}.m4a`,
+      file_name: `${artist} - ${title}.m4a`,
       file_size: body.byteLength,
       format: 'm4a',
       artwork_hash_sha256: null,
@@ -310,6 +324,7 @@ function parseOptions(args: string[]): {
   bucket: string;
   failAudioEvery: number;
   port: number;
+  specialNames: boolean;
   tracks: number;
 } {
   const readNumber = (name: string, fallback: number): number => {
@@ -323,6 +338,7 @@ function parseOptions(args: string[]): {
       || 'local-test-bucket',
     failAudioEvery: readNumber('fail-audio-every', 0),
     port: readNumber('port', 9462),
+    specialNames: args.includes('--special-names'),
     tracks: Math.max(1, readNumber('tracks', 1_600)),
   };
 }

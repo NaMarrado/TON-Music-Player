@@ -14,6 +14,7 @@ export {
   addTracksToPlaylist,
   createPlaylist,
   deletePlaylist,
+  movePlaylistTrack,
   removeTrackFromPlaylist,
   reorderPlaylistTracks,
   updatePlaylist,

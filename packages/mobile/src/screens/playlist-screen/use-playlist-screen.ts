@@ -52,7 +52,6 @@ export function usePlaylistScreen(
   const mutationActions = usePlaylistMutationActions(
     id,
     playlist?.name ?? undefined,
-    sourceTracks,
     selection.selectedPlaylistTrackIds,
     selection.clearSelection,
     navigation,

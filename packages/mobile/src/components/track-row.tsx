@@ -42,9 +42,9 @@ export const TrackRow = memo(function TrackRow({
 
   return (
     <Pressable
-      onPress={onPress}
-      onLongPress={onLongPress}
-      disabled={disabled}
+      onPress={disabled ? undefined : onPress}
+      onLongPress={disabled ? undefined : onLongPress}
+      accessible={!disabled}
       className={`flex-row items-center px-4 ${selected ? 'bg-bg-surface' : ''}`}
       style={{ height: 56, borderBottomWidth: 0.5, borderBottomColor: 'rgba(255,255,255,0.06)' }}
       android_ripple={disabled ? undefined : { color: 'rgba(255,255,255,0.08)' }}

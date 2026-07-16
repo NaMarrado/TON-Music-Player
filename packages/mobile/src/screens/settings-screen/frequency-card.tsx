@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Switch, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import Slider from '@react-native-community/slider';
 import {
   FREQUENCY_PRESETS,
@@ -8,7 +8,7 @@ import {
   normalizeFrequencyHz,
 } from '@ton/core';
 import { setFrequency, setFrequencyEnabled } from '../../services/audio-settings';
-import { PillButton, SectionHeader, SettingsCard } from './primitives';
+import { CompactToggle, PillButton, SectionHeader, SettingsCard } from './primitives';
 
 export function FrequencyCard({
   title,
@@ -45,18 +45,13 @@ export function FrequencyCard({
         title={title}
         description={description}
         right={(
-          <Switch
-            accessibilityHint={description}
+          <CompactToggle
             accessibilityLabel={title}
-            accessibilityRole="switch"
-            accessibilityState={{ checked: frequencyEnabled, disabled }}
             disabled={disabled}
             value={controlsEnabled}
             onValueChange={(enabled) => {
               void setFrequencyEnabled(enabled);
             }}
-            trackColor={{ false: '#333', true: '#555' }}
-            thumbColor={controlsEnabled ? '#fff' : '#888'}
           />
         )}
       />

@@ -1,4 +1,4 @@
-import { View, ScrollView, Switch, Text } from 'react-native';
+import { View, ScrollView, Text } from 'react-native';
 import { EQ_PRESETS } from '@ton/core';
 import { useTranslation } from 'react-i18next';
 import {
@@ -10,7 +10,7 @@ import {
   toggleEq,
 } from '../../services/audio-settings';
 import { EqualizerBandControl } from './equalizer-band-control';
-import { PillButton, SectionHeader, SettingsCard } from './primitives';
+import { CompactToggle, PillButton, SectionHeader, SettingsCard } from './primitives';
 
 const EQ_FREQUENCY_LABELS = CANONICAL_EQ_FREQUENCIES.map((frequency) => getEqFrequencyLabel(frequency));
 
@@ -43,12 +43,11 @@ export function EqualizerCard({
         title={title}
         description={description}
         right={(
-          <Switch
+          <CompactToggle
+            accessibilityLabel={title}
             disabled={disabled}
             value={active}
             onValueChange={toggleEq}
-            trackColor={{ false: '#333', true: '#555' }}
-            thumbColor={active ? '#fff' : '#888'}
           />
         )}
       />
