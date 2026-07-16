@@ -43,9 +43,9 @@ If TON is useful to you, the easiest way to support the project is to star the r
 
 - 🔒 **Fully Local, No Account Required:** TON works without registration, sign-in, or a mandatory online service. Your music, playlists, settings, and playback data stay on your device; cloud sync is entirely optional.
 - 🔊 **Tired of jumping from too quiet to too loud?** Phone volume controls often move in steps that are simply too large. TON adds its own independent volume layer without changing the device volume, letting you fine-tune playback between those system steps.
-- 📥 **Download Entire Playlists:** Paste a Spotify or YouTube playlist and TON creates it locally, processes tracks you are permitted to download, and preserves their original order. Large playlists are supported, subject to content availability and the terms of the source platform.
+- 📥 **Playlist Import & Downloads:** Paste a supported playlist to recreate it locally while preserving the original track order. Only download tracks that you own or are authorized to use. Availability and permitted use depend on the source platform and the relevant rights holders.
 
-  > **Copyright notice:** Only download content you own or have permission to use. TON does not provide or host music and is not affiliated with Spotify, YouTube, or SoundCloud. Users are responsible for complying with copyright law and the source platform’s terms.
+  > **Copyright notice:** TON does not host, sell, or license music and is not affiliated with or endorsed by Spotify, YouTube, or SoundCloud. You are responsible for ensuring that every download complies with applicable law, the rights holder’s permission, and the source platform’s terms.
 
 - 🔀 **Actual Shuffle:** TON shuffles your entire queue and plays through every song instead of repeatedly picking from the same small group.
 - ⚡ **Lightweight by Design:** A fast, focused player without ads, bloated dashboards, or unnecessary background services.
