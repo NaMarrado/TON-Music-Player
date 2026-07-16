@@ -97,6 +97,8 @@ export {
   parseSoundCloudPlaylistUrl,
 } from './services/detect-playlist-source';
 export type { PlaylistSource } from './services/detect-playlist-source';
+export { parseDirectTrackUrl } from './services/detect-track-url';
+export type { DirectTrackSource, DirectTrackUrl } from './services/detect-track-url';
 export {
   TON_REPOSITORY_URL,
   TON_RELEASES_URL,

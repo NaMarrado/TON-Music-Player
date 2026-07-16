@@ -9,7 +9,7 @@ export function usePlaylistPageModel() {
   const { i18n, t } = useTranslation('pages/playlist');
   const navigate = useNavigate();
   const pageData = usePlaylistPageData();
-  const viewState = usePlaylistViewState(pageData.tracks);
+  const viewState = usePlaylistViewState(pageData.playlistId, pageData.tracks);
   const actions = usePlaylistActions({
     clearSelection: viewState.clearSelection,
     displayTracksRef: viewState.displayTracksRef,

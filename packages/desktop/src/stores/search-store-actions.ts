@@ -4,6 +4,7 @@ import {
   createSearchRequestIdGenerator,
   getSearchPageLimit,
   isCurrentSearchRequest,
+  parseDirectTrackUrl,
   type SearchQuery,
   type SearchSource,
   type SearchSourceEvent,
@@ -105,12 +106,14 @@ export function setSearchQuery(rawQuery: string): void {
     return;
   }
 
-  const activeSource = useSearchStore.getState().activeSource;
-  const sources = getRequestedSources(activeSource);
+  const directTrack = parseDirectTrackUrl(effectiveQuery);
+  const activeSource = directTrack ? 'all' : useSearchStore.getState().activeSource;
+  const sources = directTrack ? [directTrack.source] : getRequestedSources(activeSource);
   useSearchStore.setState({
     query: rawQuery,
     effectiveQuery,
     activeRequestId: requestId,
+    activeSource,
     results: EMPTY_RESULTS(),
     sourceErrors: {},
     isSearching: true,

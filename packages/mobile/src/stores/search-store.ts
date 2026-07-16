@@ -2,6 +2,7 @@ import {
   SEARCH_DEBOUNCE_MS,
   canonicalizeSearchQuery,
   getSearchPageLimit,
+  parseDirectTrackUrl,
 } from '@ton/core';
 import { countPerfEvent, markPerf } from '../services/perf';
 import { executeSearch, type MobileSearchSourceEvent } from '../services/search-service';
@@ -62,7 +63,9 @@ async function runSearch(query: string, activeSource: ActiveTab, requestId: numb
   searchRuntime.activeController?.abort();
   const controller = new AbortController();
   searchRuntime.activeController = controller;
-  const requestedSources = DEFAULT_SEARCH_SOURCES.filter(
+  const directTrack = parseDirectTrackUrl(query);
+  const availableSources = directTrack ? [directTrack.source] : DEFAULT_SEARCH_SOURCES;
+  const requestedSources = availableSources.filter(
     (source) => !useSearchStore.getState().completedSources.includes(source),
   );
   if (requestedSources.length === 0) {
@@ -97,6 +100,7 @@ async function runSearch(query: string, activeSource: ActiveTab, requestId: numb
 
 export function setSearchQuery(rawQuery: string): void {
   const effectiveQuery = canonicalizeSearchQuery(rawQuery);
+  const directTrack = parseDirectTrackUrl(effectiveQuery);
   const requestId = searchRuntime.nextRequestId();
   searchRuntime.activeController?.abort();
   countPerfEvent('search:query-change');
@@ -112,12 +116,14 @@ export function setSearchQuery(rawQuery: string): void {
     return;
   }
   useSearchStore.setState({
-    query: rawQuery, effectiveQuery, activeRequestId: requestId, isSearching: true,
+    query: rawQuery, effectiveQuery, activeRequestId: requestId,
+    activeSource: directTrack ? 'all' : useSearchStore.getState().activeSource,
+    isSearching: true,
     sourceErrors: {}, results: createEmptySearchResults(), completedSources: [],
-    pendingSources: [...DEFAULT_SEARCH_SOURCES], loadingMoreSources: [],
+    pendingSources: directTrack ? [directTrack.source] : [...DEFAULT_SEARCH_SOURCES],
     hasMoreBySource: createEmptySearchMoreState(),
   });
-  const activeSource = useSearchStore.getState().activeSource;
+  const activeSource = directTrack ? 'all' : useSearchStore.getState().activeSource;
   searchRuntime.debounceTimer = setTimeout(() => {
     searchRuntime.debounceTimer = null;
     void runSearch(effectiveQuery, activeSource, requestId);

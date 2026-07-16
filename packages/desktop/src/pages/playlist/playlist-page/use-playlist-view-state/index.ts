@@ -1,14 +1,25 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PlaylistTrackEntry } from '@ton/core';
 import type { SortColumn, SortDir } from '../../sortable-track-row';
 import { filterTracks } from './filter-tracks';
 import { sortTracks } from './sort-tracks';
+import {
+  loadPlaylistSortPreference,
+  savePlaylistSortPreference,
+} from './sort-preference';
 import { useTrackSelection } from './use-track-selection';
 
-export function usePlaylistViewState(tracks: PlaylistTrackEntry[]) {
+export function usePlaylistViewState(playlistId: number, tracks: PlaylistTrackEntry[]) {
   const [filterQuery, setFilterQuery] = useState('');
-  const [sortBy, setSortBy] = useState<SortColumn>(null);
-  const [sortDir, setSortDir] = useState<SortDir>('asc');
+  const initialSort = loadPlaylistSortPreference(playlistId);
+  const [sortBy, setSortBy] = useState<SortColumn>(initialSort.sortBy);
+  const [sortDir, setSortDir] = useState<SortDir>(initialSort.sortDir);
+
+  useEffect(() => {
+    const preference = loadPlaylistSortPreference(playlistId);
+    setSortBy(preference.sortBy);
+    setSortDir(preference.sortDir);
+  }, [playlistId]);
 
   const filteredTracks = useMemo(
     () => filterTracks(tracks, filterQuery),
@@ -31,31 +42,36 @@ export function usePlaylistViewState(tracks: PlaylistTrackEntry[]) {
 
   const handleSort = useCallback(
     (column: SortColumn) => {
+      const applySort = (nextSortBy: SortColumn, nextSortDir: SortDir) => {
+        setSortBy(nextSortBy);
+        setSortDir(nextSortDir);
+        savePlaylistSortPreference(playlistId, {
+          sortBy: nextSortBy,
+          sortDir: nextSortDir,
+        });
+      };
+
       if (column === '#') {
         if (sortBy === '#') {
-          setSortBy(null);
-          setSortDir('asc');
+          applySort(null, 'asc');
         } else {
-          setSortBy('#');
-          setSortDir('desc');
+          applySort('#', 'desc');
         }
         return;
       }
 
       if (sortBy === column) {
         if (sortDir === 'asc') {
-          setSortDir('desc');
+          applySort(sortBy, 'desc');
         } else {
-          setSortBy(null);
-          setSortDir('asc');
+          applySort(null, 'asc');
         }
         return;
       }
 
-      setSortBy(column);
-      setSortDir('asc');
+      applySort(column, 'asc');
     },
-    [sortBy, sortDir],
+    [playlistId, sortBy, sortDir],
   );
 
   return {

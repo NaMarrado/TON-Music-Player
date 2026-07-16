@@ -19,7 +19,7 @@ interface ScEntry {
   url?: string;
 }
 
-interface YtDlpPlaylistResult {
+interface YtDlpPlaylistResult extends ScEntry {
   entries?: ScEntry[];
 }
 
@@ -41,6 +41,30 @@ export async function searchSoundCloud(
 ): Promise<SearchResult[]> {
   const response = await searchSoundCloudPage(query, limit, 0);
   return response.results;
+}
+
+export async function getSoundCloudTrackByUrl(
+  url: string,
+  signal?: AbortSignal,
+): Promise<SearchResult> {
+  const result = await runYtDlp(await getYtDlpPathAsync(), [
+    url,
+    '--dump-single-json',
+    '--no-playlist',
+    '--no-warnings',
+  ], signal);
+  const canonicalUrl = result.webpage_url || url;
+  return {
+    id: result.id || canonicalUrl,
+    source: 'soundcloud',
+    title: result.title || '',
+    artist: result.uploader || result.creator || '',
+    album: null,
+    duration_ms: result.duration == null ? null : Math.round(result.duration * 1000),
+    thumbnail_url: pickThumbnail(result),
+    url: canonicalUrl,
+    is_downloaded: false,
+  };
 }
 
 export async function searchSoundCloudPage(

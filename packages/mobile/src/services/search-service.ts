@@ -3,13 +3,15 @@ import {
   buildSearchFtsQuery,
   canonicalizeSearchQuery,
   createSearchPageRequest,
+  parseDirectTrackUrl,
   relaxSearchQuery,
+  type DirectTrackUrl,
   type SearchResult,
   type SearchSource,
   type SearchSourceStatus,
 } from '@ton/core';
-import { searchYouTubePage } from './youtube-search';
-import { searchSpotifyPage } from './spotify-client';
+import { getYouTubeTrackById, searchYouTubePage } from './youtube-search';
+import { getSpotifyTrackById, searchSpotifyPage } from './spotify-client';
 import { getTrackIdsBySourceIdentity, searchTracksFts } from './db-queries';
 import { getDb } from './database';
 import {
@@ -116,6 +118,13 @@ async function getSourcePage(
   offset: number,
   signal?: AbortSignal,
 ): Promise<SearchPage> {
+  const directTrack = parseDirectTrackUrl(query);
+  if (directTrack) {
+    return withProviderDeadline(signal, (providerSignal) => (
+      getDirectTrackPage(source, directTrack, offset, providerSignal)
+    ));
+  }
+
   switch (source) {
     case 'youtube':
       return withProviderDeadline(signal, (providerSignal) => searchRemoteWithRelaxedRetry(
@@ -165,6 +174,32 @@ async function getSourcePage(
       return searchPlaylists(query, limit, offset);
     case 'soundcloud':
       return { results: [], hasMore: false };
+  }
+}
+
+async function getDirectTrackPage(
+  source: SearchSource,
+  directTrack: DirectTrackUrl,
+  offset: number,
+  signal?: AbortSignal,
+): Promise<SearchPage> {
+  if (offset > 0 || source !== directTrack.source) {
+    return { results: [], hasMore: false };
+  }
+
+  switch (directTrack.source) {
+    case 'youtube':
+      return {
+        results: [await getYouTubeTrackById(directTrack.id, signal)],
+        hasMore: false,
+      };
+    case 'spotify':
+      return {
+        results: [await getSpotifyTrackById(directTrack.id, signal)],
+        hasMore: false,
+      };
+    case 'soundcloud':
+      throw new Error('SoundCloud is available on desktop only');
   }
 }
 

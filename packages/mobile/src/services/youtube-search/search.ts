@@ -25,6 +25,38 @@ export async function searchYouTube(
   return (await searchYouTubePage(query, limit, offset)).results;
 }
 
+export async function getYouTubeTrackById(
+  videoId: string,
+  signal?: AbortSignal,
+  clientFactory: SearchClientFactory = defaultSearchClientFactory,
+): Promise<SearchResult> {
+  throwIfSearchAborted(signal);
+  const yt = await clientFactory();
+  const info = await raceSearchAbort(yt.getBasicInfo(videoId), signal);
+  const metadata = info.basic_info;
+  if (!metadata.title) {
+    throw new Error('YouTube video metadata is unavailable');
+  }
+
+  const thumbnail = metadata.thumbnail
+    ?.filter((item): item is typeof item & { url: string } => Boolean(item.url))
+    .sort((left, right) => (
+      (right.width ?? right.height ?? 0) - (left.width ?? left.height ?? 0)
+    ))[0]?.url ?? null;
+
+  return {
+    id: videoId,
+    source: 'youtube',
+    title: metadata.title,
+    artist: metadata.author ?? metadata.channel?.name ?? '',
+    album: null,
+    duration_ms: metadata.duration == null ? null : Math.round(metadata.duration * 1000),
+    thumbnail_url: thumbnail,
+    url: `https://www.youtube.com/watch?v=${videoId}`,
+    is_downloaded: false,
+  };
+}
+
 export async function searchYouTubePage(
   query: string,
   limit = SEARCH_PAGE_LIMITS.youtube,

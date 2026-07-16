@@ -42,6 +42,24 @@ export async function searchSpotify(
   return response.results;
 }
 
+export async function getSpotifyTrackById(
+  trackId: string,
+  signal?: AbortSignal,
+): Promise<SearchResult> {
+  const track = await raceSearchAbort(getClient().tracks.get(trackId), signal);
+  return {
+    id: track.id,
+    source: 'spotify',
+    title: track.name,
+    artist: track.artists.map((artist) => artist.name).join(', '),
+    album: track.album.name,
+    duration_ms: track.duration_ms,
+    thumbnail_url: track.album.images[0]?.url ?? null,
+    url: track.external_urls.spotify,
+    is_downloaded: false,
+  };
+}
+
 export async function searchSpotifyPage(
   query: string,
   limit = SEARCH_PAGE_LIMITS.spotify,
