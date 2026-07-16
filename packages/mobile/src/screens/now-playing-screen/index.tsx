@@ -1,7 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import { ScrollView, Text, View, useWindowDimensions } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { runOnJS } from 'react-native-reanimated';
+import { PanResponder, ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -33,21 +31,24 @@ export function NowPlayingScreen() {
   const volumePercent = usePlaybackStore((state) => state.volumePercent);
   const isMuted = usePlaybackStore((state) => state.isMuted);
   const { position, duration } = useTrackProgress(250);
-  const { width: screenWidth } = useWindowDimensions();
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const artSize = screenWidth - (ARTWORK_HORIZONTAL_INSET * 2);
 
   const handleSeek = useCallback((value: number) => {
     return seek(value);
   }, []);
   const handleClose = useCallback(() => navigation.goBack(), [navigation]);
-  const closeGesture = useMemo(() => Gesture.Pan()
-    .activeOffsetY(18)
-    .failOffsetX([-24, 24])
-    .onEnd((event) => {
-      if (event.translationY >= 80 && event.velocityY >= 250) {
-        runOnJS(handleClose)();
-      }
-    }), [handleClose]);
+  const closeResponder = useMemo(() => PanResponder.create({
+    onMoveShouldSetPanResponderCapture: (_event, gesture) => (
+      gesture.y0 <= screenHeight * 0.58
+      && gesture.dy >= 18
+      && Math.abs(gesture.dx) <= 24
+    ),
+    onPanResponderRelease: (_event, gesture) => {
+      if (gesture.dy >= 80) handleClose();
+    },
+    onPanResponderTerminationRequest: () => false,
+  }), [handleClose, screenHeight]);
 
   if (!currentTrack) {
     return (
@@ -61,6 +62,7 @@ export function NowPlayingScreen() {
     <View
       className="flex-1 bg-bg-deep"
       style={{ paddingTop: insets.top }}
+      {...closeResponder.panHandlers}
     >
       <NowPlayingHeader title={t('title')} onBack={handleClose} />
 
@@ -74,26 +76,24 @@ export function NowPlayingScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View className="flex-grow justify-evenly">
-          <GestureDetector gesture={closeGesture}>
-            <View>
-              <View className="items-center px-10 pt-2">
-                <TrackArtwork coverArtPath={currentTrack.cover_art_path} size={artSize} />
-              </View>
-
-              <View className="px-6 mt-6">
-                <AutoMarqueeText
-                  active
-                  text={currentTrack.title ?? tc('unknown_title')}
-                  className="text-white text-xl font-bold"
-                />
-                <AutoMarqueeText
-                  active
-                  text={currentTrack.artist ?? tc('unknown_artist')}
-                  className="text-text-secondary text-base mt-1"
-                />
-              </View>
+          <View>
+            <View className="items-center px-10 pt-2">
+              <TrackArtwork coverArtPath={currentTrack.cover_art_path} size={artSize} />
             </View>
-          </GestureDetector>
+
+            <View className="px-6 mt-6">
+              <AutoMarqueeText
+                active
+                text={currentTrack.title ?? tc('unknown_title')}
+                className="text-white text-xl font-bold"
+              />
+              <AutoMarqueeText
+                active
+                text={currentTrack.artist ?? tc('unknown_artist')}
+                className="text-text-secondary text-base mt-1"
+              />
+            </View>
+          </View>
 
           <ProgressSection position={position} duration={duration} onSeekComplete={handleSeek} />
           <PlaybackControls isPlaying={isPlaying} shuffle={shuffle} repeat={repeat} />
