@@ -11,7 +11,7 @@ interface TrackListViewProps {
   layout: LibraryLayout;
   locale: string;
   tracks: LibraryTrack[];
-  onPlayTrack: (index: number) => void;
+  onPlayTrack: (trackId: number) => void;
   onContextMenu: (trackId: number, event: React.MouseEvent) => void;
   selectedIds: Set<number>;
   onToggleSelect: (id: number, shiftKey: boolean) => void;
@@ -68,7 +68,7 @@ export function TrackListView({
               track={track}
               isPlaying={track.id === currentTrackId}
               isSelected={selectedIds.has(track.id)}
-              onClick={() => onPlayTrack(index)}
+              onClick={() => onPlayTrack(track.id)}
               onContextMenu={(event) => onContextMenu(track.id, event)}
               onToggleSelect={(shiftKey) => onToggleSelect(track.id, shiftKey)}
             />

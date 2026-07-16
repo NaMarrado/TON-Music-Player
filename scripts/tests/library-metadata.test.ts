@@ -65,6 +65,23 @@ test('sorts downloaded dates while always leaving unknown dates last', () => {
   );
 });
 
+test('filters library tracks by normalized artist and album artist names', () => {
+  const rows = [
+    { id: 1, title: 'First Track', artist: 'Beyonc\u00e9', album_artist: null },
+    { id: 2, title: 'Second Track', artist: null, album_artist: 'No Copyright Sounds' },
+    { id: 3, title: 'Third Track', artist: 'Someone Else', album_artist: null },
+  ] as Track[];
+
+  assert.deepEqual(
+    getFilteredTracks(rows, 'BEYONCE', 'added_at', 'asc').map((track) => track.id),
+    [1],
+  );
+  assert.deepEqual(
+    getFilteredTracks(rows, 'nocopyrightsounds', 'added_at', 'asc').map((track) => track.id),
+    [2],
+  );
+});
+
 function cloudTrack(downloadedAt: number | null, updatedAt: number): CloudTrackEntry {
   return {
     content_hash_sha256: 'hash',

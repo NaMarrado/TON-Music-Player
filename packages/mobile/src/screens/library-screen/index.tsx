@@ -71,12 +71,12 @@ export function LibraryScreen() {
         estimatedItemSize={56}
         extraData={selectedTrackIds}
         ListHeaderComponent={listHeader}
-        renderItem={({ item, index }) => (
+        renderItem={({ item }) => (
           <TrackRow
             track={item}
             selected={selectedTrackIdSet.has(item.id)}
             selectionMode={selectionActive}
-            onPress={() => handleTrackPress(item, index)}
+            onPress={() => handleTrackPress(item)}
             onLongPress={() => handleTrackLongPress(item)}
           />
         )}

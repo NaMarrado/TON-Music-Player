@@ -11,13 +11,14 @@ export function getFilteredTracks<
 ): T[] {
   let result = [...tracks];
 
-  if (filterQuery) {
-    const q = filterQuery.toLowerCase();
+  const query = normalizeLibraryFilterValue(filterQuery);
+  if (query) {
     result = result.filter(
       (track) =>
-        track.title?.toLowerCase().includes(q) ||
-        track.artist?.toLowerCase().includes(q) ||
-        track.album?.toLowerCase().includes(q),
+        normalizeLibraryFilterValue(track.title).includes(query) ||
+        normalizeLibraryFilterValue(track.artist).includes(query) ||
+        normalizeLibraryFilterValue(track.album_artist).includes(query) ||
+        normalizeLibraryFilterValue(track.album).includes(query),
     );
   }
 
@@ -42,6 +43,14 @@ export function getFilteredTracks<
   });
 
   return result;
+}
+
+function normalizeLibraryFilterValue(value: string | null | undefined): string {
+  return (value ?? '')
+    .normalize('NFKD')
+    .replace(/\p{Mark}/gu, '')
+    .toLowerCase()
+    .replace(/[^\p{Letter}\p{Number}]+/gu, '');
 }
 
 export function getArtists(

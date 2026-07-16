@@ -32,8 +32,8 @@ export function useLibrarySelection(displayTracks: Track[]) {
     handleTrackLongPress: (track: Track) => {
       playbackActions.handleTrackLongPress(track, selectionState.toggleSelection);
     },
-    handleTrackPress: (track: Track, index: number) => {
-      playbackActions.handleTrackPress(track, index, selectionState.selectionActive, selectionState.toggleSelection);
+    handleTrackPress: (track: Track) => {
+      playbackActions.handleTrackPress(track, selectionState.selectionActive, selectionState.toggleSelection);
     },
     playlistPickerTrackIds: selectionState.playlistPickerTrackIds,
     removePromptDescription: removeActions.removePromptDescription,

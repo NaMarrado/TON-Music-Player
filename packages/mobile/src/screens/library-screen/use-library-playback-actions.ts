@@ -7,13 +7,16 @@ export function useLibraryPlaybackActions(
   selectedTracks: Track[],
   clearSelection: () => void,
 ) {
-  const handleTrackPress = useCallback((track: Track, index: number, selectionActive: boolean, toggleSelection: (trackId: number) => void) => {
+  const handleTrackPress = useCallback((track: Track, selectionActive: boolean, toggleSelection: (trackId: number) => void) => {
     if (selectionActive) {
       toggleSelection(track.id);
       return;
     }
 
-    playTracks(displayTracks, index);
+    const currentIndex = displayTracks.findIndex((currentTrack) => currentTrack.id === track.id);
+    if (currentIndex >= 0) {
+      playTracks(displayTracks, currentIndex);
+    }
   }, [displayTracks]);
 
   const handleTrackLongPress = useCallback((track: Track, toggleSelection: (trackId: number) => void) => {

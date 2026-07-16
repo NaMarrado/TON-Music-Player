@@ -15,8 +15,12 @@ export function useLibraryPlaybackActions({
   }, [filteredTracksRef]);
 
   const handlePlayTrack = useCallback(
-    (index: number) => {
-      playTracks(filteredTracksRef.current, index);
+    (trackId: number) => {
+      const currentTracks = filteredTracksRef.current;
+      const currentIndex = currentTracks.findIndex((track) => track.id === trackId);
+      if (currentIndex >= 0) {
+        playTracks(currentTracks, currentIndex);
+      }
     },
     [filteredTracksRef],
   );
