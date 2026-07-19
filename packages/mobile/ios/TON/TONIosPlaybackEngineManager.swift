@@ -42,6 +42,7 @@ final class TONIosPlaybackEngineManager: NSObject {
   var eqEnabled = false
   var eventSink: (([String: Any]) -> Void)?
   var pitchRatio: Float = 1
+  var pendingArtworkPaths = Set<String>()
   var queue: [TONIosPlaybackTrack] = []
   var remoteCommandsConfigured = false
   var remoteCapabilities = TONIosPlaybackEngineManager.defaultRemoteCapabilities

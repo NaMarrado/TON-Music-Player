@@ -2,6 +2,12 @@ import Foundation
 import MediaPlayer
 import UIKit
 
+private let nowPlayingArtworkCache = NSCache<NSString, UIImage>()
+private let nowPlayingArtworkQueue = DispatchQueue(
+  label: "com.ton.player.now-playing-artwork",
+  qos: .userInitiated
+)
+
 extension TONIosPlaybackEngineManager {
   func updateNowPlayingInfo() {
     applyRemoteCommandCapabilities()
@@ -22,14 +28,45 @@ extension TONIosPlaybackEngineManager {
     if let artist = track.artist, !artist.isEmpty { info[MPMediaItemPropertyArtist] = artist }
     if let album = track.album, !album.isEmpty { info[MPMediaItemPropertyAlbumTitle] = album }
     if currentDurationSeconds > 0 { info[MPMediaItemPropertyPlaybackDuration] = currentDurationSeconds }
-    if let artworkURL = track.resolvedArtworkURL(),
-       let image = UIImage(contentsOfFile: artworkURL.path) {
-      info[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(
-        boundsSize: image.size,
-        requestHandler: { _ in image }
-      )
+    if let artworkURL = track.resolvedArtworkURL() {
+      let cacheKey = artworkURL.path as NSString
+      if let image = nowPlayingArtworkCache.object(forKey: cacheKey) {
+        info[MPMediaItemPropertyArtwork] = makeNowPlayingArtwork(image)
+      } else {
+        loadNowPlayingArtwork(
+          at: artworkURL
+        )
+      }
     }
     center.nowPlayingInfo = info
+  }
+
+  private func makeNowPlayingArtwork(_ image: UIImage) -> MPMediaItemArtwork {
+    MPMediaItemArtwork(boundsSize: image.size, requestHandler: { _ in image })
+  }
+
+  private func loadNowPlayingArtwork(at artworkURL: URL) {
+    let path = artworkURL.path
+    guard !pendingArtworkPaths.contains(path) else { return }
+    pendingArtworkPaths.insert(path)
+
+    nowPlayingArtworkQueue.async { [weak self] in
+      let image = UIImage(contentsOfFile: path)
+      if let image {
+        nowPlayingArtworkCache.setObject(image, forKey: path as NSString)
+      }
+      self?.stateQueue.async {
+        guard let self else { return }
+        self.pendingArtworkPaths.remove(path)
+        guard let image,
+              self.shouldPublishNowPlayingInfo,
+              self.queue.indices.contains(self.currentIndex),
+              self.queue[self.currentIndex].resolvedArtworkURL()?.path == path else { return }
+        var currentInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo ?? [:]
+        currentInfo[MPMediaItemPropertyArtwork] = self.makeNowPlayingArtwork(image)
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = currentInfo
+      }
+    }
   }
 
   var shouldPublishNowPlayingInfo: Bool {

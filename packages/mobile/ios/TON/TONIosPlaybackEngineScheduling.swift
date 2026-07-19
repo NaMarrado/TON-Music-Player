@@ -33,16 +33,26 @@ extension TONIosPlaybackEngineManager {
     resumePositionSeconds = 0
     scheduledOffsetSeconds = 0
     state = autoplay ? "loading" : "ready"
-    updateNowPlayingInfo()
-    emitPlaybackSnapshot()
     if autoplay {
-      try scheduleCurrentTrack(startingAt: 0, playWhenReady: true)
+      // The previous node is already stopped. Schedule the new audio before
+      // artwork or bridge work so a track switch cannot introduce silence.
+      try scheduleCurrentTrack(
+        startingAt: 0,
+        playWhenReady: true,
+        playerNodeIsStopped: true
+      )
     } else {
+      updateNowPlayingInfo()
+      emitPlaybackSnapshot()
       deactivateAudioSessionIfNeeded()
     }
   }
 
-  func scheduleCurrentTrack(startingAt position: Double, playWhenReady: Bool) throws {
+  func scheduleCurrentTrack(
+    startingAt position: Double,
+    playWhenReady: Bool,
+    playerNodeIsStopped: Bool = false
+  ) throws {
     guard let file = currentFile else { return }
     try configureEngineIfNeeded()
     try activateAudioSessionIfNeeded()
@@ -56,9 +66,11 @@ extension TONIosPlaybackEngineManager {
       handleTrackCompletion()
       return
     }
+    if !playerNodeIsStopped {
+      playerNode.stop()
+      scheduleToken += 1
+    }
     playerNode.volume = 0
-    playerNode.stop()
-    scheduleToken += 1
     let token = scheduleToken
     scheduledOffsetSeconds = clamped
     resumePositionSeconds = clamped

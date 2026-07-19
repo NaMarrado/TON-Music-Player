@@ -3,8 +3,10 @@ import { useQueueStore } from '../../stores/queue-store';
 import { getTrackById } from '../db-queries';
 import {
   addPlaybackTracks,
+  getPlaybackState,
   getPlaybackPosition,
   playPlayback,
+  PlaybackStateValue,
   removeUpcomingPlaybackTracks,
   seekPlayback,
   replacePlaybackQueue,
@@ -13,13 +15,52 @@ import {
 import { incrementPlayCount } from './player-runtime';
 import { buildRntpQueue, type QueueTrackRef } from './track-mapping';
 
+let latestSkipRequest = 0;
+
 export async function skipToIndex(index: number, countPlay = false): Promise<void> {
-  const { items } = useQueueStore.getState();
+  const {
+    currentIndex: previousIndex,
+    generation,
+    items,
+  } = useQueueStore.getState();
   if (index < 0 || index >= items.length) return;
 
+  const request = ++latestSkipRequest;
+  const wasPlaying = usePlaybackStore.getState().isPlaying;
   useQueueStore.setState({ currentIndex: index });
-  await skipPlaybackIndex(index);
-  await playPlayback();
+
+  try {
+    // Both native runtimes preserve active playback during a skip. Calling
+    // play again would reschedule the freshly-started iOS track and cause an
+    // audible restart. Only start explicitly when navigation began paused.
+    await skipPlaybackIndex(index);
+    if (!wasPlaying) {
+      const nativeState = await getPlaybackState();
+      if (
+        nativeState.state !== PlaybackStateValue.Playing
+        && nativeState.state !== PlaybackStateValue.Buffering
+        && nativeState.state !== PlaybackStateValue.Loading
+      ) {
+        await playPlayback();
+      }
+    }
+  } catch (error) {
+    if (
+      latestSkipRequest === request
+      && useQueueStore.getState().generation === generation
+    ) {
+      useQueueStore.setState({ currentIndex: previousIndex });
+    }
+    throw error;
+  }
+
+  if (
+    latestSkipRequest !== request
+    || useQueueStore.getState().generation !== generation
+    || useQueueStore.getState().currentIndex !== index
+  ) {
+    return;
+  }
 
   const item = items[index];
   if (item) {
