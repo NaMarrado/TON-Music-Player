@@ -36,6 +36,7 @@ export function CloudCard({
   labels,
   onCancel,
   onCleanup,
+  onPrepareCleanup,
   onFetch,
   onLoad,
   onSaveTest,
@@ -171,14 +172,17 @@ export function CloudCard({
             <CloudPill
               danger
               fullWidth
-              disabled={isBusy || cleanupChecking || !cleanupPreview
-                || (cleanupPreview.cloudOnlyTracks === 0 && cleanupPreview.objectsToDelete === 0)}
+              disabled={isBusy || cleanupChecking || !canRun}
               label={cleanupChecking
                 ? labels.cleanupChecking
                 : cleanupPreview && (cleanupPreview.cloudOnlyTracks > 0 || cleanupPreview.objectsToDelete > 0)
                   ? labels.cleanupButton
-                  : labels.cleanupClean}
-              onPress={() => setShowCleanup(true)}
+                  : labels.cleanupAnalyze}
+              onPress={() => {
+                void onPrepareCleanup().then((hasChanges) => {
+                  if (hasChanges) setShowCleanup(true);
+                });
+              }}
             />
           </View>
         </View>

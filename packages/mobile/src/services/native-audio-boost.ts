@@ -1,4 +1,4 @@
-import { NativeModules } from 'react-native';
+import { NativeModules, Platform } from 'react-native';
 
 type AudioBoostModule = {
   attach(sessionId: number): Promise<void>;
@@ -10,6 +10,7 @@ type IosPlaybackEngineModule = {
   attachAudioBoost(sessionId: number): Promise<void>;
   setAudioBoostTargetGain(value: number): Promise<void>;
   releaseAudioBoost(): Promise<void>;
+  setLoudnessNormalizationEnabled(enabled: boolean): Promise<void>;
 };
 
 function getAudioBoostModule(): AudioBoostModule | null {
@@ -70,4 +71,11 @@ export async function releaseAudioBoost(): Promise<void> {
   }
 
   await module.release();
+}
+
+export async function setNativeLoudnessNormalizationEnabled(enabled: boolean): Promise<void> {
+  if (Platform.OS !== 'ios') return;
+  const module = getIosPlaybackEngineModule();
+  if (!module) return;
+  await module.setLoudnessNormalizationEnabled(enabled);
 }

@@ -104,6 +104,7 @@
   "cloudWorking": "働く...",
   "cloudCleanupSectionTitle": "クラウドストレージを空ける",
   "cloudCleanupDescription": "この端末のローカルLibraryにない曲をR2から削除します。R2の空き容量を増やすために使用します。削除した曲は同期済みプレイリストと他の端末からも消えます。",
+  "cloudCleanupAnalyze": "端末にないクラウド曲を確認",
   "cloudCleanupChecking": "R2を確認中...",
   "cloudCleanupClean": "削除するクラウド曲はありません",
   "cloudCleanupButton": "不足しているクラウド曲を削除 · {{count}} · {{size}}",

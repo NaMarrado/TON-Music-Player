@@ -1,6 +1,7 @@
 import { getDb } from '../database';
 import type { CloudR2CleanupFailureSummary } from '@ton/core';
 import { getCloudDownloadRetryDelaySeconds } from './download-failure-policy';
+import { runMobileCloudDbLane } from './db-lane';
 
 const FAILURE_DELETE_BATCH_SIZE = 200;
 
@@ -13,21 +14,23 @@ export interface MobileCloudDownloadFailureContext {
 export async function prepareMobileCloudDownloadFailures(
   context: MobileCloudDownloadFailureContext,
 ): Promise<Set<string>> {
-  const db = getDb();
-  await db.runAsync(
-    `DELETE FROM cloud_sync_download_failures
-     WHERE scope_id = ? AND manifest_revision != ?`,
-    [context.scopeId, context.manifestRevision],
-  );
-  if (context.retryFailed) return new Set<string>();
-  const rows = await db.getAllAsync<{ content_hash_sha256: string }>(
-    `SELECT content_hash_sha256
-     FROM cloud_sync_download_failures
-     WHERE scope_id = ? AND manifest_revision = ?
-       AND next_retry_at > strftime('%s','now')`,
-    [context.scopeId, context.manifestRevision],
-  );
-  return new Set(rows.map((row) => row.content_hash_sha256));
+  return runMobileCloudDbLane(async () => {
+    const db = getDb();
+    await db.runAsync(
+      `DELETE FROM cloud_sync_download_failures
+       WHERE scope_id = ? AND manifest_revision != ?`,
+      [context.scopeId, context.manifestRevision],
+    );
+    if (context.retryFailed) return new Set<string>();
+    const rows = await db.getAllAsync<{ content_hash_sha256: string }>(
+      `SELECT content_hash_sha256
+       FROM cloud_sync_download_failures
+       WHERE scope_id = ? AND manifest_revision = ?
+         AND next_retry_at > strftime('%s','now')`,
+      [context.scopeId, context.manifestRevision],
+    );
+    return new Set(rows.map((row) => row.content_hash_sha256));
+  });
 }
 
 export async function recordMobileCloudDownloadFailure(
@@ -38,8 +41,7 @@ export async function recordMobileCloudDownloadFailure(
   const message = error instanceof Error && error.message
     ? error.message
     : 'cloud_sync_track_download_failed';
-  const db = getDb();
-  await db.withExclusiveTransactionAsync(async (txn) => {
+  await runMobileCloudDbLane(async () => getDb().withExclusiveTransactionAsync(async (txn) => {
     const previous = await txn.getFirstAsync<{
       manifest_revision: string;
       attempt_count: number;
@@ -70,7 +72,7 @@ export async function recordMobileCloudDownloadFailure(
         failedAt, attemptCount, nextRetryAt,
       ],
     );
-  });
+  }));
 }
 
 export async function countMobileCloudDownloadFailures(
@@ -90,11 +92,11 @@ export async function clearMobileCloudDownloadFailure(
   context: MobileCloudDownloadFailureContext,
   contentHash: string,
 ): Promise<void> {
-  await getDb().runAsync(
+  await runMobileCloudDbLane(() => getDb().runAsync(
     `DELETE FROM cloud_sync_download_failures
      WHERE scope_id = ? AND content_hash_sha256 = ?`,
     [context.scopeId, contentHash],
-  );
+  ).then(() => undefined));
 }
 
 export async function listMobileCloudDownloadFailures(
@@ -124,8 +126,9 @@ export async function clearMobileCloudDownloadFailures(
 ): Promise<void> {
   const uniqueHashes = [...new Set(contentHashes.map((hash) => hash.toLowerCase()))];
   if (uniqueHashes.length === 0) return;
-  const db = getDb();
-  await db.withTransactionAsync(async () => {
+  await runMobileCloudDbLane(async () => {
+    const db = getDb();
+    await db.withTransactionAsync(async () => {
     for (let offset = 0; offset < uniqueHashes.length; offset += FAILURE_DELETE_BATCH_SIZE) {
       const batch = uniqueHashes.slice(offset, offset + FAILURE_DELETE_BATCH_SIZE);
       const placeholders = batch.map(() => '?').join(', ');
@@ -135,5 +138,6 @@ export async function clearMobileCloudDownloadFailures(
         [scopeId, ...batch],
       );
     }
+    });
   });
 }

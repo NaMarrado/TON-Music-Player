@@ -31,6 +31,7 @@ export async function buildExportPayload(
   const allTracks = await getAllTracksForTransfer();
   const allPlaylists = await getAllPlaylists();
   const selectedPlaylistIds = new Set(selection.playlistIds);
+  const selectedTrackIds = new Set(selection.trackIds ?? []);
   const selectedPlaylists = allPlaylists.filter((playlist) => selectedPlaylistIds.has(playlist.id));
   const bundleType = resolveExportBundleType(selection);
   const exportLabel = buildExportLabel(selection, selectedPlaylists.map((playlist) => playlist.name));
@@ -39,6 +40,10 @@ export async function buildExportPayload(
 
   if (selection.includeLibrary) {
     for (const track of allTracks) selectedTrackMap.set(track.id, track);
+  } else if (selectedTrackIds.size > 0) {
+    for (const track of allTracks) {
+      if (selectedTrackIds.has(track.id)) selectedTrackMap.set(track.id, track);
+    }
   }
   for (const playlist of selectedPlaylists) {
     throwIfLibraryTransferCancelled(shouldCancel);

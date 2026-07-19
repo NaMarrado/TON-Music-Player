@@ -4,6 +4,7 @@ import {
   acknowledgeIosBackgroundSettled,
   getIosBackgroundDownloadSnapshot,
   initializeIosBackgroundDownloadsNative,
+  isIosCloudSyncBackgroundItem,
 } from '../download-runtime/ios-background-session';
 import {
   attachActiveHandle,
@@ -40,7 +41,8 @@ export async function restoreIosBackgroundQueueItems(
   state.restorePromise = (async () => {
     await initializeIosBackgroundDownloadsNative();
     const snapshot = await getIosBackgroundDownloadSnapshot();
-    const items = Array.isArray(snapshot?.items) ? snapshot.items : [];
+    const items = (Array.isArray(snapshot?.items) ? snapshot.items : [])
+      .filter((item) => !isIosCloudSyncBackgroundItem(item));
     for (const item of items) {
       if (item.state === 'running') await restoreRunningItem(queue, item);
     }

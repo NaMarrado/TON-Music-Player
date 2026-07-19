@@ -1,4 +1,5 @@
 import * as FileSystem from 'expo-file-system';
+import { Platform } from 'react-native';
 import {
   buildCloudConnectionTestObjectKey,
   createCloudStorageHttpError,
@@ -9,6 +10,7 @@ import {
   type CloudR2ObjectInfo,
 } from '@ton/core';
 import { parseListBucketResult } from './r2-list-parser';
+import { downloadCloudFileInIosBackground } from './ios-background-download';
 
 function requestHeaders(headers: Record<string, string>): Record<string, string> {
   const rest = { ...headers };
@@ -259,8 +261,16 @@ export class MobileR2Client {
       throw new Error('cloud_sync_cancelled');
     }
     const signed = signR2Request({ config: this.config, method: 'GET', key });
-    const task = FileSystem.createDownloadResumable(requestUrl(signed.url), destinationUri, {
-      headers: requestHeaders(signed.headers),
+    const url = requestUrl(signed.url);
+    const headers = requestHeaders(signed.headers);
+    if (Platform.OS === 'ios') {
+      const backgroundResult = await downloadCloudFileInIosBackground({
+        destinationUri, headers, objectKey: key, signal, url,
+      });
+      if (backgroundResult) return backgroundResult;
+    }
+    const task = FileSystem.createDownloadResumable(url, destinationUri, {
+      headers,
     });
     const abort = () => { void task.cancelAsync(); };
     signal?.addEventListener('abort', abort, { once: true });

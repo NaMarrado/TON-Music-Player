@@ -93,7 +93,9 @@ export function startForegroundCoordinator(runImmediately = true): void {
 export function stopForegroundCoordinator(): void {
   runtime.foregroundStarted = false;
   stopJournalObserver();
-  runtime.coordinator?.stop();
+  // Moving to the background must stop timers, not the transfer already in
+  // flight. FileSystem/native transfers can continue while JS is suspended.
+  runtime.coordinator?.stop(false);
 }
 
 export async function applyNetworkState(state: NetInfoState): Promise<void> {

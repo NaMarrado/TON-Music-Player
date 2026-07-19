@@ -2,6 +2,7 @@ import type { CloudLibraryManifestV2 } from '@ton/core';
 import { getDb } from '../database';
 import { getMobileCloudProtectedEntities } from './local-state';
 import { throwIfAborted } from './v2-common';
+import { runMobileCloudDbLane } from './db-lane';
 
 export async function storeEntityMirror(
   scopeId: string,
@@ -10,7 +11,7 @@ export async function storeEntityMirror(
   signal?: AbortSignal,
 ): Promise<void> {
   throwIfAborted(signal);
-  await getDb().withExclusiveTransactionAsync(async (db) => {
+  await runMobileCloudDbLane(() => getDb().withExclusiveTransactionAsync(async (db) => {
     const protectedEntities = await getMobileCloudProtectedEntities(scopeId, afterGeneration, db);
     const upsert = async (
       entityType: 'track' | 'playlist',
@@ -46,6 +47,6 @@ export async function storeEntityMirror(
         await upsert('playlist', record.cloud_id, record);
       }
     }
-  });
+  }));
   throwIfAborted(signal);
 }

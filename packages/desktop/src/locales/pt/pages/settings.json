@@ -104,6 +104,7 @@
   "cloudWorking": "A processar...",
   "cloudCleanupSectionTitle": "Libertar armazenamento na nuvem",
   "cloudCleanupDescription": "Elimina do R2 as músicas que não estão na Library local deste dispositivo. Isto liberta espaço no R2. As músicas eliminadas também desaparecem das playlists sincronizadas e dos outros dispositivos.",
+  "cloudCleanupAnalyze": "Verificar que músicas na nuvem não estão locais",
   "cloudCleanupChecking": "A verificar o R2...",
   "cloudCleanupClean": "Não há músicas na nuvem para eliminar",
   "cloudCleanupButton": "Eliminar músicas ausentes da nuvem · {{count}} · {{size}}",

@@ -48,7 +48,9 @@ extension TONIosBackgroundDownloadsManager {
   }
 
   func emit(_ record: TONIosBackgroundDownloadRecord) {
-    TONIosDownloadActivityManager.shared.synchronize(record)
+    if !record.silent {
+      TONIosDownloadActivityManager.shared.synchronize(record)
+    }
     let payload = record.asDictionary()
     DispatchQueue.main.async { self.eventSink?(payload) }
   }
@@ -155,6 +157,9 @@ extension TONIosBackgroundDownloadsManager {
     response: HTTPURLResponse,
     record: TONIosBackgroundDownloadRecord,
   ) throws {
+    // R2 objects are verified by the cloud layer using their manifest hash.
+    // They can be audio, artwork, or another TON-managed binary asset.
+    if record.silent && record.strategy == "r2-cloud-sync" { return }
     guard let mimeType = response.mimeType?.lowercased(), !mimeType.isEmpty else { return }
     if mimeType.hasPrefix("audio/") || mimeType == "application/octet-stream" { return }
     if record.format == "m4a" && mimeType == "video/mp4" { return }

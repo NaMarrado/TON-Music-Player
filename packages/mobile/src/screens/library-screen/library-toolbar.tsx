@@ -8,6 +8,7 @@ export function LibraryToolbar({
   selectionActive,
   onPlaySelection,
   onAddSelectionToPlaylist,
+  onExportSelection,
   onRemoveSelection,
   onClearSelection,
   onOpenSortMenu,
@@ -17,6 +18,7 @@ export function LibraryToolbar({
   selectionActive: boolean;
   onPlaySelection: () => void;
   onAddSelectionToPlaylist: () => void;
+  onExportSelection: () => void;
   onRemoveSelection: () => void;
   onClearSelection: () => void;
   onOpenSortMenu: () => void;
@@ -39,6 +41,9 @@ export function LibraryToolbar({
             </Pressable>
             <Pressable onPress={onAddSelectionToPlaylist} hitSlop={8} className="ml-4">
               <Feather name="plus-circle" size={20} color="#e8e8e8" />
+            </Pressable>
+            <Pressable onPress={onExportSelection} hitSlop={8} className="ml-4">
+              <Feather name="share" size={20} color="#e8e8e8" />
             </Pressable>
             <Pressable onPress={onRemoveSelection} hitSlop={8} className="ml-4">
               <Feather name="trash-2" size={20} color="#ef4444" />

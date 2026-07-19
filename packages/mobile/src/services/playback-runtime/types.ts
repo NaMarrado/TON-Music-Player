@@ -6,6 +6,7 @@ export interface PlaybackRuntimeTrack {
   album?: string;
   artwork?: string;
   duration?: number;
+  loudnessGainDb?: number;
   [key: string]: unknown;
 }
 

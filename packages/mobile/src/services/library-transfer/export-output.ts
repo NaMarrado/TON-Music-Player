@@ -61,6 +61,21 @@ export async function writeLibraryExportArchiveAsync(
   return target.fileUri;
 }
 
+export async function prepareLibraryExportArchiveUriAsync(
+  target: LibraryExportOutputTarget,
+  fileName: string,
+): Promise<string> {
+  if (target.kind === 'android-directory') {
+    return FileSystem.StorageAccessFramework.createFileAsync(
+      target.directoryUri,
+      fileName,
+      EXPORT_ARCHIVE_MIME,
+    );
+  }
+  await FileSystem.deleteAsync(target.fileUri, { idempotent: true }).catch(() => {});
+  return target.fileUri;
+}
+
 export async function finalizeLibraryExportOutputAsync(
   target: LibraryExportOutputTarget,
   archiveUri: string,

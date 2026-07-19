@@ -25,6 +25,7 @@ export interface IosBackgroundDownloadRequest {
   headers: Record<string, string>;
   itemId: number;
   safeName: string;
+  silent?: boolean;
   strategy?: string;
   title: string;
   url: string;
@@ -42,6 +43,7 @@ export interface IosBackgroundDownloadSnapshotItem {
   itemId: number;
   progress: number;
   safeName: string;
+  silent?: boolean;
   state: IosBackgroundDownloadState;
   strategy?: string | null;
   title: string;
@@ -55,3 +57,11 @@ export interface IosBackgroundDownloadSnapshot {
 }
 
 export type IosBackgroundDownloadEvent = IosBackgroundDownloadSnapshotItem;
+
+export const IOS_CLOUD_SYNC_DOWNLOAD_STRATEGY = 'r2-cloud-sync';
+
+export function isIosCloudSyncBackgroundItem(
+  item: Pick<IosBackgroundDownloadSnapshotItem, 'strategy'>,
+): boolean {
+  return item.strategy === IOS_CLOUD_SYNC_DOWNLOAD_STRATEGY;
+}

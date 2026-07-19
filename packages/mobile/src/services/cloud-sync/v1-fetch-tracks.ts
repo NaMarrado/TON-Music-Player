@@ -262,7 +262,10 @@ export async function fetchV1Tracks(input: {
     : new Set<string>();
   const orderedTracks = [...manifest.tracks].sort(compareCloudTracksForLibrary);
   emitProgress(onProgress, { phase: 'downloading', total: orderedTracks.length });
-  for (let index = 0; index < orderedTracks.length; index += 1) {
+  let nextIndex = 0;
+  let completed = 0;
+
+  const processTrack = async (index: number): Promise<void> => {
     throwIfFetchCancelled(shouldCancel, abortSignal);
     const track = orderedTracks[index];
     const existing = existingByHash.get(track.content_hash_sha256);
@@ -275,7 +278,7 @@ export async function fetchV1Tracks(input: {
         failedHashes: deferredFailures,
       })) {
         result.failed += 1;
-        continue;
+        return;
       }
       if (existing) {
         const updated = await updateExistingTrack({
@@ -293,7 +296,7 @@ export async function fetchV1Tracks(input: {
         });
         if (!inserted) {
           result.skipped += 1;
-          continue;
+          return;
         }
         trackIdByHash.set(track.content_hash_sha256, inserted.id);
         existingByHash.set(track.content_hash_sha256, {
@@ -324,16 +327,34 @@ export async function fetchV1Tracks(input: {
         );
       }
     } finally {
+      completed += 1;
       emitProgress(onProgress, {
-        phase: 'downloading', current: index + 1, total: orderedTracks.length,
+        phase: 'downloading', current: completed, total: orderedTracks.length,
         downloaded: result.downloaded, skipped: result.skipped, failed: result.failed,
         message: track.metadata.title ?? undefined,
       });
     }
-    if ((index + 1) % 8 === 0) {
+    if (completed % 8 === 0) {
       await yieldToUi();
     }
-  }
+  };
+
+  const worker = async (): Promise<void> => {
+    while (true) {
+      throwIfFetchCancelled(shouldCancel, abortSignal);
+      const index = nextIndex;
+      nextIndex += 1;
+      if (index >= orderedTracks.length) return;
+      await processTrack(index);
+    }
+  };
+
+  // Two bounded workers match TON's download concurrency without flooding R2
+  // or serializing a large cloud library one track at a time.
+  await Promise.all(Array.from(
+    { length: Math.min(2, orderedTracks.length) },
+    () => worker(),
+  ));
   return trackIdByHash;
 }
 

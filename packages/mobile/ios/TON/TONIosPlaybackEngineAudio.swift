@@ -57,19 +57,26 @@ extension TONIosPlaybackEngineManager {
     }
   }
   func attachAudioBoost(sessionId: Int, completion: @escaping () -> Void) {
-    stateQueue.async { _ = sessionId; self.applyAudioBoost(); completion() }
+    stateQueue.async { _ = sessionId; self.applyEffectiveOutput(); completion() }
   }
   func setAudioBoostTargetGain(_ gainMb: Int, completion: @escaping () -> Void) {
     stateQueue.async {
       self.audioBoostGainMb = max(0, gainMb)
-      self.applyAudioBoost()
+      self.applyEffectiveOutput()
+      completion()
+    }
+  }
+  func setLoudnessNormalizationEnabled(_ enabled: Bool, completion: @escaping () -> Void) {
+    stateQueue.async {
+      self.loudnessNormalizationEnabled = enabled
+      self.applyEffectiveOutput()
       completion()
     }
   }
   func releaseAudioBoost(completion: @escaping () -> Void) {
     stateQueue.async {
       self.audioBoostGainMb = 0
-      self.applyAudioBoost()
+      self.applyEffectiveOutput()
       completion()
     }
   }

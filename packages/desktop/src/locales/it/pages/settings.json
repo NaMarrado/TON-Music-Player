@@ -104,6 +104,7 @@
   "cloudWorking": "Operazione in corso...",
   "cloudCleanupSectionTitle": "Libera spazio nel cloud",
   "cloudCleanupDescription": "Elimina da R2 i brani che non sono nella Library locale di questo dispositivo. Serve a liberare spazio in R2. I brani eliminati spariranno anche dalle playlist sincronizzate e dagli altri dispositivi.",
+  "cloudCleanupAnalyze": "Controlla quali brani cloud non sono locali",
   "cloudCleanupChecking": "Controllo di R2...",
   "cloudCleanupClean": "Nessun brano cloud da eliminare",
   "cloudCleanupButton": "Elimina brani cloud mancanti · {{count}} · {{size}}",

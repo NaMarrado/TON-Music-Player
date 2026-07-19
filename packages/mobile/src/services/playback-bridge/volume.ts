@@ -3,6 +3,7 @@ import {
   MOBILE_VOLUME_BUTTON_STEP_PERCENT,
   volumePercentToDesktopGain,
 } from '@ton/core';
+import { Platform } from 'react-native';
 import { usePlaybackStore } from '../../stores/playback-store';
 import { setSetting } from '../db-queries';
 import {
@@ -236,6 +237,9 @@ function shouldApplyTrackGain(nextTrackGain: number): boolean {
 }
 
 function getEffectiveLoudnessGainDb(): number {
+  if (Platform.OS === 'ios') {
+    return 0;
+  }
   const { currentTrack, loudnessNormEnabled } = usePlaybackStore.getState();
   if (!loudnessNormEnabled) {
     return 0;

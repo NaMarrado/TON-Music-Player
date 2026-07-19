@@ -117,6 +117,24 @@ export function useCloudSyncSettings() {
     }
   }, [t]);
 
+  const prepareCloudCleanup = useCallback(async (): Promise<boolean> => {
+    setCloudCleanupChecking(true);
+    setCloudCleanupStatus(null);
+    setCloudError(null);
+    try {
+      const preview = await previewCloudCleanup();
+      setCloudCleanupPreview(preview);
+      const hasChanges = preview.cloudOnlyTracks > 0 || preview.objectsToDelete > 0;
+      if (!hasChanges) setCloudCleanupStatus(t('cloudCleanupClean'));
+      return hasChanges;
+    } catch (error) {
+      setCloudError(formatCloudError(error, t));
+      return false;
+    } finally {
+      setCloudCleanupChecking(false);
+    }
+  }, [t]);
+
   const loadCloudConfig = useCallback(async () => {
     if (cloudLoaded) {
       return;
@@ -132,10 +150,9 @@ export function useCloudSyncSettings() {
         jurisdiction: config.jurisdiction,
       });
       setCloudHasSecret(config.hasSecretAccessKey);
-      void refreshCloudCleanupPreview();
     }
     setCloudLoaded(true);
-  }, [cloudLoaded, refreshCloudCleanupPreview]);
+  }, [cloudLoaded]);
 
   const buildConfig = useCallback((): CloudStorageConfig => ({
     accountId: cloudForm.accountId,
@@ -169,14 +186,13 @@ export function useCloudSyncSettings() {
       await notifyMobileCloudConfigChanged();
       await testMobileCloudConnection();
       setCloudConnected(true);
-      await refreshCloudCleanupPreview();
     } catch (error) {
       setCloudError(formatCloudError(error, t));
     } finally {
       setCloudProgress(null);
       setCloudBusy(false);
     }
-  }, [buildConfig, refreshCloudCleanupPreview, t]);
+  }, [buildConfig, t]);
 
   const runCloudCleanup = useCallback(async (): Promise<'completed' | 'stale' | 'cancelled'> => {
     if (!cloudCleanupPreview) return 'cancelled';
@@ -240,9 +256,6 @@ export function useCloudSyncSettings() {
           loadPlaylists(),
         ]);
       }
-      if (result) {
-        await refreshCloudCleanupPreview();
-      }
     } catch (error) {
       if (error instanceof Error && error.message === 'cloud_sync_cancelled') {
         keepProgress = true;
@@ -256,7 +269,7 @@ export function useCloudSyncSettings() {
         setCloudProgress(null);
       }
     }
-  }, [refreshCloudCleanupPreview, t]);
+  }, [t]);
 
   const cancelCloudTask = useCallback(() => {
     cancelMobileCloudAutoSyncRun();
@@ -330,7 +343,7 @@ export function useCloudSyncSettings() {
 
   const cloudAutoSyncDetailsLabel = useMemo(() => {
     const lastSuccess = cloudAutoSyncStatus.lastSuccessAt == null
-      ? '—'
+      ? t('cloudAutoSyncNever')
       : new Date(
         cloudAutoSyncStatus.lastSuccessAt < 10_000_000_000
           ? cloudAutoSyncStatus.lastSuccessAt * 1000
@@ -365,8 +378,10 @@ export function useCloudSyncSettings() {
     cloudResultLabel,
     fetchCloud: () => void runCloudTask('fetch'),
     loadCloudConfig,
+    prepareCloudCleanup,
     runCloudCleanup,
     refreshCloudLocalState,
+    refreshCloudCleanupPreview,
     saveAndTestCloud,
     syncCloud: () => void runCloudTask('fetch'),
     toggleCloudAutoSync,

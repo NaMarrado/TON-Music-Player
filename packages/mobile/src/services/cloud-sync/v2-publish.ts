@@ -25,7 +25,7 @@ import {
   type PreparedLocalManifest,
 } from './v2-common';
 import { buildLocalMutationManifest } from './v2-mutations';
-import { repairMissingPublishedObjects, uploadPreparedObjects } from './v2-upload';
+import { liveManifestObjectKeys, uploadPreparedObjects } from './v2-upload';
 
 export async function publishMobileV2Head(input: {
   client: MobileR2Client;
@@ -36,7 +36,6 @@ export async function publishMobileV2Head(input: {
   deviceId: string;
   prepared: PreparedLocalManifest | null;
   needsLocal: boolean;
-  manualRecovery: boolean;
   result: CloudSyncResult;
 }): Promise<{
   published: CloudLibraryManifestV2;
@@ -45,7 +44,7 @@ export async function publishMobileV2Head(input: {
 }> {
   const {
     client, options, scopeId, state, outbox, deviceId,
-    prepared, needsLocal, manualRecovery, result,
+    prepared, needsLocal, result,
   } = input;
   const { config, signal } = options;
   let published: CloudLibraryManifestV2 | null = null;
@@ -100,14 +99,8 @@ export async function publishMobileV2Head(input: {
     );
     await uploadPreparedObjects(
       client, prepared, versionedLocal, attemptedUploadKeys,
-      result, options.onProgress, signal,
+      liveManifestObjectKeys(remote), result, options.onProgress, signal,
     );
-    if (manualRecovery) {
-      await repairMissingPublishedObjects(
-        client, prepared, remote, attemptedUploadKeys,
-        result, options.onProgress, signal,
-      );
-    }
     if (!needsLocal && (remoteRead.status !== 'missing' || options.mode === 'fetch')) {
       published = remote;
       publishedEtag = currentEtag;

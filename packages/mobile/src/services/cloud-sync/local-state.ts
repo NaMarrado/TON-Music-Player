@@ -2,6 +2,7 @@ import type { SQLiteDatabase } from 'expo-sqlite';
 import type { CloudStorageConfig } from '@ton/core';
 import { getDb } from '../database';
 import { buildMobileCloudScopeId } from './config';
+import { runMobileCloudDbLane } from './db-lane';
 
 export interface MobileCloudOutboxRow {
   scope_id: string;
@@ -239,17 +240,19 @@ export async function updateMobileCloudPersistedState(
 export async function withMobileCloudOutboxSuppressed<T>(
   run: (db: SQLiteDatabase) => Promise<T>,
 ): Promise<T> {
-  const db = getDb();
-  let result!: T;
-  await db.withExclusiveTransactionAsync(async (txn) => {
-    await txn.runAsync('UPDATE cloud_sync_control SET suppress_outbox = 1 WHERE id = 1');
-    try {
-      result = await run(txn);
-    } finally {
-      await txn.runAsync('UPDATE cloud_sync_control SET suppress_outbox = 0 WHERE id = 1');
-    }
+  return runMobileCloudDbLane(async () => {
+    const db = getDb();
+    let result!: T;
+    await db.withExclusiveTransactionAsync(async (txn) => {
+      await txn.runAsync('UPDATE cloud_sync_control SET suppress_outbox = 1 WHERE id = 1');
+      try {
+        result = await run(txn);
+      } finally {
+        await txn.runAsync('UPDATE cloud_sync_control SET suppress_outbox = 0 WHERE id = 1');
+      }
+    });
+    return result;
   });
-  return result;
 }
 
 export async function acquireMobileCloudLease(owner: string, durationSeconds = 120): Promise<boolean> {

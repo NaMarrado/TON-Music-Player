@@ -23,6 +23,8 @@ type StoredObject = {
 const options = parseOptions(process.argv.slice(2));
 const objects = new Map<string, StoredObject>();
 const failingAudioKeys = new Set<string>();
+const requestCounts = new Map<string, number>();
+const recentRequests: Array<{ method: string; path: string }> = [];
 seedHarness(options.tracks, options.failAudioEvery, options.specialNames);
 
 const server = createServer((request, response) => {
@@ -50,6 +52,21 @@ server.listen(options.port, '127.0.0.1', () => {
 
 async function handleRequest(request: IncomingMessage, response: ServerResponse): Promise<void> {
   const url = new URL(request.url ?? '/', `http://${request.headers.host ?? 'localhost'}`);
+  if (request.method === 'GET' && url.pathname === '/__harness/stats') {
+    response.setHeader('content-type', 'application/json');
+    response.end(JSON.stringify({
+      counts: Object.fromEntries(requestCounts),
+      recentRequests,
+    }));
+    return;
+  }
+  if (request.method === 'POST' && url.pathname === '/__harness/reset-stats') {
+    requestCounts.clear();
+    recentRequests.length = 0;
+    response.statusCode = 204;
+    response.end();
+    return;
+  }
   if (request.method === 'POST' && url.pathname === '/__harness/restore-audio') {
     failingAudioKeys.clear();
     response.statusCode = 204;
@@ -57,6 +74,7 @@ async function handleRequest(request: IncomingMessage, response: ServerResponse)
     return;
   }
   if (request.method === 'GET' && url.searchParams.get('list-type') === '2') {
+    recordRequest('LIST', url.pathname);
     sendList(response, url.searchParams.get('prefix') ?? '');
     return;
   }
@@ -73,6 +91,7 @@ async function handleRequest(request: IncomingMessage, response: ServerResponse)
   }
 
   const stored = objects.get(key);
+  recordRequest(request.method ?? 'UNKNOWN', key);
   if (request.method === 'HEAD') {
     if (!stored) {
       response.statusCode = 404;
@@ -138,6 +157,12 @@ async function handleRequest(request: IncomingMessage, response: ServerResponse)
 
   response.statusCode = 405;
   response.end();
+}
+
+function recordRequest(method: string, path: string): void {
+  requestCounts.set(method, (requestCounts.get(method) ?? 0) + 1);
+  recentRequests.push({ method, path });
+  if (recentRequests.length > 100) recentRequests.shift();
 }
 
 function seedHarness(trackCount: number, failAudioEvery: number, specialNames: boolean): void {

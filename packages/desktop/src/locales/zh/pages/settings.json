@@ -104,6 +104,7 @@
   "cloudWorking": "在职的...",
   "cloudCleanupSectionTitle": "释放云存储空间",
   "cloudCleanupDescription": "从R2中删除本设备本地Library里不存在的歌曲，以释放R2空间。删除的歌曲也会从已同步的播放列表和其他设备中消失。",
+  "cloudCleanupAnalyze": "检查哪些云端歌曲未保存在本地",
   "cloudCleanupChecking": "正在检查 R2...",
   "cloudCleanupClean": "没有要删除的云端歌曲",
   "cloudCleanupButton": "删除缺失的云端歌曲 · {{count}} · {{size}}",

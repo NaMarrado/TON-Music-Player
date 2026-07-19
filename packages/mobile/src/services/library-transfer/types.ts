@@ -23,6 +23,7 @@ export interface LibraryExportResult {
 export interface LibraryExportSelection {
   includeLibrary: boolean;
   playlistIds: number[];
+  trackIds?: number[];
 }
 
 export interface LibraryImportSource {

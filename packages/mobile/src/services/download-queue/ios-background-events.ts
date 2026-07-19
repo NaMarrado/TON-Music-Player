@@ -3,6 +3,7 @@ import {
   acknowledgeIosBackgroundSettled,
   getIosBackgroundDownloadSnapshot,
   subscribeToIosBackgroundDownloads,
+  isIosCloudSyncBackgroundItem,
   type IosBackgroundDownloadEvent,
   type IosBackgroundDownloadSnapshotItem,
 } from '../download-runtime/ios-background-session';
@@ -32,6 +33,7 @@ export async function settleRestoredSnapshotItem(
   queue: IosBackgroundQueueFacade,
   item: IosBackgroundDownloadSnapshotItem,
 ): Promise<void> {
+  if (isIosCloudSyncBackgroundItem(item)) return;
   if (item.state === 'completed') {
     try { await finalizeCompletedBackgroundItem(queue, item); }
     catch (error) {
@@ -61,6 +63,7 @@ async function handleBackgroundEvent(
   queue: IosBackgroundQueueFacade,
   event: IosBackgroundDownloadEvent,
 ): Promise<void> {
+  if (isIosCloudSyncBackgroundItem(event)) return;
   if (event.state === 'running') {
     const alreadyActive = queue.runtime.activeItemIds.has(event.itemId);
     const updated = updateQueueItem(queue.runtime, event.itemId, (current) => (
@@ -175,7 +178,8 @@ async function reconcileSnapshot(queue: IosBackgroundQueueFacade): Promise<void>
   state.reconcileInFlight = true;
   try {
     const snapshot = await getIosBackgroundDownloadSnapshot();
-    const items = Array.isArray(snapshot?.items) ? snapshot.items : [];
+    const items = (Array.isArray(snapshot?.items) ? snapshot.items : [])
+      .filter((item) => !isIosCloudSyncBackgroundItem(item));
     for (const item of items) {
       if (item.state === 'running') await restoreRunningItem(queue, item);
       else await settleSnapshotItemOnce(queue, item);

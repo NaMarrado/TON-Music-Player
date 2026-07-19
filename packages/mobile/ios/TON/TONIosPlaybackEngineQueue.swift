@@ -139,7 +139,7 @@ extension TONIosPlaybackEngineManager {
   func setVolume(_ nextVolume: Float, completion: @escaping () -> Void) {
     stateQueue.async {
       self.volume = max(0, min(nextVolume, 1))
-      if self.engineConfigured { self.playerNode.volume = self.volume }
+      self.applyEffectiveOutput()
       completion()
     }
   }

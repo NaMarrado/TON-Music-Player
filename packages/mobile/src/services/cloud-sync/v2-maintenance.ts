@@ -9,6 +9,7 @@ import { getDb } from '../database';
 import { updateMobileCloudPersistedState } from './local-state';
 import { MobileR2Client } from './r2-client';
 import { liveManifestObjectKeys } from './v2-upload';
+import { runMobileCloudDbLane } from './db-lane';
 
 export async function queueBlobGcTransitions(
   scopeId: string,
@@ -64,7 +65,7 @@ export async function queueBlobGcTransitions(
   }
   const liveKeys = liveManifestObjectKeys(published);
   const eligibleAt = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
-  await getDb().withExclusiveTransactionAsync(async (db) => {
+  await runMobileCloudDbLane(() => getDb().withExclusiveTransactionAsync(async (db) => {
     for (const key of liveKeys) {
       await db.runAsync(
         'DELETE FROM cloud_sync_blob_gc WHERE scope_id = ? AND object_key = ?', [scopeId, key],
@@ -79,7 +80,7 @@ export async function queueBlobGcTransitions(
         [scopeId, key, eligibleAt],
       );
     }
-  });
+  }));
 }
 
 export async function runDailyCloudMaintenance(

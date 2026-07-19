@@ -30,6 +30,7 @@ final class TONIosPlaybackEngineManager: NSObject {
   let stateQueue = DispatchQueue(label: "com.ton.player.ios-playback-engine")
   lazy var timePitchNode = AVAudioUnitTimePitch()
   var audioBoostGainMb = 0
+  var loudnessNormalizationEnabled = false
   var audioSessionActive = false
   var audioSessionConfigured = false
   var audioSessionObserversConfigured = false

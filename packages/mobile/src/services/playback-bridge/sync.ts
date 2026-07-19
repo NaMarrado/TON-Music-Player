@@ -61,6 +61,19 @@ export function syncPlaybackState(
       return;
     }
   }
+  const terminal = event.state === PlaybackStateValue.None
+    || event.state === PlaybackStateValue.Stopped
+    || event.state === PlaybackStateValue.Ended;
+  if (terminal) {
+    usePlaybackStore.setState({
+      currentTrack: null,
+      duration: 0,
+      isPlaying: false,
+      position: 0,
+    });
+    return;
+  }
+
   usePlaybackStore.setState({ isPlaying: event.state === PlaybackStateValue.Playing });
 
   if (
@@ -74,8 +87,10 @@ export function syncPlaybackState(
 }
 
 export async function handleQueueEnded(): Promise<void> {
-  const { items } = useQueueStore.getState();
-  if (items.length === 0) {
-    usePlaybackStore.setState({ isPlaying: false });
-  }
+  usePlaybackStore.setState({
+    currentTrack: null,
+    duration: 0,
+    isPlaying: false,
+    position: 0,
+  });
 }

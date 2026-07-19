@@ -74,7 +74,9 @@ export function useLibraryTransferActions() {
       return;
     }
 
-    if (!selection.includeLibrary && selection.playlistIds.length === 0) {
+    if (!selection.includeLibrary
+        && selection.playlistIds.length === 0
+        && (selection.trackIds?.length ?? 0) === 0) {
       return;
     }
 

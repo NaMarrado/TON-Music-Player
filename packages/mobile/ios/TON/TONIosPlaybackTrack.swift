@@ -6,6 +6,7 @@ struct TONIosPlaybackTrack {
   let artwork: String?
   let duration: Double?
   let id: String
+  let loudnessGainDb: Double
   let title: String
   let url: String
 
@@ -25,6 +26,7 @@ struct TONIosPlaybackTrack {
     self.album = dictionary["album"] as? String
     self.artwork = dictionary["artwork"] as? String
     self.duration = dictionary["duration"] as? Double
+    self.loudnessGainDb = (dictionary["loudnessGainDb"] as? NSNumber)?.doubleValue ?? 0
   }
 
   func asDictionary() -> [String: Any] {
@@ -32,6 +34,7 @@ struct TONIosPlaybackTrack {
       "id": id,
       "title": title,
       "url": url,
+      "loudnessGainDb": loudnessGainDb,
     ]
 
     if let artist {

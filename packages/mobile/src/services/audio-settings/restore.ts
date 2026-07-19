@@ -5,6 +5,7 @@ import { restoreVolumePercent } from '../playback-bridge/volume';
 import { readStoredAudioSettings } from './persistence';
 import { persistAudioSetting } from './persistence';
 import { logVolumeDebug } from '../volume-debug';
+import { setNativeLoudnessNormalizationEnabled } from '../native-audio-boost';
 
 export async function restoreAudioSettings(): Promise<void> {
   const settings = await readStoredAudioSettings();
@@ -37,6 +38,7 @@ export async function restoreAudioSettings(): Promise<void> {
   });
 
   try {
+    await setNativeLoudnessNormalizationEnabled(loudnessNormEnabled);
     await restoreVolumePercent(volumePercent);
   } catch {
     // Volume will be applied when a track plays.

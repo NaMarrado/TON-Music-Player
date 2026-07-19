@@ -37,6 +37,7 @@ struct TONIosBackgroundDownloadRequest {
   let headers: [String: String]
   let itemId: Int
   let safeName: String
+  let silent: Bool
   let strategy: String?
   let title: String
   let url: String
@@ -67,6 +68,7 @@ struct TONIosBackgroundDownloadRequest {
     self.headers = headers
     self.itemId = itemId.intValue
     self.safeName = safeName
+    self.silent = (dictionary["silent"] as? Bool) ?? false
     self.strategy = dictionary["strategy"] as? String
     self.title = title
     self.url = url
@@ -87,6 +89,7 @@ struct TONIosBackgroundDownloadRecord: Codable {
   var itemId: Int
   var progress: Double
   var safeName: String
+  var silent: Bool
   var state: String
   var strategy: String?
   var taskId: Int
@@ -108,6 +111,7 @@ struct TONIosBackgroundDownloadRecord: Codable {
     self.itemId = request.itemId
     self.progress = 0
     self.safeName = request.safeName
+    self.silent = request.silent
     self.state = "running"
     self.strategy = request.strategy
     self.taskId = taskId
@@ -130,6 +134,7 @@ struct TONIosBackgroundDownloadRecord: Codable {
     case itemId
     case progress
     case safeName
+    case silent
     case state
     case strategy
     case taskId
@@ -159,6 +164,7 @@ struct TONIosBackgroundDownloadRecord: Codable {
     itemId = try container.decode(Int.self, forKey: .itemId)
     progress = try container.decode(Double.self, forKey: .progress)
     safeName = try container.decode(String.self, forKey: .safeName)
+    silent = try container.decodeIfPresent(Bool.self, forKey: .silent) ?? false
     state = try container.decode(String.self, forKey: .state)
     strategy = try container.decodeIfPresent(String.self, forKey: .strategy)
     taskId = try container.decode(Int.self, forKey: .taskId)
@@ -186,6 +192,7 @@ struct TONIosBackgroundDownloadRecord: Codable {
       "itemId": itemId,
       "progress": progress,
       "safeName": safeName,
+      "silent": silent,
       "state": state,
       "strategy": strategy as Any,
       "title": title,

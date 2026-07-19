@@ -89,7 +89,9 @@ export async function downloadVerifiedCloudFile(
       intermediates: true,
     });
   }
-  const temporaryUri = `${destinationUri}.part-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  // A stable staging path lets iOS reattach to the same background URLSession
+  // task after suspension or process relaunch.
+  const temporaryUri = `${destinationUri}.r2-part`;
   let downloadedUri: string | null = null;
   try {
     downloadedUri = await client.downloadFile(objectKey, temporaryUri, signal);

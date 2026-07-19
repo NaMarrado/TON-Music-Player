@@ -95,10 +95,21 @@ export function usePlaybackSync({ enabled }: UsePlaybackSyncOptions): void {
 
     const syncPlayerSnapshot = async (): Promise<void> => {
       try {
-        const [activeIndex, activeTrack] = await Promise.all([
+        const [activeIndex, activeTrack, playbackState] = await Promise.all([
           getActivePlaybackTrackIndex(),
           getActivePlaybackTrack(),
+          getPlaybackState(),
         ]);
+
+        if (playbackState.state === 'none'
+            || playbackState.state === 'stopped'
+            || playbackState.state === 'ended') {
+          lastActiveIndexRef.current = null;
+          lastActiveTrackIdRef.current = null;
+          lastPlaybackStateRef.current = playbackState.state;
+          syncPlaybackState(playbackState);
+          return;
+        }
 
         if (activeIndex != null) {
           const activeTrackId = activeTrack?.id ?? null;
@@ -117,10 +128,12 @@ export function usePlaybackSync({ enabled }: UsePlaybackSyncOptions): void {
             lastActiveTrackIdRef.current = activeTrackId;
             lastActiveIndexRef.current = null;
             await syncActiveTrack({ track: activeTrack });
+          } else if (activeTrackId == null) {
+            lastActiveIndexRef.current = null;
+            lastActiveTrackIdRef.current = null;
           }
         }
 
-        const playbackState = await getPlaybackState();
         if (
           playbackState.state != null
           && playbackState.state !== lastPlaybackStateRef.current

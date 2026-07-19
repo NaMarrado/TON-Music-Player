@@ -48,7 +48,9 @@ final class TONIosBackgroundDownloadsManager: NSObject, URLSessionDownloadDelega
     stateQueue.async {
       _ = self.session
       self.reconcileSessionTasks {
-        TONIosDownloadActivityManager.shared.reconcile(Array(self.recordsByItemId.values))
+        TONIosDownloadActivityManager.shared.reconcile(
+          self.recordsByItemId.values.filter { !$0.silent }
+        )
         completion()
       }
     }

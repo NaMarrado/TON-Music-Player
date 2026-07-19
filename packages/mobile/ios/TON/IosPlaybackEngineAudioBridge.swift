@@ -52,6 +52,11 @@ extension IosPlaybackEngine {
     TONIosPlaybackEngineManager.sharedManager().setAudioBoostTargetGain(value.intValue) { resolve(nil) }
   }
 
+  @objc(setLoudnessNormalizationEnabled:resolver:rejecter:)
+  func setLoudnessNormalizationEnabled(_ enabled: Bool, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    TONIosPlaybackEngineManager.sharedManager().setLoudnessNormalizationEnabled(enabled) { resolve(nil) }
+  }
+
   @objc(releaseAudioBoost:rejecter:)
   func releaseAudioBoost(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
     TONIosPlaybackEngineManager.sharedManager().releaseAudioBoost { resolve(nil) }

@@ -4,7 +4,9 @@ import type { LibraryExportSelection, LibraryTransferBundleType } from './types'
 export function resolveExportBundleType(
   selection: LibraryExportSelection,
 ): LibraryTransferBundleType {
-  return selection.includeLibrary ? 'library' : 'playlist';
+  return selection.includeLibrary || (selection.trackIds?.length ?? 0) > 0
+    ? 'library'
+    : 'playlist';
 }
 
 export function resolveImportBundleType(

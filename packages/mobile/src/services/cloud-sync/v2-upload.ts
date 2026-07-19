@@ -60,28 +60,50 @@ export async function uploadPreparedObjects(
   prepared: PreparedLocalManifest | null,
   mutations: CloudLibraryManifestV2,
   attemptedKeys: Set<string>,
+  existingRemoteKeys: ReadonlySet<string>,
   result: CloudSyncResult,
   onProgress?: MobileCloudV2SyncOptions['onProgress'],
   signal?: AbortSignal,
 ): Promise<void> {
   if (!prepared) return;
   const referencedKeys = liveManifestObjectKeys(mutations);
-  const uploads = [...prepared.uploads.entries()].filter(
+  const referencedUploads = [...prepared.uploads.entries()].filter(
     ([key]) => referencedKeys.has(key) && !attemptedKeys.has(key),
   );
+  const uploads = referencedUploads.filter(([key]) => !existingRemoteKeys.has(key));
+  const allTrackGroups = new Set(
+    referencedUploads.map(([, upload]) => upload.progressGroup).filter(Boolean),
+  );
+  const pendingTrackGroups = new Set(
+    uploads.map(([, upload]) => upload.progressGroup).filter(Boolean),
+  );
+  let completedTracks = allTrackGroups.size - pendingTrackGroups.size;
+  result.skipped += completedTracks;
   const progress = createTrackProgress(uploads.map(([, upload]) => upload));
-  emitProgress(onProgress, { phase: 'uploading', total: progress.total });
+  const uploadedGroups = new Set<string>();
+  emitProgress(onProgress, {
+    phase: 'uploading', current: completedTracks, total: allTrackGroups.size,
+    uploaded: result.uploaded, skipped: result.skipped,
+  });
   for (let index = 0; index < uploads.length; index += 1) {
     throwIfAborted(signal);
     const [key, upload] = uploads[index];
     const status = await client.uploadFile(
       key, upload.filePath, upload.contentType, upload.hash, { ifNoneMatch: '*', signal },
     );
-    if (status === 'uploaded') result.uploaded += 1;
-    else result.skipped += 1;
+    if (status === 'uploaded' && upload.progressGroup) {
+      uploadedGroups.add(upload.progressGroup);
+    }
     attemptedKeys.add(key);
+    const completedPending = progress.complete(upload);
+    const nextCompletedTracks = allTrackGroups.size - pendingTrackGroups.size + completedPending;
+    if (nextCompletedTracks > completedTracks) {
+      completedTracks = nextCompletedTracks;
+      if (upload.progressGroup && uploadedGroups.has(upload.progressGroup)) result.uploaded += 1;
+      else if (upload.progressGroup) result.skipped += 1;
+    }
     emitProgress(onProgress, {
-      phase: 'uploading', current: progress.complete(upload), total: progress.total,
+      phase: 'uploading', current: completedTracks, total: allTrackGroups.size,
       uploaded: result.uploaded, skipped: result.skipped,
     });
   }

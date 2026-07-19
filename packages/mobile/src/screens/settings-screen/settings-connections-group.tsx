@@ -38,6 +38,7 @@ export function SettingsConnectionsGroup({
     cloudResultLabel,
     fetchCloud,
     loadCloudConfig,
+    prepareCloudCleanup,
     runCloudCleanup,
     loadSpotifyCreds,
     saveAndTestCloud,
@@ -129,6 +130,7 @@ export function SettingsConnectionsGroup({
           cleanupDescription: t('cloudCleanupDescription'),
           cleanupChecking: t('cloudCleanupChecking'),
           cleanupClean: t('cloudCleanupClean'),
+          cleanupAnalyze: t('cloudCleanupAnalyze'),
           cleanupButton: cloudCleanupPreview ? t('cloudCleanupButton', {
             count: cloudCleanupPreview.cloudOnlyTracks,
             size: formatSize(cloudCleanupPreview.reclaimableBytes),
@@ -146,6 +148,7 @@ export function SettingsConnectionsGroup({
         }}
         onCancel={cancelCloudTask}
         onCleanup={runCloudCleanup}
+        onPrepareCleanup={prepareCloudCleanup}
         onFetch={fetchCloud}
         onLoad={loadCloudConfig}
         onSaveTest={saveAndTestCloud}

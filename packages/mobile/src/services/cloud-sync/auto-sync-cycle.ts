@@ -90,9 +90,10 @@ async function runCycle(origin: CloudSyncOrigin): Promise<{
     ]);
     const manual = origin === 'manual' ? runtime.pendingManualRun : null;
     if (manual?.cancelled) throw new Error('cloud_sync_cancelled');
-    // Sync is cloud-authoritative. Uploading local changes is an explicit
-    // separate action (`Upload missing local`).
-    const requestedMode = manual?.mode ?? 'fetch';
+    // Automatic runs merge safe local upserts and remote changes. Track delete
+    // triggers intentionally do not create outbox rows, so destructive cloud
+    // cleanup remains an explicit user action.
+    const requestedMode = manual?.mode ?? 'sync';
     const onProgress = reportProgress;
     const mode = requestedMode;
     if (origin !== 'manual'

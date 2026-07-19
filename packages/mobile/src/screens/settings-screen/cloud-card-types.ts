@@ -45,6 +45,7 @@ export type CloudCardProps = {
   formatCleanupPlaylistChange: (removed: number, remaining: number) => string;
   onCancel: () => void;
   onCleanup: () => Promise<'completed' | 'stale' | 'cancelled'>;
+  onPrepareCleanup: () => Promise<boolean>;
   onFetch: () => void;
   onLoad: () => void;
   onSaveTest: () => void;

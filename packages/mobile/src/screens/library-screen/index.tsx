@@ -10,6 +10,8 @@ import { PlaylistPicker } from '../../components/playlist-picker';
 import { CreatePlaylistModal } from './create-playlist-modal';
 import { LibraryListHeader } from './library-list-header';
 import { LibraryToolbar } from './library-toolbar';
+import { LibraryTransferProgressModal } from '../../components/library-transfer-progress-modal';
+import { useLibraryTransferActions } from '../settings-screen/use-library-transfer-actions';
 import { useLibraryScreen } from './use-library-screen';
 import {
   MobileFastScroller,
@@ -18,6 +20,8 @@ import {
 
 export function LibraryScreen() {
   const { t } = useTranslation('library');
+  const { t: ts } = useTranslation('settings');
+  const transfer = useLibraryTransferActions();
   const {
     clearSelection,
     displayTracks,
@@ -80,6 +84,11 @@ export function LibraryScreen() {
         selectionActive={selectionActive}
         onPlaySelection={handlePlaySelection}
         onAddSelectionToPlaylist={handleAddSelectionToPlaylist}
+        onExportSelection={() => {
+          const trackIds = [...selectedTrackIds];
+          clearSelection();
+          void transfer.exportLibrary({ includeLibrary: false, playlistIds: [], trackIds });
+        }}
         onRemoveSelection={() => { void handleRemoveSelection(); }}
         onClearSelection={clearSelection}
         onOpenSortMenu={() => setShowSortMenu(true)}
@@ -154,6 +163,18 @@ export function LibraryScreen() {
         createLabel={t('create')}
         onClose={() => setShowCreatePlaylist(false)}
         onCreate={handleCreatePlaylist}
+      />
+
+      <LibraryTransferProgressModal
+        visible={transfer.transferProgress != null}
+        title={transfer.transferProgress?.title ?? ts('exportingButton')}
+        message={transfer.transferProgress?.message ?? ts('transferPreparing')}
+        progress={transfer.transferProgress && transfer.transferProgress.total > 0
+          ? Math.round((transfer.transferProgress.current / transfer.transferProgress.total) * 100)
+          : null}
+        canCancel={Boolean(transfer.transferProgress?.cancel)}
+        cancelLabel={t('cancel')}
+        onCancel={() => { void transfer.cancelTransfer(); }}
       />
     </View>
   );

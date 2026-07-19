@@ -42,7 +42,7 @@ extension TONIosPlaybackEngineManager {
     engine.connect(timePitchNode, to: equalizerNode, format: nil)
     engine.connect(equalizerNode, to: engine.mainMixerNode, format: nil)
     engineConfigured = true
-    playerNode.volume = volume
+    playerNode.volume = effectivePlayerVolume()
     timePitchNode.rate = 1
     applyPitch()
     applyEqualizerState()

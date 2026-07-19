@@ -59,5 +59,6 @@ export interface IosPlaybackRuntimeModule {
   setEqEnabled(enabled: boolean): Promise<void>;
   setEqBandLevel(index: number, level: number): Promise<void>;
   setAudioBoostTargetGain(value: number): Promise<void>;
+  setLoudnessNormalizationEnabled(enabled: boolean): Promise<void>;
   releaseAudioBoost(): Promise<void>;
 }

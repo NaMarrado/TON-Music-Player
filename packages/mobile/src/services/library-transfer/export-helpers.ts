@@ -29,6 +29,10 @@ export function buildExportLabel(
   selection: LibraryExportSelection,
   playlistNames: string[],
 ): string {
+  const selectedTrackCount = selection.trackIds?.length ?? 0;
+  if (!selection.includeLibrary && playlistNames.length === 0 && selectedTrackCount > 0) {
+    return selectedTrackCount === 1 ? 'Track' : `${selectedTrackCount} tracks`;
+  }
   if (selection.includeLibrary && playlistNames.length === 0) {
     return 'Library';
   }

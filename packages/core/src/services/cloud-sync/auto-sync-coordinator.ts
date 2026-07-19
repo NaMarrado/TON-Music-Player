@@ -89,12 +89,12 @@ export class CloudAutoSyncCoordinator {
     }
   }
 
-  stop(): void {
+  stop(cancelActive = true): void {
     this.started = false;
     this.timers.clearAll();
     this.firstDirtyAt = null;
     this.runQueue.dropAutomatic(new Error('cloudAutoSyncStopped'));
-    if (this.runQueue.activeOrigin !== 'manual') this.cancelActiveCallback?.();
+    if (cancelActive && this.runQueue.activeOrigin !== 'manual') this.cancelActiveCallback?.();
   }
 
   getStatus(): CloudAutoSyncStatus {

@@ -31,3 +31,7 @@ export type {
   IosBackgroundDownloadSnapshotItem,
   IosBackgroundDownloadState,
 } from './ios-background-types';
+export {
+  IOS_CLOUD_SYNC_DOWNLOAD_STRATEGY,
+  isIosCloudSyncBackgroundItem,
+} from './ios-background-types';

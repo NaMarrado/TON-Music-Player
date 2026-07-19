@@ -13,6 +13,7 @@ export function trackToRntp(track: Track, uniqueSuffix?: string): PlaybackRuntim
     album: track.album ?? undefined,
     artwork: track.cover_art_path ?? undefined,
     duration: (track.duration_ms ?? 0) / 1000,
+    loudnessGainDb: track.loudness_gain ?? 0,
   };
 }
 

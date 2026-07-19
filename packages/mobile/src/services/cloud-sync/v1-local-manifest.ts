@@ -48,13 +48,25 @@ export async function buildLocalManifest(
   const localArtworks: LocalCloudArtwork[] = [];
   const trackEntries: CloudTrackEntry[] = [];
 
-  emitProgress(onProgress, { phase: 'hashing', total: tracks.length });
+  const missingHashCount = tracks.reduce(
+    (count, track) => count + (track.content_hash_sha256 ? 0 : 1), 0,
+  );
+  let hashedTracks = 0;
+  if (missingHashCount > 0) {
+    emitProgress(onProgress, { phase: 'hashing', total: missingHashCount });
+  }
   for (let index = 0; index < tracks.length; index += 1) {
     throwIfCancelled(shouldCancel);
     const track = tracks[index];
+    const neededHash = !track.content_hash_sha256;
     const contentHash = await ensureTrackContentHash(track);
     if (!contentHash) {
-      emitProgress(onProgress, { phase: 'hashing', current: index + 1, total: tracks.length, failed: 1 });
+      if (neededHash) {
+        hashedTracks += 1;
+        emitProgress(onProgress, {
+          phase: 'hashing', current: hashedTracks, total: missingHashCount, failed: 1,
+        });
+      }
       continue;
     }
     const ext = getFileExtension(track.file_path, track.format);
@@ -102,7 +114,12 @@ export async function buildLocalManifest(
         loudness_gain: track.loudness_gain, rating: track.rating,
       },
     });
-    emitProgress(onProgress, { phase: 'hashing', current: index + 1, total: tracks.length });
+    if (neededHash) {
+      hashedTracks += 1;
+      emitProgress(onProgress, {
+        phase: 'hashing', current: hashedTracks, total: missingHashCount,
+      });
+    }
   }
 
   const hashesById = new Map(localTracks.map((entry) => [entry.track.id, entry.contentHash]));

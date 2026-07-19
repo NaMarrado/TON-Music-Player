@@ -104,6 +104,7 @@
   "cloudWorking": "Pracujący...",
   "cloudCleanupSectionTitle": "Zwolnij miejsce w chmurze",
   "cloudCleanupDescription": "Usuwa z R2 utwory, których nie ma w lokalnej Library tego urządzenia. Pozwala to zwolnić miejsce w R2. Usunięte utwory znikną także z zsynchronizowanych playlist i innych urządzeń.",
+  "cloudCleanupAnalyze": "Sprawdź, których utworów z chmury nie ma lokalnie",
   "cloudCleanupChecking": "Sprawdzanie R2...",
   "cloudCleanupClean": "Brak utworów w chmurze do usunięcia",
   "cloudCleanupButton": "Usuń brakujące utwory z chmury · {{count}} · {{size}}",

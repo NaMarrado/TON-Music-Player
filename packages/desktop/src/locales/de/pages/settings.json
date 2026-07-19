@@ -104,6 +104,7 @@
   "cloudWorking": "Wird verarbeitet...",
   "cloudCleanupSectionTitle": "Cloud-Speicher bereinigen",
   "cloudCleanupDescription": "Löscht Songs aus R2, die nicht in der lokalen Library dieses Geräts vorhanden sind. Dadurch wird R2-Speicher freigegeben. Gelöschte Songs verschwinden auch aus synchronisierten Playlists und von anderen Geräten.",
+  "cloudCleanupAnalyze": "Cloud-Songs prüfen, die nicht lokal gespeichert sind",
   "cloudCleanupChecking": "R2 wird geprüft...",
   "cloudCleanupClean": "Keine Cloud-Songs zu löschen",
   "cloudCleanupButton": "Fehlende Cloud-Songs löschen · {{count}} · {{size}}",

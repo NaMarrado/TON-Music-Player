@@ -18,17 +18,20 @@ extension TONIosPlaybackEngineManager {
       )
     }
     let audioFile = try AVAudioFile(forReading: fileURL)
-    currentFile = audioFile
-    currentIndex = index
-    currentDurationSeconds = queue[index].duration
-      ?? Double(audioFile.length) / audioFile.processingFormat.sampleRate
-    resumePositionSeconds = 0
-    scheduledOffsetSeconds = 0
+    // Invalidate pending ramps and silence the previous track before applying
+    // the next track's loudness gain to the shared audio graph.
     scheduleToken += 1
     if engineConfigured {
       playerNode.volume = 0
       playerNode.stop()
     }
+    currentFile = audioFile
+    currentIndex = index
+    applyAudioBoost()
+    currentDurationSeconds = queue[index].duration
+      ?? Double(audioFile.length) / audioFile.processingFormat.sampleRate
+    resumePositionSeconds = 0
+    scheduledOffsetSeconds = 0
     state = autoplay ? "loading" : "ready"
     updateNowPlayingInfo()
     emitPlaybackSnapshot()
@@ -79,7 +82,7 @@ extension TONIosPlaybackEngineManager {
       rampPlayerVolume(for: token)
     } else if state == "playing" {
       state = "ready"
-      playerNode.volume = volume
+      playerNode.volume = effectivePlayerVolume()
     }
     updateNowPlayingInfo()
     emitPlaybackSnapshot()
@@ -90,7 +93,7 @@ extension TONIosPlaybackEngineManager {
     for step in 1...steps {
       stateQueue.asyncAfter(deadline: .now() + (0.006 * Double(step))) {
         guard token == self.scheduleToken, self.playerNode.isPlaying else { return }
-        self.playerNode.volume = self.volume * Float(step) / Float(steps)
+        self.playerNode.volume = self.effectivePlayerVolume() * Float(step) / Float(steps)
       }
     }
   }

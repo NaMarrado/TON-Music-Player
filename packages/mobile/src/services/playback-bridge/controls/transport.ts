@@ -124,6 +124,9 @@ export async function playSingleTrack(track: Track): Promise<void> {
 }
 
 export async function resume(): Promise<void> {
+  const { currentTrack } = usePlaybackStore.getState();
+  const { items, currentIndex } = useQueueStore.getState();
+  if (!currentTrack || items.length === 0 || currentIndex < 0) return;
   await setupPlayer();
   await playPlayback();
   await initializeVolumeBoost().catch(() => {});

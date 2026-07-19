@@ -52,21 +52,10 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
     void Promise.all([
       window.api.invoke('cloud:get-config'),
       window.api.invoke('cloud:get-auto-sync-status'),
-    ]).then(async ([config, syncStatus]) => {
+    ]).then(([config, syncStatus]) => {
       setForm(toCloudForm(config));
       setHasSecret(Boolean(config?.hasSecretAccessKey));
       setAutoSyncStatus(syncStatus);
-      if (config) {
-        setCleanupChecking(true);
-        try {
-          setCleanupPreview(await window.api.invoke('cloud:preview-cleanup'));
-        } catch (error) {
-          setStatus(formatCloudError(error, t));
-        } finally {
-          setCleanupChecking(false);
-          setProgress(null);
-        }
-      }
     });
   }, [t]);
 
@@ -112,16 +101,33 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
       setAutoSyncStatus(await window.api.invoke('cloud:get-auto-sync-status'));
       setStatus(t('cloudConnected'));
       setProgress(null);
-      setCleanupChecking(true);
-      setCleanupPreview(await window.api.invoke('cloud:preview-cleanup'));
+      setCleanupPreview(null);
     } catch (error) {
       setStatus(formatCloudError(error, t));
       setProgress(null);
     } finally {
       setBusy(false);
-      setCleanupChecking(false);
     }
   }, [buildConfig, t]);
+
+  const prepareCleanup = useCallback(async () => {
+    setCleanupChecking(true);
+    setStatus(null);
+    try {
+      const preview = await window.api.invoke('cloud:preview-cleanup');
+      setCleanupPreview(preview);
+      if (preview.cloudOnlyTracks > 0 || preview.objectsToDelete > 0) {
+        setShowCleanup(true);
+      } else {
+        setStatus(t('cloudCleanupClean'));
+      }
+    } catch (error) {
+      setStatus(formatCloudError(error, t));
+    } finally {
+      setCleanupChecking(false);
+      setProgress(null);
+    }
+  }, [t]);
 
   const executeCleanup = useCallback(async () => {
     if (!cleanupPreview) return;
@@ -149,13 +155,11 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
         failed: cleanupResult.failedObjects,
         size: formatSize(cleanupResult.freedBytes),
       }));
-      setCleanupChecking(true);
-      setCleanupPreview(await window.api.invoke('cloud:preview-cleanup'));
+      setCleanupPreview(null);
     } catch (error) {
       setStatus(formatCloudError(error, t));
     } finally {
       setBusy(false);
-      setCleanupChecking(false);
       setProgress(null);
     }
   }, [cleanupPreview, t]);
@@ -193,17 +197,13 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
           reloadPlaylistViews(),
         ]);
       }
-      if (taskResult) {
-        setCleanupChecking(true);
-        setCleanupPreview(await window.api.invoke('cloud:preview-cleanup'));
-      }
+      if (taskResult) setCleanupPreview(null);
       setResult(taskResult as CloudSyncResult | null);
       setStatus(taskResult ? t('cloudDone') : t('cloudCancelled'));
     } catch (error) {
       setStatus(formatCloudError(error, t));
     } finally {
       setBusy(false);
-      setCleanupChecking(false);
       setProgress(null);
     }
   }, [t]);
@@ -347,9 +347,8 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
           </p>
           <CloudActionButton
             danger
-            disabled={busy || cleanupChecking || !cleanupPreview
-              || (cleanupPreview.cloudOnlyTracks === 0 && cleanupPreview.objectsToDelete === 0)}
-            onClick={() => setShowCleanup(true)}
+            disabled={busy || cleanupChecking || !canRun}
+            onClick={() => void prepareCleanup()}
           >
             {cleanupChecking
               ? t('cloudCleanupChecking')
@@ -358,7 +357,7 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
                   count: cleanupPreview.cloudOnlyTracks,
                   size: formatSize(cleanupPreview.reclaimableBytes),
                 })
-                : t('cloudCleanupClean')}
+                : t('cloudCleanupAnalyze')}
           </CloudActionButton>
         </div>
       </div>

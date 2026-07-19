@@ -16,7 +16,7 @@ import {
   throwIfAborted,
   type MobileCloudV2SyncOptions,
 } from './v2-common';
-import { queueBlobGcTransitions, runDailyCloudMaintenance } from './v2-maintenance';
+import { queueBlobGcTransitions } from './v2-maintenance';
 import { storeEntityMirror } from './v2-mirror';
 import { prepareLocalManifest } from './v2-prepare-full';
 import { prepareIncrementalManifest } from './v2-prepare-incremental';
@@ -56,22 +56,11 @@ export async function runMobileCloudV2Sync(
         : null;
       const publication = await publishMobileV2Head({
         client, options, scopeId, state, outbox, deviceId,
-        prepared, needsLocal, manualRecovery, result,
+        prepared, needsLocal, result,
       });
       await queueBlobGcTransitions(
         scopeId, publication.previousRemoteForGc, publication.published,
       );
-      try {
-        await runDailyCloudMaintenance(
-          client, config, scopeId, state.last_cleanup_at, signal,
-        );
-      } catch (error) {
-        if (signal?.aborted) throw error;
-        await updateMobileCloudPersistedState(scopeId, {
-          last_cleanup_at: Math.floor(Date.now() / 1000),
-        }).catch(() => {});
-      }
-
       const pending = await applyMobileV2Publication({
         options,
         scopeId,
@@ -84,10 +73,11 @@ export async function runMobileCloudV2Sync(
       if (mode !== 'upload') {
         await storeEntityMirror(scopeId, publication.published, maxGeneration, signal);
       }
-      // A successful cloud-authoritative fetch resolves local mutations that
-      // existed when it started. Mutations created concurrently have a newer
-      // generation and remain queued for an explicit upload.
-      if (maxGeneration > 0) await acknowledgeMobileCloudOutbox(scopeId, maxGeneration);
+      // Fetch is cloud-authoritative, but it must not discard pending local
+      // upserts. Only a run that actually publishes them may acknowledge them.
+      if (mode !== 'fetch' && maxGeneration > 0) {
+        await acknowledgeMobileCloudOutbox(scopeId, maxGeneration);
+      }
       throwIfAborted(signal);
       await updateMobileCloudPersistedState(scopeId, {
         revision: publication.published.revision,

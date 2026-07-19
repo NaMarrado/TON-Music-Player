@@ -104,6 +104,7 @@
   "cloudWorking": "عمل...",
   "cloudCleanupSectionTitle": "إخلاء مساحة التخزين السحابي",
   "cloudCleanupDescription": "يحذف من R2 الأغاني غير الموجودة في المكتبة المحلية لهذا الجهاز. استخدمه لإخلاء مساحة في R2. ستختفي الأغاني المحذوفة أيضًا من قوائم التشغيل المتزامنة والأجهزة الأخرى.",
+  "cloudCleanupAnalyze": "تحقق من الأغاني السحابية غير الموجودة محليًا",
   "cloudCleanupChecking": "جارٍ فحص R2...",
   "cloudCleanupClean": "لا توجد أغانٍ سحابية لحذفها",
   "cloudCleanupButton": "حذف الأغاني السحابية المفقودة · {{count}} · {{size}}",

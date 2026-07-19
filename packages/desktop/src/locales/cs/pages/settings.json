@@ -104,6 +104,7 @@
   "cloudWorking": "Pracuji...",
   "cloudCleanupSectionTitle": "Uvolnit cloudové úložiště",
   "cloudCleanupDescription": "Smaže z R2 skladby, které nejsou v lokální Library tohoto zařízení. Tím uvolní místo v R2. Smazané skladby zmizí také ze synchronizovaných playlistů a ostatních zařízení.",
+  "cloudCleanupAnalyze": "Zjistit, které cloudové skladby nejsou lokálně",
   "cloudCleanupChecking": "Kontroluji R2...",
   "cloudCleanupClean": "Žádné cloudové skladby ke smazání",
   "cloudCleanupButton": "Smazat chybějící cloudové skladby · {{count}} · {{size}}",

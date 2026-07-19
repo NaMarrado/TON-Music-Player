@@ -55,7 +55,31 @@ extension TONIosPlaybackEngineManager {
 
   func applyAudioBoost() {
     guard engineConfigured else { return }
-    equalizerNode.globalGain = Float(audioBoostGainMb) / 100
+    equalizerNode.globalGain = effectiveGlobalGainDb()
+  }
+
+  func effectiveTotalGain() -> Double {
+    let userBoost = pow(10, Double(audioBoostGainMb) / 2000)
+    let trackDb = loudnessNormalizationEnabled
+      ? currentIndex.flatMap { queue.indices.contains($0) ? queue[$0].loudnessGainDb : nil } ?? 0
+      : 0
+    return Double(volume) * userBoost * pow(10, trackDb / 20)
+  }
+
+  func effectivePlayerVolume() -> Float {
+    Float(max(0, min(1, effectiveTotalGain())))
+  }
+
+  func effectiveGlobalGainDb() -> Float {
+    let gain = effectiveTotalGain()
+    guard gain > 1 else { return 0 }
+    return Float(20 * log10(gain))
+  }
+
+  func applyEffectiveOutput() {
+    guard engineConfigured else { return }
+    playerNode.volume = effectivePlayerVolume()
+    applyAudioBoost()
   }
 
   func emitEvent(type: String, extra: [String: Any] = [:]) {

@@ -104,6 +104,7 @@
   "cloudWorking": "Traitement...",
   "cloudCleanupSectionTitle": "Libérer le stockage cloud",
   "cloudCleanupDescription": "Supprime de R2 les morceaux absents de la Library locale de cet appareil. Cela libère de l'espace dans R2. Les morceaux supprimés disparaîtront aussi des playlists synchronisées et des autres appareils.",
+  "cloudCleanupAnalyze": "Vérifier les morceaux cloud absents de cet appareil",
   "cloudCleanupChecking": "Vérification de R2...",
   "cloudCleanupClean": "Aucun morceau cloud à supprimer",
   "cloudCleanupButton": "Supprimer les morceaux cloud absents · {{count}} · {{size}}",
