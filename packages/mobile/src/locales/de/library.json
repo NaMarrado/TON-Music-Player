@@ -37,5 +37,12 @@
   "selectedCount_other": "{{count}} ausgewählt",
   "noResults": "Keine passenden Titel",
   "emptyLibrary": "Deine Mediathek ist leer",
-  "tabLabel": "Mediathek"
+  "tabLabel": "Mediathek",
+  "duplicatePlaylistTitle": "Song bereits in der Playlist",
+  "duplicatePlaylistMessage": "„{{title}}“ ist bereits in dieser Playlist. Erneut hinzufügen?",
+  "duplicatePlaylistProgress": "Duplikat {{current}} von {{total}}",
+  "duplicatePlaylistAddAgain": "Erneut hinzufügen",
+  "duplicatePlaylistSkip": "Überspringen",
+  "duplicatePlaylistAddThis": "Diesen Song hinzufügen",
+  "duplicatePlaylistAddAll": "Alle Duplikate hinzufügen"
 }

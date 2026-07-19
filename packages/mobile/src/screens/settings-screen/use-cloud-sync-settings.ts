@@ -3,6 +3,7 @@ import type {
   CloudStorageConfig,
   CloudStorageJurisdiction,
   CloudR2CleanupPreview,
+  CloudLocalDeletionPreview,
   CloudSyncProgress,
   CloudSyncResult,
 } from '@ton/core';
@@ -12,6 +13,7 @@ import {
   getMobileCloudSyncConfig,
   executeCloudCleanup,
   previewCloudCleanup,
+  previewMobileCloudLocalDeletions,
   saveMobileCloudSyncConfig,
   testMobileCloudConnection,
 } from '../../services/cloud-sync';
@@ -235,6 +237,7 @@ export function useCloudSyncSettings() {
 
   const runCloudTask = useCallback(async (
     task: 'upload' | 'fetch' | 'sync',
+    restoreLocallyDeleted = false,
   ) => {
     let keepProgress = false;
     setCloudBusy(true);
@@ -244,7 +247,11 @@ export function useCloudSyncSettings() {
     setCloudProgress(null);
     try {
       const onProgress = (progress: CloudSyncProgress) => setCloudProgress(progress);
-      const result = await runMobileCloudManualTask(task, onProgress);
+      const result = await runMobileCloudManualTask(
+        task,
+        onProgress,
+        restoreLocallyDeleted,
+      );
       setCloudResult(result);
       if (!result) {
         keepProgress = true;
@@ -268,6 +275,19 @@ export function useCloudSyncSettings() {
       if (!keepProgress) {
         setCloudProgress(null);
       }
+    }
+  }, [t]);
+
+  const prepareCloudSync = useCallback(async (): Promise<CloudLocalDeletionPreview | null> => {
+    setCloudBusy(true);
+    setCloudError(null);
+    try {
+      return await previewMobileCloudLocalDeletions();
+    } catch (error) {
+      setCloudError(formatCloudError(error, t));
+      return null;
+    } finally {
+      setCloudBusy(false);
     }
   }, [t]);
 
@@ -378,14 +398,16 @@ export function useCloudSyncSettings() {
     cloudProgressLabel,
     cloudResult,
     cloudResultLabel,
-    fetchCloud: () => void runCloudTask('fetch'),
     loadCloudConfig,
+    prepareCloudSync,
     prepareCloudCleanup,
     runCloudCleanup,
     refreshCloudLocalState,
     refreshCloudCleanupPreview,
     saveAndTestCloud,
-    syncCloud: () => void runCloudTask('fetch'),
+    syncCloud: (restoreLocallyDeleted: boolean) => {
+      void runCloudTask('fetch', restoreLocallyDeleted);
+    },
     toggleCloudAutoSync,
     toggleCloudAudioOverCellular,
     updateCloudForm,

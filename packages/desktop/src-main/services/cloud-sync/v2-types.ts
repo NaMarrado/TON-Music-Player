@@ -6,15 +6,24 @@ import type {
   ProgressCallback,
 } from './sync-common';
 
+export type DesktopCloudV2SyncMode = 'upload' | 'fetch' | 'sync';
+
 export type V2SyncOptions = {
   onProgress?: ProgressCallback;
   shouldCancel?: CancelSignal;
   signal?: AbortSignal;
   force?: boolean;
-  mode?: 'upload' | 'fetch' | 'sync';
+  mode?: DesktopCloudV2SyncMode;
+  restoreLocallyDeleted?: boolean;
   onMetadataApplied?: () => void;
   onTracksApplied?: (trackIds: number[]) => void;
 };
+
+export function shouldAcknowledgeDesktopCloudOutbox(
+  mode: DesktopCloudV2SyncMode,
+): boolean {
+  return mode !== 'fetch';
+}
 
 export type SerializedTrack = {
   local: LocalCloudTrack;

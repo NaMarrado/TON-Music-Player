@@ -39,4 +39,5 @@ export const useSearchStore = create<SearchState>()(() => ({
   hasMoreBySource: EMPTY_HAS_MORE(),
   activeRequestId: 0,
   pendingSources: [],
+  sortMode: 'relevance',
 }));

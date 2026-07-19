@@ -17,6 +17,7 @@ export function UpdateCard({
   openUpdateLabel,
   onCheckForUpdates,
   onOpenUpdate,
+  newVersionAvailableLabel,
 }: {
   title: string;
   currentVersionLabel: string;
@@ -33,11 +34,39 @@ export function UpdateCard({
   openUpdateLabel: string;
   onCheckForUpdates: () => void;
   onOpenUpdate: () => void;
+  newVersionAvailableLabel: string;
 }) {
+  const hasUpdate = canOpenUpdate;
   return (
-    <SettingsCard>
+    <SettingsCard attention={hasUpdate}>
+      {hasUpdate && (
+        <View
+          pointerEvents="none"
+          style={{
+            alignItems: 'center',
+            backgroundColor: '#ff3b3b',
+            borderColor: '#111111',
+            borderRadius: 999,
+            borderWidth: 3,
+            height: 28,
+            justifyContent: 'center',
+            position: 'absolute',
+            right: -10,
+            top: -10,
+            width: 28,
+            zIndex: 2,
+          }}
+        >
+          <Text style={{ color: '#fff', fontSize: 13, fontWeight: '800' }}>!</Text>
+        </View>
+      )}
       <SectionHeader icon="refresh-cw" title={title} />
       <View className="ml-[38px] gap-3">
+        {hasUpdate && (
+          <Text style={{ color: '#ff5757', fontSize: 13, fontWeight: '700' }}>
+            {newVersionAvailableLabel}
+          </Text>
+        )}
         <View className="flex-row items-center justify-between gap-3">
           <Text className="text-text-secondary text-xs">{currentVersionLabel}</Text>
           <Text className="text-text-primary text-xs font-medium">{currentVersionValue}</Text>

@@ -100,6 +100,10 @@
   "cloudUploadMissing": "Enviar ficheiros locais em falta",
   "cloudFetchLibrary": "Obter biblioteca da nuvem",
   "cloudSyncNow": "Sincronizar agora",
+  "cloudSyncDialogTitle": "Sincronizar biblioteca na nuvem",
+  "cloudSyncDialogDescription": "Escolha se pretende restaurar músicas anteriormente eliminadas deste dispositivo.",
+  "cloudSyncRestoreDeleted": "Transferir novamente músicas eliminadas ({{count}})",
+  "cloudSyncConfirm": "Sincronizar",
   "cloudCancel": "Cancelar",
   "cloudWorking": "A processar...",
   "cloudCleanupSectionTitle": "Libertar armazenamento na nuvem",
@@ -204,5 +208,9 @@
   "communitySection": "Comunidade",
   "communityTitle": "Ajude a moldar o TON",
   "communityDescription": "Encontrou um bug ou tem uma ideia para uma nova funcionalidade? Entre no Discord e conte para nós.",
-  "communityButton": "Entrar no Discord"
+  "communityButton": "Entrar no Discord",
+  "uiScaleTitle": "Escala da interface",
+  "uiScaleDescription": "Reduza ou aumente toda a interface do TON.",
+  "uiScaleReset": "Repor para 100%",
+  "newVersionAvailable": "Nova versão disponível"
 }

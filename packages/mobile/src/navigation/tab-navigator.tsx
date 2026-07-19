@@ -12,6 +12,7 @@ import { SettingsStack } from './settings-stack';
 import { MiniPlayer } from '../components/mini-player';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { getTabPerformanceOptions } from './tab-performance';
+import { hasUnreadMobileUpdate, useUpdateStore } from '../stores/update-store';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
@@ -25,6 +26,7 @@ const TAB_ICONS: Record<string, keyof typeof Feather.glyphMap> = {
 
 function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
+  const hasUnreadUpdate = useUpdateStore(hasUnreadMobileUpdate);
 
   return (
     <View style={{ backgroundColor: '#0a0a0a' }}>
@@ -69,11 +71,32 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
               onLongPress={onLongPress}
               style={{ flex: 1, alignItems: 'center', paddingVertical: 2 }}
             >
-              <Feather
-                name={iconName}
-                size={20}
-                color={isFocused ? '#ffffff' : '#666666'}
-              />
+              <View>
+                <Feather
+                  name={iconName}
+                  size={20}
+                  color={isFocused ? '#ffffff' : '#666666'}
+                />
+                {route.name === 'SettingsTab' && hasUnreadUpdate && (
+                  <View
+                    style={{
+                      alignItems: 'center',
+                      backgroundColor: '#ff3b3b',
+                      borderColor: '#0a0a0a',
+                      borderRadius: 999,
+                      borderWidth: 2,
+                      height: 14,
+                      justifyContent: 'center',
+                      position: 'absolute',
+                      right: -7,
+                      top: -6,
+                      width: 14,
+                    }}
+                  >
+                    <Text style={{ color: '#fff', fontSize: 7, fontWeight: '800' }}>!</Text>
+                  </View>
+                )}
+              </View>
               <Text
                 style={{
                   fontSize: 10,

@@ -6,11 +6,13 @@ import {
   DESKTOP_MIN_WINDOW_WIDTH,
 } from '../../src/shared/layout';
 import { getAppIconPath } from './app-icon';
+import { applyDesktopUiScale, readDesktopUiScale } from './ui-scale';
 
 const mainProcessDir = dirname(fileURLToPath(import.meta.url));
 
 export function createMainWindow(): BrowserWindow {
   const iconPath = getAppIconPath();
+  const initialUiScale = readDesktopUiScale();
 
   const mainWindow = new BrowserWindow({
     width: 1280,
@@ -31,8 +33,11 @@ export function createMainWindow(): BrowserWindow {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
+      zoomFactor: initialUiScale / 100,
     },
   });
+
+  applyDesktopUiScale(mainWindow, initialUiScale);
 
   if (process.env.ELECTRON_RENDERER_URL) {
     void mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL);

@@ -100,6 +100,10 @@
   "cloudUploadMissing": "Carica elementi locali mancanti",
   "cloudFetchLibrary": "Scarica libreria cloud",
   "cloudSyncNow": "Sincronizza ora",
+  "cloudSyncDialogTitle": "Sincronizza libreria cloud",
+  "cloudSyncDialogDescription": "Scegli se ripristinare i brani eliminati in precedenza da questo dispositivo.",
+  "cloudSyncRestoreDeleted": "Scarica di nuovo i brani eliminati ({{count}})",
+  "cloudSyncConfirm": "Sincronizza",
   "cloudCancel": "Annulla",
   "cloudWorking": "Operazione in corso...",
   "cloudCleanupSectionTitle": "Libera spazio nel cloud",
@@ -204,5 +208,9 @@
   "communitySection": "Community",
   "communityTitle": "Aiuta a migliorare TON",
   "communityDescription": "Hai trovato un bug o hai un'idea per una nuova funzionalità? Entra nel Discord e faccelo sapere.",
-  "communityButton": "Entra su Discord"
+  "communityButton": "Entra su Discord",
+  "uiScaleTitle": "Scala dell'interfaccia",
+  "uiScaleDescription": "Riduci o ingrandisci l'intera interfaccia di TON.",
+  "uiScaleReset": "Ripristina al 100%",
+  "newVersionAvailable": "Nuova versione disponibile"
 }

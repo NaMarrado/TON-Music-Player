@@ -1,4 +1,4 @@
-import { ipcMain, app, shell } from 'electron';
+import { ipcMain, app, BrowserWindow, shell } from 'electron';
 import { createWriteStream } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'path';
@@ -6,6 +6,11 @@ import { pipeline } from 'node:stream/promises';
 import { Readable } from 'node:stream';
 import { pathToFileURL } from 'node:url';
 import { checkForAppUpdate, type AppUpdatePlatform } from '@ton/core';
+import {
+  applyDesktopUiScale,
+  persistDesktopUiScale,
+  readDesktopUiScale,
+} from '../main/ui-scale';
 
 interface UpdateDownloadRequest {
   url: string;
@@ -129,6 +134,15 @@ export function registerAppHandlers(): void {
 
   ipcMain.handle('app:get-platform', () => {
     return process.platform;
+  });
+
+  ipcMain.handle('app:get-ui-scale', () => readDesktopUiScale());
+
+  ipcMain.handle('app:set-ui-scale', (event, value: unknown) => {
+    const scale = persistDesktopUiScale(value);
+    const window = BrowserWindow.fromWebContents(event.sender);
+    if (window) applyDesktopUiScale(window, scale);
+    return scale;
   });
 
   ipcMain.handle('app:get-paths', () => {

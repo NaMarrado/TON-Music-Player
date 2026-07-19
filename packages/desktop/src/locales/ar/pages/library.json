@@ -38,5 +38,12 @@
   "exportLibrary": "مكتبة التصدير",
   "exportSuccess": "تم تصدير المكتبة بنجاح",
   "nothingToExport": "لا شيء للتصدير",
-  "noResults": "لا توجد مسارات مطابقة."
+  "noResults": "لا توجد مسارات مطابقة.",
+  "duplicatePlaylistTitle": "الأغنية موجودة في قائمة التشغيل",
+  "duplicatePlaylistMessage": "الأغنية «{{title}}» موجودة بالفعل في هذه القائمة. هل تريد إضافتها مجددًا؟",
+  "duplicatePlaylistProgress": "التكرار {{current}} من {{total}}",
+  "duplicatePlaylistAddAgain": "إضافة مجددًا",
+  "duplicatePlaylistSkip": "تخطي",
+  "duplicatePlaylistAddThis": "إضافة هذه الأغنية",
+  "duplicatePlaylistAddAll": "إضافة كل التكرارات"
 }

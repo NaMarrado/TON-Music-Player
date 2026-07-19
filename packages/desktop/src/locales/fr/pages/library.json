@@ -38,5 +38,12 @@
   "exportLibrary": "Exporter la bibliothèque",
   "exportSuccess": "Bibliothèque exportée",
   "nothingToExport": "Rien à exporter",
-  "noResults": "Aucun titre correspondant."
+  "noResults": "Aucun titre correspondant.",
+  "duplicatePlaylistTitle": "Morceau déjà dans la playlist",
+  "duplicatePlaylistMessage": "« {{title}} » est déjà dans cette playlist. L’ajouter à nouveau ?",
+  "duplicatePlaylistProgress": "Doublon {{current}} sur {{total}}",
+  "duplicatePlaylistAddAgain": "Ajouter à nouveau",
+  "duplicatePlaylistSkip": "Ignorer",
+  "duplicatePlaylistAddThis": "Ajouter ce morceau",
+  "duplicatePlaylistAddAll": "Ajouter tous les doublons"
 }

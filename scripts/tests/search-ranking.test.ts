@@ -9,8 +9,10 @@ import {
   getSearchPageLimit,
   isCurrentSearchRequest,
   rankSearchResults,
+  parseYouTubeViewCount,
   relaxSearchQuery,
   searchRelevanceScore,
+  sortSearchResults,
 } from '../../packages/core/src/utils/search.ts';
 import { executeSpotifySearchPage } from '../../packages/core/src/services/spotify-search.ts';
 import {
@@ -137,4 +139,31 @@ test('mobile pagination trusts explicit provider hasMore instead of result count
   const merged = mergeSearchMoreState(current, explicit, ['spotify', 'youtube']);
   assert.equal(merged.spotify, true);
   assert.equal(merged.youtube, false);
+});
+
+test('YouTube view counts are parsed without additional metadata requests', () => {
+  assert.equal(parseYouTubeViewCount('1,234,567 views'), 1_234_567);
+  assert.equal(parseYouTubeViewCount('1.2M views'), 1_200_000);
+  assert.equal(parseYouTubeViewCount('987K views'), 987_000);
+  assert.equal(parseYouTubeViewCount(null), null);
+});
+
+test('most viewed sorting is stable and keeps unknown counts last', () => {
+  const firstUnknown = result('unknown-1', 'youtube', 'Unknown 1', 'Artist');
+  const lower = { ...result('lower', 'youtube', 'Lower', 'Artist'), view_count: 10 };
+  const higher = { ...result('higher', 'youtube', 'Higher', 'Artist'), view_count: 20 };
+  const secondUnknown = result('unknown-2', 'youtube', 'Unknown 2', 'Artist');
+  const tied = { ...result('tied', 'youtube', 'Tied', 'Artist'), view_count: 20 };
+
+  assert.deepEqual(
+    sortSearchResults(
+      [firstUnknown, lower, higher, secondUnknown, tied],
+      'most_viewed',
+    ).map((item) => item.id),
+    ['higher', 'tied', 'lower', 'unknown-1', 'unknown-2'],
+  );
+  assert.deepEqual(
+    sortSearchResults([lower, higher], 'relevance').map((item) => item.id),
+    ['lower', 'higher'],
+  );
 });

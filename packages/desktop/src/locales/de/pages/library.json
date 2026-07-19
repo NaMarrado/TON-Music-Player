@@ -38,5 +38,12 @@
   "exportLibrary": "Mediathek exportieren",
   "exportSuccess": "Mediathek erfolgreich exportiert",
   "nothingToExport": "Nichts zum Exportieren",
-  "noResults": "Keine passenden Titel."
+  "noResults": "Keine passenden Titel.",
+  "duplicatePlaylistTitle": "Song bereits in der Playlist",
+  "duplicatePlaylistMessage": "„{{title}}“ ist bereits in dieser Playlist. Erneut hinzufügen?",
+  "duplicatePlaylistProgress": "Duplikat {{current}} von {{total}}",
+  "duplicatePlaylistAddAgain": "Erneut hinzufügen",
+  "duplicatePlaylistSkip": "Überspringen",
+  "duplicatePlaylistAddThis": "Diesen Song hinzufügen",
+  "duplicatePlaylistAddAll": "Alle Duplikate hinzufügen"
 }

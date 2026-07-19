@@ -100,6 +100,10 @@
   "cloudUploadMissing": "رفع الملفات المحلية المفقودة",
   "cloudFetchLibrary": "جلب المكتبة السحابية",
   "cloudSyncNow": "مزامنة الآن",
+  "cloudSyncDialogTitle": "مزامنة مكتبة السحابة",
+  "cloudSyncDialogDescription": "اختر ما إذا كنت تريد استعادة الأغاني التي حذفتها سابقًا من هذا الجهاز.",
+  "cloudSyncRestoreDeleted": "تنزيل الأغاني المحذوفة سابقًا مجددًا ({{count}})",
+  "cloudSyncConfirm": "مزامنة",
   "cloudCancel": "إلغاء",
   "cloudWorking": "عمل...",
   "cloudCleanupSectionTitle": "إخلاء مساحة التخزين السحابي",
@@ -204,5 +208,9 @@
   "communitySection": "المجتمع",
   "communityTitle": "ساهم في تطوير TON",
   "communityDescription": "هل وجدت خطأ أو لديك فكرة لميزة جديدة؟ انضم إلى Discord وأخبرنا.",
-  "communityButton": "الانضمام إلى Discord"
+  "communityButton": "الانضمام إلى Discord",
+  "uiScaleTitle": "حجم الواجهة",
+  "uiScaleDescription": "صغّر واجهة TON بالكامل أو كبّرها.",
+  "uiScaleReset": "إعادة الضبط إلى 100٪",
+  "newVersionAvailable": "يتوفر إصدار جديد"
 }

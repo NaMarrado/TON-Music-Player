@@ -6,6 +6,12 @@
   transition: border-color var(--transition);
 }
 .settings-card:hover { border-color: var(--border); }
+.settings-card-attention {
+  border-color: rgba(255, 59, 59, 0.82);
+  background: linear-gradient(135deg, rgba(255, 59, 59, 0.09), var(--bg-surface) 62%);
+  box-shadow: 0 0 24px rgba(255, 59, 59, 0.08), inset 0 0 24px rgba(255, 59, 59, 0.025);
+}
+.settings-card-attention:hover { border-color: #ff3b3b; }
 .community-card {
   border-color: rgba(255, 68, 68, 0.72);
   background: linear-gradient(135deg, rgba(255, 68, 68, 0.09), var(--bg-surface) 58%);

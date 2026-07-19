@@ -53,6 +53,8 @@ class DesktopCloudAutoSyncRuntime {
 
   private requestedManualMode: 'upload' | 'fetch' | 'sync' = 'sync';
 
+  private requestedRestoreLocallyDeleted = false;
+
   private manualRequestSequence = 0;
 
   private cancelledManualRequestSequence = 0;
@@ -104,6 +106,8 @@ class DesktopCloudAutoSyncRuntime {
               // Full reconciliation is an explicit upload-repair operation;
               // a regular manual sync should process only durable changes.
               force: origin === 'manual' || missingMirroredEntities > 0,
+              restoreLocallyDeleted: origin === 'manual'
+                && this.requestedRestoreLocallyDeleted,
               onMetadataApplied: () => {
                 broadcastCloudEvent('cloud:applied', { phase: 'metadata' });
               },
@@ -229,6 +233,7 @@ class DesktopCloudAutoSyncRuntime {
   async runManual(
     mode: 'upload' | 'fetch' | 'sync' = 'sync',
     listener?: ManualProgressListener,
+    restoreLocallyDeleted = false,
   ): Promise<CloudSyncResult | null> {
     if (this.exclusiveOperationActive) throw new Error('cloud_cleanup_busy');
     if (this.activeAbortController || this.activeCycleDone) {
@@ -241,6 +246,7 @@ class DesktopCloudAutoSyncRuntime {
     try {
       this.lastResult = null;
       this.requestedManualMode = mode;
+      this.requestedRestoreLocallyDeleted = restoreLocallyDeleted;
       // Auto Sync OFF intentionally stops the network watcher. Refresh the
       // coordinator from Electron's current state before a recovery button is
       // evaluated so an old offline state cannot reject a valid manual run.

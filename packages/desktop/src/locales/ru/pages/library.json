@@ -38,5 +38,12 @@
   "exportLibrary": "Экспорт библиотеки",
   "exportSuccess": "Библиотека успешно экспортирована",
   "nothingToExport": "Ничего экспортировать",
-  "noResults": "Нет подходящих треков."
+  "noResults": "Нет подходящих треков.",
+  "duplicatePlaylistTitle": "Трек уже есть в плейлисте",
+  "duplicatePlaylistMessage": "«{{title}}» уже есть в этом плейлисте. Добавить ещё раз?",
+  "duplicatePlaylistProgress": "Дубликат {{current}} из {{total}}",
+  "duplicatePlaylistAddAgain": "Добавить ещё раз",
+  "duplicatePlaylistSkip": "Пропустить",
+  "duplicatePlaylistAddThis": "Добавить этот трек",
+  "duplicatePlaylistAddAll": "Добавить все дубликаты"
 }

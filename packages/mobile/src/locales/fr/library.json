@@ -37,5 +37,12 @@
   "selectedCount_other": "{{count}} sélectionnés",
   "noResults": "Aucun titre correspondant",
   "emptyLibrary": "Votre bibliothèque est vide",
-  "tabLabel": "Bibliothèque"
+  "tabLabel": "Bibliothèque",
+  "duplicatePlaylistTitle": "Morceau déjà dans la playlist",
+  "duplicatePlaylistMessage": "« {{title}} » est déjà dans cette playlist. L’ajouter à nouveau ?",
+  "duplicatePlaylistProgress": "Doublon {{current}} sur {{total}}",
+  "duplicatePlaylistAddAgain": "Ajouter à nouveau",
+  "duplicatePlaylistSkip": "Ignorer",
+  "duplicatePlaylistAddThis": "Ajouter ce morceau",
+  "duplicatePlaylistAddAll": "Ajouter tous les doublons"
 }

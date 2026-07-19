@@ -37,5 +37,12 @@
   "selectedCount_other": "{{count}} が選択されました",
   "noResults": "一致するトラックがありません",
   "emptyLibrary": "あなたのライブラリは空です",
-  "tabLabel": "ライブラリ"
+  "tabLabel": "ライブラリ",
+  "duplicatePlaylistTitle": "曲はすでにプレイリストにあります",
+  "duplicatePlaylistMessage": "「{{title}}」はすでにこのプレイリストにあります。もう一度追加しますか？",
+  "duplicatePlaylistProgress": "重複 {{current}} / {{total}}",
+  "duplicatePlaylistAddAgain": "もう一度追加",
+  "duplicatePlaylistSkip": "スキップ",
+  "duplicatePlaylistAddThis": "この曲を追加",
+  "duplicatePlaylistAddAll": "重複をすべて追加"
 }

@@ -3,6 +3,7 @@ import {
   canonicalizeSearchQuery,
   getSearchPageLimit,
   parseDirectTrackUrl,
+  type SearchSortMode,
 } from '@ton/core';
 import { countPerfEvent, markPerf } from '../services/perf';
 import { executeSearch, type MobileSearchSourceEvent } from '../services/search-service';
@@ -146,6 +147,10 @@ export function setActiveSource(source: ActiveTab): void {
   if (searchRuntime.debounceTimer) clearTimeout(searchRuntime.debounceTimer);
   searchRuntime.debounceTimer = null;
   void runSearch(state.effectiveQuery, source, requestId);
+}
+
+export function setSearchSortMode(sortMode: SearchSortMode): void {
+  useSearchStore.setState({ sortMode });
 }
 
 export function clearSearch(): void {

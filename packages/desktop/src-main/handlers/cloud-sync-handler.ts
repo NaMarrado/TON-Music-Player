@@ -7,13 +7,19 @@ import {
   saveCloudConfigForDesktop,
   testCloudConnectionForDesktop,
 } from '../services/cloud-sync';
+import { previewDesktopCloudLocalDeletions } from '../services/cloud-sync/local-exclusions';
 import { getDesktopCloudAutoSyncRuntime } from '../services/cloud-sync/auto-sync-runtime';
 
 async function runCloudTask(
   mode: 'upload' | 'fetch' | 'sync',
+  restoreLocallyDeleted = false,
 ): Promise<Awaited<ReturnType<ReturnType<typeof getDesktopCloudAutoSyncRuntime>['runManual']>>> {
   try {
-    return await getDesktopCloudAutoSyncRuntime().runManual(mode);
+    return await getDesktopCloudAutoSyncRuntime().runManual(
+      mode,
+      undefined,
+      restoreLocallyDeleted,
+    );
   } catch (error) {
     if (error instanceof Error && (error.message === 'cloud_sync_cancelled' || error.name === 'AbortError')) {
       for (const window of BrowserWindow.getAllWindows()) {
@@ -56,8 +62,10 @@ export function registerCloudSyncHandlers(): void {
     getDesktopCloudAutoSyncRuntime().setEnabled(Boolean(enabled))
   ));
   ipcMain.handle('cloud:upload-missing', () => runCloudTask('upload'));
-  ipcMain.handle('cloud:fetch-library', () => runCloudTask('fetch'));
-  ipcMain.handle('cloud:sync-now', () => runCloudTask('fetch'));
+  ipcMain.handle('cloud:preview-local-deletions', () => previewDesktopCloudLocalDeletions());
+  ipcMain.handle('cloud:sync-now', (_event, restoreLocallyDeleted = false) => (
+    runCloudTask('fetch', Boolean(restoreLocallyDeleted))
+  ));
   ipcMain.handle('cloud:preview-cleanup', () => (
     previewDesktopCloudCleanup(broadcastProgress)
   ));

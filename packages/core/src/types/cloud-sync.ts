@@ -228,6 +228,12 @@ export interface CloudSyncResult {
   importedTracks: number;
   importedPlaylists: number;
   revision: string | null;
+  restoredLocallyDeleted?: number;
+}
+
+export interface CloudLocalDeletionPreview {
+  deletedTracks: number;
+  reclaimableBytes: number;
 }
 
 export interface CloudR2ObjectInfo {

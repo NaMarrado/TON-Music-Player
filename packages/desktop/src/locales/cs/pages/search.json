@@ -26,5 +26,8 @@
   "soundcloudProviderError": "Vyhledávání na SoundCloudu selhalo.",
   "openSettings": "Otevřít nastavení",
   "loadMore": "Načíst další",
-  "downloadStarted": "Stahování {{title}}"
+  "downloadStarted": "Stahování {{title}}",
+  "sortResults": "Seřadit výsledky",
+  "sortRelevance": "Relevance",
+  "sortMostViewed": "Nejvíce zhlédnutí"
 }

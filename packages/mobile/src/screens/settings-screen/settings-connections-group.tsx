@@ -36,9 +36,9 @@ export function SettingsConnectionsGroup({
     cloudProgressLabel,
     cloudResult,
     cloudResultLabel,
-    fetchCloud,
     loadCloudConfig,
     prepareCloudCleanup,
+    prepareCloudSync,
     runCloudCleanup,
     loadSpotifyCreds,
     saveAndTestCloud,
@@ -98,6 +98,7 @@ export function SettingsConnectionsGroup({
           removed,
           remaining,
         })}
+        formatSyncRestoreDeleted={(count) => t('cloudSyncRestoreDeleted', { count })}
         form={cloudForm}
         hasSecret={cloudHasSecret}
         helpTitle={t('cloudHelpTitle')}
@@ -122,8 +123,10 @@ export function SettingsConnectionsGroup({
           secretStored: t('cloudSecretStored'),
           saveTest: t('cloudSaveTest'),
           uploadMissing: t('cloudUploadMissing'),
-          fetchLibrary: t('cloudFetchLibrary'),
           syncNow: t('cloudSyncNow'),
+          syncDialogTitle: t('cloudSyncDialogTitle'),
+          syncDialogDescription: t('cloudSyncDialogDescription'),
+          syncConfirm: t('cloudSyncConfirm'),
           cancel: tc('cancel'),
           working: t('cloudWorking'),
           cleanupSectionTitle: t('cloudCleanupSectionTitle'),
@@ -149,8 +152,11 @@ export function SettingsConnectionsGroup({
         onCancel={cancelCloudTask}
         onCleanup={runCloudCleanup}
         onPrepareCleanup={prepareCloudCleanup}
-        onFetch={fetchCloud}
         onLoad={loadCloudConfig}
+        onPrepareSync={async () => {
+          const preview = await prepareCloudSync();
+          return preview;
+        }}
         onSaveTest={saveAndTestCloud}
         onSync={syncCloud}
         onToggleAutoSync={(enabled) => { void toggleCloudAutoSync(enabled); }}

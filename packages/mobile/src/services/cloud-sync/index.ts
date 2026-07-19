@@ -7,6 +7,7 @@ export {
   executeCloudCleanup,
   previewCloudCleanup,
 } from './r2-cleanup';
+export { previewMobileCloudLocalDeletions } from './local-exclusions';
 export type {
   CloudFetchApplyProtection,
   LocalCloudArtwork,

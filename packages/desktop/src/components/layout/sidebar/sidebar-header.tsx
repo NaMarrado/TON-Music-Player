@@ -15,7 +15,7 @@ export function SidebarHeader({
       <div
         className="flex justify-center shrink-0"
         style={{
-          padding: '44px 0 16px',
+          padding: 'var(--desktop-page-top) 0 16px',
           WebkitAppRegion: 'drag',
         } as React.CSSProperties}
       >
@@ -30,7 +30,7 @@ export function SidebarHeader({
     <div
       className="flex items-center justify-between shrink-0"
       style={{
-        padding: '44px 20px 16px 24px',
+        padding: 'var(--desktop-page-top) 20px 16px 24px',
         WebkitAppRegion: 'drag',
       } as React.CSSProperties}
     >

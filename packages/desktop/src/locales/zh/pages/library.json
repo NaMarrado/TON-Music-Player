@@ -38,5 +38,12 @@
   "exportLibrary": "导出库",
   "exportSuccess": "库导出成功",
   "nothingToExport": "没有什么可导出的",
-  "noResults": "没有匹配的曲目。"
+  "noResults": "没有匹配的曲目。",
+  "duplicatePlaylistTitle": "歌曲已在播放列表中",
+  "duplicatePlaylistMessage": "“{{title}}”已在此播放列表中。再次添加？",
+  "duplicatePlaylistProgress": "重复项 {{current}} / {{total}}",
+  "duplicatePlaylistAddAgain": "再次添加",
+  "duplicatePlaylistSkip": "跳过",
+  "duplicatePlaylistAddThis": "添加此歌曲",
+  "duplicatePlaylistAddAll": "添加所有重复项"
 }

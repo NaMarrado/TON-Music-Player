@@ -10,12 +10,18 @@ export function useSearchScreenActions({
   query,
   results,
   sourceErrors,
+  sortMode,
   t,
 }: UseSearchScreenActionsArgs) {
   const [selectedResult, setSelectedResult] = useState<SearchResult | null>(null);
   const [dismissedErrors, setDismissedErrors] = useState<Record<string, boolean>>({});
   const [playlistPickerTrackId, setPlaylistPickerTrackId] = useState<number | null>(null);
-  const { counts, displayResults } = useSearchDerivedState(activeSource, query, results);
+  const { counts, displayResults } = useSearchDerivedState(
+    activeSource,
+    query,
+    results,
+    sortMode,
+  );
   const handlers = useSearchResultHandlers(t);
 
   const resultActions = useMemo(

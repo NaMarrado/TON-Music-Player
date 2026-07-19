@@ -37,5 +37,12 @@
   "selectedCount_other": "{{count}} выбрано",
   "noResults": "Нет подходящих треков",
   "emptyLibrary": "Ваша библиотека пуста",
-  "tabLabel": "Библиотека"
+  "tabLabel": "Библиотека",
+  "duplicatePlaylistTitle": "Трек уже есть в плейлисте",
+  "duplicatePlaylistMessage": "«{{title}}» уже есть в этом плейлисте. Добавить ещё раз?",
+  "duplicatePlaylistProgress": "Дубликат {{current}} из {{total}}",
+  "duplicatePlaylistAddAgain": "Добавить ещё раз",
+  "duplicatePlaylistSkip": "Пропустить",
+  "duplicatePlaylistAddThis": "Добавить этот трек",
+  "duplicatePlaylistAddAll": "Добавить все дубликаты"
 }

@@ -76,6 +76,10 @@
   "cloudUploadMissing": "Prześlij brakujący plik lokalny",
   "cloudFetchLibrary": "Pobierz bibliotekę w chmurze",
   "cloudSyncNow": "Zsynchronizuj teraz",
+  "cloudSyncDialogTitle": "Synchronizuj bibliotekę w chmurze",
+  "cloudSyncDialogDescription": "Wybierz, czy przywrócić utwory wcześniej usunięte z tego urządzenia.",
+  "cloudSyncRestoreDeleted": "Pobierz ponownie usunięte utwory ({{count}})",
+  "cloudSyncConfirm": "Synchronizuj",
   "cloudWorking": "Pracujący...",
   "cloudCleanupSectionTitle": "Zwolnij miejsce w chmurze",
   "cloudCleanupDescription": "Usuwa z R2 utwory, których nie ma w lokalnej Library tego urządzenia. Pozwala to zwolnić miejsce w R2. Usunięte utwory znikną także z zsynchronizowanych playlist i innych urządzeń.",
@@ -187,5 +191,6 @@
   "communitySection": "Społeczność",
   "communityTitle": "Pomóż rozwijać TON",
   "communityDescription": "Znalazłeś błąd lub masz pomysł na nową funkcję? Dołącz do Discorda i daj nam znać.",
-  "communityButton": "Dołącz do Discorda"
+  "communityButton": "Dołącz do Discorda",
+  "newVersionAvailable": "Dostępna jest nowa wersja"
 }

@@ -12,5 +12,8 @@
   "emptyHint":"Cerca musica su YouTube, Spotify e nella tua libreria",
   "spotifyError":"Ricerca Spotify non riuscita — controlla le credenziali",
   "openSettings":"Apri Impostazioni",
-  "tabLabel":"Cerca"
+  "tabLabel":"Cerca",
+  "sortResults":"Ordina risultati",
+  "sortRelevance":"Rilevanza",
+  "sortMostViewed":"Più visualizzati"
 }

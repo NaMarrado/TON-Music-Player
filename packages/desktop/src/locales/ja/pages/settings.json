@@ -100,6 +100,10 @@
   "cloudUploadMissing": "不足しているローカルをアップロードする",
   "cloudFetchLibrary": "クラウドライブラリを取得する",
   "cloudSyncNow": "今すぐ同期する",
+  "cloudSyncDialogTitle": "クラウドライブラリを同期",
+  "cloudSyncDialogDescription": "このデバイスから以前削除した曲を復元するか選択してください。",
+  "cloudSyncRestoreDeleted": "以前削除した曲を再ダウンロード ({{count}})",
+  "cloudSyncConfirm": "同期",
   "cloudCancel": "キャンセル",
   "cloudWorking": "働く...",
   "cloudCleanupSectionTitle": "クラウドストレージを空ける",
@@ -204,5 +208,9 @@
   "communitySection": "コミュニティ",
   "communityTitle": "TON を一緒に改善",
   "communityDescription": "バグを見つけた、または新機能のアイデアがありますか？Discord に参加してお知らせください。",
-  "communityButton": "Discord に参加"
+  "communityButton": "Discord に参加",
+  "uiScaleTitle": "UIスケール",
+  "uiScaleDescription": "TONのインターフェース全体を拡大・縮小します。",
+  "uiScaleReset": "100%に戻す",
+  "newVersionAvailable": "新しいバージョンがあります"
 }

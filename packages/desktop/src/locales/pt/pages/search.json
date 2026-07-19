@@ -26,5 +26,8 @@
   "soundcloudProviderError": "A pesquisa no SoundCloud falhou.",
   "openSettings": "Abrir definições",
   "loadMore": "Carregar mais",
-  "downloadStarted": "A transferir {{title}}"
+  "downloadStarted": "A transferir {{title}}",
+  "sortResults": "Ordenar resultados",
+  "sortRelevance": "Relevância",
+  "sortMostViewed": "Mais vistos"
 }

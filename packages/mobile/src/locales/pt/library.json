@@ -37,5 +37,12 @@
   "selectedCount_other": "{{count}} selecionadas",
   "noResults": "Nenhuma faixa correspondente",
   "emptyLibrary": "A sua biblioteca está vazia",
-  "tabLabel": "Biblioteca"
+  "tabLabel": "Biblioteca",
+  "duplicatePlaylistTitle": "Música já está na playlist",
+  "duplicatePlaylistMessage": "“{{title}}” já está nesta playlist. Adicionar novamente?",
+  "duplicatePlaylistProgress": "Duplicado {{current}} de {{total}}",
+  "duplicatePlaylistAddAgain": "Adicionar novamente",
+  "duplicatePlaylistSkip": "Ignorar",
+  "duplicatePlaylistAddThis": "Adicionar esta música",
+  "duplicatePlaylistAddAll": "Adicionar todos os duplicados"
 }

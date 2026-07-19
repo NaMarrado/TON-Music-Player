@@ -12,5 +12,8 @@
   "emptyHint": "Recherchez de la musique sur YouTube, Spotify et dans votre bibliothèque",
   "spotifyError": "La recherche Spotify a échoué. Vérifiez vos identifiants.",
   "openSettings": "Ouvrir les paramètres",
-  "tabLabel": "Rechercher"
+  "tabLabel": "Rechercher",
+  "sortResults": "Trier les résultats",
+  "sortRelevance": "Pertinence",
+  "sortMostViewed": "Les plus vues"
 }

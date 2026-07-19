@@ -26,5 +26,8 @@
   "soundcloudProviderError": "SoundCloud 搜索失败。",
   "openSettings": "打开设置",
   "loadMore": "加载更多",
-  "downloadStarted": "下载{{title}}"
+  "downloadStarted": "下载{{title}}",
+  "sortResults": "排序结果",
+  "sortRelevance": "相关性",
+  "sortMostViewed": "观看次数最多"
 }

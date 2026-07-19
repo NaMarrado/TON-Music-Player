@@ -1,9 +1,12 @@
 import {
   ActivityIndicator,
   Keyboard,
+  Pressable,
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
+import { useState } from 'react';
+import { Feather } from '@expo/vector-icons';
 import { getSearchPageLimit, type SearchSource } from '@ton/core';
 import { FlashList } from '@shopify/flash-list';
 import { useNavigation } from '@react-navigation/native';
@@ -19,6 +22,7 @@ import {
   loadMoreSearchResults,
   setActiveSource,
   setSearchQuery,
+  setSearchSortMode,
   useSearchStore,
 } from '../../stores/search-store';
 import { SearchEmptyState } from './search-empty-state';
@@ -35,10 +39,12 @@ export function SearchScreen() {
   const results = useSearchStore((state) => state.results);
   const isSearching = useSearchStore((state) => state.isSearching);
   const activeSource = useSearchStore((state) => state.activeSource);
+  const sortMode = useSearchStore((state) => state.sortMode);
   const sourceErrors = useSearchStore((state) => state.sourceErrors);
   const hasMoreBySource = useSearchStore((state) => state.hasMoreBySource);
   const loadingMoreSources = useSearchStore((state) => state.loadingMoreSources);
   const topPadding = useScreenTopPadding(8);
+  const [showSort, setShowSort] = useState(false);
 
   const {
     counts,
@@ -57,6 +63,7 @@ export function SearchScreen() {
     query,
     results,
     sourceErrors,
+    sortMode,
     t,
   });
   const loadMoreSource: SearchSource | null = activeSource === 'all'
@@ -80,11 +87,34 @@ export function SearchScreen() {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View className="flex-1 bg-bg-deep">
         <View style={{ paddingTop: topPadding }}>
-          <SearchInput
-            value={query}
-            onChangeText={setSearchQuery}
-            placeholder={t('placeholder')}
-          />
+          <View className="flex-row items-center">
+            <SearchInput
+              value={query}
+              onChangeText={setSearchQuery}
+              placeholder={t('placeholder')}
+              style={{
+                flex: 1,
+                marginLeft: 16,
+                marginRight: activeSource === 'youtube' && query.trim().length > 0
+                  ? 8
+                  : 16,
+              }}
+            />
+            {activeSource === 'youtube' && query.trim().length > 0 && (
+              <Pressable
+                accessibilityLabel={t('sortResults')}
+                onPress={() => setShowSort(true)}
+                className="bg-bg-elevated border border-border items-center justify-center mr-4"
+                style={{ borderRadius: 20, height: 40, width: 40 }}
+              >
+                <Feather
+                  name="bar-chart-2"
+                  size={17}
+                  color={sortMode === 'most_viewed' ? '#e8e8e8' : '#777'}
+                />
+              </Pressable>
+            )}
+          </View>
         </View>
 
         {spotifyError && (
@@ -143,6 +173,24 @@ export function SearchScreen() {
           title={selectedResult?.title ?? undefined}
           options={resultActions}
           onClose={() => setSelectedResult(null)}
+        />
+
+        <ActionSheet
+          visible={showSort}
+          title={t('sortResults')}
+          options={[
+            {
+              label: t('sortRelevance'),
+              icon: sortMode === 'relevance' ? 'check' : 'list',
+              onPress: () => setSearchSortMode('relevance'),
+            },
+            {
+              label: t('sortMostViewed'),
+              icon: sortMode === 'most_viewed' ? 'check' : 'bar-chart-2',
+              onPress: () => setSearchSortMode('most_viewed'),
+            },
+          ]}
+          onClose={() => setShowSort(false)}
         />
 
         {playlistPickerTrackId != null && (

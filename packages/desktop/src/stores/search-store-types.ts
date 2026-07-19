@@ -1,4 +1,4 @@
-import type { SearchResult, SearchSource } from '@ton/core';
+import type { SearchResult, SearchSortMode, SearchSource } from '@ton/core';
 
 export type ActiveTab = SearchSource | 'all';
 
@@ -13,4 +13,5 @@ export interface SearchState {
   hasMoreBySource: Record<SearchSource, boolean>;
   activeRequestId: number;
   pendingSources: SearchSource[];
+  sortMode: SearchSortMode;
 }

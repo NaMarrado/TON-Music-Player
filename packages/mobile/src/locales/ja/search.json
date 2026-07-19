@@ -12,5 +12,8 @@
   "emptyHint": "YouTube、Spotify、ライブラリ全体で音楽を検索します",
   "spotifyError": "Spotify の検索に失敗しました — 資格情報を確認してください",
   "openSettings": "設定を開く",
-  "tabLabel": "検索"
+  "tabLabel": "検索",
+  "sortResults": "結果を並べ替え",
+  "sortRelevance": "関連度",
+  "sortMostViewed": "再生回数順"
 }

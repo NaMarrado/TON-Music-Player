@@ -76,6 +76,10 @@
   "cloudUploadMissing": "Fehlende lokale Dateien hochladen",
   "cloudFetchLibrary": "Cloud-Mediathek abrufen",
   "cloudSyncNow": "Jetzt synchronisieren",
+  "cloudSyncDialogTitle": "Cloud-Bibliothek synchronisieren",
+  "cloudSyncDialogDescription": "Wähle, ob zuvor von diesem Gerät gelöschte Songs wiederhergestellt werden sollen.",
+  "cloudSyncRestoreDeleted": "Zuvor gelöschte Songs erneut herunterladen ({{count}})",
+  "cloudSyncConfirm": "Synchronisieren",
   "cloudWorking": "Wird verarbeitet...",
   "cloudCleanupSectionTitle": "Cloud-Speicher bereinigen",
   "cloudCleanupDescription": "Löscht Songs aus R2, die nicht in der lokalen Library dieses Geräts vorhanden sind. Dadurch wird R2-Speicher freigegeben. Gelöschte Songs verschwinden auch aus synchronisierten Playlists und von anderen Geräten.",
@@ -187,5 +191,6 @@
   "communitySection": "Community",
   "communityTitle": "Hilf mit, TON zu gestalten",
   "communityDescription": "Einen Fehler gefunden oder eine Idee für eine neue Funktion? Tritt dem Discord bei und erzähl es uns.",
-  "communityButton": "Discord beitreten"
+  "communityButton": "Discord beitreten",
+  "newVersionAvailable": "Neue Version verfügbar"
 }

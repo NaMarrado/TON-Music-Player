@@ -76,6 +76,10 @@
   "cloudUploadMissing": "上传缺少的本地",
   "cloudFetchLibrary": "获取云库",
   "cloudSyncNow": "立即同步",
+  "cloudSyncDialogTitle": "同步云端音乐库",
+  "cloudSyncDialogDescription": "选择是否恢复之前从此设备删除的歌曲。",
+  "cloudSyncRestoreDeleted": "重新下载之前删除的歌曲 ({{count}})",
+  "cloudSyncConfirm": "同步",
   "cloudWorking": "在职的...",
   "cloudCleanupSectionTitle": "释放云存储空间",
   "cloudCleanupDescription": "从R2中删除本设备本地Library里不存在的歌曲，以释放R2空间。删除的歌曲也会从已同步的播放列表和其他设备中消失。",
@@ -187,5 +191,6 @@
   "communitySection": "社区",
   "communityTitle": "帮助塑造 TON",
   "communityDescription": "发现了错误或有新功能的想法？加入 Discord 告诉我们。",
-  "communityButton": "加入 Discord"
+  "communityButton": "加入 Discord",
+  "newVersionAvailable": "有新版本可用"
 }

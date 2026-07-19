@@ -1,5 +1,5 @@
 import { execFile } from 'child_process';
-import type { SearchResult } from '@ton/core';
+import { parseYouTubeViewCount, type SearchResult } from '@ton/core';
 import { getYtDlpPathAsync } from './binary-manager';
 
 interface YtDlpYouTubeEntry {
@@ -11,6 +11,7 @@ interface YtDlpYouTubeEntry {
   title?: string;
   uploader?: string;
   webpage_url?: string;
+  view_count?: number;
 }
 
 interface YtDlpYouTubeSearch {
@@ -49,6 +50,7 @@ export async function searchYouTubeWithYtDlp(
       thumbnail_url: pickThumbnail(entry),
       url: entry.webpage_url || `https://www.youtube.com/watch?v=${id}`,
       is_downloaded: false,
+      view_count: parseYouTubeViewCount(entry.view_count),
     }];
   });
 

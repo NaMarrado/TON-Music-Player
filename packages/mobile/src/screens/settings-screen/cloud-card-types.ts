@@ -1,5 +1,6 @@
 import type {
   CloudR2CleanupPreview,
+  CloudLocalDeletionPreview,
   CloudStorageJurisdiction,
   CloudSyncProgress,
   CloudSyncResult,
@@ -43,13 +44,14 @@ export type CloudCardProps = {
   resultLabel: string | null;
   labels: Record<string, string>;
   formatCleanupPlaylistChange: (removed: number, remaining: number) => string;
+  formatSyncRestoreDeleted: (count: number) => string;
   onCancel: () => void;
   onCleanup: () => Promise<'completed' | 'stale' | 'cancelled'>;
   onPrepareCleanup: () => Promise<boolean>;
-  onFetch: () => void;
   onLoad: () => void;
+  onPrepareSync: () => Promise<CloudLocalDeletionPreview | null>;
   onSaveTest: () => void;
-  onSync: () => void;
+  onSync: (restoreLocallyDeleted: boolean) => void;
   onToggleAutoSync: (enabled: boolean) => void;
   onToggleAudioOverCellular: (enabled: boolean) => void;
   onUpdate: (patch: Partial<CloudForm>) => void;

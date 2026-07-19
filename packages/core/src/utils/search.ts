@@ -1,4 +1,4 @@
-import type { SearchResult, SearchSource } from '../types';
+import type { SearchResult, SearchSortMode, SearchSource } from '../types';
 import { diceCoefficient } from '../services/match-service';
 
 export const SEARCH_PAGE_LIMITS: Readonly<Record<SearchSource, number>> = Object.freeze({
@@ -196,6 +196,42 @@ export function rankSearchResults(results: SearchResult[], query: string): Searc
       if (Math.abs(relevance) > 1e-9) return relevance;
       const localTieBreak = Number(isLocalResult(right.result)) - Number(isLocalResult(left.result));
       if (localTieBreak !== 0) return localTieBreak;
+      return left.index - right.index;
+    })
+    .map(({ result }) => result);
+}
+
+export function parseYouTubeViewCount(value: unknown): number | null {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) && value >= 0 ? Math.round(value) : null;
+  }
+  if (typeof value !== 'string') return null;
+  const normalized = value.trim().toUpperCase().replace(/\u00A0/g, ' ');
+  const match = normalized.match(/([\d.,]+)\s*([KMB])?/);
+  if (!match) return null;
+  const suffix = match[2] ?? '';
+  const numeric = suffix
+    ? Number(match[1].replace(',', '.'))
+    : Number(match[1].replace(/[,.](?=\d{3}(?:\D|$))/g, '').replace(',', '.'));
+  if (!Number.isFinite(numeric) || numeric < 0) return null;
+  const multiplier = suffix === 'K' ? 1_000 : suffix === 'M' ? 1_000_000 : suffix === 'B' ? 1_000_000_000 : 1;
+  return Math.round(numeric * multiplier);
+}
+
+export function sortSearchResults(
+  results: SearchResult[],
+  mode: SearchSortMode,
+): SearchResult[] {
+  if (mode === 'relevance') return results;
+  return results
+    .map((result, index) => ({ result, index }))
+    .sort((left, right) => {
+      const leftViews = left.result.view_count;
+      const rightViews = right.result.view_count;
+      const leftKnown = typeof leftViews === 'number' && Number.isFinite(leftViews);
+      const rightKnown = typeof rightViews === 'number' && Number.isFinite(rightViews);
+      if (leftKnown !== rightKnown) return rightKnown ? 1 : -1;
+      if (leftKnown && rightKnown && rightViews !== leftViews) return rightViews - leftViews;
       return left.index - right.index;
     })
     .map(({ result }) => result);

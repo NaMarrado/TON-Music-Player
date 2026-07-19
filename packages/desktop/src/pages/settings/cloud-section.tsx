@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type {
   CloudAutoSyncStatus,
+  CloudLocalDeletionPreview,
   CloudR2CleanupPreview,
   CloudR2CleanupResult,
   CloudStorageConfig,
@@ -21,6 +22,7 @@ import {
   CloudField,
   CloudHelpButton,
   CloudHelpDialog,
+  CloudSyncDialog,
 } from './cloud-section-components';
 import {
   formatCloudAutoSyncTime,
@@ -47,6 +49,10 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
   const [cleanupPreview, setCleanupPreview] = useState<CloudR2CleanupPreview | null>(null);
   const [cleanupChecking, setCleanupChecking] = useState(false);
   const [showCleanup, setShowCleanup] = useState(false);
+  const [showSync, setShowSync] = useState(false);
+  const [syncPreview, setSyncPreview] = useState<CloudLocalDeletionPreview | null>(null);
+  const [restoreDeleted, setRestoreDeleted] = useState(false);
+  const [syncPreparing, setSyncPreparing] = useState(false);
 
   useEffect(() => {
     void Promise.all([
@@ -183,14 +189,15 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
   }, [autoSyncBusy, autoSyncStatus, t]);
 
   const runTask = useCallback(async (
-    task: 'cloud:upload-missing' | 'cloud:fetch-library' | 'cloud:sync-now',
+    task: 'cloud:upload-missing' | 'cloud:sync-now',
+    restoreLocallyDeleted = false,
   ) => {
     setBusy(true);
     setStatus(null);
     setResult(null);
     setProgress(null);
     try {
-      const taskResult = await window.api.invoke(task);
+      const taskResult = await window.api.invoke(task, restoreLocallyDeleted);
       if (taskResult && task !== 'cloud:upload-missing') {
         await Promise.all([
           reconcileLibraryTracks({ immediate: true, loadIfUninitialized: true }),
@@ -205,6 +212,23 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
     } finally {
       setBusy(false);
       setProgress(null);
+    }
+  }, [t]);
+
+  const prepareSync = useCallback(async () => {
+    setSyncPreparing(true);
+    setStatus(null);
+    try {
+      const preview = await window.api.invoke(
+        'cloud:preview-local-deletions',
+      ) as CloudLocalDeletionPreview;
+      setSyncPreview(preview);
+      setRestoreDeleted(false);
+      setShowSync(true);
+    } catch (error) {
+      setStatus(formatCloudError(error, t));
+    } finally {
+      setSyncPreparing(false);
     }
   }, [t]);
 
@@ -246,6 +270,19 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
           onCancel={() => setShowCleanup(false)}
           onConfirm={() => void executeCleanup()}
           preview={cleanupPreview}
+          t={t}
+        />
+      )}
+      {showSync && syncPreview && (
+        <CloudSyncDialog
+          busy={busy}
+          onCancel={() => setShowSync(false)}
+          onConfirm={() => {
+            void runTask('cloud:sync-now', restoreDeleted).then(() => setShowSync(false));
+          }}
+          preview={syncPreview}
+          restoreDeleted={restoreDeleted}
+          setRestoreDeleted={setRestoreDeleted}
           t={t}
         />
       )}
@@ -317,11 +354,8 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
           <CloudActionButton disabled={busy || !canRun} onClick={() => void runTask('cloud:upload-missing')}>
             {t('cloudUploadMissing')}
           </CloudActionButton>
-          <CloudActionButton disabled={busy || !canRun} onClick={() => void runTask('cloud:fetch-library')}>
-            {t('cloudFetchLibrary')}
-          </CloudActionButton>
-          <CloudActionButton disabled={busy || !canRun} onClick={() => void runTask('cloud:sync-now')}>
-            {t('cloudSyncNow')}
+          <CloudActionButton disabled={busy || syncPreparing || !canRun} onClick={() => void prepareSync()}>
+            {syncPreparing ? t('cloudWorking') : t('cloudSyncNow')}
           </CloudActionButton>
           <CloudActionButton disabled={!busy} onClick={() => void window.api.invoke('cloud:cancel')}>
             {t('cloudCancel')}

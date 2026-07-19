@@ -21,6 +21,7 @@ import {
 import {
   acquireMobileCloudLease,
   ensureMobileCloudScope,
+  clearMobileCloudLocalExclusions,
   getMobileCloudJournalGeneration,
   releaseMobileCloudLease,
   updateMobileCloudPersistedState,
@@ -203,6 +204,10 @@ export async function executeCloudCleanup(
           next_retry_at: null,
         });
         await setMobileCloudLastRevision(plan.manifest.revision);
+        await clearMobileCloudLocalExclusions(
+          scopeId,
+          plan.preview.tracks.map((track) => track.contentHash),
+        );
         await clearMobileCloudDownloadFailures(
           scopeId,
           plan.preview.failuresToClear.map((failure) => failure.contentHash),

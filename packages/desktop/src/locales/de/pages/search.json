@@ -26,5 +26,8 @@
   "soundcloudProviderError": "SoundCloud-Suche fehlgeschlagen.",
   "openSettings": "Einstellungen öffnen",
   "loadMore": "Mehr laden",
-  "downloadStarted": "{{title}} wird heruntergeladen"
+  "downloadStarted": "{{title}} wird heruntergeladen",
+  "sortResults": "Ergebnisse sortieren",
+  "sortRelevance": "Relevanz",
+  "sortMostViewed": "Meistgesehen"
 }

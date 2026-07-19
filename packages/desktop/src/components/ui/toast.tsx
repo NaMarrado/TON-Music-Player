@@ -54,7 +54,7 @@ export function ToastContainer(): ReactPortal | null {
     <div
       className="fixed flex flex-col gap-2"
       style={{
-        top: '44px',
+        top: 'var(--desktop-page-top)',
         right: queueOpen ? `${DESKTOP_QUEUE_PANEL_WIDTH + 16}px` : '16px',
         maxWidth: '340px',
         pointerEvents: 'none',

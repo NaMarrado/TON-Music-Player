@@ -12,5 +12,8 @@
   "emptyHint": "Search for music across YouTube, Spotify, and your library",
   "spotifyError": "Spotify search failed — check your credentials",
   "openSettings": "Open Settings",
-  "tabLabel": "Search"
+  "tabLabel": "Search",
+  "sortResults": "Sort results",
+  "sortRelevance": "Relevance",
+  "sortMostViewed": "Most viewed"
 }

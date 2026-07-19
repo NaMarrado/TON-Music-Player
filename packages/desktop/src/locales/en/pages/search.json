@@ -26,5 +26,8 @@
   "soundcloudProviderError": "SoundCloud search failed.",
   "openSettings": "Open Settings",
   "loadMore": "Load more",
-  "downloadStarted": "Downloading {{title}}"
+  "downloadStarted": "Downloading {{title}}",
+  "sortResults": "Sort results",
+  "sortRelevance": "Relevance",
+  "sortMostViewed": "Most viewed"
 }

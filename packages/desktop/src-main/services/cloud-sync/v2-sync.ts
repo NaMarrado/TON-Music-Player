@@ -21,10 +21,18 @@ import { bootstrapMissingV2Manifest } from './v2-bootstrap';
 import { conditionalManifestEtag } from './v2-bootstrap-guard';
 import { ensureV2ActivationMarker, queueReplacedRemoteBlobsForGc } from './v2-files';
 import { serializePendingV2Entities } from './v2-local-entities';
+import {
+  prepareDesktopManifestForLocalDevice,
+  storeDesktopExcludedTrackMirrors,
+} from './local-exclusions';
 import { createV2MutationBuilder } from './v2-mutations';
 import { createV2ObjectUploader } from './v2-object-upload';
 import { publishV2Manifest } from './v2-publish';
-import { throwIfV2Cancelled, type V2SyncOptions } from './v2-types';
+import {
+  shouldAcknowledgeDesktopCloudOutbox,
+  throwIfV2Cancelled,
+  type V2SyncOptions,
+} from './v2-types';
 
 /**
  * Incremental V2 cycle. A clean conditional poll exits on 304 before touching
@@ -146,12 +154,22 @@ export async function syncCloudLibraryV2ForDesktop(
   throwIfV2Cancelled(options);
   if (shouldUpload) queueReplacedRemoteBlobsForGc(scopeId, publicationBase, published);
   if (shouldApply) {
-    await applyCloudManifestV2(
-      client, scopeId, published, result, options, capturedGeneration,
+    const localPublication = prepareDesktopManifestForLocalDevice(
+      scopeId,
+      published,
+      Boolean(options.restoreLocallyDeleted),
     );
+    await applyCloudManifestV2(
+      client, scopeId, localPublication.manifest, result, options, capturedGeneration,
+    );
+    storeDesktopExcludedTrackMirrors(scopeId, localPublication.excludedRecords);
+    result.restoredLocallyDeleted = localPublication.restored;
   }
   throwIfV2Cancelled(options);
-  acknowledgeDesktopCloudOutbox(scopeId, capturedGeneration);
+  // A fetch never publishes local mutations, so it must not acknowledge them.
+  if (shouldAcknowledgeDesktopCloudOutbox(mode)) {
+    acknowledgeDesktopCloudOutbox(scopeId, capturedGeneration);
+  }
   throwIfV2Cancelled(options);
   updateDesktopCloudSyncState(scopeId, {
     revision: published.revision,

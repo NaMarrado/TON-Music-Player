@@ -21,6 +21,8 @@ export function SearchPage() {
     query,
     setActiveSource,
     setSearchQuery,
+    setSearchSortMode,
+    sortMode,
     sourceErrors,
     visibleResults,
   } = useSearchPageState(t);
@@ -33,8 +35,10 @@ export function SearchPage() {
         isSearching={isSearching}
         query={query}
         t={t}
+        sortMode={sortMode}
         onSetActiveSource={setActiveSource}
         onSetSearchQuery={setSearchQuery}
+        onSetSortMode={setSearchSortMode}
       />
 
       <ErrorBanners

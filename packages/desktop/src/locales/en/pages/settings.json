@@ -100,6 +100,10 @@
   "cloudUploadMissing": "Upload missing local",
   "cloudFetchLibrary": "Fetch cloud library",
   "cloudSyncNow": "Sync now",
+  "cloudSyncDialogTitle": "Sync cloud library",
+  "cloudSyncDialogDescription": "Choose whether to restore songs you previously deleted from this device.",
+  "cloudSyncRestoreDeleted": "Download previously deleted songs again ({{count}})",
+  "cloudSyncConfirm": "Sync",
   "cloudCancel": "Cancel",
   "cloudWorking": "Working...",
   "cloudCleanupSectionTitle": "Clean up cloud storage",
@@ -204,5 +208,9 @@
   "communitySection": "Community",
   "communityTitle": "Help shape TON",
   "communityDescription": "Found a bug or have an idea for a feature? Join the Discord and tell us.",
-  "communityButton": "Join Discord"
+  "communityButton": "Join Discord",
+  "uiScaleTitle": "UI scale",
+  "uiScaleDescription": "Make the entire TON interface smaller or larger.",
+  "uiScaleReset": "Reset to 100%",
+  "newVersionAvailable": "New version available"
 }

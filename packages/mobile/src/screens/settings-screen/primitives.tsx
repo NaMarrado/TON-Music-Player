@@ -21,9 +21,24 @@ export function SettingsGroup({
   );
 }
 
-export function SettingsCard({ children }: { children: React.ReactNode }) {
+export function SettingsCard({
+  attention = false,
+  children,
+}: {
+  attention?: boolean;
+  children: React.ReactNode;
+}) {
   return (
-    <View className="bg-bg-surface border border-border rounded-xl p-4">
+    <View
+      className="bg-bg-surface border rounded-xl p-4"
+      style={{
+        borderColor: attention ? '#ff3b3b' : '#272727',
+        backgroundColor: attention ? '#160b0b' : '#111111',
+        shadowColor: attention ? '#ff3b3b' : 'transparent',
+        shadowOpacity: attention ? 0.18 : 0,
+        shadowRadius: attention ? 12 : 0,
+      }}
+    >
       {children}
     </View>
   );

@@ -1,4 +1,9 @@
-import type { Playlist } from '@ton/core';
+import type {
+  Playlist,
+  PlaylistAddTracksRequest,
+  PlaylistAddTracksResult,
+  PlaylistDuplicateTrack,
+} from '@ton/core';
 import type { SQLiteDatabase } from 'expo-sqlite';
 import { getDb } from '../database';
 
@@ -67,35 +72,58 @@ export async function deletePlaylist(id: number): Promise<number[]> {
 }
 
 export async function addTracksToPlaylist(
-  playlistId: number,
-  trackIds: number[],
-): Promise<void> {
+  request: PlaylistAddTracksRequest,
+): Promise<PlaylistAddTracksResult> {
+  const trackIds = [...new Set(request.trackIds)];
   if (trackIds.length === 0) {
-    return;
+    return { status: 'added', addedCount: 0 };
   }
 
   const db = getDb();
   const now = Math.floor(Date.now() / 1000);
 
+  let result: PlaylistAddTracksResult = { status: 'added', addedCount: 0 };
   await db.withTransactionAsync(async () => {
+    const placeholders = trackIds.map(() => '?').join(',');
+    const duplicateRows = await db.getAllAsync<PlaylistDuplicateTrack>(
+      `SELECT DISTINCT t.id AS trackId, t.title, t.artist
+       FROM playlist_tracks pt
+       JOIN tracks t ON t.id = pt.track_id
+       WHERE pt.playlist_id = ? AND pt.track_id IN (${placeholders})`,
+      [request.playlistId, ...trackIds],
+    );
+    const duplicatesById = new Map(duplicateRows.map((track) => [track.trackId, track]));
+    const duplicates = trackIds.flatMap((trackId) => {
+      const track = duplicatesById.get(trackId);
+      return track ? [track] : [];
+    });
+    const allowed = new Set(request.allowedDuplicateTrackIds ?? []);
+    const unapproved = duplicates.filter((track) => !allowed.has(track.trackId));
+    if (unapproved.length > 0) {
+      result = { status: 'needs_confirmation', duplicates: unapproved };
+      return;
+    }
+
     const maxPos = await db.getFirstAsync<{ m: number }>(
       'SELECT COALESCE(MAX(position), 0) as m FROM playlist_tracks WHERE playlist_id = ?',
-      [playlistId],
+      [request.playlistId],
     );
 
     let position = (maxPos?.m ?? 0) + 1;
     for (const trackId of trackIds) {
       await db.runAsync(
         'INSERT INTO playlist_tracks (playlist_id, track_id, position) VALUES (?, ?, ?)',
-        [playlistId, trackId, position++],
+        [request.playlistId, trackId, position++],
       );
     }
 
     await db.runAsync(
       'UPDATE playlists SET updated_at = ? WHERE id = ?',
-      [now, playlistId],
+      [now, request.playlistId],
     );
+    result = { status: 'added', addedCount: trackIds.length };
   });
+  return result;
 }
 
 export async function removeTrackFromPlaylist(

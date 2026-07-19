@@ -1,5 +1,10 @@
 import { create } from 'zustand';
-import { createSearchRequestIdGenerator, type SearchResult, type SearchSource } from '@ton/core';
+import {
+  createSearchRequestIdGenerator,
+  type SearchResult,
+  type SearchSortMode,
+  type SearchSource,
+} from '@ton/core';
 import { createEmptySearchMoreState, createEmptySearchResults } from '../services/search-plan';
 
 export type ActiveTab = SearchSource | 'all';
@@ -16,6 +21,7 @@ export interface SearchState {
   pendingSources: SearchSource[];
   loadingMoreSources: SearchSource[];
   hasMoreBySource: Record<SearchSource, boolean>;
+  sortMode: SearchSortMode;
 }
 
 export const useSearchStore = create<SearchState>()(() => ({
@@ -30,6 +36,7 @@ export const useSearchStore = create<SearchState>()(() => ({
   pendingSources: [],
   loadingMoreSources: [],
   hasMoreBySource: createEmptySearchMoreState(),
+  sortMode: 'relevance',
 }));
 
 export const searchRuntime = {

@@ -1,29 +1,14 @@
 import { ipcMain } from 'electron';
+import type { PlaylistAddTracksRequest } from '@ton/core';
 import { getDb } from '../../../services/database';
 import { touchPlaylist } from './helpers';
+import { addTracksToPlaylistAtomic } from './add-tracks-atomic';
 
 export function registerPlaylistTrackMutationHandlers(): void {
-  ipcMain.handle('playlist:add-tracks', async (_event, playlistId: number, trackIds: number[]) => {
-    const db = getDb();
-    const maxRow = db.prepare(
-      'SELECT MAX(position) as maxPos FROM playlist_tracks WHERE playlist_id = ?',
-    ).get(playlistId) as { maxPos: number | null } | undefined;
-    let nextPosition = (maxRow?.maxPos ?? -1) + 1;
-
-    const insert = db.prepare(
-      'INSERT INTO playlist_tracks (playlist_id, track_id, position, file_path) VALUES (?, ?, ?, NULL)',
-    );
-
-    const insertAll = db.transaction((ids: number[]) => {
-      for (const trackId of ids) {
-        insert.run(playlistId, trackId, nextPosition);
-        nextPosition += 1;
-      }
-    });
-    insertAll(trackIds);
-
-    touchPlaylist(playlistId);
-  });
+  ipcMain.handle('playlist:add-tracks', async (
+    _event,
+    request: PlaylistAddTracksRequest,
+  ) => addTracksToPlaylistAtomic(getDb(), request));
 
   ipcMain.handle('playlist:remove-track', async (_event, playlistTrackId: number) => {
     const db = getDb();

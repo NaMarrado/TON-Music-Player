@@ -37,5 +37,12 @@
   "selectedCount_other": "{{count}} seleccionadas",
   "noResults": "No hay canciones que coincidan",
   "emptyLibrary": "Tu biblioteca está vacía",
-  "tabLabel": "Biblioteca"
+  "tabLabel": "Biblioteca",
+  "duplicatePlaylistTitle": "La canción ya está en la lista",
+  "duplicatePlaylistMessage": "“{{title}}” ya está en esta lista. ¿Añadirla otra vez?",
+  "duplicatePlaylistProgress": "Duplicado {{current}} de {{total}}",
+  "duplicatePlaylistAddAgain": "Añadir otra vez",
+  "duplicatePlaylistSkip": "Omitir",
+  "duplicatePlaylistAddThis": "Añadir esta canción",
+  "duplicatePlaylistAddAll": "Añadir todos los duplicados"
 }

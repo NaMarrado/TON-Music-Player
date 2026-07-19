@@ -100,6 +100,10 @@
   "cloudUploadMissing": "Загрузите отсутствующий локальный файл",
   "cloudFetchLibrary": "Получить облачную библиотеку",
   "cloudSyncNow": "Синхронизировать сейчас",
+  "cloudSyncDialogTitle": "Синхронизировать облачную медиатеку",
+  "cloudSyncDialogDescription": "Выберите, нужно ли восстановить треки, ранее удалённые с этого устройства.",
+  "cloudSyncRestoreDeleted": "Снова скачать удалённые треки ({{count}})",
+  "cloudSyncConfirm": "Синхронизировать",
   "cloudCancel": "Отменить",
   "cloudWorking": "Работающий...",
   "cloudCleanupSectionTitle": "Освободить облачное хранилище",
@@ -204,5 +208,9 @@
   "communitySection": "Сообщество",
   "communityTitle": "Помогите развивать TON",
   "communityDescription": "Нашли ошибку или есть идея для новой функции? Присоединяйтесь к Discord и расскажите нам.",
-  "communityButton": "Присоединиться к Discord"
+  "communityButton": "Присоединиться к Discord",
+  "uiScaleTitle": "Масштаб интерфейса",
+  "uiScaleDescription": "Уменьшите или увеличьте весь интерфейс TON.",
+  "uiScaleReset": "Сбросить до 100 %",
+  "newVersionAvailable": "Доступна новая версия"
 }

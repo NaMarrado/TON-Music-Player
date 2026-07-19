@@ -2,7 +2,14 @@ import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { CompactToggle, SettingsCard, SectionHeader } from './primitives';
-import { CloudCleanupModal, CloudField, CloudHelpModal, CloudPill } from './cloud-card-controls';
+import {
+  CloudCleanupModal,
+  CloudField,
+  CloudHelpModal,
+  CloudPill,
+  CloudSyncModal,
+} from './cloud-card-controls';
+import type { CloudLocalDeletionPreview } from '@ton/core';
 import type { CloudCardProps } from './cloud-card-types';
 
 export function CloudCard({
@@ -22,6 +29,7 @@ export function CloudCard({
   description,
   failedLabel,
   formatCleanupPlaylistChange,
+  formatSyncRestoreDeleted,
   form,
   hasSecret,
   helpSteps,
@@ -37,8 +45,8 @@ export function CloudCard({
   onCancel,
   onCleanup,
   onPrepareCleanup,
-  onFetch,
   onLoad,
+  onPrepareSync,
   onSaveTest,
   onSync,
   onToggleAutoSync,
@@ -49,6 +57,7 @@ export function CloudCard({
 }: CloudCardProps) {
   const [showHelp, setShowHelp] = useState(false);
   const [showCleanup, setShowCleanup] = useState(false);
+  const [syncPreview, setSyncPreview] = useState<CloudLocalDeletionPreview | null>(null);
 
   const card = (
     <SettingsCard>
@@ -150,8 +159,14 @@ export function CloudCard({
           <View className="flex-row flex-wrap justify-between" style={{ marginTop: 2 }}>
             <CloudPill gridItem primary disabled={isBusy || !canRun} label={isBusy ? labels.working : labels.saveTest} onPress={onSaveTest} />
             <CloudPill gridItem disabled={isBusy || !canRun} label={labels.uploadMissing} onPress={onUpload} />
-            <CloudPill gridItem disabled={isBusy || !canRun} label={labels.fetchLibrary} onPress={onFetch} />
-            <CloudPill gridItem disabled={isBusy || !canRun} label={labels.syncNow} onPress={onSync} />
+            <CloudPill
+              gridItem
+              disabled={isBusy || !canRun}
+              label={labels.syncNow}
+              onPress={() => {
+                void onPrepareSync().then((preview) => setSyncPreview(preview));
+              }}
+            />
             <CloudPill gridItem disabled={!isBusy} label={labels.cancel} onPress={onCancel} />
           </View>
           <View
@@ -209,6 +224,19 @@ export function CloudCard({
             });
           }}
           preview={cleanupPreview}
+        />
+      )}
+      {syncPreview && (
+        <CloudSyncModal
+          busy={isBusy}
+          formatRestoreDeleted={formatSyncRestoreDeleted}
+          labels={labels}
+          onClose={() => setSyncPreview(null)}
+          onConfirm={(restoreLocallyDeleted) => {
+            onSync(restoreLocallyDeleted);
+            setSyncPreview(null);
+          }}
+          preview={syncPreview}
         />
       )}
     </>

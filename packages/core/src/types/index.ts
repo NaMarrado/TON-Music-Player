@@ -3,6 +3,9 @@ export type {
   Playlist,
   PlaylistTrack,
   PlaylistTrackEntry,
+  PlaylistAddTracksRequest,
+  PlaylistAddTracksResult,
+  PlaylistDuplicateTrack,
   SmartRule,
   SmartRuleOperator,
   SmartRuleField,
@@ -42,6 +45,7 @@ export type {
   SearchSource,
   SearchSourceEvent,
   SearchSourceStatus,
+  SearchSortMode,
 } from './search';
 export type { DownloadQualityProfile, SettingsMap, SettingKey } from './settings';
 export { PERSISTED_SETTING_DEFAULTS, SETTING_DEFAULTS } from './settings';
@@ -58,6 +62,7 @@ export type {
   CloudEntityVersionV2,
   CloudLibraryManifestV1,
   CloudLibraryManifestV2,
+  CloudLocalDeletionPreview,
   CloudLivePlaylistRecordV2,
   CloudLiveTrackRecordV2,
   CloudPlaylistEntry,

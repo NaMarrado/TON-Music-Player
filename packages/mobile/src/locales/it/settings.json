@@ -76,6 +76,10 @@
   "cloudUploadMissing": "Carica elementi locali mancanti",
   "cloudFetchLibrary": "Scarica libreria cloud",
   "cloudSyncNow": "Sincronizza ora",
+  "cloudSyncDialogTitle": "Sincronizza libreria cloud",
+  "cloudSyncDialogDescription": "Scegli se ripristinare i brani eliminati in precedenza da questo dispositivo.",
+  "cloudSyncRestoreDeleted": "Scarica di nuovo i brani eliminati ({{count}})",
+  "cloudSyncConfirm": "Sincronizza",
   "cloudWorking": "Operazione in corso...",
   "cloudCleanupSectionTitle": "Libera spazio nel cloud",
   "cloudCleanupDescription": "Elimina da R2 i brani che non sono nella Library locale di questo dispositivo. Serve a liberare spazio in R2. I brani eliminati spariranno anche dalle playlist sincronizzate e dagli altri dispositivi.",
@@ -187,5 +191,6 @@
   "communitySection": "Community",
   "communityTitle": "Aiuta a migliorare TON",
   "communityDescription": "Hai trovato un bug o hai un'idea per una nuova funzionalità? Entra nel Discord e faccelo sapere.",
-  "communityButton": "Entra su Discord"
+  "communityButton": "Entra su Discord",
+  "newVersionAvailable": "Nuova versione disponibile"
 }

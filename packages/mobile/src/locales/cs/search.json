@@ -12,5 +12,8 @@
   "emptyHint": "Hledej hudbu na YouTube, Spotify a ve své knihovně",
   "spotifyError": "Hledání na Spotify selhalo — zkontroluj přihlašovací údaje",
   "openSettings": "Otevřít nastavení",
-  "tabLabel": "Hledat"
+  "tabLabel": "Hledat",
+  "sortResults": "Seřadit výsledky",
+  "sortRelevance": "Relevance",
+  "sortMostViewed": "Nejsledovanější"
 }

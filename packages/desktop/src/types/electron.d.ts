@@ -62,8 +62,8 @@ interface ElectronAPI {
     enabled: boolean,
   ): Promise<import('@ton/core').CloudAutoSyncStatus>;
   invoke(channel: 'cloud:upload-missing'): Promise<import('@ton/core').CloudSyncResult | null>;
-  invoke(channel: 'cloud:fetch-library'): Promise<import('@ton/core').CloudSyncResult | null>;
-  invoke(channel: 'cloud:sync-now'): Promise<import('@ton/core').CloudSyncResult | null>;
+  invoke(channel: 'cloud:sync-now', restoreLocallyDeleted?: boolean): Promise<import('@ton/core').CloudSyncResult | null>;
+  invoke(channel: 'cloud:preview-local-deletions'): Promise<import('@ton/core').CloudLocalDeletionPreview>;
   invoke(channel: 'cloud:preview-cleanup'): Promise<import('@ton/core').CloudR2CleanupPreview>;
   invoke(
     channel: 'cloud:execute-cleanup',
@@ -165,9 +165,14 @@ interface ElectronAPI {
     data: { name?: string; description?: string; smart_rules?: string },
   ): Promise<void>;
   invoke(channel: 'playlist:delete', id: number): Promise<void>;
-  invoke(channel: 'playlist:add-tracks', playlistId: number, trackIds: number[]): Promise<void>;
+  invoke(
+    channel: 'playlist:add-tracks',
+    request: import('@ton/core').PlaylistAddTracksRequest,
+  ): Promise<import('@ton/core').PlaylistAddTracksResult>;
   invoke(channel: 'playlist:remove-track', playlistId: number, trackId: number): Promise<void>;
   invoke(channel: 'playlist:reorder', playlistId: number, orderedTrackIds: number[]): Promise<void>;
+  invoke(channel: 'app:get-ui-scale'): Promise<number>;
+  invoke(channel: 'app:set-ui-scale', scale: number): Promise<number>;
   invoke(
     channel: 'playlist:smart-query',
     config: import('@ton/core').SmartPlaylistConfig,

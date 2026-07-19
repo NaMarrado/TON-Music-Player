@@ -26,6 +26,22 @@ export type PlaylistTrackEntry = import('./track').Track & {
   position?: number;
 };
 
+export interface PlaylistDuplicateTrack {
+  trackId: number;
+  title: string;
+  artist: string | null;
+}
+
+export interface PlaylistAddTracksRequest {
+  playlistId: number;
+  trackIds: number[];
+  allowedDuplicateTrackIds?: number[];
+}
+
+export type PlaylistAddTracksResult =
+  | { status: 'needs_confirmation'; duplicates: PlaylistDuplicateTrack[] }
+  | { status: 'added'; addedCount: number };
+
 export type SmartRuleOperator =
   | 'equals'
   | 'not_equals'

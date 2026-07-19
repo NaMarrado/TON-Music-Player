@@ -37,5 +37,12 @@
   "selectedCount_other": "تم تحديد {{count}}",
   "noResults": "لا توجد مسارات مطابقة",
   "emptyLibrary": "مكتبتك فارغة",
-  "tabLabel": "المكتبة"
+  "tabLabel": "المكتبة",
+  "duplicatePlaylistTitle": "الأغنية موجودة في قائمة التشغيل",
+  "duplicatePlaylistMessage": "الأغنية «{{title}}» موجودة بالفعل في هذه القائمة. هل تريد إضافتها مجددًا؟",
+  "duplicatePlaylistProgress": "التكرار {{current}} من {{total}}",
+  "duplicatePlaylistAddAgain": "إضافة مجددًا",
+  "duplicatePlaylistSkip": "تخطي",
+  "duplicatePlaylistAddThis": "إضافة هذه الأغنية",
+  "duplicatePlaylistAddAll": "إضافة كل التكرارات"
 }

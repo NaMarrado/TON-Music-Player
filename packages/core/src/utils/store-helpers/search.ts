@@ -1,5 +1,5 @@
-import type { SearchResult, SearchSource } from '../../types';
-import { rankSearchResults, searchRelevanceScore } from '../search';
+import type { SearchResult, SearchSortMode, SearchSource } from '../../types';
+import { rankSearchResults, searchRelevanceScore, sortSearchResults } from '../search';
 
 /** @deprecated Prefer searchRelevanceScore. Kept for store compatibility. */
 export function relevanceScore(result: SearchResult, query: string): number {
@@ -10,6 +10,7 @@ export function getVisibleResults(
   results: Record<SearchSource, SearchResult[]>,
   activeSource: SearchSource | 'all',
   query: string,
+  sortMode: SearchSortMode = 'relevance',
 ): SearchResult[] {
   const visible = activeSource === 'all'
     ? [
@@ -21,7 +22,8 @@ export function getVisibleResults(
       ]
     : [...(results[activeSource] || [])];
 
-  return query.trim() ? rankSearchResults(visible, query) : visible;
+  const ranked = query.trim() ? rankSearchResults(visible, query) : visible;
+  return activeSource === 'youtube' ? sortSearchResults(ranked, sortMode) : ranked;
 }
 
 export function getSourceCounts(

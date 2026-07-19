@@ -100,6 +100,10 @@
   "cloudUploadMissing": "העלאה חסר מקומי",
   "cloudFetchLibrary": "אחזר את ספריית הענן",
   "cloudSyncNow": "סנכרן עכשיו",
+  "cloudSyncDialogTitle": "סנכרון ספריית הענן",
+  "cloudSyncDialogDescription": "בחר אם לשחזר שירים שמחקת בעבר מהמכשיר הזה.",
+  "cloudSyncRestoreDeleted": "הורד שוב שירים שנמחקו בעבר ({{count}})",
+  "cloudSyncConfirm": "סנכרן",
   "cloudCancel": "ביטול",
   "cloudWorking": "עובד...",
   "cloudCleanupSectionTitle": "פינוי אחסון בענן",
@@ -204,5 +208,9 @@
   "communitySection": "קהילה",
   "communityTitle": "עזרו לעצב את TON",
   "communityDescription": "מצאתם באג או שיש לכם רעיון לתכונה חדשה? הצטרפו ל-Discord וספרו לנו.",
-  "communityButton": "הצטרפות ל-Discord"
+  "communityButton": "הצטרפות ל-Discord",
+  "uiScaleTitle": "קנה מידה של הממשק",
+  "uiScaleDescription": "הקטן או הגדל את כל ממשק TON.",
+  "uiScaleReset": "איפוס ל־100%",
+  "newVersionAvailable": "גרסה חדשה זמינה"
 }

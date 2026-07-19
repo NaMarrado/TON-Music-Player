@@ -12,5 +12,8 @@
   "emptyHint": "ابحث عن الموسيقى عبر YouTube وSpotify ومكتبتك",
   "spotifyError": "فشل البحث في Spotify - تحقق من بيانات الاعتماد الخاصة بك",
   "openSettings": "افتح الإعدادات",
-  "tabLabel": "بحث"
+  "tabLabel": "بحث",
+  "sortResults": "ترتيب النتائج",
+  "sortRelevance": "الصلة",
+  "sortMostViewed": "الأكثر مشاهدة"
 }

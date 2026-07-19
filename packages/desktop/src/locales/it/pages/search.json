@@ -26,5 +26,8 @@
   "soundcloudProviderError": "Ricerca su SoundCloud non riuscita.",
   "openSettings": "Apri Impostazioni",
   "loadMore": "Carica altro",
-  "downloadStarted": "Download di {{title}} in corso"
+  "downloadStarted": "Download di {{title}} in corso",
+  "sortResults": "Ordina risultati",
+  "sortRelevance": "Rilevanza",
+  "sortMostViewed": "Più visualizzati"
 }

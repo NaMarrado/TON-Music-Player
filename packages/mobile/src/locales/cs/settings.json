@@ -76,6 +76,10 @@
   "cloudUploadMissing": "Nahrát chybějící lokální",
   "cloudFetchLibrary": "Stáhnout cloud knihovnu",
   "cloudSyncNow": "Sync teď",
+  "cloudSyncDialogTitle": "Synchronizovat cloudovou knihovnu",
+  "cloudSyncDialogDescription": "Zvolte, zda chcete obnovit skladby dříve smazané z tohoto zařízení.",
+  "cloudSyncRestoreDeleted": "Znovu stáhnout dříve smazané skladby ({{count}})",
+  "cloudSyncConfirm": "Synchronizovat",
   "cloudWorking": "Pracuji...",
   "cloudCleanupSectionTitle": "Uvolnit cloudové úložiště",
   "cloudCleanupDescription": "Smaže z R2 skladby, které nejsou v lokální Library tohoto zařízení. Tím uvolní místo v R2. Smazané skladby zmizí také ze synchronizovaných playlistů a ostatních zařízení.",
@@ -187,5 +191,6 @@
   "communitySection": "Komunita",
   "communityTitle": "Pomozte utvářet TON",
   "communityDescription": "Našli jste chybu nebo máte nápad na novou funkci? Připojte se k Discordu a dejte nám vědět.",
-  "communityButton": "Připojit se k Discordu"
+  "communityButton": "Připojit se k Discordu",
+  "newVersionAvailable": "K dispozici je nová verze"
 }

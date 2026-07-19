@@ -15,6 +15,7 @@ export interface PendingManualRun {
   onProgress?: (progress: CloudSyncProgress) => void;
   result: CloudSyncResult | null;
   cancelled: boolean;
+  restoreLocallyDeleted: boolean;
 }
 
 type CycleResult = { pendingChanges: number; pendingDownloads: number };

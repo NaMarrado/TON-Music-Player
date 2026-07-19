@@ -100,6 +100,10 @@
   "cloudUploadMissing": "Prześlij brakujący plik lokalny",
   "cloudFetchLibrary": "Pobierz bibliotekę w chmurze",
   "cloudSyncNow": "Zsynchronizuj teraz",
+  "cloudSyncDialogTitle": "Synchronizuj bibliotekę w chmurze",
+  "cloudSyncDialogDescription": "Wybierz, czy przywrócić utwory wcześniej usunięte z tego urządzenia.",
+  "cloudSyncRestoreDeleted": "Pobierz ponownie usunięte utwory ({{count}})",
+  "cloudSyncConfirm": "Synchronizuj",
   "cloudCancel": "Anuluj",
   "cloudWorking": "Pracujący...",
   "cloudCleanupSectionTitle": "Zwolnij miejsce w chmurze",
@@ -204,5 +208,9 @@
   "communitySection": "Społeczność",
   "communityTitle": "Pomóż rozwijać TON",
   "communityDescription": "Znalazłeś błąd lub masz pomysł na nową funkcję? Dołącz do Discorda i daj nam znać.",
-  "communityButton": "Dołącz do Discorda"
+  "communityButton": "Dołącz do Discorda",
+  "uiScaleTitle": "Skala interfejsu",
+  "uiScaleDescription": "Zmniejsz lub powiększ cały interfejs TON.",
+  "uiScaleReset": "Przywróć 100%",
+  "newVersionAvailable": "Dostępna jest nowa wersja"
 }

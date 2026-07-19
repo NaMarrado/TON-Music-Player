@@ -22,6 +22,7 @@ import { prepareLocalManifest } from './v2-prepare-full';
 import { prepareIncrementalManifest } from './v2-prepare-incremental';
 import { publishMobileV2Head } from './v2-publish';
 import { shouldRunManualCloudRepair } from './manual-repair-policy';
+import { prepareMobileManifestForLocalDevice } from './local-exclusions';
 
 export type { MobileCloudSyncMode, MobileCloudV2SyncOptions } from './v2-common';
 
@@ -61,14 +62,22 @@ export async function runMobileCloudV2Sync(
       await queueBlobGcTransitions(
         scopeId, publication.previousRemoteForGc, publication.published,
       );
+      const localPublication = mode === 'upload'
+        ? { manifest: publication.published, restored: 0 }
+        : await prepareMobileManifestForLocalDevice(
+          scopeId,
+          publication.published,
+          Boolean(options.restoreLocallyDeleted),
+        );
       const pending = await applyMobileV2Publication({
         options,
         scopeId,
         state,
         maxAcknowledgedGeneration: maxGeneration,
-        published: publication.published,
+        published: localPublication.manifest,
         result,
       });
+      result.restoredLocallyDeleted = localPublication.restored;
       throwIfAborted(signal);
       await storeEntityMirror(scopeId, publication.published, maxGeneration, signal);
       // Fetch is cloud-authoritative, but it must not discard pending local

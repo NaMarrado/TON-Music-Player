@@ -100,6 +100,10 @@
   "cloudUploadMissing": "Fehlende lokale Dateien hochladen",
   "cloudFetchLibrary": "Cloud-Mediathek abrufen",
   "cloudSyncNow": "Jetzt synchronisieren",
+  "cloudSyncDialogTitle": "Cloud-Bibliothek synchronisieren",
+  "cloudSyncDialogDescription": "Wähle, ob zuvor von diesem Gerät gelöschte Songs wiederhergestellt werden sollen.",
+  "cloudSyncRestoreDeleted": "Zuvor gelöschte Songs erneut herunterladen ({{count}})",
+  "cloudSyncConfirm": "Synchronisieren",
   "cloudCancel": "Abbrechen",
   "cloudWorking": "Wird verarbeitet...",
   "cloudCleanupSectionTitle": "Cloud-Speicher bereinigen",
@@ -204,5 +208,9 @@
   "communitySection": "Community",
   "communityTitle": "Hilf mit, TON zu gestalten",
   "communityDescription": "Einen Fehler gefunden oder eine Idee für eine neue Funktion? Tritt dem Discord bei und erzähl es uns.",
-  "communityButton": "Discord beitreten"
+  "communityButton": "Discord beitreten",
+  "uiScaleTitle": "UI-Skalierung",
+  "uiScaleDescription": "Verkleinere oder vergrößere die gesamte TON-Oberfläche.",
+  "uiScaleReset": "Auf 100 % zurücksetzen",
+  "newVersionAvailable": "Neue Version verfügbar"
 }

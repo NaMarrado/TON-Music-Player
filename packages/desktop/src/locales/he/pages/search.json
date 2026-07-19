@@ -26,5 +26,8 @@
   "soundcloudProviderError": "חיפוש SoundCloud נכשל.",
   "openSettings": "פתח את ההגדרות",
   "loadMore": "טען עוד",
-  "downloadStarted": "מוריד את {{title}}"
+  "downloadStarted": "מוריד את {{title}}",
+  "sortResults": "מיון תוצאות",
+  "sortRelevance": "רלוונטיות",
+  "sortMostViewed": "הנצפים ביותר"
 }

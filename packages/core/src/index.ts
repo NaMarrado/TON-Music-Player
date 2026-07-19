@@ -48,8 +48,10 @@ export {
   getSearchPageLimit,
   isCurrentSearchRequest,
   rankSearchResults,
+  parseYouTubeViewCount,
   relaxSearchQuery,
   searchRelevanceScore,
+  sortSearchResults,
   tokenizeSearchQuery,
 } from './utils/search';
 
@@ -171,6 +173,7 @@ export {
   buildLegacyCloudConnectionTestObjectKey,
   buildLegacyCloudManifestObjectKey,
   buildR2Endpoint,
+  buildCloudLocalDeletionPreview,
   createCloudStorageHttpError,
   createCloudDeletedPlaylistRecordV2,
   createCloudDeletedTrackRecordV2,
@@ -195,6 +198,7 @@ export {
   normalizeCloudStorageErrorKey,
   parseCloudLibraryManifestV2,
   parseCloudStorageServiceErrorCode,
+  partitionCloudManifestForLocalExclusions,
   sha256Hex,
   signR2Request,
 } from './services/cloud-sync';
@@ -209,6 +213,7 @@ export type {
   CloudR2CleanupPlan,
   CloudR2CleanupExecutionAdapter,
   CloudR2CleanupExecutionOptions,
+  CloudLocalExclusionPartition,
   CloudStorageErrorKey,
   CloudTrackObjectNameInput,
   MergeCloudLibraryManifestsV2Options,
