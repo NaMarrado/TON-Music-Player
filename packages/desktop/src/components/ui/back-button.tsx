@@ -4,7 +4,7 @@ export function BackButton({ label }: { label: string }) {
   const navigate = useNavigate();
 
   return (
-    <div className="px-8" style={{ paddingTop: '44px' }}>
+    <div className="px-8" style={{ paddingTop: 'var(--desktop-page-top)' }}>
       <button
         className="flex items-center gap-1 cursor-pointer"
         onClick={() => navigate(-1)}

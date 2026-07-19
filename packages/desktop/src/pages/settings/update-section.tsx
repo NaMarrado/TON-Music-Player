@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react';
-import type { AppUpdateCheck } from '@ton/core';
 import { SectionHeader } from './helpers';
 import type { SettingsLayout } from './use-settings-layout';
 import { showToast } from '../../stores/toast-store';
 import {
-  checkDesktopForUpdates,
   downloadDesktopUpdate,
   getDesktopAppVersion,
   openDesktopUpdateUrl,
 } from '../../services/app-update';
+import { checkDesktopUpdateState, useUpdateStore } from '../../stores/update-store';
 
 export function UpdateSection({
   layout,
@@ -18,8 +17,8 @@ export function UpdateSection({
   t: (key: string, opts?: Record<string, unknown>) => string;
 }) {
   const [currentVersion, setCurrentVersion] = useState('...');
-  const [updateResult, setUpdateResult] = useState<AppUpdateCheck | null>(null);
-  const [isChecking, setIsChecking] = useState(false);
+  const updateResult = useUpdateStore((state) => state.result);
+  const isChecking = useUpdateStore((state) => state.isChecking);
   const [isPreparingUpdate, setIsPreparingUpdate] = useState(false);
 
   useEffect(() => {
@@ -41,12 +40,9 @@ export function UpdateSection({
       return;
     }
 
-    setIsChecking(true);
-
     try {
-      const result = await checkDesktopForUpdates();
+      const result = await checkDesktopUpdateState();
       setCurrentVersion(result.currentVersion);
-      setUpdateResult(result);
 
       if (result.hasUpdate) {
         showToast(t('updateAvailableToast', { version: result.latestVersion }), 'info');
@@ -55,8 +51,6 @@ export function UpdateSection({
       }
     } catch {
       showToast(t('updateCheckFailedToast'), 'error', 5000);
-    } finally {
-      setIsChecking(false);
     }
   };
 
@@ -95,7 +89,29 @@ export function UpdateSection({
   };
 
   return (
-    <section>
+    <section style={{ position: 'relative' }}>
+      {updateResult?.hasUpdate && (
+        <span
+          aria-hidden
+          style={{
+            alignItems: 'center',
+            background: '#ff3b3b',
+            border: '3px solid var(--bg-surface)',
+            borderRadius: '50%',
+            color: '#fff',
+            display: 'flex',
+            fontSize: '0.72rem',
+            fontWeight: 800,
+            height: '26px',
+            justifyContent: 'center',
+            position: 'absolute',
+            right: '-10px',
+            top: '-10px',
+            width: '26px',
+            zIndex: 2,
+          }}
+        >!</span>
+      )}
       <SectionHeader
         compact={layout.compact}
         icon={
@@ -123,6 +139,11 @@ export function UpdateSection({
       />
 
       <div className="flex flex-col gap-4" style={{ paddingLeft: layout.sectionIndent }}>
+        {updateResult?.hasUpdate && (
+          <p style={{ color: '#ff5757', fontSize: '0.82rem', fontWeight: 700 }}>
+            {t('newVersionAvailable')}
+          </p>
+        )}
         <div
           className="flex justify-between gap-3"
           style={{

@@ -6,11 +6,13 @@ export function SidebarNavItem({
   icon,
   label,
   to,
+  badge = false,
 }: {
   collapsed: boolean;
   icon: ReactNode;
   label: string;
   to: string;
+  badge?: boolean;
 }) {
   return (
     <NavLink
@@ -46,6 +48,28 @@ export function SidebarNavItem({
           )}
           <span className="nav-icon w-5 h-5 shrink-0" style={{ opacity: isActive ? 1 : 0.7 }}>
             {icon}
+            {badge && (
+              <span
+                aria-label="New update"
+                style={{
+                  alignItems: 'center',
+                  background: '#ff3b3b',
+                  border: '2px solid var(--bg-base)',
+                  borderRadius: '50%',
+                  color: '#fff',
+                  display: 'flex',
+                  fontSize: '7px',
+                  fontWeight: 800,
+                  height: '13px',
+                  justifyContent: 'center',
+                  position: 'absolute',
+                  right: collapsed ? 'calc(50% - 14px)' : 'auto',
+                  left: collapsed ? 'auto' : '25px',
+                  top: '5px',
+                  width: '13px',
+                }}
+              >!</span>
+            )}
           </span>
           {!collapsed && <span>{label}</span>}
         </>

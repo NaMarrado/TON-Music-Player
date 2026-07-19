@@ -38,5 +38,12 @@
   "exportLibrary": "Eksportuj bibliotekę",
   "exportSuccess": "Biblioteka została pomyślnie wyeksportowana",
   "nothingToExport": "Nic do eksportu",
-  "noResults": "Brak pasujących utworów."
+  "noResults": "Brak pasujących utworów.",
+  "duplicatePlaylistTitle": "Utwór jest już na playliście",
+  "duplicatePlaylistMessage": "„{{title}}” jest już na tej playliście. Dodać ponownie?",
+  "duplicatePlaylistProgress": "Duplikat {{current}} z {{total}}",
+  "duplicatePlaylistAddAgain": "Dodaj ponownie",
+  "duplicatePlaylistSkip": "Pomiń",
+  "duplicatePlaylistAddThis": "Dodaj ten utwór",
+  "duplicatePlaylistAddAll": "Dodaj wszystkie duplikaty"
 }

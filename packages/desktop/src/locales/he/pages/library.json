@@ -38,5 +38,12 @@
   "exportLibrary": "ייצוא ספרייה",
   "exportSuccess": "הספרייה יצאה בהצלחה",
   "nothingToExport": "אין מה לייצא",
-  "noResults": "אין רצועות תואמות."
+  "noResults": "אין רצועות תואמות.",
+  "duplicatePlaylistTitle": "השיר כבר נמצא בפלייליסט",
+  "duplicatePlaylistMessage": "״{{title}}״ כבר נמצא בפלייליסט הזה. להוסיף אותו שוב?",
+  "duplicatePlaylistProgress": "כפילות {{current}} מתוך {{total}}",
+  "duplicatePlaylistAddAgain": "הוסף שוב",
+  "duplicatePlaylistSkip": "דלג",
+  "duplicatePlaylistAddThis": "הוסף את השיר הזה",
+  "duplicatePlaylistAddAll": "הוסף את כל הכפילויות"
 }

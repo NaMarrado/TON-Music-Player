@@ -204,5 +204,9 @@
   "communitySection": "Comunidade",
   "communityTitle": "Ajude a moldar o TON",
   "communityDescription": "Encontrou um bug ou tem uma ideia para uma nova funcionalidade? Entre no Discord e conte para nós.",
-  "communityButton": "Entrar no Discord"
+  "communityButton": "Entrar no Discord",
+  "uiScaleTitle": "Escala da interface",
+  "uiScaleDescription": "Reduza ou aumente toda a interface do TON.",
+  "uiScaleReset": "Repor para 100%",
+  "newVersionAvailable": "Nova versão disponível"
 }

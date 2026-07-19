@@ -187,5 +187,6 @@
   "communitySection": "Сообщество",
   "communityTitle": "Помогите развивать TON",
   "communityDescription": "Нашли ошибку или есть идея для новой функции? Присоединяйтесь к Discord и расскажите нам.",
-  "communityButton": "Присоединиться к Discord"
+  "communityButton": "Присоединиться к Discord",
+  "newVersionAvailable": "Доступна новая версия"
 }

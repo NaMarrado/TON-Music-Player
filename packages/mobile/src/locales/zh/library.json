@@ -37,5 +37,12 @@
   "selectedCount_other": "{{count}} 已选择",
   "noResults": "没有匹配的曲目",
   "emptyLibrary": "您的音乐库是空的",
-  "tabLabel": "音乐库"
+  "tabLabel": "音乐库",
+  "duplicatePlaylistTitle": "歌曲已在播放列表中",
+  "duplicatePlaylistMessage": "“{{title}}”已在此播放列表中。再次添加？",
+  "duplicatePlaylistProgress": "重复项 {{current}} / {{total}}",
+  "duplicatePlaylistAddAgain": "再次添加",
+  "duplicatePlaylistSkip": "跳过",
+  "duplicatePlaylistAddThis": "添加此歌曲",
+  "duplicatePlaylistAddAll": "添加所有重复项"
 }

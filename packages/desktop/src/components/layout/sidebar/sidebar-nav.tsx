@@ -6,6 +6,7 @@ import {
   SettingsIcon,
 } from '../sidebar-icons';
 import { SidebarNavItem } from './sidebar-nav-item';
+import { hasUnreadDesktopUpdate, useUpdateStore } from '../../../stores/update-store';
 
 export function SidebarNav({
   collapsed,
@@ -14,6 +15,7 @@ export function SidebarNav({
   collapsed: boolean;
   t: (key: string) => string;
 }) {
+  const hasUnreadUpdate = useUpdateStore(hasUnreadDesktopUpdate);
   return (
     <nav
       className="flex shrink-0 flex-col"
@@ -26,7 +28,7 @@ export function SidebarNav({
       <SidebarNavItem collapsed={collapsed} to="/search" icon={<SearchIcon />} label={t('search')} />
       <SidebarNavItem collapsed={collapsed} to="/library" icon={<LibraryIcon />} label={t('library')} />
       <SidebarNavItem collapsed={collapsed} to="/downloads" icon={<DownloadsIcon />} label={t('downloads')} />
-      <SidebarNavItem collapsed={collapsed} to="/settings" icon={<SettingsIcon />} label={t('settings')} />
+      <SidebarNavItem collapsed={collapsed} to="/settings" icon={<SettingsIcon />} label={t('settings')} badge={hasUnreadUpdate} />
     </nav>
   );
 }

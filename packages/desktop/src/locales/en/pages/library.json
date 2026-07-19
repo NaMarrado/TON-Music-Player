@@ -38,5 +38,12 @@
   "exportLibrary": "Export Library",
   "exportSuccess": "Library exported successfully",
   "nothingToExport": "Nothing to export",
-  "noResults": "No matching tracks."
+  "noResults": "No matching tracks.",
+  "duplicatePlaylistTitle": "Song already in playlist",
+  "duplicatePlaylistMessage": "“{{title}}” is already in this playlist. Add it again?",
+  "duplicatePlaylistProgress": "Duplicate {{current}} of {{total}}",
+  "duplicatePlaylistAddAgain": "Add again",
+  "duplicatePlaylistSkip": "Skip",
+  "duplicatePlaylistAddThis": "Add this song",
+  "duplicatePlaylistAddAll": "Add all duplicates"
 }

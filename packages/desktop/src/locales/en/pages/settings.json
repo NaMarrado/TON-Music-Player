@@ -204,5 +204,9 @@
   "communitySection": "Community",
   "communityTitle": "Help shape TON",
   "communityDescription": "Found a bug or have an idea for a feature? Join the Discord and tell us.",
-  "communityButton": "Join Discord"
+  "communityButton": "Join Discord",
+  "uiScaleTitle": "UI scale",
+  "uiScaleDescription": "Make the entire TON interface smaller or larger.",
+  "uiScaleReset": "Reset to 100%",
+  "newVersionAvailable": "New version available"
 }

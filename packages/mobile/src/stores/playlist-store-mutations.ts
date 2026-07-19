@@ -1,4 +1,9 @@
-import type { Playlist, PlaylistTrackEntry } from '@ton/core';
+import type {
+  Playlist,
+  PlaylistAddTracksRequest,
+  PlaylistAddTracksResult,
+  PlaylistTrackEntry,
+} from '@ton/core';
 import {
   addTracksToPlaylist as dbAddTracks,
   createPlaylist as dbCreatePlaylist,
@@ -55,9 +60,14 @@ export async function deletePlaylist(id: number): Promise<void> {
   });
 }
 
-export async function addTracksToPlaylist(playlistId: number, trackIds: number[]): Promise<void> {
-  await dbAddTracks(playlistId, trackIds);
-  if (usePlaylistStore.getState().playlistDetails[playlistId]) await loadPlaylist(playlistId);
+export async function addTracksToPlaylist(
+  request: PlaylistAddTracksRequest,
+): Promise<PlaylistAddTracksResult> {
+  const result = await dbAddTracks(request);
+  if (result.status === 'added' && usePlaylistStore.getState().playlistDetails[request.playlistId]) {
+    await loadPlaylist(request.playlistId);
+  }
+  return result;
 }
 
 export async function removeTrackFromPlaylist(playlistTrackId: number): Promise<void> {

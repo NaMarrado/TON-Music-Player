@@ -36,7 +36,7 @@ export function DownloadsHeader({
     <div
       className="flex items-center justify-between shrink-0 sticky top-0 z-10"
       style={{
-        padding: '44px 32px 20px',
+        padding: 'var(--desktop-page-top) 32px 20px',
         background: 'linear-gradient(var(--bg-deep) 60%, transparent)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',

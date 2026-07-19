@@ -38,7 +38,7 @@ export function LibraryHeader({
     <div
       className="shrink-0"
       style={{
-        padding: `44px ${layout.contentPaddingX}px 16px`,
+        padding: `var(--desktop-page-top) ${layout.contentPaddingX}px 16px`,
       }}
     >
       <div

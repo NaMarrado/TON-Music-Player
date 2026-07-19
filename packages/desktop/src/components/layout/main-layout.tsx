@@ -3,7 +3,6 @@ import { Outlet } from 'react-router';
 import { useLocation } from 'react-router';
 import { Sidebar } from './sidebar';
 import { NowPlayingBar } from './now-playing-bar';
-import { AppUpdateDialog } from './app-update-dialog';
 import { QueuePanel } from '../player/queue-panel';
 import { ToastContainer } from '../ui/toast';
 import { useMediaSession } from '../../hooks/use-media-session';
@@ -27,6 +26,7 @@ import {
   DESKTOP_SIDEBAR_EXPANDED_WIDTH,
 } from '../../shared/layout';
 import { useShellLayout } from './use-shell-layout';
+import { initializeDesktopUpdateState } from '../../stores/update-store';
 
 export function MainLayout() {
   useMediaSession();
@@ -54,6 +54,10 @@ export function MainLayout() {
   useEffect(() => {
     loadDownloads();
     return subscribeToDownloadEvents();
+  }, []);
+
+  useEffect(() => {
+    void initializeDesktopUpdateState();
   }, []);
 
   useEffect(() => {
@@ -134,8 +138,8 @@ export function MainLayout() {
               top: 0,
               left: 0,
               right: 0,
-              height: '36px',
-              marginBottom: '-36px',
+              height: 'var(--desktop-drag-region-height)',
+              marginBottom: 'calc(var(--desktop-drag-region-height) * -1)',
               zIndex: 100,
               WebkitAppRegion: 'drag',
             } as React.CSSProperties}
@@ -148,8 +152,6 @@ export function MainLayout() {
       </div>
       <NowPlayingBar compact={isCompactPlayer} onQueueToggle={toggleQueue} queueOpen={queueOpen} />
       <ToastContainer />
-      <AppUpdateDialog />
-
       {isSidebarOverlayViewport && sidebarOverlayOpen && (
         <div
           style={{

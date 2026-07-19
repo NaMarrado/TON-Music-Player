@@ -1,18 +1,17 @@
 import { useCallback, useState } from 'react';
-import type { AppUpdateCheck } from '@ton/core';
 import { useTranslation } from 'react-i18next';
 import {
-  checkMobileForUpdates,
   getMobileAppVersion,
   installMobileUpdate,
 } from '../../services/app-update';
 import { showToast } from '../../stores/toast-store';
+import { checkMobileUpdateState, useUpdateStore } from '../../stores/update-store';
 
 export function useUpdateSettings() {
   const { t } = useTranslation('settings');
   const [appVersion] = useState(() => getMobileAppVersion());
-  const [updateResult, setUpdateResult] = useState<AppUpdateCheck | null>(null);
-  const [isCheckingUpdates, setIsCheckingUpdates] = useState(false);
+  const updateResult = useUpdateStore((state) => state.result);
+  const isCheckingUpdates = useUpdateStore((state) => state.isChecking);
   const [isPreparingUpdate, setIsPreparingUpdate] = useState(false);
 
   const checkForUpdates = useCallback(async () => {
@@ -20,11 +19,8 @@ export function useUpdateSettings() {
       return;
     }
 
-    setIsCheckingUpdates(true);
-
     try {
-      const result = await checkMobileForUpdates();
-      setUpdateResult(result);
+      const result = await checkMobileUpdateState();
 
       if (result.hasUpdate) {
         showToast(t('updateAvailableToast', { version: result.latestVersion }), 'info', 4000);
@@ -33,8 +29,6 @@ export function useUpdateSettings() {
       }
     } catch {
       showToast(t('updateCheckFailedToast'), 'error', 4000);
-    } finally {
-      setIsCheckingUpdates(false);
     }
   }, [isCheckingUpdates, t]);
 

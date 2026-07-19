@@ -204,5 +204,9 @@
   "communitySection": "المجتمع",
   "communityTitle": "ساهم في تطوير TON",
   "communityDescription": "هل وجدت خطأ أو لديك فكرة لميزة جديدة؟ انضم إلى Discord وأخبرنا.",
-  "communityButton": "الانضمام إلى Discord"
+  "communityButton": "الانضمام إلى Discord",
+  "uiScaleTitle": "حجم الواجهة",
+  "uiScaleDescription": "صغّر واجهة TON بالكامل أو كبّرها.",
+  "uiScaleReset": "إعادة الضبط إلى 100٪",
+  "newVersionAvailable": "يتوفر إصدار جديد"
 }

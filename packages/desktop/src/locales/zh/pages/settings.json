@@ -204,5 +204,9 @@
   "communitySection": "社区",
   "communityTitle": "帮助塑造 TON",
   "communityDescription": "发现了错误或有新功能的想法？加入 Discord 告诉我们。",
-  "communityButton": "加入 Discord"
+  "communityButton": "加入 Discord",
+  "uiScaleTitle": "界面缩放",
+  "uiScaleDescription": "缩小或放大整个 TON 界面。",
+  "uiScaleReset": "重置为 100%",
+  "newVersionAvailable": "有新版本可用"
 }

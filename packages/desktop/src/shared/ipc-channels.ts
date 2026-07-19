@@ -69,6 +69,8 @@ export const ALLOWED_INVOKE_CHANNELS = [
   'import:start',
   'app:get-version',
   'app:get-platform',
+  'app:get-ui-scale',
+  'app:set-ui-scale',
   'app:get-paths',
   'app:check-update',
   'app:open-external',

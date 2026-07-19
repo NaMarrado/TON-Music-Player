@@ -38,5 +38,12 @@
   "exportLibrary": "Exportar biblioteca",
   "exportSuccess": "La biblioteca se exportó correctamente",
   "nothingToExport": "No hay nada que exportar",
-  "noResults": "No hay canciones que coincidan."
+  "noResults": "No hay canciones que coincidan.",
+  "duplicatePlaylistTitle": "La canción ya está en la lista",
+  "duplicatePlaylistMessage": "“{{title}}” ya está en esta lista. ¿Añadirla otra vez?",
+  "duplicatePlaylistProgress": "Duplicado {{current}} de {{total}}",
+  "duplicatePlaylistAddAgain": "Añadir otra vez",
+  "duplicatePlaylistSkip": "Omitir",
+  "duplicatePlaylistAddThis": "Añadir esta canción",
+  "duplicatePlaylistAddAll": "Añadir todos los duplicados"
 }

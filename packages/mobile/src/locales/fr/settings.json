@@ -187,5 +187,6 @@
   "communitySection": "Communauté",
   "communityTitle": "Aidez à façonner TON",
   "communityDescription": "Vous avez trouvé un bug ou une idée de fonctionnalité ? Rejoignez le Discord et dites-le-nous.",
-  "communityButton": "Rejoindre Discord"
+  "communityButton": "Rejoindre Discord",
+  "newVersionAvailable": "Nouvelle version disponible"
 }

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Linking, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { LUFS_TARGET_DEFAULT } from '@ton/core';
 import { useTranslation } from 'react-i18next';
@@ -26,6 +26,8 @@ import { useScreenTopPadding } from '../../hooks/use-screen-top-padding';
 import { SettingsConnectionsGroup } from './settings-connections-group';
 import { reconcileLibraryTracks } from '../../stores/library-store';
 import { loadPlaylists } from '../../stores/playlist-store';
+import { useIsFocused } from '@react-navigation/native';
+import { markMobileUpdateSeen } from '../../stores/update-store';
 
 export function SettingsScreen() {
   const { t } = useTranslation('settings');
@@ -41,6 +43,7 @@ export function SettingsScreen() {
   const topPadding = useScreenTopPadding(16);
   const controller = useSettingsScreen();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const isFocused = useIsFocused();
   const {
     analyzeAll,
     appVersion,
@@ -71,6 +74,10 @@ export function SettingsScreen() {
     refreshDownloadQuality,
     refreshLoudnessStats,
   } = controller;
+
+  useEffect(() => {
+    if (isFocused && updateResult?.hasUpdate) void markMobileUpdateSeen();
+  }, [isFocused, updateResult?.hasUpdate, updateResult?.latestVersion]);
 
   const handleRefresh = useCallback(async () => {
     if (isRefreshing) return;
@@ -162,6 +169,7 @@ export function SettingsScreen() {
           openUpdateLabel={updateActionLabel}
           onCheckForUpdates={() => void checkForUpdates()}
           onOpenUpdate={() => void openAvailableUpdate()}
+          newVersionAvailableLabel={t('newVersionAvailable')}
         />
       </SettingsGroup>
 

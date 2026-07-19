@@ -37,5 +37,12 @@
   "selectedCount_other": "Vybrané položky: {{count}}",
   "noResults": "Žádné odpovídající skladby",
   "emptyLibrary": "Knihovna je prázdná",
-  "tabLabel": "Knihovna"
+  "tabLabel": "Knihovna",
+  "duplicatePlaylistTitle": "Skladba už je v playlistu",
+  "duplicatePlaylistMessage": "„{{title}}“ už je v tomto playlistu. Přidat ji znovu?",
+  "duplicatePlaylistProgress": "Duplicita {{current}} z {{total}}",
+  "duplicatePlaylistAddAgain": "Přidat znovu",
+  "duplicatePlaylistSkip": "Přeskočit",
+  "duplicatePlaylistAddThis": "Přidat tuto skladbu",
+  "duplicatePlaylistAddAll": "Přidat všechny duplicity"
 }

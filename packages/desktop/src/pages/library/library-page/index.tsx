@@ -8,6 +8,7 @@ import { useLibraryPageActions } from './use-library-page-actions';
 import { useLibraryPageData } from './use-library-page-data';
 import { useLibraryLayout } from './use-library-layout';
 import { useLibraryViewState } from './use-library-view-state';
+import { PlaylistDuplicateDialog } from './playlist-duplicate-dialog';
 
 export function LibraryPage() {
   const { i18n, t } = useTranslation('pages/library');
@@ -54,6 +55,11 @@ export function LibraryPage() {
     handleOpenPlaylistPicker,
     handlePlayAll,
     handlePlayTrack,
+    duplicateDialog,
+    handleAddAllDuplicates,
+    handleAddCurrentDuplicate,
+    handleCancelDuplicate,
+    handleSkipDuplicate,
   } = useLibraryPageActions({
     contextMenu,
     filteredTracksRef,
@@ -125,6 +131,17 @@ export function LibraryPage() {
           playlists={manualPlaylists}
           onAddToPlaylist={handleAddToPlaylist}
           onDelete={handleDeleteFromMenu}
+          t={t}
+        />
+      )}
+
+      {duplicateDialog && (
+        <PlaylistDuplicateDialog
+          state={duplicateDialog}
+          onAddAll={handleAddAllDuplicates}
+          onAddCurrent={handleAddCurrentDuplicate}
+          onCancel={handleCancelDuplicate}
+          onSkip={handleSkipDuplicate}
           t={t}
         />
       )}

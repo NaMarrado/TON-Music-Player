@@ -14,10 +14,19 @@ import { useSettingsLayout } from './use-settings-layout';
 import { AppCredit } from '../../components/app-credit';
 import { CommunityCard } from './community-card';
 import { DiscordPresenceSection } from './discord-presence-section';
+import { UiScaleSection } from './ui-scale-section';
+import { useEffect } from 'react';
+import { markDesktopUpdateSeen, useUpdateStore } from '../../stores/update-store';
 
 export function SettingsPage() {
   const { t } = useTranslation('pages/settings');
   const layout = useSettingsLayout();
+  const updateResult = useUpdateStore((state) => state.result);
+  const hasUpdate = Boolean(updateResult?.hasUpdate);
+
+  useEffect(() => {
+    void markDesktopUpdateSeen();
+  }, [hasUpdate, updateResult?.latestVersion]);
 
   return (
     <div className="flex flex-col flex-1 overflow-y-auto">
@@ -33,7 +42,7 @@ export function SettingsPage() {
           style={{
             maxWidth: `${layout.maxContentWidth}px`,
             margin: '0 auto',
-            padding: `44px ${layout.contentPaddingX}px 20px`,
+            padding: `var(--desktop-page-top) ${layout.contentPaddingX}px 20px`,
           }}
         >
           <h1
@@ -58,6 +67,9 @@ export function SettingsPage() {
             <LanguageSection layout={layout} t={t} />
           </SettingsCard>
           <SettingsCard layout={layout}>
+            <UiScaleSection layout={layout} t={t} />
+          </SettingsCard>
+          <SettingsCard layout={layout} attention={hasUpdate}>
             <UpdateSection layout={layout} t={t} />
           </SettingsCard>
         </SettingsGroup>

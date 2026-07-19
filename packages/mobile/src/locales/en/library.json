@@ -37,5 +37,12 @@
   "selectedCount_other": "{{count}} selected",
   "noResults": "No matching tracks",
   "emptyLibrary": "Your library is empty",
-  "tabLabel": "Library"
+  "tabLabel": "Library",
+  "duplicatePlaylistTitle": "Song already in playlist",
+  "duplicatePlaylistMessage": "“{{title}}” is already in this playlist. Add it again?",
+  "duplicatePlaylistProgress": "Duplicate {{current}} of {{total}}",
+  "duplicatePlaylistAddAgain": "Add again",
+  "duplicatePlaylistSkip": "Skip",
+  "duplicatePlaylistAddThis": "Add this song",
+  "duplicatePlaylistAddAll": "Add all duplicates"
 }

@@ -37,5 +37,12 @@
   "selectedCount_other":"{{count}} selezionati",
   "noResults":"Nessun brano corrispondente",
   "emptyLibrary":"La libreria è vuota",
-  "tabLabel":"Libreria"
+  "tabLabel":"Libreria",
+  "duplicatePlaylistTitle": "Brano già nella playlist",
+  "duplicatePlaylistMessage": "“{{title}}” è già in questa playlist. Aggiungerlo di nuovo?",
+  "duplicatePlaylistProgress": "Duplicato {{current}} di {{total}}",
+  "duplicatePlaylistAddAgain": "Aggiungi di nuovo",
+  "duplicatePlaylistSkip": "Salta",
+  "duplicatePlaylistAddThis": "Aggiungi questo brano",
+  "duplicatePlaylistAddAll": "Aggiungi tutti i duplicati"
 }

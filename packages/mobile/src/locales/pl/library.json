@@ -37,5 +37,12 @@
   "selectedCount_other": "Wybrano {{count}}",
   "noResults": "Brak pasujących utworów",
   "emptyLibrary": "Twoja biblioteka jest pusta",
-  "tabLabel": "Biblioteka"
+  "tabLabel": "Biblioteka",
+  "duplicatePlaylistTitle": "Utwór jest już na playliście",
+  "duplicatePlaylistMessage": "„{{title}}” jest już na tej playliście. Dodać ponownie?",
+  "duplicatePlaylistProgress": "Duplikat {{current}} z {{total}}",
+  "duplicatePlaylistAddAgain": "Dodaj ponownie",
+  "duplicatePlaylistSkip": "Pomiń",
+  "duplicatePlaylistAddThis": "Dodaj ten utwór",
+  "duplicatePlaylistAddAll": "Dodaj wszystkie duplikaty"
 }

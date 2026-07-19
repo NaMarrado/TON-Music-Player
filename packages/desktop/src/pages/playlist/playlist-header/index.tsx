@@ -33,7 +33,7 @@ export function PlaylistHeader({
     <div
       className="shrink-0 flex gap-6"
       style={{
-        padding: `44px ${layout.contentPaddingX}px 24px`,
+        padding: `var(--desktop-page-top) ${layout.contentPaddingX}px 24px`,
         alignItems: 'flex-start',
         flexDirection: 'column',
       }}

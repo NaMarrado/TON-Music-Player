@@ -1,4 +1,5 @@
 import type { Playlist } from './types';
+import type { PlaylistAddTracksRequest, PlaylistAddTracksResult } from '@ton/core';
 import { invokeIpc } from './ipc';
 import { loadPlaylist, loadPlaylists } from './loaders';
 import { usePlaylistStore } from './store';
@@ -42,14 +43,15 @@ export async function deletePlaylist(id: number): Promise<void> {
 }
 
 export async function addTracksToPlaylist(
-  playlistId: number,
-  trackIds: number[],
-): Promise<void> {
-  await invokeIpc('playlist:add-tracks', playlistId, trackIds);
+  request: PlaylistAddTracksRequest,
+): Promise<PlaylistAddTracksResult> {
+  const result = await invokeIpc('playlist:add-tracks', request) as PlaylistAddTracksResult;
+  if (result.status !== 'added') return result;
   const { currentPlaylist } = usePlaylistStore.getState();
-  if (currentPlaylist?.id === playlistId) {
-    await loadPlaylist(playlistId);
+  if (currentPlaylist?.id === request.playlistId) {
+    await loadPlaylist(request.playlistId);
   }
+  return result;
 }
 
 export async function removeTrackFromPlaylist(

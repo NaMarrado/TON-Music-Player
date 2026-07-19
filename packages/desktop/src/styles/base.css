@@ -23,6 +23,8 @@
   --radius: 8px;
   --radius-lg: 12px;
   --transition: 180ms cubic-bezier(0.4, 0, 0.2, 1);
+  --desktop-page-top: 48px;
+  --desktop-drag-region-height: 48px;
 }
 
 *,
