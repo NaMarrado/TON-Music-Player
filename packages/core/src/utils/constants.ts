@@ -1,5 +1,5 @@
 export const APP_NAME = 'TON';
-export const APP_VERSION = '1.0.39';
+export const APP_VERSION = '1.0.40';
 export const TON_DISCORD_URL = 'https://discord.gg/4PHWaYXeT4';
 
 export const SUPPORTED_AUDIO_EXTENSIONS = [
