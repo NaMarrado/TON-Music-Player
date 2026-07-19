@@ -1,7 +1,7 @@
 export type LibraryTransferBundleType = 'library' | 'playlist';
 
 export interface LibraryTransferProgress {
-  phase: 'queued' | 'preparing' | 'tracks' | 'playlists' | 'finalizing' | 'done';
+  phase: 'queued' | 'preparing' | 'tracks' | 'playlists' | 'finalizing' | 'sharing' | 'done';
   current: number;
   total: number;
 }
@@ -22,6 +22,7 @@ export interface LibraryExportResult {
 
 export interface LibraryExportSelection {
   includeLibrary: boolean;
+  outputMode?: 'archive' | 'individual_files';
   playlistIds: number[];
   trackIds?: number[];
 }

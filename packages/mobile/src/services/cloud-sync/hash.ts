@@ -1,6 +1,6 @@
 import * as FileSystem from 'expo-file-system';
 import { base64ToBytes, createSha256Hasher } from '@ton/core';
-import { getDb } from '../database';
+import { runMobileCloudDbLane } from './db-lane';
 
 const HASH_CHUNK_BYTES = 1024 * 1024;
 
@@ -32,16 +32,16 @@ export async function hashCloudArtworkCached(fileUri: string): Promise<string> {
   ) {
     return hashFileSha256(fileUri);
   }
-  const cached = await getDb().getFirstAsync<{ sha256: string }>(
+  const cached = await runMobileCloudDbLane((db) => db.getFirstAsync<{ sha256: string }>(
     `SELECT sha256 FROM cloud_sync_hash_cache
      WHERE file_path = ? AND file_size = ? AND file_mtime = ?`,
     [fileUri, info.size, info.modificationTime],
-  );
+  ));
   if (cached?.sha256) {
     return cached.sha256;
   }
   const sha256 = await hashFileSha256(fileUri);
-  await getDb().runAsync(
+  await runMobileCloudDbLane((db) => db.runAsync(
     `INSERT INTO cloud_sync_hash_cache(file_path, file_size, file_mtime, sha256)
      VALUES (?, ?, ?, ?)
      ON CONFLICT(file_path) DO UPDATE SET
@@ -50,6 +50,6 @@ export async function hashCloudArtworkCached(fileUri: string): Promise<string> {
        sha256 = excluded.sha256,
        updated_at = strftime('%s','now')`,
     [fileUri, info.size, info.modificationTime, sha256],
-  );
+  ).then(() => undefined));
   return sha256;
 }

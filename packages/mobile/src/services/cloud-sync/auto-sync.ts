@@ -189,6 +189,13 @@ export async function runMobileCloudManualTask(
   mode: MobileCloudSyncMode,
   onProgress?: (progress: CloudSyncProgress) => void,
 ): Promise<CloudSyncResult | null> {
+  if (runtime.activeCyclePromise || runtime.currentController) {
+    runtime.currentController?.abort();
+    runtime.coordinator?.cancelActive();
+    await runtime.activeCyclePromise?.catch(() => {});
+    runtime.currentProgress = null;
+    emitStatus();
+  }
   if (!runtime.activeCyclePromise && !runtime.currentController) {
     await recoverMobileCloudControl(true);
   }

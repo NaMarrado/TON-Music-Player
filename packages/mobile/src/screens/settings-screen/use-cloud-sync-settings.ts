@@ -302,7 +302,9 @@ export function useCloudSyncSettings() {
     && (cloudForm.secretAccessKey || cloudHasSecret),
   );
 
-  const displayedCloudProgress = cloudProgress ?? cloudAutoSyncStatus.progress ?? null;
+  const displayedCloudProgress = cloudBusy
+    ? cloudProgress
+    : cloudProgress ?? cloudAutoSyncStatus.progress ?? null;
 
   const cloudProgressLabel = useMemo(() => {
     if (!displayedCloudProgress) {

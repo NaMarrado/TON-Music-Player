@@ -33,6 +33,10 @@ export function usePlaylistTransferActions(
     progress: LibraryTransferProgress,
     cancel: (() => Promise<void>) | null,
   ) => {
+    if (progress.phase === 'sharing') {
+      setTransferProgress(null);
+      return;
+    }
     const message = progress.phase === 'queued'
       ? ts('transferQueued')
       : progress.phase === 'preparing'

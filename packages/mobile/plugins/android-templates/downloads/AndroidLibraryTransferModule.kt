@@ -3,6 +3,7 @@ package com.ton.player.downloads
 // Template source for the Android config plugin. Expo prebuild writes this into the generated Android project.
 import android.app.Activity
 import android.content.Intent
+import android.net.Uri
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.BaseActivityEventListener
 import com.facebook.react.bridge.Promise
@@ -19,6 +20,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.util.UUID
+import java.io.File
+import java.io.FileInputStream
 
 class AndroidLibraryTransferModule(
   reactContext: ReactApplicationContext,
@@ -59,6 +62,28 @@ class AndroidLibraryTransferModule(
       startJob(jobId, TransferSpec.Export(AndroidLibraryTransferRequestParser.parseExport(request)), promise)
     } catch (error: Exception) {
       promise.reject("android_library_transfer_export_request_failed", error)
+    }
+  }
+
+  @ReactMethod
+  fun copyExportFile(sourceUri: String, destinationUri: String, promise: Promise) {
+    scope.launch {
+      try {
+        val source = Uri.parse(sourceUri)
+        val destination = Uri.parse(destinationUri)
+        val input = if (source.scheme == "file") {
+          FileInputStream(File(requireNotNull(source.path)))
+        } else {
+          requireNotNull(reactApplicationContext.contentResolver.openInputStream(source))
+        }
+        val output = requireNotNull(
+          reactApplicationContext.contentResolver.openOutputStream(destination, "w"),
+        )
+        input.use { from -> output.use { to -> from.copyTo(to, DEFAULT_BUFFER_SIZE) } }
+        promise.resolve(null)
+      } catch (error: Exception) {
+        promise.reject("android_library_export_copy_failed", error)
+      }
     }
   }
 

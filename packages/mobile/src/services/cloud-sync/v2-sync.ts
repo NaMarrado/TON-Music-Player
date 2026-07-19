@@ -70,9 +70,7 @@ export async function runMobileCloudV2Sync(
         result,
       });
       throwIfAborted(signal);
-      if (mode !== 'upload') {
-        await storeEntityMirror(scopeId, publication.published, maxGeneration, signal);
-      }
+      await storeEntityMirror(scopeId, publication.published, maxGeneration, signal);
       // Fetch is cloud-authoritative, but it must not discard pending local
       // upserts. Only a run that actually publishes them may acknowledge them.
       if (mode !== 'fetch' && maxGeneration > 0) {
@@ -81,13 +79,12 @@ export async function runMobileCloudV2Sync(
       throwIfAborted(signal);
       await updateMobileCloudPersistedState(scopeId, {
         revision: publication.published.revision,
-        etag: mode === 'upload' ? null : publication.publishedEtag,
+        etag: publication.publishedEtag,
         lamport_counter: publication.published.max_counter,
         last_success_at: Math.floor(Date.now() / 1000),
         last_error: null,
         next_retry_at: null,
-        needs_full_reconcile: mode === 'upload'
-          || (mode === 'fetch' && state.needs_full_reconcile === 1) ? 1 : 0,
+        needs_full_reconcile: mode === 'fetch' && state.needs_full_reconcile === 1 ? 1 : 0,
         pending_downloads: mode === 'upload' ? state.pending_downloads : pending.pendingDownloads,
         pending_assets: mode === 'upload' ? state.pending_assets : pending.pendingAssets,
       });

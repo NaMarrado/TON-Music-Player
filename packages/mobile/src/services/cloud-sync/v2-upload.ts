@@ -71,18 +71,14 @@ export async function uploadPreparedObjects(
     ([key]) => referencedKeys.has(key) && !attemptedKeys.has(key),
   );
   const uploads = referencedUploads.filter(([key]) => !existingRemoteKeys.has(key));
-  const allTrackGroups = new Set(
-    referencedUploads.map(([, upload]) => upload.progressGroup).filter(Boolean),
-  );
   const pendingTrackGroups = new Set(
     uploads.map(([, upload]) => upload.progressGroup).filter(Boolean),
   );
-  let completedTracks = allTrackGroups.size - pendingTrackGroups.size;
-  result.skipped += completedTracks;
+  let completedTracks = 0;
   const progress = createTrackProgress(uploads.map(([, upload]) => upload));
   const uploadedGroups = new Set<string>();
   emitProgress(onProgress, {
-    phase: 'uploading', current: completedTracks, total: allTrackGroups.size,
+    phase: 'uploading', current: completedTracks, total: pendingTrackGroups.size,
     uploaded: result.uploaded, skipped: result.skipped,
   });
   for (let index = 0; index < uploads.length; index += 1) {
@@ -96,14 +92,14 @@ export async function uploadPreparedObjects(
     }
     attemptedKeys.add(key);
     const completedPending = progress.complete(upload);
-    const nextCompletedTracks = allTrackGroups.size - pendingTrackGroups.size + completedPending;
+    const nextCompletedTracks = completedPending;
     if (nextCompletedTracks > completedTracks) {
       completedTracks = nextCompletedTracks;
       if (upload.progressGroup && uploadedGroups.has(upload.progressGroup)) result.uploaded += 1;
       else if (upload.progressGroup) result.skipped += 1;
     }
     emitProgress(onProgress, {
-      phase: 'uploading', current: completedTracks, total: allTrackGroups.size,
+      phase: 'uploading', current: completedTracks, total: pendingTrackGroups.size,
       uploaded: result.uploaded, skipped: result.skipped,
     });
   }

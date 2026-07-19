@@ -31,11 +31,11 @@ import {
 } from './sync-common';
 
 export async function ensureTrackContentHash(track: Track): Promise<string | null> {
-  if (!(await pathExists(track.file_path))) {
-    return null;
-  }
   if (track.content_hash_sha256) {
     return track.content_hash_sha256;
+  }
+  if (!(await pathExists(track.file_path))) {
+    return null;
   }
   const contentHash = await hashFileSha256(track.file_path);
   setDesktopCloudOutboxSuppressed(() => {

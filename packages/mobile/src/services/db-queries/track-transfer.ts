@@ -4,8 +4,8 @@ import { getDb } from '../database';
 
 type TrackAssetRow = Pick<Track, 'id' | 'file_path' | 'cover_art_path' | 'in_library'>;
 
-export async function getAllTracksForTransfer(): Promise<Track[]> {
-  const db = getDb();
+export async function getAllTracksForTransfer(database?: SQLiteDatabase): Promise<Track[]> {
+  const db = database ?? getDb();
   return db.getAllAsync<Track>(
     `SELECT *
      FROM tracks

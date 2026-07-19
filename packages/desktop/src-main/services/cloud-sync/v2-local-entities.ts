@@ -37,20 +37,30 @@ export async function serializePendingV2Entities(
 
   const tracks = new Map<number, SerializedTrack>();
   const playlists = new Map<number, SerializedPlaylist>();
-  const total = trackIds.size + playlistIds.size;
+  const missingTrackHashIds = new Set(
+    trackIds.size === 0
+      ? []
+      : (db.prepare(`
+          SELECT id FROM tracks
+          WHERE id IN (${[...trackIds].map(() => '?').join(', ')})
+            AND (content_hash_sha256 IS NULL OR content_hash_sha256 = '')
+        `).all(...trackIds) as Array<{ id: number }>).map((row) => row.id),
+  );
+  const total = missingTrackHashIds.size;
   let current = 0;
-  emitProgress(options.onProgress, { phase: 'hashing', total });
+  if (total > 0) emitProgress(options.onProgress, { phase: 'hashing', total });
   for (const id of trackIds) {
     throwIfV2Cancelled(options);
     const serialized = await serializeTrackForV2(config, id);
     if (serialized) tracks.set(id, serialized);
-    emitProgress(options.onProgress, { phase: 'hashing', current: ++current, total });
+    if (missingTrackHashIds.has(id)) {
+      emitProgress(options.onProgress, { phase: 'hashing', current: ++current, total });
+    }
   }
   for (const id of playlistIds) {
     throwIfV2Cancelled(options);
     const serialized = await serializePlaylistForV2(config, id);
     if (serialized) playlists.set(id, serialized);
-    emitProgress(options.onProgress, { phase: 'hashing', current: ++current, total });
   }
 
   const remoteHashes = new Set(remote.tracks.map((record) => record.content_hash_sha256));

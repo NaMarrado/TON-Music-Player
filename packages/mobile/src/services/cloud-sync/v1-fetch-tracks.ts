@@ -1,7 +1,6 @@
 import * as FileSystem from 'expo-file-system';
 import { compareCloudTracksForLibrary } from '@ton/core';
 import type { CloudLibraryManifestV1, CloudSyncResult } from '@ton/core';
-import { getDb } from '../database';
 import { insertTrack } from '../db-queries';
 import { MUSIC_DIR } from '../downloader/filesystem';
 import { ensureUniqueLocalFilePathAsync } from '../library-transfer/file-helpers';
@@ -12,6 +11,7 @@ import {
   recordMobileCloudDownloadFailure,
   type MobileCloudDownloadFailureContext,
 } from './download-failures';
+import { runMobileCloudDbLane } from './db-lane';
 import { shouldDeferCloudTrackDownload } from './download-failure-policy';
 import { getMobileCloudProtectedEntities, withMobileCloudOutboxSuppressed } from './local-state';
 import { getFileExtension } from './media';
@@ -249,12 +249,12 @@ export async function fetchV1Tracks(input: {
     client, manifest, result, onProgress, shouldCancel, abortSignal,
     applyProtection, failureContext, onTrackImported,
   } = input;
-  const rows = await getDb().getAllAsync<ExistingCloudTrack>(
+  const rows = await runMobileCloudDbLane((db) => db.getAllAsync<ExistingCloudTrack>(
     `SELECT id, content_hash_sha256, added_at, downloaded_at, in_library, cover_art_path,
             file_path, file_size, format
      FROM tracks WHERE content_hash_sha256 IS NOT NULL AND content_hash_sha256 != ''
      ORDER BY id ASC`,
-  );
+  ));
   const existingByHash = new Map(rows.map((row) => [row.content_hash_sha256, row]));
   const trackIdByHash = new Map<string, number>();
   const deferredFailures = failureContext

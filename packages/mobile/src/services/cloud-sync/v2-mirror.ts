@@ -1,5 +1,4 @@
 import type { CloudLibraryManifestV2 } from '@ton/core';
-import { getDb } from '../database';
 import { getMobileCloudProtectedEntities } from './local-state';
 import { throwIfAborted } from './v2-common';
 import { runMobileCloudDbLane } from './db-lane';
@@ -11,7 +10,7 @@ export async function storeEntityMirror(
   signal?: AbortSignal,
 ): Promise<void> {
   throwIfAborted(signal);
-  await runMobileCloudDbLane(() => getDb().withExclusiveTransactionAsync(async (db) => {
+  await runMobileCloudDbLane((connection) => connection.withExclusiveTransactionAsync(async (db) => {
     const protectedEntities = await getMobileCloudProtectedEntities(scopeId, afterGeneration, db);
     const upsert = async (
       entityType: 'track' | 'playlist',

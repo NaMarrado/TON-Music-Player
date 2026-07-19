@@ -11,6 +11,9 @@ export async function beginExportMobileLibrary(
   selection: LibraryExportSelection,
   onProgress?: (progress: LibraryTransferProgress) => void,
 ): Promise<LibraryTransferTask<LibraryExportResult>> {
+  if (selection.outputMode === 'individual_files') {
+    return startJsExportTask(selection, onProgress);
+  }
   return canUseNativeLibraryTransfer()
     ? startAndroidExportTask(selection, onProgress)
     : startJsExportTask(selection, onProgress);

@@ -141,8 +141,8 @@ export async function normalizeCloudAudioForPlayback(
 }
 
 export async function ensureTrackContentHash(track: Track): Promise<string | null> {
-  if (!(await fileExists(track.file_path))) return null;
   if (track.content_hash_sha256) return track.content_hash_sha256;
+  if (!(await fileExists(track.file_path))) return null;
   const contentHash = await hashFileSha256(track.file_path);
   await withMobileCloudOutboxSuppressed((db) => (
     updateTrack(track.id, { content_hash_sha256: contentHash }, db)
