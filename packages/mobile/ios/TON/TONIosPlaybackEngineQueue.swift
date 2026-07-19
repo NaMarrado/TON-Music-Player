@@ -91,7 +91,7 @@ extension TONIosPlaybackEngineManager {
       }
       self.resumePositionSeconds = self.currentPositionSeconds()
       self.scheduleToken += 1
-      self.playerNode.stop()
+      self.stopAllPlayerNodes()
       self.state = self.currentFile == nil ? "none" : "paused"
       self.updateNowPlayingInfo()
       self.emitPlaybackState()
@@ -103,7 +103,7 @@ extension TONIosPlaybackEngineManager {
     stateQueue.async {
       self.resumePositionSeconds = 0
       self.scheduleToken += 1
-      if self.engineConfigured { self.playerNode.stop() }
+      self.stopAllPlayerNodes()
       self.state = self.currentFile == nil ? "none" : "stopped"
       self.updateNowPlayingInfo()
       self.deactivateAudioSessionIfNeeded()

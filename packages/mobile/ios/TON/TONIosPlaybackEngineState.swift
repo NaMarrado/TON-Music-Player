@@ -151,7 +151,7 @@ extension TONIosPlaybackEngineManager {
 
   func failPlayback(_ error: Error) {
     scheduleToken += 1
-    if engineConfigured { playerNode.stop() }
+    stopAllPlayerNodes()
     state = "error"
     updateNowPlayingInfo()
     deactivateAudioSessionIfNeeded()
@@ -161,7 +161,7 @@ extension TONIosPlaybackEngineManager {
 
   func resetPlaybackState(keepQueue: Bool) {
     scheduleToken += 1
-    if engineConfigured { playerNode.stop() }
+    stopAllPlayerNodes()
     currentDurationSeconds = 0
     currentFile = nil
     currentIndex = nil
