@@ -1,14 +1,20 @@
 import {
   addPlaybackRuntimeEventListener,
-  getPlaybackProgress,
   pausePlayback,
   PlaybackEvent,
   playPlayback,
   seekPlayback,
-  skipToNextPlayback,
-  skipToPreviousPlayback,
   stopPlayback,
 } from './playback-runtime';
+import {
+  nextTrack,
+  prevTrack,
+  setRepeatMode,
+  setShuffleEnabled,
+} from './playback-bridge/controls';
+import { setupPlayer } from './audio-player';
+import { playCarMediaId } from './car-playback';
+import { Platform } from 'react-native';
 
 let listenersRegistered = false;
 
@@ -29,6 +35,15 @@ export async function PlaybackService(): Promise<void> {
     await playPlayback();
   });
 
+  addPlaybackRuntimeEventListener(PlaybackEvent.RemotePlayId, async ({ id }) => {
+    logRemote('play-id');
+    try {
+      await playCarMediaId(id);
+    } catch (error) {
+      console.warn('[RNTP Remote] play-id failed:', error);
+    }
+  });
+
   addPlaybackRuntimeEventListener(PlaybackEvent.RemotePause, async () => {
     logRemote('pause');
     await pausePlayback();
@@ -37,7 +52,7 @@ export async function PlaybackService(): Promise<void> {
   addPlaybackRuntimeEventListener(PlaybackEvent.RemoteNext, async () => {
     logRemote('next');
     try {
-      await skipToNextPlayback();
+      await nextTrack();
     } catch (error) {
       console.warn('[RNTP Remote] next failed:', error);
     }
@@ -46,15 +61,27 @@ export async function PlaybackService(): Promise<void> {
   addPlaybackRuntimeEventListener(PlaybackEvent.RemotePrevious, async () => {
     logRemote('previous');
     try {
-      const progress = await getPlaybackProgress();
-      if (progress.position > 3) {
-        await seekPlayback(0);
-        return;
-      }
-
-      await skipToPreviousPlayback();
+      await prevTrack();
     } catch (error) {
       console.warn('[RNTP Remote] previous failed:', error);
+    }
+  });
+
+  addPlaybackRuntimeEventListener(PlaybackEvent.RemoteShuffle, async ({ enabled }) => {
+    logRemote('shuffle', `enabled=${enabled}`);
+    try {
+      await setShuffleEnabled(enabled);
+    } catch (error) {
+      console.warn('[RNTP Remote] shuffle failed:', error);
+    }
+  });
+
+  addPlaybackRuntimeEventListener(PlaybackEvent.RemoteRepeat, async ({ mode }) => {
+    logRemote('repeat', `mode=${mode}`);
+    try {
+      await setRepeatMode(mode);
+    } catch (error) {
+      console.warn('[RNTP Remote] repeat failed:', error);
     }
   });
 
@@ -80,5 +107,9 @@ export async function PlaybackService(): Promise<void> {
       await playPlayback();
     }
   });
+
+  if (Platform.OS === 'android') {
+    await setupPlayer();
+  }
 
 }

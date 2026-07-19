@@ -1,4 +1,4 @@
-import type { Track } from '@ton/core';
+import type { QueueItem, Track } from '@ton/core';
 import { getTracksByIds } from '../db-queries';
 import type { PlaybackRuntimeTrack } from '../playback-runtime';
 
@@ -6,7 +6,7 @@ export type QueueTrackRef = { id?: string; track_id: number };
 
 export function trackToRntp(track: Track, uniqueSuffix?: string): PlaybackRuntimeTrack {
   return {
-    id: uniqueSuffix ? `${track.id}-${uniqueSuffix}` : String(track.id),
+    id: uniqueSuffix ?? String(track.id),
     url: track.file_path,
     title: track.title ?? '',
     artist: track.artist ?? '',
@@ -34,4 +34,23 @@ export async function buildRntpQueue(
   }
 
   return ordered;
+}
+
+export async function hydrateMobileQueueItems(items: QueueItem[]): Promise<QueueItem[]> {
+  const tracks = await getTracksByIds([...new Set(items.map((item) => item.track_id))]);
+  const trackMap = new Map(tracks.map((track) => [track.id, track]));
+  return items.map((item) => {
+    const track = trackMap.get(item.track_id);
+    return track ? {
+      ...item,
+      file_path: track.file_path,
+      title: track.title,
+      artist: track.artist,
+      album: track.album,
+      duration_ms: track.duration_ms,
+      cover_art_path: track.cover_art_path,
+      loudness_gain: track.loudness_gain,
+      youtube_id: track.youtube_id,
+    } : item;
+  });
 }

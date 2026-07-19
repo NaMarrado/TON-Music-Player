@@ -20,6 +20,8 @@ const DEFAULT_PLAYBACK_OPTIONS: PlaybackRuntimeUpdateOptions = {
     Capability.Play,
     Capability.Pause,
     Capability.SkipToNext,
+    Capability.PlayFromId,
+    Capability.SeekTo,
   ],
   notificationCapabilities: [
     Capability.SkipToPrevious,
@@ -96,6 +98,10 @@ export async function setPlaybackVolume(volume: number): Promise<void> {
 
 export async function setPlaybackRepeatMode(mode: number): Promise<void> {
   await TrackPlayer.setRepeatMode(mode);
+}
+
+export async function setPlaybackShuffleEnabled(_enabled: boolean): Promise<void> {
+  // RNTP exposes queue order rather than a separate shuffle-mode state.
 }
 
 export async function skipPlaybackIndex(index: number): Promise<void> {

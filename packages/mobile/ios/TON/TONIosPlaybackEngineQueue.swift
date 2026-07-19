@@ -145,7 +145,19 @@ extension TONIosPlaybackEngineManager {
   }
 
   func setRepeatMode(_ mode: Int, completion: @escaping () -> Void) {
-    stateQueue.async { self.repeatMode = mode; completion() }
+    stateQueue.async {
+      self.repeatMode = mode
+      if self.remoteCommandsConfigured { self.applyRemoteCommandCapabilities() }
+      completion()
+    }
+  }
+
+  func setShuffleEnabled(_ enabled: Bool, completion: @escaping () -> Void) {
+    stateQueue.async {
+      self.shuffleEnabled = enabled
+      if self.remoteCommandsConfigured { self.applyRemoteCommandCapabilities() }
+      completion()
+    }
   }
 
   func skip(to index: Int, completion: @escaping (Error?) -> Void) {

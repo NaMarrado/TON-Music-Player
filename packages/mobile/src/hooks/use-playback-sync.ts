@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
+import { AppState } from 'react-native';
 import {
   handleQueueEnded,
   syncActiveTrack,
@@ -152,10 +153,16 @@ export function usePlaybackSync({ enabled }: UsePlaybackSyncOptions): void {
         void syncPlayerSnapshot();
       }
     }, 1_500);
+    const appStateSubscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active' && !cancelled) {
+        void syncPlayerSnapshot();
+      }
+    });
 
     return () => {
       cancelled = true;
       clearInterval(intervalId);
+      appStateSubscription.remove();
     };
   }, [enabled]);
 

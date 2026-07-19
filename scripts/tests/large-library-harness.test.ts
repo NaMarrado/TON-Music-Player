@@ -7,6 +7,8 @@ import {
   createCloudLivePlaylistRecordV2,
   createCloudLiveTrackRecordV2,
   getFilteredPlaylistTracks,
+  compactAndRefillRollingQueue,
+  createFollowingRollingQueueWindow,
 } from '../../packages/core/src/index.ts';
 import {
   createPlaybackQueuePlan,
@@ -88,18 +90,18 @@ function cloudEntry(item: Track): CloudTrackEntry {
   };
 }
 
-test('pre-enabled shuffle covers all 1,600 source tracks and keeps the selected track current', () => {
+test('pre-enabled shuffle keeps a bounded active queue and samples with replacement', () => {
   const tracks = Array.from({ length: 1_600 }, (_, index) => track(index));
   const selectedIndex = 731;
   const plan = createPlaybackQueuePlan(tracks, selectedIndex, 9, true, () => 0.37);
 
-  assert.equal(plan.items.length, 1_600);
+  assert.equal(plan.items.length, 20);
   assert.equal(plan.originalItems.length, 1_600);
   assert.equal(plan.currentIndex, 0);
   assert.equal(plan.items[0].track_id, tracks[selectedIndex].id);
-  assert.equal(new Set(plan.items.map((item) => item.id)).size, 1_600);
+  assert.equal(new Set(plan.items.map((item) => item.id)).size, 20);
   assert.deepEqual(plan.originalItems.map((item) => item.track_id), tracks.map((item) => item.id));
-  assert.notDeepEqual(plan.items.slice(1, 40), plan.originalItems.slice(1, 40));
+  assert.equal(new Set(plan.items.slice(1).map((item) => item.track_id)).size, 1);
 });
 
 test('runtime shuffle covers every upcoming item and disabling restores exact source order', () => {
@@ -118,15 +120,48 @@ test('runtime shuffle covers every upcoming item and disabling restores exact so
   assert.equal(restored.requiresFullReplacement, false);
 });
 
-test('disabling pre-enabled shuffle restores the selected track to its source index', () => {
+test('pre-enabled shuffle retains the full compact source separately from the active queue', () => {
   const tracks = Array.from({ length: 1_600 }, (_, index) => track(index));
   const selectedIndex = 731;
   const shuffled = createPlaybackQueuePlan(tracks, selectedIndex, 11, true, () => 0.61);
-  const restored = disableQueueShuffle(shuffled.items, shuffled.originalItems, shuffled.currentIndex);
+  assert.equal(shuffled.items.length, 20);
+  assert.equal(shuffled.originalItems.length, 1_600);
+  assert.equal(shuffled.items[0].source_index, selectedIndex);
+});
 
-  assert.deepEqual(restored.items, shuffled.originalItems);
-  assert.equal(restored.currentIndex, selectedIndex);
-  assert.equal(restored.requiresFullReplacement, true);
+test('rolling queue stays at 20 while compacting and refilling from the full source', () => {
+  const tracks = Array.from({ length: 1_600 }, (_, index) => track(index));
+  const initial = createPlaybackQueuePlan(tracks, 700, 12, false);
+  const compacted = compactAndRefillRollingQueue(
+    initial.items,
+    initial.originalItems,
+    10,
+    12,
+    false,
+    initial.nextQueueSerial,
+  );
+
+  assert.equal(compacted.items.length, 20);
+  assert.equal(compacted.currentIndex, 1);
+  assert.equal(compacted.items[1].source_index, 710);
+  assert.equal(compacted.items.at(-1)?.source_index, 728);
+});
+
+test('shuffle refills independently with replacement', () => {
+  const tracks = Array.from({ length: 1_600 }, (_, index) => track(index));
+  const initial = createPlaybackQueuePlan(tracks, 700, 13, true, () => 0.25);
+  const following = createFollowingRollingQueueWindow(
+    initial.originalItems,
+    initial.items.at(-1)!,
+    13,
+    true,
+    initial.nextQueueSerial,
+    () => 0.5,
+  );
+
+  assert.equal(following.items.length, 20);
+  assert.equal(new Set(following.items.map((item) => item.track_id)).size, 1);
+  assert.equal(following.items[0].track_id, tracks[800].id);
 });
 
 test('10,000-track playlist filtering and persisted sort inputs are viewport-independent', () => {

@@ -1,9 +1,13 @@
+import {
+  createFollowingRollingQueueWindow,
+  rebuildRollingQueueUpcoming,
+} from '@ton/core';
 import { usePlaybackStore } from '../../stores/playback-store';
 import { useQueueStore } from '../../stores/queue-store';
 import { getActiveElement } from '../media-element-pool';
 import { updateMediaSessionPosition } from './position';
-import { shuffleArray } from './queue-helpers';
 import { loadQueueIndex } from './track-loading';
+import { hydrateQueueItems } from './queue-helpers';
 
 export async function nextTrack(auto = false): Promise<void> {
   const { items, currentIndex } = useQueueStore.getState();
@@ -22,15 +26,23 @@ export async function nextTrack(auto = false): Promise<void> {
   if (currentIndex < items.length - 1) {
     nextIndex = currentIndex + 1;
   } else {
-    if (shuffle && items.length > 1) {
-      const rest = [...items];
-      shuffleArray(rest);
-      useQueueStore.setState({ items: rest, currentIndex: 0 });
-      await loadQueueIndex(0);
-      return;
-    }
-
-    nextIndex = 0;
+    const queue = useQueueStore.getState();
+    const window = createFollowingRollingQueueWindow(
+      queue.originalOrder,
+      items[currentIndex],
+      queue.generation,
+      shuffle,
+      queue.nextQueueSerial,
+    );
+    if (!window.items.length) return;
+    const hydratedItems = await hydrateQueueItems(window.items);
+    useQueueStore.setState({
+      items: hydratedItems,
+      currentIndex: 0,
+      nextQueueSerial: window.nextSerial,
+    });
+    await loadQueueIndex(0);
+    return;
   }
 
   await loadQueueIndex(nextIndex);
@@ -54,36 +66,27 @@ export async function prevTrack(): Promise<void> {
   await loadQueueIndex(prevIndex);
 }
 
-export function toggleShuffle(): void {
+export async function toggleShuffle(): Promise<void> {
   const { shuffle } = usePlaybackStore.getState();
   const queue = useQueueStore.getState();
 
-  if (!shuffle) {
-    const current = queue.items[queue.currentIndex];
-    const rest = queue.items.filter((_, index) => index !== queue.currentIndex);
-    shuffleArray(rest);
-    const shuffled = current ? [current, ...rest] : rest;
+  const nextShuffle = !shuffle;
+  const plan = rebuildRollingQueueUpcoming(
+    queue.items,
+    queue.originalOrder,
+    queue.currentIndex,
+    queue.generation,
+    nextShuffle,
+    queue.nextQueueSerial,
+  );
 
-    useQueueStore.setState({
-      items: shuffled,
-      currentIndex: 0,
-      originalOrder: [...queue.items],
-    });
-    usePlaybackStore.setState({ shuffle: true });
-    return;
-  }
-
-  const currentItem = queue.items[queue.currentIndex];
-  const restored = queue.originalOrder;
-  const restoredIndex = currentItem
-    ? restored.findIndex((item) => item.id === currentItem.id)
-    : 0;
-
+  const hydratedItems = await hydrateQueueItems(plan.items);
   useQueueStore.setState({
-    items: restored,
-    currentIndex: restoredIndex >= 0 ? restoredIndex : 0,
+    items: hydratedItems,
+    currentIndex: plan.currentIndex,
+    nextQueueSerial: plan.nextSerial,
   });
-  usePlaybackStore.setState({ shuffle: false });
+  usePlaybackStore.setState({ shuffle: nextShuffle });
 }
 
 export function toggleRepeat(): void {

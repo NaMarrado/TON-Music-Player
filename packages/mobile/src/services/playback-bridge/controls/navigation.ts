@@ -4,11 +4,12 @@ import {
   getPlaybackProgress,
   seekPlayback,
 } from '../../playback-runtime';
-import { shuffleArray, skipToIndex, syncRntpQueue } from '../queue-sync';
+import { skipToIndex } from '../queue-sync';
+import { advanceRollingQueueWindow } from './rolling';
 
 export async function nextTrack(): Promise<void> {
   const { items, currentIndex } = useQueueStore.getState();
-  const { repeat, shuffle } = usePlaybackStore.getState();
+  const { repeat } = usePlaybackStore.getState();
 
   if (items.length === 0) return;
 
@@ -17,15 +18,7 @@ export async function nextTrack(): Promise<void> {
     return;
   }
 
-  if (repeat === 'all') {
-    if (shuffle && items.length > 1) {
-      const rest = [...items];
-      shuffleArray(rest);
-      useQueueStore.setState({ items: rest, currentIndex: 0 });
-      await syncRntpQueue(rest);
-    } else {
-      await skipToIndex(0);
-    }
+  if (repeat === 'all' && await advanceRollingQueueWindow()) {
     return;
   }
 

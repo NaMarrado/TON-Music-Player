@@ -77,7 +77,7 @@ function addActivitySources(project, appTargetUuid, extensionTargetUuid, refs) {
   }
 }
 
-function ensureIosDownloadActivityTarget(project, fallbackBundleId = 'com.ton.player') {
+function ensureIosDownloadActivityTarget(project, fallbackBundleId = 'cz.ton.player') {
   const appTargetEntry = project.getFirstTarget();
   const appTarget = appTargetEntry.firstTarget;
   const appTargetUuid = appTargetEntry.uuid;

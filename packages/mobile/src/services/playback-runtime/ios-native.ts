@@ -95,6 +95,10 @@ export async function setIosPlaybackRepeatMode(mode: number): Promise<void> {
   await getIosPlaybackRuntimeModule().setRepeatMode(mode);
 }
 
+export async function setIosPlaybackShuffleEnabled(enabled: boolean): Promise<void> {
+  await getIosPlaybackRuntimeModule().setShuffleEnabled(enabled);
+}
+
 export async function skipIosPlaybackIndex(index: number): Promise<void> {
   await getIosPlaybackRuntimeModule().skip(index);
 }

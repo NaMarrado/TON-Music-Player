@@ -6,6 +6,8 @@ interface QueueState {
   currentIndex: number;
   source: QueueSource | null;
   originalOrder: QueueItem[];
+  nextQueueSerial: number;
+  generation: number;
 }
 
 export const useQueueStore = create<QueueState>()(() => ({
@@ -13,4 +15,6 @@ export const useQueueStore = create<QueueState>()(() => ({
   currentIndex: -1,
   source: null,
   originalOrder: [],
+  nextQueueSerial: 0,
+  generation: 0,
 }));

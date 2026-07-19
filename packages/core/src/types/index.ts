@@ -23,6 +23,7 @@ export type { Artist } from './artist';
 export type {
   PlaybackQueueSourceDescriptor,
   PlaybackQueueSourceKind,
+  PlaybackSessionSnapshot,
   QueueItem,
   QueueSource,
   QueueState,

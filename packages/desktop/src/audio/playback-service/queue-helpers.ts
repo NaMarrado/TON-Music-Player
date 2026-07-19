@@ -1,4 +1,8 @@
-import type { QueueItem, Track } from '@ton/core';
+import {
+  createRollingQueueWindow,
+  type QueueItem,
+  type Track,
+} from '@ton/core';
 
 export function buildQueueItems(tracks: Track[]) {
   return tracks.map((track, index) => ({
@@ -17,6 +21,25 @@ export function buildQueueItems(tracks: Track[]) {
       ? { playlist_track_id: (track as Track & { playlist_track_id: number }).playlist_track_id }
       : {}),
   }));
+}
+
+export function buildRollingQueue(
+  tracks: Track[],
+  startIndex: number,
+  generation: number,
+  shuffle: boolean,
+) {
+  const sourceItems = buildQueueItems(tracks).map((item, index) => ({
+    ...item,
+    id: `${item.track_id}-g${generation}-s${index}`,
+  }));
+  const window = createRollingQueueWindow(
+    sourceItems,
+    startIndex,
+    generation,
+    shuffle,
+  );
+  return { sourceItems, ...window };
 }
 
 export function getQueueItemTrackSnapshot(item: QueueItem): Track | null {
@@ -58,6 +81,26 @@ export function getQueueItemTrackSnapshot(item: QueueItem): Track | null {
     downloaded_at: null,
     scanned_at: 0,
   };
+}
+
+export async function hydrateQueueItems(items: QueueItem[]): Promise<QueueItem[]> {
+  const trackIds = [...new Set(items.map((item) => item.track_id))];
+  const tracks = await window.api.invoke('library:list-summary-by-ids', trackIds) as Track[];
+  const byId = new Map(tracks.map((track) => [track.id, track]));
+  return items.map((item) => {
+    const track = byId.get(item.track_id);
+    return track ? {
+      ...item,
+      file_path: track.file_path,
+      title: track.title,
+      artist: track.artist,
+      album: track.album,
+      duration_ms: track.duration_ms,
+      cover_art_path: track.cover_art_path,
+      loudness_gain: track.loudness_gain,
+      youtube_id: track.youtube_id,
+    } : item;
+  });
 }
 
 export function shuffleArray<T>(items: T[]): void {

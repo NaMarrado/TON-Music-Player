@@ -7,7 +7,7 @@ index deabf14ce0f31b804d0979774b856bc786bdb3cf..0751856507878b8eba8b3d5c22b3b13a
 -<manifest xmlns:android="http://schemas.android.com/apk/res/android"
 -          package="com.doublesymmetry.trackplayer">
 +<manifest xmlns:android="http://schemas.android.com/apk/res/android">
- 
+
      <uses-permission android:name="android.permission.WAKE_LOCK" />
      <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 diff --git a/android/src/main/java/com/doublesymmetry/trackplayer/module/MusicModule.kt b/android/src/main/java/com/doublesymmetry/trackplayer/module/MusicModule.kt
@@ -17,7 +17,7 @@ index b2409a09939164c49c0f7a16bb6d3284e8eab8fb..3795af7517938a269e82db5439861772
 @@ -503,6 +503,25 @@ class MusicModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
          callback.resolve(null)
      }
- 
+
 +    @ReactMethod
 +    fun setPitch(pitch: Float, callback: Promise) {
 +        scope.launch {
@@ -41,19 +41,47 @@ index b2409a09939164c49c0f7a16bb6d3284e8eab8fb..3795af7517938a269e82db5439861772
      fun getRate(callback: Promise) = scope.launch {
          if (verifyServiceBoundOrReject(callback)) return@launch
 diff --git a/android/src/main/java/com/doublesymmetry/trackplayer/service/MusicService.kt b/android/src/main/java/com/doublesymmetry/trackplayer/service/MusicService.kt
-index afa6b0f335714de0cc8741d5bbdd51b4e04bb3bb..db61d7b59e4780d7056e3eb0ebdacd05bb82e85e 100644
+index afa6b0f335714de0cc8741d5bbdd51b4e04bb3bb..ab3a2ea23f0599e9a3b0673503166fddec8919b6 100644
 --- a/android/src/main/java/com/doublesymmetry/trackplayer/service/MusicService.kt
 +++ b/android/src/main/java/com/doublesymmetry/trackplayer/service/MusicService.kt
-@@ -33,6 +33,8 @@ import com.facebook.react.HeadlessJsTaskService
+@@ -9,7 +9,10 @@ import android.os.Binder
+ import android.os.Build
+ import android.os.Bundle
+ import android.os.IBinder
++import android.os.ResultReceiver
+ import android.support.v4.media.RatingCompat
++import android.support.v4.media.session.MediaSessionCompat
++import android.support.v4.media.session.PlaybackStateCompat
+ import androidx.annotation.MainThread
+ import androidx.core.app.NotificationCompat
+ import androidx.core.app.NotificationCompat.PRIORITY_LOW
+@@ -33,6 +36,10 @@ import com.facebook.react.HeadlessJsTaskService
  import com.facebook.react.bridge.Arguments
  import com.facebook.react.jstasks.HeadlessJsTaskConfig
  import com.facebook.react.modules.core.DeviceEventManagerModule
 +import com.google.android.exoplayer2.ExoPlayer
++import com.google.android.exoplayer2.Player
 +import com.google.android.exoplayer2.PlaybackParameters
++import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
  import com.google.android.exoplayer2.ui.R as ExoPlayerR
  import kotlinx.coroutines.*
  import kotlinx.coroutines.flow.flow
-@@ -811,6 +813,39 @@ class MusicService : HeadlessJsTaskService() {
+@@ -159,5 +166,6 @@ class MusicService : HeadlessJsTaskService() {
+         player = QueuedAudioPlayer(this@MusicService, playerConfig, bufferConfig, cacheConfig)
+         player.automaticallyUpdateNotificationMetadata = automaticallyUpdateNotificationMetadata
++        setupPlayFromMediaId()
+         observeEvents()
+         setupForegrounding()
+     }
+@@ -763,4 +771,7 @@ class MusicService : HeadlessJsTaskService() {
+     @MainThread
+     override fun onBind(intent: Intent): IBinder {
++        if (intent.action == CAR_BROWSER_BIND_ACTION) {
++            startTask(getTaskConfig(intent))
++        }
+         return binder
+     }
+@@ -811,6 +822,104 @@ class MusicService : HeadlessJsTaskService() {
          val service = this@MusicService
      }
  
@@ -78,6 +106,71 @@ index afa6b0f335714de0cc8741d5bbdd51b4e04bb3bb..db61d7b59e4780d7056e3eb0ebdacd05
 +    }
 +
 +    @MainThread
++    private fun getPlayerField(name: String): Any? {
++        if (!::player.isInitialized) return null
++        return try {
++            var cls: Class<*>? = player.javaClass
++            while (cls != null) {
++                try {
++                    val field = cls.getDeclaredField(name)
++                    field.isAccessible = true
++                    return field.get(player)
++                } catch (_: NoSuchFieldException) {
++                    cls = cls.superclass
++                }
++            }
++            null
++        } catch (error: Exception) {
++            Timber.e(error, "Failed to access $name via reflection")
++            null
++        }
++    }
++
++    @MainThread
++    private fun setupPlayFromMediaId() {
++        val connector = getPlayerField("mediaSessionConnector") as? MediaSessionConnector ?: return
++        connector.setPlaybackPreparer(object : MediaSessionConnector.PlaybackPreparer {
++            override fun getSupportedPrepareActions(): Long =
++                PlaybackStateCompat.ACTION_PLAY_FROM_MEDIA_ID or
++                    PlaybackStateCompat.ACTION_PREPARE_FROM_MEDIA_ID
++
++            override fun onPrepare(playWhenReady: Boolean) = Unit
++
++            override fun onPrepareFromMediaId(
++                mediaId: String,
++                playWhenReady: Boolean,
++                extras: Bundle?,
++            ) {
++                if (!playWhenReady) return
++                emit(MusicEvents.BUTTON_PLAY_FROM_ID, Bundle().apply { putString("id", mediaId) })
++            }
++
++            override fun onPrepareFromSearch(
++                query: String,
++                playWhenReady: Boolean,
++                extras: Bundle?,
++            ) = Unit
++
++            override fun onPrepareFromUri(
++                uri: Uri,
++                playWhenReady: Boolean,
++                extras: Bundle?,
++            ) = Unit
++
++            override fun onCommand(
++                player: Player,
++                command: String,
++                extras: Bundle?,
++                cb: ResultReceiver?,
++            ): Boolean = false
++        })
++    }
++
++    @MainThread
++    fun getMediaSessionToken(): MediaSessionCompat.Token? =
++        (getPlayerField("mediaSession") as? MediaSessionCompat)?.sessionToken
++
++    @MainThread
 +    fun setPitch(pitch: Float) {
 +        getExoPlayer()?.let { exoPlayer ->
 +            exoPlayer.playbackParameters = PlaybackParameters(
@@ -93,3 +186,9 @@ index afa6b0f335714de0cc8741d5bbdd51b4e04bb3bb..db61d7b59e4780d7056e3eb0ebdacd05
      companion object {
          const val EMPTY_NOTIFICATION_ID = 1
          const val STATE_KEY = "state"
+@@ -825,4 +934,5 @@ class MusicService : HeadlessJsTaskService() {
+         const val BUFFERED_POSITION_KEY = "buffered"
+         const val TASK_KEY = "TrackPlayer"
++        const val CAR_BROWSER_BIND_ACTION = "com.ton.player.action.BIND_CAR_BROWSER"
+         const val MIN_BUFFER_KEY = "minBuffer"
+         const val MAX_BUFFER_KEY = "maxBuffer"

@@ -8,6 +8,7 @@ const {
   withGradleProperties,
 } = require('expo/config-plugins');
 const {
+  ANDROIDX_MEDIA_DEPENDENCY_LINE,
   COROUTINES_DEPENDENCY_LINE,
   upsertDependency,
   upsertFfmpegKitBootstrap,
@@ -23,6 +24,7 @@ const {
   upsertMainApplicationPackages,
   upsertManifestComponent,
   upsertMetaData,
+  upsertMetaDataResource,
   writeFileIfChanged,
 } = require('./with-ton-android-project');
 
@@ -32,6 +34,10 @@ module.exports = function withTonAndroidBuild(config) {
     gradleConfig.modResults.contents = upsertDependency(
       gradleConfig.modResults.contents,
       COROUTINES_DEPENDENCY_LINE,
+    );
+    gradleConfig.modResults.contents = upsertDependency(
+      gradleConfig.modResults.contents,
+      ANDROIDX_MEDIA_DEPENDENCY_LINE,
     );
     return gradleConfig;
   });
@@ -44,6 +50,27 @@ module.exports = function withTonAndroidBuild(config) {
     const application = AndroidConfig.Manifest.getMainApplicationOrThrow(androidConfig.modResults);
     application.$['android:supportsRtl'] = 'false';
     upsertMetaData(androidConfig.modResults, 'com.facebook.soloader.enabled', 'true', 'android:value');
+    upsertMetaDataResource(
+      androidConfig.modResults,
+      'com.google.android.gms.car.application',
+      '@xml/automotive_app_desc',
+    );
+    upsertManifestComponent(
+      androidConfig.modResults,
+      'service',
+      `${packageName}.car.TonCarMediaBrowserService`,
+      {
+        'android:name': `${packageName}.car.TonCarMediaBrowserService`,
+        'android:enabled': 'true',
+        'android:exported': 'true',
+      },
+    );
+    const carService = application.service.find(
+      (item) => item.$?.['android:name'] === `${packageName}.car.TonCarMediaBrowserService`,
+    );
+    carService['intent-filter'] = [{
+      action: [{ $: { 'android:name': 'android.media.browse.MediaBrowserService' } }],
+    }];
     upsertManifestComponent(
       androidConfig.modResults,
       'service',
@@ -100,6 +127,11 @@ module.exports = function withTonAndroidBuild(config) {
       const rootBuildGradlePath = path.join(platformRoot, 'build.gradle');
       const mainApplicationPath = path.join(javaRoot, ...packagePath, 'MainApplication.kt');
       const sourceGroups = [
+        ['car', [
+          'TonCarCatalogRepository.kt',
+          'TonCarMediaBrowserService.kt',
+          'TonCarMediaIds.kt',
+        ]],
         ['audioboost', ['AudioBoostModule.kt', 'AudioBoostPackage.kt']],
         ['audioequalizer', ['AudioEqualizerModule.kt', 'AudioEqualizerPackage.kt']],
         ['downloads', [
@@ -139,6 +171,10 @@ module.exports = function withTonAndroidBuild(config) {
           );
         }
       }
+      writeFileIfChanged(
+        path.join(platformRoot, 'app', 'src', 'main', 'res', 'xml', 'automotive_app_desc.xml'),
+        `<?xml version="1.0" encoding="utf-8"?>\n<automotiveApp>\n  <uses name="media" />\n</automotiveApp>\n`,
+      );
       patchAdaptiveIconResources(platformRoot);
       patchDebugManifest(platformRoot);
       return androidConfig;

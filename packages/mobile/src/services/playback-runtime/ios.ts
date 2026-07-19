@@ -24,6 +24,7 @@ import {
   seekIosPlayback,
   setIosPlaybackQueue,
   setIosPlaybackRepeatMode,
+  setIosPlaybackShuffleEnabled,
   setIosPlaybackVolume,
   setupIosPlaybackRuntimePlayer,
   skipIosPlaybackIndex,
@@ -36,8 +37,10 @@ import {
 const IOS_PLAYBACK_CAPABILITY = {
   Pause: 3,
   Play: 0,
+  SeekTo: 5,
   SkipToNext: 7,
   SkipToPrevious: 8,
+  Stop: 4,
 } as const;
 
 const DEFAULT_PLAYBACK_OPTIONS: PlaybackRuntimeUpdateOptions = {
@@ -46,6 +49,8 @@ const DEFAULT_PLAYBACK_OPTIONS: PlaybackRuntimeUpdateOptions = {
     IOS_PLAYBACK_CAPABILITY.Play,
     IOS_PLAYBACK_CAPABILITY.Pause,
     IOS_PLAYBACK_CAPABILITY.SkipToNext,
+    IOS_PLAYBACK_CAPABILITY.SeekTo,
+    IOS_PLAYBACK_CAPABILITY.Stop,
   ],
   notificationCapabilities: [
     IOS_PLAYBACK_CAPABILITY.SkipToPrevious,
@@ -109,6 +114,10 @@ export async function setPlaybackVolume(volume: number): Promise<void> {
 
 export async function setPlaybackRepeatMode(mode: number): Promise<void> {
   await setIosPlaybackRepeatMode(mode);
+}
+
+export async function setPlaybackShuffleEnabled(enabled: boolean): Promise<void> {
+  await setIosPlaybackShuffleEnabled(enabled);
 }
 
 export async function skipPlaybackIndex(index: number): Promise<void> {

@@ -82,6 +82,29 @@ extension TONIosPlaybackEngineManager {
     commandCenter.previousTrackCommand.addTarget { [weak self] _ in
       self?.emitEvent(type: "remote-previous"); return .success
     }
+    commandCenter.changeShuffleModeCommand.addTarget { [weak self] event in
+      guard let event = event as? MPChangeShuffleModeCommandEvent else {
+        return .commandFailed
+      }
+      let enabled = event.shuffleType != .off
+      self?.shuffleEnabled = enabled
+      self?.emitEvent(type: "remote-shuffle", extra: ["enabled": enabled])
+      return .success
+    }
+    commandCenter.changeRepeatModeCommand.addTarget { [weak self] event in
+      guard let event = event as? MPChangeRepeatModeCommandEvent else {
+        return .commandFailed
+      }
+      // Car head units commonly cycle off -> all before one. TON exposes one
+      // binary repeat control, so either active system mode means repeat-one.
+      let mode = event.repeatType == .off ? 2 : 1
+      self?.repeatMode = mode
+      self?.emitEvent(
+        type: "remote-repeat",
+        extra: ["mode": mode == 1 ? "one" : "all"]
+      )
+      return .success
+    }
     commandCenter.stopCommand.addTarget { [weak self] _ in
       self?.emitEvent(type: "remote-stop"); return .success
     }
@@ -111,6 +134,10 @@ extension TONIosPlaybackEngineManager {
     commands.pauseCommand.isEnabled = active && remoteCapabilities.contains(.pause)
     commands.nextTrackCommand.isEnabled = active && remoteCapabilities.contains(.skipToNext)
     commands.previousTrackCommand.isEnabled = active && remoteCapabilities.contains(.skipToPrevious)
+    commands.changeShuffleModeCommand.isEnabled = active
+    commands.changeShuffleModeCommand.currentShuffleType = shuffleEnabled ? .items : .off
+    commands.changeRepeatModeCommand.isEnabled = active
+    commands.changeRepeatModeCommand.currentRepeatType = repeatMode == 1 ? .one : .off
     commands.changePlaybackPositionCommand.isEnabled = active && remoteCapabilities.contains(.seekTo)
     commands.stopCommand.isEnabled = active && remoteCapabilities.contains(.stop)
   }

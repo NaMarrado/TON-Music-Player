@@ -7,4 +7,4 @@ export {
   toggle,
 } from './transport';
 export { jumpToQueueIndex, nextTrack, prevTrack } from './navigation';
-export { toggleRepeat, toggleShuffle } from './modes';
+export { setRepeatMode, setShuffleEnabled, toggleRepeat, toggleShuffle } from './modes';

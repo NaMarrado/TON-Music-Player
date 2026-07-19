@@ -49,6 +49,10 @@ RCT_EXTERN_METHOD(setRepeatMode:(nonnull NSNumber *)mode
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(setShuffleEnabled:(BOOL)enabled
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
 RCT_EXTERN_METHOD(skip:(nonnull NSNumber *)index
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)

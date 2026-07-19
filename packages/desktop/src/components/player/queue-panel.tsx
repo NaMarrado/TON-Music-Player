@@ -19,7 +19,7 @@ export function QueuePanel({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className="flex flex-col h-full"
+      className="flex h-full shrink-0 flex-col"
       style={{
         width: `${DESKTOP_QUEUE_PANEL_WIDTH}px`,
         background: 'var(--bg-base)',
@@ -62,6 +62,7 @@ export function QueuePanel({ onClose }: { onClose: () => void }) {
         </p>
         {upcomingItems.length > 0 ? (
           <VirtualizedList
+            className="scrollbar-hidden flex-1 min-h-0 overflow-y-auto"
             items={upcomingItems}
             estimateSize={52}
             overscan={8}

@@ -6,6 +6,8 @@ const HERMES_FLAGS_LINE =
   '    hermesFlags = ["-O", "-output-source-map", "-include-globals=${projectRoot}/hermes/globals.js"]\n';
 const COROUTINES_DEPENDENCY_LINE =
   '    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")\n';
+const ANDROIDX_MEDIA_DEPENDENCY_LINE =
+  '    implementation("androidx.media:media:1.6.0")\n';
 const FFMPEG_KIT_PACKAGE_LINE =
   "        ffmpegKitPackage = findProperty('ffmpegKitPackage') ?: 'audio'\n";
 const FFMPEG_KIT_LOCAL_REPO_LINE =
@@ -85,6 +87,7 @@ function upsertFfmpegKitLocalRepo(contents) {
 }
 
 module.exports = {
+  ANDROIDX_MEDIA_DEPENDENCY_LINE,
   COROUTINES_DEPENDENCY_LINE,
   upsertDependency,
   upsertFfmpegKitBootstrap,

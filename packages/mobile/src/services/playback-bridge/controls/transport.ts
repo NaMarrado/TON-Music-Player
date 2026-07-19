@@ -35,6 +35,7 @@ export async function playTracks(
     originalItems,
     selectedTrack,
     trackByItemId,
+    nextQueueSerial,
   } = createPlaybackQueuePlan(tracks, startIndex, generation, shuffleEnabled);
 
   useQueueStore.setState({
@@ -43,6 +44,7 @@ export async function playTracks(
     source: 'user',
     sourceDescriptor,
     originalOrder: originalItems,
+    nextQueueSerial,
     generation,
   });
   usePlaybackStore.setState({
@@ -96,6 +98,7 @@ export async function playSingleTrack(track: Track): Promise<void> {
     source: 'user',
     sourceDescriptor: { kind: 'single', source_id: track.id },
     originalOrder: [queueItem],
+    nextQueueSerial: 1,
     generation,
   });
 
@@ -139,7 +142,16 @@ export async function pause(): Promise<void> {
 }
 
 export async function toggle(): Promise<void> {
-  const { isPlaying } = usePlaybackStore.getState();
+  const runtimeState = await getPlaybackState().catch(() => null);
+  const runtimeIsPlaying = runtimeState != null && (
+    runtimeState.state === PlaybackStateValue.Playing
+    || runtimeState.state === PlaybackStateValue.Buffering
+    || runtimeState.state === PlaybackStateValue.Loading
+  );
+  const isPlaying = runtimeState == null
+    ? usePlaybackStore.getState().isPlaying
+    : runtimeIsPlaying;
+
   if (isPlaying) {
     await pause();
   } else {

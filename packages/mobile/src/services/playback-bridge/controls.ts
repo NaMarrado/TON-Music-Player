@@ -7,6 +7,8 @@ export {
   prevTrack,
   resume,
   seek,
+  setRepeatMode,
+  setShuffleEnabled,
   toggle,
   toggleRepeat,
   toggleShuffle,

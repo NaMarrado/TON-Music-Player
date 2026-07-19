@@ -37,7 +37,7 @@ final class TONIosDownloadActivityManager: @unchecked Sendable {
   static let shared = TONIosDownloadActivityManager()
 
   private let notificationCenter = UNUserNotificationCenter.current()
-  private let stateQueue = DispatchQueue(label: "com.ton.player.ios-download-activity")
+  private let stateQueue = DispatchQueue(label: "cz.ton.player.ios-download-activity")
   private var isRunningByItemId: [Int: Bool] = [:]
   private var primedItemIds = Set<Int>()
   private var revisionByItemId: [Int: Int] = [:]

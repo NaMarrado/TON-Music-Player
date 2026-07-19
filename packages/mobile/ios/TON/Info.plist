@@ -28,7 +28,7 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>ton</string>
-				<string>com.ton.player</string>
+				<string>cz.ton.player</string>
 			</array>
 		</dict>
 	</array>

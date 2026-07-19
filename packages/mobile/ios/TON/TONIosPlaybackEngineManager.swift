@@ -28,7 +28,7 @@ final class TONIosPlaybackEngineManager: NSObject {
   lazy var equalizerNode = AVAudioUnitEQ(numberOfBands: 10)
   lazy var playerNodes = [AVAudioPlayerNode(), AVAudioPlayerNode()]
   lazy var sourceMixerNode = AVAudioMixerNode()
-  let stateQueue = DispatchQueue(label: "com.ton.player.ios-playback-engine")
+  let stateQueue = DispatchQueue(label: "cz.ton.player.ios-playback-engine")
   lazy var timePitchNode = AVAudioUnitTimePitch()
   var audioBoostGainMb = 0
   var activePlayerNodeIndex = 0
@@ -53,6 +53,7 @@ final class TONIosPlaybackEngineManager: NSObject {
   var scheduleToken = 0
   var scheduledOffsetSeconds = 0.0
   var shouldResumeAfterInterruption = false
+  var shuffleEnabled = false
   var state = "none"
   var volume: Float = 1
 

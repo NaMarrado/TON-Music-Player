@@ -20,6 +20,7 @@ export const stopPlayback = runtime.stopPlayback as typeof import('./android').s
 export const seekPlayback = runtime.seekPlayback as typeof import('./android').seekPlayback;
 export const setPlaybackVolume = runtime.setPlaybackVolume as typeof import('./android').setPlaybackVolume;
 export const setPlaybackRepeatMode = runtime.setPlaybackRepeatMode as typeof import('./android').setPlaybackRepeatMode;
+export const setPlaybackShuffleEnabled = runtime.setPlaybackShuffleEnabled as typeof import('./android').setPlaybackShuffleEnabled;
 export const skipPlaybackIndex = runtime.skipPlaybackIndex as typeof import('./android').skipPlaybackIndex;
 export const skipToNextPlayback = runtime.skipToNextPlayback as typeof import('./android').skipToNextPlayback;
 export const skipToPreviousPlayback = runtime.skipToPreviousPlayback as typeof import('./android').skipToPreviousPlayback;

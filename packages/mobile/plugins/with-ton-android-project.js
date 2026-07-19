@@ -25,6 +25,20 @@ function upsertMetaData(androidManifest, name, value, replaceAttribute) {
   }
 }
 
+function upsertMetaDataResource(androidManifest, name, resource) {
+  const application = AndroidConfig.Manifest.getMainApplicationOrThrow(androidManifest);
+  const metaData = application['meta-data'] ?? [];
+  const existing = metaData.find((item) => item.$?.['android:name'] === name);
+  const attrs = { 'android:name': name, 'android:resource': resource };
+  if (existing) {
+    const { ['android:value']: _value, ...remaining } = existing.$ ?? {};
+    existing.$ = { ...remaining, ...attrs };
+  } else {
+    metaData.push({ $: attrs });
+    application['meta-data'] = metaData;
+  }
+}
+
 function writeFileIfChanged(filePath, contents) {
   if (fs.existsSync(filePath) && fs.readFileSync(filePath, 'utf8') === contents) return;
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -126,5 +140,6 @@ module.exports = {
   upsertMainApplicationPackages,
   upsertManifestComponent,
   upsertMetaData,
+  upsertMetaDataResource,
   writeFileIfChanged,
 };

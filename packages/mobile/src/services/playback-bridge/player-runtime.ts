@@ -4,6 +4,7 @@ import { ensureAudioEffectsAttached } from '../audio-settings';
 import {
   PlaybackRepeatModeValue,
   setPlaybackRepeatMode,
+  setPlaybackShuffleEnabled,
 } from '../playback-runtime';
 import { initializeVolumeBoost } from './volume';
 
@@ -18,7 +19,8 @@ export async function syncRepeatMode(mode: 'all' | 'one'): Promise<void> {
     if (mode === 'one') {
       await setPlaybackRepeatMode(PlaybackRepeatModeValue.Track);
     } else {
-      await setPlaybackRepeatMode(PlaybackRepeatModeValue.Queue);
+      // The JS rolling queue refills from the full source pool at its boundary.
+      await setPlaybackRepeatMode(PlaybackRepeatModeValue.Off);
     }
   } catch {
     // RNTP may not be ready yet.
@@ -28,9 +30,10 @@ export async function syncRepeatMode(mode: 'all' | 'one'): Promise<void> {
 export function runFirstPlaySetup(): void {
   if (!firstPlayDone) {
     firstPlayDone = true;
-    const { repeat } = usePlaybackStore.getState();
+    const { repeat, shuffle } = usePlaybackStore.getState();
 
     syncRepeatMode(repeat).catch(() => {});
+    setPlaybackShuffleEnabled(shuffle).catch(() => {});
     initializeVolumeBoost().catch(() => {
       firstPlayDone = false;
     });

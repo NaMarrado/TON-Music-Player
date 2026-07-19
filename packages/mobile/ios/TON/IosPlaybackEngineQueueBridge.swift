@@ -96,6 +96,11 @@ extension IosPlaybackEngine {
     TONIosPlaybackEngineManager.sharedManager().setRepeatMode(mode.intValue) { resolve(nil) }
   }
 
+  @objc(setShuffleEnabled:resolver:rejecter:)
+  func setShuffleEnabled(_ enabled: Bool, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    TONIosPlaybackEngineManager.sharedManager().setShuffleEnabled(enabled) { resolve(nil) }
+  }
+
   @objc(skip:resolver:rejecter:)
   func skip(_ index: NSNumber, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
     TONIosPlaybackEngineManager.sharedManager().skip(to: index.intValue) { error in

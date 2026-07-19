@@ -28,7 +28,7 @@ const config: ExpoConfig = {
     },
   },
   ios: {
-    bundleIdentifier: 'com.ton.player',
+    bundleIdentifier: 'cz.ton.player',
     buildNumber: '1000041',
     icon: './assets/icon.png',
     infoPlist: {

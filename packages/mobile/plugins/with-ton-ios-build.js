@@ -77,7 +77,7 @@ function withTonIosBuild(config) {
     mod.modResults = removeAppTargetInheritedLdFlags(mod.modResults);
     mod.modResults = ensureIosDownloadActivityTarget(
       mod.modResults,
-      mod.ios?.bundleIdentifier ?? 'com.ton.player',
+      mod.ios?.bundleIdentifier ?? 'cz.ton.player',
     );
     return mod;
   });

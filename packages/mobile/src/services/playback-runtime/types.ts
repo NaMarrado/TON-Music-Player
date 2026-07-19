@@ -60,7 +60,9 @@ export const PlaybackEvent = {
   RemotePlayId: 'remote-play-id',
   RemotePlaySearch: 'remote-play-search',
   RemotePrevious: 'remote-previous',
+  RemoteRepeat: 'remote-repeat',
   RemoteSeek: 'remote-seek',
+  RemoteShuffle: 'remote-shuffle',
   RemoteSetRating: 'remote-set-rating',
   RemoteSkip: 'remote-skip',
   RemoteStop: 'remote-stop',
@@ -106,6 +108,12 @@ export type PlaybackRuntimeEventPayload<T extends PlaybackRuntimeEventType> =
         ? { position?: number; track?: PlaybackRuntimeTrack | null }
         : T extends typeof PlaybackEvent.RemoteDuck
           ? { paused: boolean; permanent: boolean }
-          : T extends typeof PlaybackEvent.RemoteSeek
-            ? { position: number }
-            : never;
+    : T extends typeof PlaybackEvent.RemoteSeek
+      ? { position: number }
+      : T extends typeof PlaybackEvent.RemoteRepeat
+        ? { mode: 'all' | 'one' }
+      : T extends typeof PlaybackEvent.RemoteShuffle
+        ? { enabled: boolean }
+      : T extends typeof PlaybackEvent.RemotePlayId
+        ? { id: string }
+      : never;

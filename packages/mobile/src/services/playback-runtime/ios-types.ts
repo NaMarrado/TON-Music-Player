@@ -40,6 +40,7 @@ export interface IosPlaybackRuntimeModule {
   seekTo(position: number): Promise<void>;
   setVolume(volume: number): Promise<void>;
   setRepeatMode(mode: number): Promise<void>;
+  setShuffleEnabled(enabled: boolean): Promise<void>;
   skip(index: number): Promise<void>;
   skipToNext(): Promise<void>;
   skipToPrevious(): Promise<void>;

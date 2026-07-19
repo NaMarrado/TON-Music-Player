@@ -20,10 +20,17 @@ export async function clearDeletedTracksFromPlayback(trackIds: Iterable<number>)
     .slice(0, Math.max(queueState.currentIndex, 0))
     .filter((item) => trackIdSet.has(item.track_id))
     .length;
-  const nextItems = queueState.items.filter((item) => !trackIdSet.has(item.track_id));
   const nextOriginalOrder = queueState.originalOrder.filter(
     (item) => !trackIdSet.has(item.track_id),
   );
+  const sourceIndexByIdentity = new Map(
+    nextOriginalOrder.map((item, index) => [queueItemIdentity(item), index]),
+  );
+  const nextItems = queueState.items.flatMap((item) => {
+    if (trackIdSet.has(item.track_id)) return [];
+    const sourceIndex = sourceIndexByIdentity.get(queueItemIdentity(item));
+    return sourceIndex == null ? [] : [{ ...item, source_index: sourceIndex }];
+  });
 
   if (nextItems.length !== queueState.items.length) {
     const currentWasRemoved = currentQueueItem
@@ -55,6 +62,12 @@ export async function clearDeletedTracksFromPlayback(trackIds: Iterable<number>)
     isPlaying: false,
     position: 0,
   });
+}
+
+function queueItemIdentity(item: { track_id: number; playlist_track_id?: number }): string {
+  return item.playlist_track_id != null
+    ? `p:${item.playlist_track_id}`
+    : `t:${item.track_id}`;
 }
 
 function resolveQueueIndexAfterTrackRemoval(

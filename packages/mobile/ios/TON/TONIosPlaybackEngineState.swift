@@ -4,19 +4,20 @@ import UIKit
 
 private let nowPlayingArtworkCache = NSCache<NSString, UIImage>()
 private let nowPlayingArtworkQueue = DispatchQueue(
-  label: "com.ton.player.now-playing-artwork",
+  label: "cz.ton.player.now-playing-artwork",
   qos: .userInitiated
 )
 
 extension TONIosPlaybackEngineManager {
   func updateNowPlayingInfo() {
-    applyRemoteCommandCapabilities()
     let center = MPNowPlayingInfoCenter.default()
     guard shouldPublishNowPlayingInfo,
           let currentIndex,
           currentIndex >= 0,
           currentIndex < queue.count else {
       center.nowPlayingInfo = nil
+      if #available(iOS 13.0, *) { center.playbackState = .stopped }
+      applyRemoteCommandCapabilities()
       return
     }
     let track = queue[currentIndex]
@@ -28,6 +29,8 @@ extension TONIosPlaybackEngineManager {
     if let artist = track.artist, !artist.isEmpty { info[MPMediaItemPropertyArtist] = artist }
     if let album = track.album, !album.isEmpty { info[MPMediaItemPropertyAlbumTitle] = album }
     if currentDurationSeconds > 0 { info[MPMediaItemPropertyPlaybackDuration] = currentDurationSeconds }
+    info[MPNowPlayingInfoPropertyPlaybackQueueIndex] = currentIndex
+    info[MPNowPlayingInfoPropertyPlaybackQueueCount] = queue.count
     if let artworkURL = track.resolvedArtworkURL() {
       let cacheKey = artworkURL.path as NSString
       if let image = nowPlayingArtworkCache.object(forKey: cacheKey) {
@@ -39,6 +42,12 @@ extension TONIosPlaybackEngineManager {
       }
     }
     center.nowPlayingInfo = info
+    if #available(iOS 13.0, *) {
+      center.playbackState = state == "playing" ? .playing : .paused
+    }
+    // Publish controls after metadata so newly connected head units discover
+    // shuffle and repeat on the first track, without requiring a phone tap.
+    applyRemoteCommandCapabilities()
   }
 
   private func makeNowPlayingArtwork(_ image: UIImage) -> MPMediaItemArtwork {
@@ -71,7 +80,7 @@ extension TONIosPlaybackEngineManager {
   }
 
   var shouldPublishNowPlayingInfo: Bool {
-    state == "playing" || state == "paused" || state == "loading"
+    state == "playing" || state == "paused" || state == "loading" || state == "ready"
   }
 
   func applyPitch() {

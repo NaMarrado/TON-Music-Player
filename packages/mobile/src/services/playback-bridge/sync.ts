@@ -5,6 +5,7 @@ import { useQueueStore } from '../../stores/queue-store';
 import { getTrackById } from '../db-queries';
 import { ensureAudioEffectsAttached } from '../audio-settings';
 import { syncVolumeOutputToState } from './volume';
+import { advanceRollingQueueWindow } from './controls/rolling';
 
 export async function syncActiveTrack(event: {
   index?: number;
@@ -87,6 +88,12 @@ export function syncPlaybackState(
 }
 
 export async function handleQueueEnded(): Promise<void> {
+  if (
+    usePlaybackStore.getState().repeat === 'all'
+    && await advanceRollingQueueWindow().catch(() => false)
+  ) {
+    return;
+  }
   usePlaybackStore.setState({
     currentTrack: null,
     duration: 0,

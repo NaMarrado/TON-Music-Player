@@ -6,12 +6,14 @@ import {
   type QueueItem,
   type SortField,
   type Track,
+  rebuildRollingQueueUpcoming,
 } from '@ton/core';
 import { useLibraryStore } from '../../stores/library-store';
 import { usePlaybackStore } from '../../stores/playback-store';
 import { usePlaylistStore } from '../../stores/playlist-store';
 import { useQueueStore } from '../../stores/queue-store';
-import { syncRntpQueue, syncUpcomingRntpQueue } from './queue-sync';
+import { syncUpcomingRntpQueue } from './queue-sync';
+import { hydrateMobileQueueItems } from './track-mapping';
 
 let reconcilePromise: Promise<void> | null = null;
 let reconcileRequested = false;
@@ -49,41 +51,31 @@ export async function reconcilePlaybackQueueSource(): Promise<void> {
 
   const currentItem = queue.items[queue.currentIndex];
   if (!currentItem) return;
-  const shuffleEnabled = usePlaybackStore.getState().shuffle;
-
-  if (shuffleEnabled) {
-    const nextIdentity = new Set(nextOriginalOrder.map(queueIdentity));
-    const prefix = queue.items
-      .slice(0, queue.currentIndex + 1)
-      .filter((item) => nextIdentity.has(queueIdentity(item)));
-    const upcoming = queue.items
-      .slice(queue.currentIndex + 1)
-      .filter((item) => nextIdentity.has(queueIdentity(item)));
-    const existingIdentity = new Set([...prefix, ...upcoming].map(queueIdentity));
-    const additions = nextOriginalOrder.filter((item) => !existingIdentity.has(queueIdentity(item)));
-
-    for (const item of additions) {
-      const index = Math.floor(Math.random() * (upcoming.length + 1));
-      upcoming.splice(index, 0, item);
-    }
-
-    const items = [...prefix, ...upcoming];
-    const currentIndex = items.findIndex((item) => item.id === currentItem.id);
-    if (currentIndex < 0) return;
-    useQueueStore.setState({ items, currentIndex, originalOrder: nextOriginalOrder });
-    await syncUpcomingRntpQueue(items, currentIndex);
-    return;
-  }
-
-  const currentIdentity = queueIdentity(currentItem);
-  const currentIndex = nextOriginalOrder.findIndex((item) => queueIdentity(item) === currentIdentity);
-  if (currentIndex < 0) return;
-  useQueueStore.setState({
-    items: nextOriginalOrder,
-    currentIndex,
-    originalOrder: nextOriginalOrder,
+  const sourceIndexByIdentity = new Map(
+    nextOriginalOrder.map((item, index) => [queueIdentity(item), index]),
+  );
+  const remappedItems = queue.items.flatMap((item) => {
+    const sourceIndex = sourceIndexByIdentity.get(queueIdentity(item));
+    return sourceIndex == null ? [] : [{ ...item, source_index: sourceIndex }];
   });
-  await syncRntpQueue(nextOriginalOrder);
+  const currentIndex = remappedItems.findIndex((item) => item.id === currentItem.id);
+  if (currentIndex < 0) return;
+  const plan = rebuildRollingQueueUpcoming(
+    remappedItems.slice(0, currentIndex + 1),
+    nextOriginalOrder,
+    currentIndex,
+    queue.generation,
+    usePlaybackStore.getState().shuffle,
+    queue.nextQueueSerial,
+  );
+  const hydratedItems = await hydrateMobileQueueItems(plan.items);
+  useQueueStore.setState({
+    items: hydratedItems,
+    currentIndex: plan.currentIndex,
+    originalOrder: nextOriginalOrder,
+    nextQueueSerial: plan.nextSerial,
+  });
+  await syncUpcomingRntpQueue(hydratedItems, plan.currentIndex);
 }
 
 function getSourceTracks(descriptor: PlaybackQueueSourceDescriptor): Track[] | null {
@@ -162,7 +154,7 @@ function sourceTrackIdentity(item: QueueItem, playlistSource: boolean): string {
 function queueIdentity(item: QueueItem): string {
   return item.playlist_track_id != null
     ? `p:${item.playlist_track_id}`
-    : `i:${item.id}`;
+    : `t:${item.track_id}`;
 }
 
 function sameQueueIdentity(left: QueueItem[], right: QueueItem[]): boolean {

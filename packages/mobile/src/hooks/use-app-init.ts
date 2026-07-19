@@ -23,18 +23,25 @@ import { markPerf, measurePerfAsync } from '../services/perf';
 import { subscribeToDownloads } from '../stores/download-store';
 import { loadTracks } from '../stores/library-store';
 import { loadPlaylists } from '../stores/playlist-store';
+import {
+  restoreMobilePlaybackSession,
+  startMobilePlaybackSessionPersistence,
+} from '../services/playback-session';
 
 export function useAppInit() {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const postReadyTaskRef = useRef<ReturnType<typeof InteractionManager.runAfterInteractions> | null>(null);
   const downloadNetworkMonitorRef = useRef<DownloadNetworkMonitor | null>(null);
+  const stopPlaybackPersistenceRef = useRef<(() => void) | null>(null);
 
   const init = useCallback(async () => {
     postReadyTaskRef.current?.cancel();
     postReadyTaskRef.current = null;
     downloadNetworkMonitorRef.current?.stop();
     downloadNetworkMonitorRef.current = null;
+    stopPlaybackPersistenceRef.current?.();
+    stopPlaybackPersistenceRef.current = null;
     stopMobileCloudAutoSync();
     setError(null);
     setReady(false);
@@ -51,6 +58,11 @@ export function useAppInit() {
         measurePerfAsync('app-init:library', () => loadTracks()),
         measurePerfAsync('app-init:playlists', () => loadPlaylists()),
       ]);
+      await measurePerfAsync('app-init:playback-session', async () => {
+        await setupPlayer();
+        await restoreMobilePlaybackSession();
+        stopPlaybackPersistenceRef.current = startMobilePlaybackSessionPersistence();
+      });
       setReady(true);
       markPerf('app-init:ready');
       postReadyTaskRef.current = InteractionManager.runAfterInteractions(() => {
@@ -83,6 +95,8 @@ export function useAppInit() {
       postReadyTaskRef.current = null;
       downloadNetworkMonitorRef.current?.stop();
       downloadNetworkMonitorRef.current = null;
+      stopPlaybackPersistenceRef.current?.();
+      stopPlaybackPersistenceRef.current = null;
       stopMobileCloudAutoSync();
     };
   }, [init]);

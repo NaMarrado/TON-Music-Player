@@ -36,8 +36,7 @@ import {
   prevTrack,
 } from './queue-controls';
 import {
-  buildQueueItems,
-  shuffleArray,
+  buildRollingQueue,
 } from './queue-helpers';
 import { safePlayElement } from './safe-play';
 import { preloadNextTrack, loadQueueIndex, startTrack } from './track-loading';
@@ -50,6 +49,7 @@ import {
   logVolumeDebug,
   logVolumePreview,
 } from './volume-debug';
+import { initializeDesktopPlaybackSession } from './session';
 
 export {
   setEqBand,
@@ -69,6 +69,7 @@ export {
 } from './queue-controls';
 
 let volumeHydrationPromise: Promise<number> | null = null;
+let playbackInitializationPromise: Promise<void> | null = null;
 
 async function hydrateVolumePercent(): Promise<number> {
   if (!volumeHydrationPromise) {
@@ -82,7 +83,7 @@ async function hydrateVolumePercent(): Promise<number> {
 }
 
 export function primePlaybackState(): void {
-  void hydrateVolumePercent();
+  void initPlayback().catch(() => {});
 }
 
 export async function initPlayback(): Promise<void> {
@@ -90,69 +91,65 @@ export async function initPlayback(): Promise<void> {
   if (runtimeState.initialized) {
     return;
   }
+  if (playbackInitializationPromise) return playbackInitializationPromise;
 
-  await initAudioEngine();
-  initMediaPool();
-  setupAudioEvents({
-    preloadNextTrack,
-    loadQueueIndex,
-    nextTrack,
-    updateMediaSessionPosition,
-  });
+  playbackInitializationPromise = (async () => {
+    await initAudioEngine();
+    initMediaPool();
+    setupAudioEvents({
+      preloadNextTrack,
+      loadQueueIndex,
+      nextTrack,
+      updateMediaSessionPosition,
+    });
 
-  const volumePercent = await hydrateVolumePercent();
-  const { isMuted } = usePlaybackStore.getState();
-  if (isMuted) {
-    engineSetVolumeImmediate(0);
-  } else {
-    engineSetVolume(volumePercent);
+    const volumePercent = await hydrateVolumePercent();
+    const { isMuted } = usePlaybackStore.getState();
+    if (isMuted) {
+      engineSetVolumeImmediate(0);
+    } else {
+      engineSetVolume(volumePercent);
+    }
+    logVolumeDebug('init:apply', { volumePercent, isMuted });
+    restoreAudioSettings();
+    runtimeState.initialized = true;
+
+    window.api.on('tray:play-pause', () => {
+      void toggle();
+    });
+    window.api.on('tray:next', () => {
+      void nextTrack();
+    });
+    window.api.on('tray:prev', () => {
+      void prevTrack();
+    });
+    window.api.on('menu:settings', () => {
+      window.location.hash = '#/settings';
+    });
+    await initializeDesktopPlaybackSession();
+  })();
+
+  try {
+    await playbackInitializationPromise;
+  } finally {
+    playbackInitializationPromise = null;
   }
-  logVolumeDebug('init:apply', { volumePercent, isMuted });
-  restoreAudioSettings();
-  runtimeState.initialized = true;
-
-  window.api.on('tray:play-pause', () => {
-    void toggle();
-  });
-  window.api.on('tray:next', () => {
-    void nextTrack();
-  });
-  window.api.on('tray:prev', () => {
-    void prevTrack();
-  });
-  window.api.on('menu:settings', () => {
-    window.location.hash = '#/settings';
-  });
 }
 
 export async function playTracks(tracks: Track[], startIndex: number): Promise<void> {
   await initPlayback();
-  const items = buildQueueItems(tracks);
   const { shuffle } = usePlaybackStore.getState();
-  const hasStartTrack = startIndex >= 0 && startIndex < items.length;
-  const currentItem = hasStartTrack ? items[startIndex] : null;
-  const rest = items.filter((_, index) => index !== startIndex);
-
-  if (shuffle && currentItem && rest.length > 0) {
-    shuffleArray(rest);
-    const shuffledItems = [currentItem, ...rest];
-
-    useQueueStore.setState({
-      items: shuffledItems,
-      currentIndex: 0,
-      source: 'user',
-      originalOrder: [...items],
-    });
-
-    await startTrack(tracks[startIndex]);
-    return;
-  }
+  if (!tracks.length || startIndex < 0 || startIndex >= tracks.length) return;
+  const generation = useQueueStore.getState().generation + 1;
+  const window = buildRollingQueue(tracks, startIndex, generation, shuffle);
 
   useQueueStore.setState({
-    items,
-    currentIndex: startIndex,
+    items: window.items,
+    currentIndex: window.currentIndex,
     source: 'user',
-    originalOrder: [...items],
+    originalOrder: window.sourceItems,
+    nextQueueSerial: window.nextSerial,
+    generation,
   });
 
   const track = tracks[startIndex];
@@ -188,8 +185,10 @@ export function pause(): void {
 }
 
 export async function toggle(): Promise<void> {
-  const { isPlaying } = usePlaybackStore.getState();
-  if (isPlaying) {
+  await initPlayback();
+  const element = getActiveElement();
+  const isActuallyPlaying = !element.paused && !element.ended;
+  if (isActuallyPlaying) {
     pause();
   } else {
     await play();

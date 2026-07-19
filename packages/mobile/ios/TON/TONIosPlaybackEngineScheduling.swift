@@ -46,6 +46,7 @@ extension TONIosPlaybackEngineManager {
         playerNodeIsStopped: true
       )
     } else {
+      configureRemoteCommandsIfNeeded()
       updateNowPlayingInfo()
       emitPlaybackSnapshot()
       deactivateAudioSessionIfNeeded()

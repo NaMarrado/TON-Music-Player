@@ -1,4 +1,8 @@
-import type { QueueItem, Track } from '@ton/core';
+import {
+  createRollingQueueWindow,
+  type QueueItem,
+  type Track,
+} from '@ton/core';
 
 export interface PlaybackQueuePlan {
   currentIndex: number;
@@ -6,6 +10,7 @@ export interface PlaybackQueuePlan {
   originalItems: QueueItem[];
   selectedTrack: Track;
   trackByItemId: Map<string, Track>;
+  nextQueueSerial: number;
 }
 
 export interface QueueModePlan<T> {
@@ -25,31 +30,39 @@ export function createPlaybackQueuePlan(
     throw new Error('invalid-playback-queue-source');
   }
   const originalItems: QueueItem[] = tracks.map((track, index) => ({
-    id: `${track.id}-g${generation}-i${index}`,
+    id: `${track.id}-g${generation}-s${index}`,
     track_id: track.id,
     added_by: 'user',
     playlist_track_id: 'playlist_track_id' in track
       ? Number(track.playlist_track_id)
       : undefined,
+    file_path: track.file_path,
+    title: track.title,
+    artist: track.artist,
+    album: track.album,
+    duration_ms: track.duration_ms,
+    cover_art_path: track.cover_art_path,
+    loudness_gain: track.loudness_gain,
+    youtube_id: track.youtube_id,
   }));
-  const trackByItemId = new Map(originalItems.map((item, index) => [item.id, tracks[index]]));
-  let items = [...originalItems];
-  let currentIndex = startIndex;
-
-  if (shuffleEnabled && items.length > 1) {
-    const selected = items[startIndex];
-    const remaining = items.filter((_, index) => index !== startIndex);
-    shuffleQueueItems(remaining, random);
-    items = [selected, ...remaining];
-    currentIndex = 0;
-  }
+  const window = createRollingQueueWindow(
+    originalItems,
+    startIndex,
+    generation,
+    shuffleEnabled,
+    random,
+  );
+  const trackByItemId = new Map(
+    window.items.map((item) => [item.id, tracks[item.source_index ?? startIndex]]),
+  );
 
   return {
-    currentIndex,
-    items,
+    currentIndex: window.currentIndex,
+    items: window.items,
     originalItems,
-    selectedTrack: trackByItemId.get(items[currentIndex].id) ?? tracks[startIndex],
+    selectedTrack: tracks[startIndex],
     trackByItemId,
+    nextQueueSerial: window.nextSerial,
   };
 }
 

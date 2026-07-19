@@ -104,6 +104,18 @@ export type { PlaylistSource } from './services/detect-playlist-source';
 export { parseDirectTrackUrl } from './services/detect-track-url';
 export type { DirectTrackSource, DirectTrackUrl } from './services/detect-track-url';
 export {
+  PLAYBACK_SESSION_SETTING_KEY,
+  parsePlaybackSessionSnapshot,
+} from './services/playback-session';
+export {
+  PLAYBACK_QUEUE_COMPACT_INDEX,
+  PLAYBACK_QUEUE_WINDOW_SIZE,
+  compactAndRefillRollingQueue,
+  createFollowingRollingQueueWindow,
+  createRollingQueueWindow,
+  rebuildRollingQueueUpcoming,
+} from './services/rolling-queue';
+export {
   TON_REPOSITORY_URL,
   TON_RELEASES_URL,
   TON_UPDATE_MANIFEST_URL,

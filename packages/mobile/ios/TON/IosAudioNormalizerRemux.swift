@@ -113,7 +113,7 @@ extension IosAudioNormalizer {
     }
 
     writer.startSession(atSourceTime: .zero)
-    let queue = DispatchQueue(label: "com.ton.player.ios-audio-normalizer")
+    let queue = DispatchQueue(label: "cz.ton.player.ios-audio-normalizer")
     writerInput.requestMediaDataWhenReady(on: queue) {
       while writerInput.isReadyForMoreMediaData {
         if let sampleBuffer = readerOutput.copyNextSampleBuffer() {

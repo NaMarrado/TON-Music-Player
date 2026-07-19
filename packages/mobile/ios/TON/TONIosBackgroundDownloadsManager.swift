@@ -2,7 +2,7 @@ import Foundation
 
 @objc(TONIosBackgroundDownloadsManager)
 final class TONIosBackgroundDownloadsManager: NSObject, URLSessionDownloadDelegate, URLSessionDelegate {
-  static let backgroundIdentifier = "com.ton.player.downloads.background"
+  static let backgroundIdentifier = "cz.ton.player.downloads.background"
 
   @objc
   static func sharedManager() -> TONIosBackgroundDownloadsManager { shared }
@@ -10,7 +10,7 @@ final class TONIosBackgroundDownloadsManager: NSObject, URLSessionDownloadDelega
   static func backgroundSessionIdentifier() -> String { backgroundIdentifier }
 
   private static let shared = TONIosBackgroundDownloadsManager()
-  let stateQueue = DispatchQueue(label: "com.ton.player.ios-background-downloads")
+  let stateQueue = DispatchQueue(label: "cz.ton.player.ios-background-downloads")
   let decoder = JSONDecoder()
   let encoder = JSONEncoder()
   let stateFileURL: URL

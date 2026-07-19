@@ -14,7 +14,7 @@ final class TONIosLoudnessAnalyzerTask {
   static let stepDurationSeconds = 0.1
 
   private let filePath: String
-  private let stateQueue = DispatchQueue(label: "com.ton.player.ios-loudness-analyzer-task")
+  private let stateQueue = DispatchQueue(label: "cz.ton.player.ios-loudness-analyzer-task")
   private let targetLufs: Double
   let taskId: String
   private var cancelled = false

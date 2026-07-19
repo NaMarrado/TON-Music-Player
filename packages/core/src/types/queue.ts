@@ -11,6 +11,7 @@ export interface QueueItem {
   cover_art_path?: string | null;
   loudness_gain?: number | null;
   youtube_id?: string | null;
+  source_index?: number;
 }
 
 export type QueueSource = 'user' | 'auto' | 'smart-playlist';
@@ -41,3 +42,15 @@ export interface QueueState {
 }
 
 export type RepeatMode = 'all' | 'one';
+
+export interface PlaybackSessionSnapshot {
+  queue: QueueItem[];
+  source_items: QueueItem[];
+  next_queue_serial: number;
+  current_index: number;
+  position_seconds: number;
+  repeat: RepeatMode;
+  shuffle: boolean;
+  source: QueueSource | null;
+  source_descriptor?: PlaybackQueueSourceDescriptor | null;
+}

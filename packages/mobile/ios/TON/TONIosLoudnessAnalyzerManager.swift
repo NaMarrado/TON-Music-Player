@@ -6,7 +6,7 @@ final class TONIosLoudnessAnalyzerManager: NSObject {
   static func sharedManager() -> TONIosLoudnessAnalyzerManager { shared }
 
   private static let shared = TONIosLoudnessAnalyzerManager()
-  private let stateQueue = DispatchQueue(label: "com.ton.player.ios-loudness-analyzer")
+  private let stateQueue = DispatchQueue(label: "cz.ton.player.ios-loudness-analyzer")
   private var eventSink: (([String: Any]) -> Void)?
   private var tasks: [String: TONIosLoudnessAnalyzerTask] = [:]
 
