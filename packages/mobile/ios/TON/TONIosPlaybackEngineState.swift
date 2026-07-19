@@ -60,8 +60,9 @@ extension TONIosPlaybackEngineManager {
         self.pendingArtworkPaths.remove(path)
         guard let image,
               self.shouldPublishNowPlayingInfo,
-              self.queue.indices.contains(self.currentIndex),
-              self.queue[self.currentIndex].resolvedArtworkURL()?.path == path else { return }
+              let currentIndex = self.currentIndex,
+              self.queue.indices.contains(currentIndex),
+              self.queue[currentIndex].resolvedArtworkURL()?.path == path else { return }
         var currentInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo ?? [:]
         currentInfo[MPMediaItemPropertyArtwork] = self.makeNowPlayingArtwork(image)
         MPNowPlayingInfoCenter.default().nowPlayingInfo = currentInfo
