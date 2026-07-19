@@ -4,10 +4,10 @@ import {
   buildCloudContentAudioObjectKey,
   convertCloudLibraryManifestV1ToV2,
 } from '@ton/core';
-import { getDb } from '../database';
 import { buildLocalManifest } from './v1-local-manifest';
 import { contentTypeForExtension, getFileExtension } from './media';
 import type { MobileCloudV2SyncOptions, PreparedLocalManifest } from './v2-common';
+import { runMobileCloudDbLane } from './db-lane';
 
 export async function prepareLocalManifest(
   config: CloudStorageConfig,
@@ -68,9 +68,9 @@ export async function prepareLocalManifest(
     const entry = entriesByHash.get(local.contentHash);
     if (entry) trackEntryByLocalId.set(local.track.id, entry);
   }
-  const rows = await getDb().getAllAsync<{ id: number; cloud_id: string }>(
+  const rows = await runMobileCloudDbLane((db) => db.getAllAsync<{ id: number; cloud_id: string }>(
     `SELECT id, cloud_id FROM playlists WHERE cloud_id IS NOT NULL AND cloud_id != ''`,
-  );
+  ));
   const entriesByCloudId = new Map(playlists.map((entry) => [entry.cloud_id, entry]));
   const playlistEntryByLocalId = new Map<number, CloudPlaylistEntry>();
   for (const row of rows) {

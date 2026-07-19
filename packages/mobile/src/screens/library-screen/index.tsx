@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Keyboard, RefreshControl, View } from 'react-native';
 import { FlashList, type ListRenderItemInfo } from '@shopify/flash-list';
 import type { Track } from '@ton/core';
@@ -22,6 +22,7 @@ export function LibraryScreen() {
   const { t } = useTranslation('library');
   const { t: ts } = useTranslation('settings');
   const transfer = useLibraryTransferActions();
+  const [pendingExportTrackIds, setPendingExportTrackIds] = useState<number[] | null>(null);
   const {
     clearSelection,
     displayTracks,
@@ -85,9 +86,7 @@ export function LibraryScreen() {
         onPlaySelection={handlePlaySelection}
         onAddSelectionToPlaylist={handleAddSelectionToPlaylist}
         onExportSelection={() => {
-          const trackIds = [...selectedTrackIds];
-          clearSelection();
-          void transfer.exportLibrary({ includeLibrary: false, playlistIds: [], trackIds });
+          setPendingExportTrackIds([...selectedTrackIds]);
         }}
         onRemoveSelection={() => { void handleRemoveSelection(); }}
         onClearSelection={clearSelection}
@@ -129,6 +128,44 @@ export function LibraryScreen() {
           viewportHeight={fastScroll.viewportHeight}
         />
       </View>
+
+      <ActionSheet
+        visible={pendingExportTrackIds != null}
+        title={t('exportFormatTitle')}
+        options={[
+          {
+            label: t('exportIndividualFiles'),
+            icon: 'file',
+            onPress: () => {
+              const trackIds = pendingExportTrackIds ?? [];
+              setPendingExportTrackIds(null);
+              clearSelection();
+              void transfer.exportLibrary({
+                includeLibrary: false,
+                outputMode: 'individual_files',
+                playlistIds: [],
+                trackIds,
+              });
+            },
+          },
+          {
+            label: t('exportZipArchive'),
+            icon: 'archive',
+            onPress: () => {
+              const trackIds = pendingExportTrackIds ?? [];
+              setPendingExportTrackIds(null);
+              clearSelection();
+              void transfer.exportLibrary({
+                includeLibrary: false,
+                outputMode: 'archive',
+                playlistIds: [],
+                trackIds,
+              });
+            },
+          },
+        ]}
+        onClose={() => setPendingExportTrackIds(null)}
+      />
 
       <ActionSheet
         visible={showSortMenu}

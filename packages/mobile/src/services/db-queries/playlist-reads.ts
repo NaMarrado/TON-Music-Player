@@ -1,12 +1,13 @@
 import type { Playlist, PlaylistTrackEntry } from '@ton/core';
+import type { SQLiteDatabase } from 'expo-sqlite';
 import { getDb } from '../database';
 
 function mapPlaylist(row: Playlist): Playlist {
   return { ...row, is_smart: !!row.is_smart };
 }
 
-export async function getAllPlaylists(): Promise<Playlist[]> {
-  const db = getDb();
+export async function getAllPlaylists(database?: SQLiteDatabase): Promise<Playlist[]> {
+  const db = database ?? getDb();
   const rows = await db.getAllAsync<Playlist>(
     'SELECT * FROM playlists ORDER BY sort_order ASC, created_at DESC',
   );
@@ -21,8 +22,9 @@ export async function getPlaylistById(id: number): Promise<Playlist | null> {
 
 export async function getPlaylistTracks(
   playlistId: number,
+  database?: SQLiteDatabase,
 ): Promise<PlaylistTrackEntry[]> {
-  const db = getDb();
+  const db = database ?? getDb();
   return db.getAllAsync<PlaylistTrackEntry>(
     `SELECT t.*, pt.id as playlist_track_id, pt.position
      FROM playlist_tracks pt

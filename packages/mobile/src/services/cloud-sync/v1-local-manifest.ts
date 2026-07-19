@@ -26,18 +26,27 @@ import {
   type LocalCloudTrack,
   type ProgressCallback,
 } from './v1-common';
+import { runMobileCloudDbLane } from './db-lane';
 
 export async function buildLocalManifest(
   config: CloudStorageConfig,
   onProgress?: ProgressCallback,
   shouldCancel?: CancelSignal,
 ): Promise<{ manifest: CloudLibraryManifestV1; localTracks: LocalCloudTrack[]; localArtworks: LocalCloudArtwork[] }> {
-  const allTracks = await getAllTracksForTransfer();
-  const playlists = await getAllPlaylists();
+  const snapshot = await runMobileCloudDbLane(async (db) => {
+    const allTracks = await getAllTracksForTransfer(db);
+    const playlists = await getAllPlaylists(db);
+    const playlistTracks = new Map<number, Awaited<ReturnType<typeof getPlaylistTracks>>>();
+    for (const playlist of playlists) {
+      playlistTracks.set(playlist.id, await getPlaylistTracks(playlist.id, db));
+    }
+    return { allTracks, playlists, playlistTracks };
+  });
+  const { allTracks, playlists } = snapshot;
   const selectedTrackIds = new Set(allTracks.map((track) => track.id));
   const playlistTrackIds = new Map<number, number[]>();
   for (const playlist of playlists) {
-    const tracks = await getPlaylistTracks(playlist.id);
+    const tracks = snapshot.playlistTracks.get(playlist.id) ?? [];
     playlistTrackIds.set(playlist.id, tracks.map((track) => track.id));
     tracks.forEach((track) => selectedTrackIds.add(track.id));
   }

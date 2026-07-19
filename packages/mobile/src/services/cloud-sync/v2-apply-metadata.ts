@@ -1,5 +1,4 @@
 import type { CloudLibraryManifestV2, CloudPlaylistRecordV2, CloudTrackRecordV2 } from '@ton/core';
-import { getDb } from '../database';
 import { reconcileLibraryTracks } from '../../stores/library-store';
 import { loadPlaylists, reloadLoadedPlaylistDetails } from '../../stores/playlist-store';
 import { getMobileCloudProtectedEntities, withMobileCloudOutboxSuppressed } from './local-state';
@@ -7,6 +6,7 @@ import { fileExists } from './v1-common';
 import { resolveAvailablePlaylistTrackIds } from './playlist-memberships';
 import { normalizeDownloadedAt, throwIfAborted } from './v2-common';
 import { applyTombstones } from './v2-tombstones';
+import { runMobileCloudDbLane } from './db-lane';
 
 type ExistingTrack = {
   id: number;
@@ -22,9 +22,9 @@ async function collectMissingAssets(
   existingByHash: Map<string, ExistingTrack>,
   signal?: AbortSignal,
 ): Promise<number> {
-  const rows = await getDb().getAllAsync<{
+  const rows = await runMobileCloudDbLane((db) => db.getAllAsync<{
     entity_type: 'track' | 'playlist'; entity_key: string; record_json: string;
-  }>('SELECT entity_type, entity_key, record_json FROM cloud_sync_entities WHERE scope_id = ?', [scopeId]);
+  }>('SELECT entity_type, entity_key, record_json FROM cloud_sync_entities WHERE scope_id = ?', [scopeId]));
   const previous = new Map(rows.map((row) => [`${row.entity_type}:${row.entity_key}`, row.record_json]));
   const missing = new Set<string>();
   for (const record of liveTracks) {
@@ -40,9 +40,9 @@ async function collectMissingAssets(
     if (previousHash !== hash || !(await fileExists(local.cover_art_path))) missing.add(hash);
     throwIfAborted(signal);
   }
-  const playlistRows = await getDb().getAllAsync<{ cloud_id: string; cover_path: string | null }>(
+  const playlistRows = await runMobileCloudDbLane((db) => db.getAllAsync<{ cloud_id: string; cover_path: string | null }>(
     `SELECT cloud_id, cover_path FROM playlists WHERE cloud_id IS NOT NULL AND cloud_id != ''`,
-  );
+  ));
   const playlistsById = new Map(playlistRows.map((row) => [row.cloud_id, row]));
   for (const record of livePlaylists) {
     const hash = record.entry.cover_hash_sha256;
@@ -75,10 +75,10 @@ export async function applyManifestWithoutAudio(
   const livePlaylists = manifest.playlists.filter(
     (record): record is Extract<CloudPlaylistRecordV2, { deleted: false }> => !record.deleted,
   );
-  const existing = await getDb().getAllAsync<ExistingTrack>(
+  const existing = await runMobileCloudDbLane((db) => db.getAllAsync<ExistingTrack>(
     `SELECT id, content_hash_sha256, downloaded_at, cover_art_path FROM tracks
      WHERE content_hash_sha256 IS NOT NULL AND content_hash_sha256 != ''`,
-  );
+  ));
   const existingByHash = new Map(existing.map((row) => [row.content_hash_sha256, row]));
   const existingIdByHash = new Map(existing.map((row) => [row.content_hash_sha256, row.id]));
   const pendingDownloads = liveTracks.reduce(

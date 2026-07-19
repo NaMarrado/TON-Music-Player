@@ -5,7 +5,6 @@ import type {
   CloudTrackRecordV2,
 } from '@ton/core';
 import { normalizeCloudPrefix } from '@ton/core';
-import { getDb } from '../database';
 import { updateMobileCloudPersistedState } from './local-state';
 import { MobileR2Client } from './r2-client';
 import { liveManifestObjectKeys } from './v2-upload';
@@ -22,9 +21,9 @@ export async function queueBlobGcTransitions(
   const previousPlaylists = new Map(
     previousRemote?.playlists.map((record) => [record.cloud_id, record]) ?? [],
   );
-  const rows = await getDb().getAllAsync<{
+  const rows = await runMobileCloudDbLane((db) => db.getAllAsync<{
     entity_type: 'track' | 'playlist'; entity_key: string; record_json: string;
-  }>('SELECT entity_type, entity_key, record_json FROM cloud_sync_entities WHERE scope_id = ?', [scopeId]);
+  }>('SELECT entity_type, entity_key, record_json FROM cloud_sync_entities WHERE scope_id = ?', [scopeId]));
   const mirror = new Map(rows.map((row) => [`${row.entity_type}:${row.entity_key}`, row.record_json]));
   const readMirror = <T extends CloudTrackRecordV2 | CloudPlaylistRecordV2>(identity: string): T | null => {
     const raw = mirror.get(identity);
@@ -65,7 +64,7 @@ export async function queueBlobGcTransitions(
   }
   const liveKeys = liveManifestObjectKeys(published);
   const eligibleAt = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
-  await runMobileCloudDbLane(() => getDb().withExclusiveTransactionAsync(async (db) => {
+  await runMobileCloudDbLane((connection) => connection.withExclusiveTransactionAsync(async (db) => {
     for (const key of liveKeys) {
       await db.runAsync(
         'DELETE FROM cloud_sync_blob_gc WHERE scope_id = ? AND object_key = ?', [scopeId, key],

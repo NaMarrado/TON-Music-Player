@@ -18,13 +18,17 @@ extension TONIosPlaybackEngineManager {
       )
     }
     let audioFile = try AVAudioFile(forReading: fileURL)
+    if autoplay,
+       engineConfigured,
+       currentFile != nil,
+       playerNode.isPlaying {
+      try transitionToTrack(audioFile, at: index)
+      return
+    }
     // Invalidate pending ramps and silence the previous track before applying
     // the next track's loudness gain to the shared audio graph.
     scheduleToken += 1
-    if engineConfigured {
-      playerNode.volume = 0
-      playerNode.stop()
-    }
+    stopAllPlayerNodes()
     currentFile = audioFile
     currentIndex = index
     applyAudioBoost()
@@ -67,7 +71,7 @@ extension TONIosPlaybackEngineManager {
       return
     }
     if !playerNodeIsStopped {
-      playerNode.stop()
+      stopAllPlayerNodes()
       scheduleToken += 1
     }
     playerNode.volume = 0
@@ -106,6 +110,96 @@ extension TONIosPlaybackEngineManager {
       stateQueue.asyncAfter(deadline: .now() + (0.006 * Double(step))) {
         guard token == self.scheduleToken, self.playerNode.isPlaying else { return }
         self.playerNode.volume = self.effectivePlayerVolume() * Float(step) / Float(steps)
+      }
+    }
+  }
+
+  func transitionToTrack(_ audioFile: AVAudioFile, at index: Int) throws {
+    try configureEngineIfNeeded()
+    try activateAudioSessionIfNeeded()
+    try startEngineIfNeeded()
+
+    let sampleRate = audioFile.processingFormat.sampleRate
+    let availableFrames = audioFile.length
+    guard availableFrames > 0 else {
+      throw NSError(
+        domain: "TONIosPlaybackEngine",
+        code: 3,
+        userInfo: [NSLocalizedDescriptionKey: "The selected audio file is empty."]
+      )
+    }
+
+    let outgoingNode = playerNode
+    let outgoingFile = currentFile
+    let incomingNodeIndex = (activePlayerNodeIndex + 1) % playerNodes.count
+    let incomingNode = playerNodes[incomingNodeIndex]
+    incomingNode.volume = 0
+    incomingNode.stop()
+
+    scheduleToken += 1
+    let token = scheduleToken
+    incomingNode.scheduleSegment(
+      audioFile,
+      startingFrame: 0,
+      frameCount: AVAudioFrameCount(availableFrames),
+      at: nil,
+      completionCallbackType: .dataPlayedBack
+    ) { [weak self] _ in
+      self?.stateQueue.async {
+        guard let self, token == self.scheduleToken else { return }
+        self.resumePositionSeconds = self.currentDurationSeconds
+        self.handleTrackCompletion()
+      }
+    }
+    incomingNode.prepare(withFrameCount: AVAudioFrameCount(min(availableFrames, 4_096)))
+
+    currentFile = audioFile
+    currentIndex = index
+    activePlayerNodeIndex = incomingNodeIndex
+    currentDurationSeconds = queue[index].duration
+      ?? Double(availableFrames) / sampleRate
+    resumePositionSeconds = 0
+    scheduledOffsetSeconds = 0
+    state = "playing"
+    applyAudioBoost()
+
+    incomingNode.play()
+    configureRemoteCommandsIfNeeded()
+    crossfade(
+      from: outgoingNode,
+      retaining: outgoingFile,
+      to: incomingNode,
+      token: token
+    )
+    updateNowPlayingInfo()
+    emitPlaybackSnapshot()
+  }
+
+  func crossfade(
+    from outgoingNode: AVAudioPlayerNode,
+    retaining outgoingFile: AVAudioFile?,
+    to incomingNode: AVAudioPlayerNode,
+    token: Int
+  ) {
+    let steps = 4
+    let outgoingVolume = outgoingNode.volume
+    let incomingVolume = effectivePlayerVolume()
+
+    for step in 1...steps {
+      let applyStep = {
+        guard token == self.scheduleToken else { return }
+        _ = outgoingFile
+        let progress = Float(step) / Float(steps)
+        outgoingNode.volume = outgoingVolume * (1 - progress)
+        incomingNode.volume = incomingVolume * progress
+        if step == steps { outgoingNode.stop() }
+      }
+      if step == 1 {
+        applyStep()
+      } else {
+        stateQueue.asyncAfter(deadline: .now() + (0.004 * Double(step - 1))) {
+          applyStep()
+        }
       }
     }
   }

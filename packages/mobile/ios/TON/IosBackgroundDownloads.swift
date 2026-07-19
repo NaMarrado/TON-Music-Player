@@ -1,8 +1,11 @@
 import Foundation
 import React
+import UIKit
 
 @objc(IosBackgroundDownloads)
-final class IosBackgroundDownloads: RCTEventEmitter {
+final class IosBackgroundDownloads: RCTEventEmitter, UIDocumentPickerDelegate {
+  private var fileExportResolve: RCTPromiseResolveBlock?
+  private var fileExportDirectory: URL?
   private let eventName = "iosBackgroundDownload"
 
   override static func requiresMainQueueSetup() -> Bool {
@@ -21,6 +24,124 @@ final class IosBackgroundDownloads: RCTEventEmitter {
 
   override func stopObserving() {
     TONIosBackgroundDownloadsManager.sharedManager().setEventSink(nil)
+  }
+
+  @objc(shareFiles:resolver:rejecter:)
+  func shareFiles(
+    _ files: [[String: String]],
+    resolver resolve: @escaping RCTPromiseResolveBlock,
+    rejecter reject: @escaping RCTPromiseRejectBlock,
+  ) {
+    DispatchQueue.main.async {
+      guard self.fileExportResolve == nil else {
+        reject("ios_library_export_busy", "Another file export is already open.", nil)
+        return
+      }
+      guard let controller = self.topViewController() else {
+        reject("ios_library_export_no_controller", "No active view controller is available.", nil)
+        return
+      }
+      do {
+        let urls = try self.stageFileExport(files)
+        guard urls.allSatisfy({ FileManager.default.fileExists(atPath: $0.path) }) else {
+          self.cleanupFileExportDirectory()
+          reject("ios_library_export_missing_file", "One or more export files are missing.", nil)
+          return
+        }
+        self.fileExportResolve = resolve
+        let picker = UIDocumentPickerViewController(forExporting: urls, asCopy: true)
+        picker.delegate = self
+        controller.present(picker, animated: true)
+      } catch {
+        self.cleanupFileExportDirectory()
+        reject("ios_library_export_staging_failed", error.localizedDescription, error)
+      }
+    }
+  }
+
+  func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+    finishFileExport(completed: false)
+  }
+
+  func documentPicker(
+    _ controller: UIDocumentPickerViewController,
+    didPickDocumentsAt urls: [URL]
+  ) {
+    finishFileExport(completed: true)
+  }
+
+  private func finishFileExport(completed: Bool) {
+    let resolve = fileExportResolve
+    fileExportResolve = nil
+    cleanupFileExportDirectory()
+    resolve?(completed)
+  }
+
+  private func stageFileExport(_ files: [[String: String]]) throws -> [URL] {
+    guard !files.isEmpty else {
+      throw NSError(
+        domain: "TONLibraryExport",
+        code: 1,
+        userInfo: [NSLocalizedDescriptionKey: "No export files were provided."]
+      )
+    }
+    cleanupFileExportDirectory()
+    let directory = FileManager.default.temporaryDirectory
+      .appendingPathComponent("TON-File-Export-\(UUID().uuidString)", isDirectory: true)
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    do {
+      let urls = try files.enumerated().map { index, file in
+        guard let sourceValue = file["sourceUri"] else {
+          throw NSError(
+            domain: "TONLibraryExport",
+            code: 2,
+            userInfo: [NSLocalizedDescriptionKey: "An export file is no longer available."]
+          )
+        }
+        let source = localFileURL(from: sourceValue)
+        guard FileManager.default.fileExists(atPath: source.path) else {
+          throw NSError(
+            domain: "TONLibraryExport",
+            code: 2,
+            userInfo: [NSLocalizedDescriptionKey: "An export file is no longer available."]
+          )
+        }
+        let requestedName = file["fileName"]?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let fileName = requestedName?.isEmpty == false
+          ? requestedName!
+          : "Track \(index + 1).\(source.pathExtension)"
+        let destination = directory.appendingPathComponent(fileName)
+        try FileManager.default.copyItem(at: source, to: destination)
+        return destination
+      }
+      fileExportDirectory = directory
+      return urls
+    } catch {
+      try? FileManager.default.removeItem(at: directory)
+      throw error
+    }
+  }
+
+  private func localFileURL(from value: String) -> URL {
+    guard value.hasPrefix("file://") else {
+      return URL(fileURLWithPath: value)
+    }
+    let encodedPath = String(value.dropFirst("file://".count))
+    let decodedPath = encodedPath.removingPercentEncoding ?? encodedPath
+    if FileManager.default.fileExists(atPath: decodedPath) {
+      return URL(fileURLWithPath: decodedPath)
+    }
+    return URL(fileURLWithPath: encodedPath)
+  }
+
+  private func cleanupFileExportDirectory() {
+    guard let directory = fileExportDirectory else { return }
+    fileExportDirectory = nil
+    try? FileManager.default.removeItem(at: directory)
+  }
+
+  private func topViewController() -> UIViewController? {
+    RCTPresentedViewController()
   }
 
   @objc(initialize:rejecter:)

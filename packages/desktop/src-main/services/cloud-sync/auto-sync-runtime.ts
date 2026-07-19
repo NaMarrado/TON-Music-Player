@@ -231,6 +231,11 @@ class DesktopCloudAutoSyncRuntime {
     listener?: ManualProgressListener,
   ): Promise<CloudSyncResult | null> {
     if (this.exclusiveOperationActive) throw new Error('cloud_cleanup_busy');
+    if (this.activeAbortController || this.activeCycleDone) {
+      this.activeAbortController?.abort(new Error('cloud_sync_cancelled'));
+      this.coordinator.cancelActive();
+      await this.activeCycleDone?.catch(() => undefined);
+    }
     const requestSequence = ++this.manualRequestSequence;
     if (listener) this.progressListeners.add(listener);
     try {

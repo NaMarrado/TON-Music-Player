@@ -1,5 +1,4 @@
 import type { CloudLibraryManifestV1, CloudSyncResult } from '@ton/core';
-import { getDb } from '../database';
 import { refreshPlaylistsById } from '../../stores/playlist-store';
 import {
   getMobileCloudProtectedEntities,
@@ -17,6 +16,7 @@ import {
   type CloudFetchApplyProtection,
   type ProgressCallback,
 } from './v1-common';
+import { runMobileCloudDbLane } from './db-lane';
 
 type PlaylistMembershipTarget = {
   cloudId: string;
@@ -45,14 +45,14 @@ export async function prepareV1PlaylistShells(input: {
   } = input;
   throwIfFetchCancelled(shouldCancel, abortSignal);
   const [existingPlaylists, existingTracks, protectedEntities] = await Promise.all([
-    getDb().getAllAsync<{ cloud_id: string; cover_path: string | null }>(
+    runMobileCloudDbLane((db) => db.getAllAsync<{ cloud_id: string; cover_path: string | null }>(
       `SELECT cloud_id, cover_path FROM playlists
        WHERE cloud_id IS NOT NULL AND cloud_id != ''`,
-    ),
-    getDb().getAllAsync<{ id: number; content_hash_sha256: string }>(
+    )),
+    runMobileCloudDbLane((db) => db.getAllAsync<{ id: number; content_hash_sha256: string }>(
       `SELECT id, content_hash_sha256 FROM tracks
        WHERE content_hash_sha256 IS NOT NULL AND content_hash_sha256 != ''`,
-    ),
+    )),
     applyProtection
       ? getMobileCloudProtectedEntities(
         applyProtection.scopeId,

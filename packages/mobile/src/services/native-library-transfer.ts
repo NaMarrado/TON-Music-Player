@@ -24,6 +24,7 @@ export type AndroidLibraryExportRequest = {
 };
 
 type AndroidLibraryTransferModule = {
+  copyExportFile(sourceUri: string, destinationUri: string): Promise<void>;
   pickExportDestination(fileName: string): Promise<string | null>;
   startImport(request: AndroidLibraryImportRequest): Promise<string>;
   startExport(request: AndroidLibraryExportRequest): Promise<string>;
@@ -126,6 +127,17 @@ export function createAndroidLibraryTransferJobId(prefix = 'library-transfer'): 
 
 export function isAndroidLibraryTransferAvailable(): boolean {
   return getModule() != null;
+}
+
+export async function copyAndroidLibraryExportFile(
+  sourceUri: string,
+  destinationUri: string,
+): Promise<void> {
+  const module = getModule();
+  if (!module?.copyExportFile) {
+    throw new Error('Android library file export is unavailable');
+  }
+  await module.copyExportFile(sourceUri, destinationUri);
 }
 
 export async function pickAndroidLibraryExportDestination(fileName: string): Promise<string | null> {

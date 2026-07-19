@@ -31,6 +31,10 @@ export function useLibraryTransferActions() {
     progress: LibraryTransferProgress,
     cancel: (() => Promise<void>) | null,
   ) => {
+    if (progress.phase === 'sharing') {
+      setTransferProgress(null);
+      return;
+    }
     const message = progress.phase === 'queued'
       ? t('transferQueued')
       : progress.phase === 'preparing'
@@ -108,7 +112,8 @@ export function useLibraryTransferActions() {
         'success',
         5000,
       );
-    } catch {
+    } catch (error) {
+      console.error('[library-transfer] Export failed', error);
       showToast(t('exportLibraryFailedToast'), 'error', 5000);
     } finally {
       setTransferProgress(null);
@@ -159,6 +164,7 @@ export function useLibraryTransferActions() {
         5000,
       );
     } catch (error) {
+      console.error('[library-transfer] Import failed', error);
       showToast(
         isLibraryTransferValidationError(error)
           ? t('importInvalidBundleToast')

@@ -9,6 +9,7 @@ import type {
 import { isLibraryTransferCancelledError } from './cancellation';
 import { buildExportPayload } from './export-payload';
 import { exportMobileLibraryJs } from './export-js';
+import { exportMobileTracksIndividually } from './export-individual';
 import { createLibraryTransferJobId, startNativeLibraryExportTask } from './runtime';
 
 function createExportLease(onProgress?: (progress: LibraryTransferProgress) => void) {
@@ -37,7 +38,9 @@ export async function startJsExportTask(
       const started = await lease.started;
       if (!started) return null;
       try {
-        return await exportMobileLibraryJs(selection, onProgress, () => cancelRequested);
+        return selection.outputMode === 'individual_files'
+          ? await exportMobileTracksIndividually(selection, onProgress, () => cancelRequested)
+          : await exportMobileLibraryJs(selection, onProgress, () => cancelRequested);
       } catch (error) {
         if (isLibraryTransferCancelledError(error)) return null;
         throw error;

@@ -1,4 +1,5 @@
 import * as FileSystem from 'expo-file-system';
+import { InteractionManager } from 'react-native';
 import { sanitizeFilename } from '@ton/core';
 import { getFileExtension } from './naming';
 
@@ -26,6 +27,14 @@ export function buildLocalFileUri(
 
 export async function yieldToUiAsync(): Promise<void> {
   await new Promise<void>((resolve) => setTimeout(resolve, 0));
+}
+
+export async function waitForUiTransitionAsync(): Promise<void> {
+  await new Promise<void>((resolve) => {
+    InteractionManager.runAfterInteractions(() => {
+      requestAnimationFrame(() => resolve());
+    });
+  });
 }
 
 export async function createStageDirectoryAsync(prefix: string): Promise<string> {

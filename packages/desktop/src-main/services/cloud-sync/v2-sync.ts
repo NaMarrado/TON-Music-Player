@@ -57,7 +57,8 @@ export async function syncCloudLibraryV2ForDesktop(
 
   const initialRead = await client.getJsonConditional<CloudLibraryManifestV2>(v2Key, {
     ifNoneMatch: conditionalManifestEtag(
-      Boolean(options.force) || (shouldApply && state.pending_downloads > 0),
+      Boolean(options.force)
+        || (shouldApply && (state.pending_downloads > 0 || state.pending_remote_revision != null)),
       fullReconcile,
       shouldApply ? durableOutbox.length : outbox.length,
       state.etag,
@@ -104,7 +105,10 @@ export async function syncCloudLibraryV2ForDesktop(
     tracks: serialized.tracks,
     playlists: serialized.playlists,
     bootstrappingFromV1,
-    repairReferencedBlobs: shouldUpload && Boolean(options.force),
+    // The manifest is authoritative for already published object keys. A full
+    // local reconcile discovers local entities missing from that manifest; it
+    // must not HEAD every referenced R2 object.
+    repairReferencedBlobs: false,
   });
   let mutationManifest = mutations.build(remote);
   const hasMutations = mutationManifest.tracks.length > 0 || mutationManifest.playlists.length > 0;
@@ -150,13 +154,13 @@ export async function syncCloudLibraryV2ForDesktop(
   acknowledgeDesktopCloudOutbox(scopeId, capturedGeneration);
   throwIfV2Cancelled(options);
   updateDesktopCloudSyncState(scopeId, {
-    revision: mode === 'upload' ? state.revision : published.revision,
-    etag: mode === 'upload' ? null : publishedEtag,
+    revision: published.revision,
+    etag: publishedEtag,
     lamport_counter: published.max_counter,
     last_success_at: Date.now(),
     last_error: null,
     next_retry_at: null,
-    needs_full_reconcile: shouldApply ? 0 : state.needs_full_reconcile,
+    needs_full_reconcile: shouldApply || fullReconcile ? 0 : state.needs_full_reconcile,
     pending_remote_revision: mode === 'upload' ? published.revision : null,
     pending_downloads: shouldApply ? result.failed : state.pending_downloads,
   });

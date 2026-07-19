@@ -35,19 +35,31 @@ extension TONIosPlaybackEngineManager {
 
   func configureEngineIfNeeded() throws {
     guard !engineConfigured else { return }
-    engine.attach(playerNode)
+    for playerNode in playerNodes { engine.attach(playerNode) }
+    engine.attach(sourceMixerNode)
     engine.attach(timePitchNode)
     engine.attach(equalizerNode)
-    engine.connect(playerNode, to: timePitchNode, format: nil)
+    engine.connect(playerNodes[0], to: sourceMixerNode, fromBus: 0, toBus: 0, format: nil)
+    engine.connect(playerNodes[1], to: sourceMixerNode, fromBus: 0, toBus: 1, format: nil)
+    engine.connect(sourceMixerNode, to: timePitchNode, format: nil)
     engine.connect(timePitchNode, to: equalizerNode, format: nil)
     engine.connect(equalizerNode, to: engine.mainMixerNode, format: nil)
     engineConfigured = true
+    for playerNode in playerNodes { playerNode.volume = 0 }
     playerNode.volume = effectivePlayerVolume()
     timePitchNode.rate = 1
     applyPitch()
     applyEqualizerState()
     applyAudioBoost()
     engine.prepare()
+  }
+
+  func stopAllPlayerNodes() {
+    guard engineConfigured else { return }
+    for playerNode in playerNodes {
+      playerNode.volume = 0
+      playerNode.stop()
+    }
   }
 
   func startEngineIfNeeded() throws {

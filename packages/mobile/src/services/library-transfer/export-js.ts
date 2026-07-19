@@ -11,6 +11,7 @@ import {
 import { throwIfLibraryTransferCancelled } from './cancellation';
 import { buildExportPayload } from './export-payload';
 import { writeStoredZipArchive } from './zip-store-writer';
+import { waitForUiTransitionAsync } from './file-helpers';
 
 export async function exportMobileLibraryJs(
   selection: LibraryExportSelection,
@@ -59,6 +60,10 @@ export async function exportMobileLibraryJs(
       },
     });
     throwIfLibraryTransferCancelled(shouldCancel);
+    if (outputTarget.kind === 'share-sheet') {
+      onProgress?.({ phase: 'sharing', current: 1, total: 1 });
+      await waitForUiTransitionAsync();
+    }
     await finalizeLibraryExportOutputAsync(outputTarget, exportArchiveUri);
     onProgress?.({ phase: 'done', current: 1, total: 1 });
     return {

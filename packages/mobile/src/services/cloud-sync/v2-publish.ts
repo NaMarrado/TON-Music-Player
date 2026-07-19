@@ -9,7 +9,6 @@ import {
   mergeCloudLibraryManifestsV2,
   parseCloudLibraryManifestV2,
 } from '@ton/core';
-import { getDb } from '../database';
 import {
   updateMobileCloudPersistedState,
   type MobileCloudOutboxRow,
@@ -26,6 +25,7 @@ import {
 } from './v2-common';
 import { buildLocalMutationManifest } from './v2-mutations';
 import { liveManifestObjectKeys, uploadPreparedObjects } from './v2-upload';
+import { runMobileCloudDbLane } from './db-lane';
 
 export async function publishMobileV2Head(input: {
   client: MobileR2Client;
@@ -70,10 +70,10 @@ export async function publishMobileV2Head(input: {
     }
     if (!remote) {
       const [mirror, activation] = await Promise.all([
-        getDb().getFirstAsync<{ present: number }>(
+        runMobileCloudDbLane((db) => db.getFirstAsync<{ present: number }>(
           `SELECT EXISTS(SELECT 1 FROM cloud_sync_entities WHERE scope_id = ? LIMIT 1) AS present`,
           [scopeId],
-        ),
+        )),
         client.getJsonConditional<Record<string, unknown>>(
           buildCloudV2ActivationObjectKey(config.prefix), undefined, signal,
         ),
