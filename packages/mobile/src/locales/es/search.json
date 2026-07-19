@@ -12,5 +12,8 @@
   "emptyHint": "Busca música en YouTube, Spotify y tu biblioteca",
   "spotifyError": "No se pudo buscar en Spotify. Revisa tus credenciales.",
   "openSettings": "Abrir ajustes",
-  "tabLabel": "Buscar"
+  "tabLabel": "Buscar",
+  "sortResults": "Ordenar resultados",
+  "sortRelevance": "Relevancia",
+  "sortMostViewed": "Más vistos"
 }

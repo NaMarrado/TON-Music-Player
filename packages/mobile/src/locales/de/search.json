@@ -12,5 +12,8 @@
   "emptyHint": "Durchsuche YouTube, Spotify und deine Mediathek",
   "spotifyError": "Spotify-Suche fehlgeschlagen. Prüfe deine Zugangsdaten.",
   "openSettings": "Einstellungen öffnen",
-  "tabLabel": "Suchen"
+  "tabLabel": "Suchen",
+  "sortResults": "Ergebnisse sortieren",
+  "sortRelevance": "Relevanz",
+  "sortMostViewed": "Meistgesehen"
 }

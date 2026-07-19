@@ -12,5 +12,8 @@
   "emptyHint": "Szukaj muzyki w YouTube, Spotify i swojej bibliotece",
   "spotifyError": "Wyszukiwanie w Spotify nie powiodło się — sprawdź swoje dane uwierzytelniające",
   "openSettings": "Otwórz Ustawienia",
-  "tabLabel": "Szukaj"
+  "tabLabel": "Szukaj",
+  "sortResults": "Sortuj wyniki",
+  "sortRelevance": "Trafność",
+  "sortMostViewed": "Najczęściej oglądane"
 }

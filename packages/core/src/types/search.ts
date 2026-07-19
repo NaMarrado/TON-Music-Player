@@ -9,11 +9,14 @@ export interface SearchResult {
   thumbnail_url: string | null;
   url: string;
   is_downloaded: boolean;
+  view_count?: number | null;
   /** Name of the playlist this track belongs to (only for source: 'playlist'). */
   playlist_name?: string;
 }
 
 export type SearchSource = 'youtube' | 'spotify' | 'soundcloud' | 'local' | 'playlist';
+
+export type SearchSortMode = 'relevance' | 'most_viewed';
 
 export type SearchSourceStatus = 'success' | 'error' | 'cancelled';
 

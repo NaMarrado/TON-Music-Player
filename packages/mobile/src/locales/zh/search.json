@@ -12,5 +12,8 @@
   "emptyHint": "在 YouTube、Spotify 和您的音乐音乐库中搜索音乐",
   "spotifyError": "Spotify 搜索失败 — 检查您的凭据",
   "openSettings": "打开设置",
-  "tabLabel": "搜索"
+  "tabLabel": "搜索",
+  "sortResults": "排序结果",
+  "sortRelevance": "相关性",
+  "sortMostViewed": "观看次数最多"
 }

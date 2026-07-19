@@ -12,5 +12,8 @@
   "emptyHint": "Pesquise música no YouTube, Spotify e na sua biblioteca",
   "spotifyError": "A pesquisa no Spotify falhou. Verifique as credenciais.",
   "openSettings": "Abrir definições",
-  "tabLabel": "Pesquisar"
+  "tabLabel": "Pesquisar",
+  "sortResults": "Ordenar resultados",
+  "sortRelevance": "Relevância",
+  "sortMostViewed": "Mais vistos"
 }

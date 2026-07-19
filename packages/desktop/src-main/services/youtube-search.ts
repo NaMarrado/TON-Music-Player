@@ -5,7 +5,11 @@
 
 import { Innertube, Parser, YTNodes } from 'youtubei.js';
 import type { SearchResult, YouTubePlaylistTrack } from '@ton/core';
-import { parseYouTubePlaylistItem, SEARCH_PAGE_LIMITS } from '@ton/core';
+import {
+  parseYouTubePlaylistItem,
+  parseYouTubeViewCount,
+  SEARCH_PAGE_LIMITS,
+} from '@ton/core';
 import { searchYouTubeWithYtDlp } from './youtube-search-fallback';
 
 let innertube: Innertube | null = null;
@@ -63,6 +67,7 @@ export async function getYouTubeTrackById(
     thumbnail_url: thumbnail,
     url: `https://www.youtube.com/watch?v=${videoId}`,
     is_downloaded: false,
+    view_count: parseYouTubeViewCount(metadata.view_count),
   };
 }
 
@@ -185,6 +190,8 @@ function extractVideos(
       author?: { name?: string };
       duration?: { seconds?: number };
       thumbnails?: Array<{ url?: string }>;
+      view_count?: { text?: string };
+      short_view_count?: { text?: string };
     };
 
     if (!video.id || seen.has(video.id)) continue;
@@ -200,6 +207,9 @@ function extractVideos(
       thumbnail_url: video.thumbnails?.[0]?.url || null,
       url: `https://www.youtube.com/watch?v=${video.id}`,
       is_downloaded: false,
+      view_count: parseYouTubeViewCount(
+        video.view_count?.text ?? video.short_view_count?.text,
+      ),
     });
   }
   return added;

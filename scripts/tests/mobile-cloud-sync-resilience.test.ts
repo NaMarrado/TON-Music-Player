@@ -9,6 +9,7 @@ import { resolveAvailablePlaylistTrackIds } from '../../packages/mobile/src/serv
 import { migrate013 } from '../../packages/mobile/src/services/migrations/013-cloud-download-failures.ts';
 import { migrate014 } from '../../packages/mobile/src/services/migrations/014-cloud-download-retries.ts';
 import { migrate015 } from '../../packages/mobile/src/services/migrations/015-cloud-outbox-path-repair.ts';
+import { migrate016 } from '../../packages/mobile/src/services/migrations/016-local-cloud-exclusions.ts';
 import { shouldRunManualCloudRepair } from '../../packages/mobile/src/services/cloud-sync/manual-repair-policy.ts';
 
 test('a failed cloud track does not prevent the playlist from importing available tracks', () => {
@@ -175,6 +176,70 @@ test('path repair migration removes mirrored upserts but preserves real edits', 
     assert.deepEqual(
       db.prepare('SELECT entity_key FROM cloud_sync_outbox ORDER BY entity_key').all(),
       [{ entity_key: 'hash-b' }],
+    );
+  } finally {
+    db.close();
+  }
+});
+
+test('mobile local exclusion migration keeps delete local and clears it on re-import', async () => {
+  const db = new Database(':memory:');
+  try {
+    db.exec(`
+      CREATE TABLE cloud_sync_control (
+        id INTEGER PRIMARY KEY,
+        generation INTEGER NOT NULL DEFAULT 0,
+        suppress_outbox INTEGER NOT NULL DEFAULT 0
+      );
+      INSERT INTO cloud_sync_control(id) VALUES (1);
+      CREATE TABLE tracks (
+        id INTEGER PRIMARY KEY, file_path TEXT, content_hash_sha256 TEXT,
+        file_size INTEGER, title TEXT, artist TEXT, album TEXT, album_artist TEXT,
+        track_number INTEGER, disc_number INTEGER, duration_ms INTEGER, genre TEXT,
+        year INTEGER, bitrate INTEGER, sample_rate INTEGER, format TEXT,
+        cover_art_path TEXT, loudness_lufs REAL, loudness_gain REAL,
+        youtube_id TEXT, spotify_id TEXT, soundcloud_id TEXT, source_url TEXT,
+        rating INTEGER, downloaded_at INTEGER
+      );
+      CREATE TABLE playlists (id INTEGER PRIMARY KEY);
+      CREATE TABLE playlist_tracks (playlist_id INTEGER, track_id INTEGER);
+      CREATE TABLE cloud_sync_outbox (
+        scope_id TEXT NOT NULL DEFAULT '', entity_type TEXT NOT NULL,
+        entity_key TEXT NOT NULL, local_id INTEGER, operation TEXT NOT NULL,
+        payload_json TEXT, generation INTEGER NOT NULL, created_at INTEGER,
+        PRIMARY KEY(scope_id, entity_type, entity_key)
+      );
+    `);
+    const adapter = {
+      execAsync: async (sql: string) => { db.exec(sql); },
+      getAllAsync: async (sql: string) => db.prepare(sql).all(),
+    } as never;
+    await migrate016(adapter);
+    db.prepare("UPDATE cloud_sync_control SET active_scope_id = 'mobile-scope' WHERE id = 1").run();
+    const hash = 'a'.repeat(64);
+    const id = Number(db.prepare(`
+      INSERT INTO tracks(file_path, content_hash_sha256, title)
+      VALUES ('/music/first.m4a', ?, 'First')
+    `).run(hash).lastInsertRowid);
+    db.prepare('DELETE FROM cloud_sync_outbox').run();
+    db.prepare('DELETE FROM tracks WHERE id = ?').run(id);
+
+    assert.deepEqual(
+      db.prepare('SELECT scope_id, content_hash_sha256 FROM cloud_sync_local_exclusions').get(),
+      { scope_id: 'mobile-scope', content_hash_sha256: hash },
+    );
+    assert.equal(
+      (db.prepare('SELECT COUNT(*) AS count FROM cloud_sync_outbox').get() as { count: number }).count,
+      0,
+    );
+
+    db.prepare(`
+      INSERT INTO tracks(file_path, content_hash_sha256, title)
+      VALUES ('/music/reimported.m4a', ?, 'Reimported')
+    `).run(hash);
+    assert.equal(
+      (db.prepare('SELECT COUNT(*) AS count FROM cloud_sync_local_exclusions').get() as { count: number }).count,
+      0,
     );
   } finally {
     db.close();

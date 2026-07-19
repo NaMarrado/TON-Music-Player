@@ -7,6 +7,12 @@ export async function createCloudAutoSyncTrackTriggers009(db: SQLiteDatabase): P
     AFTER INSERT ON tracks
     WHEN (SELECT suppress_outbox FROM cloud_sync_control WHERE id = 1) = 0
     BEGIN
+      DELETE FROM cloud_sync_local_exclusions
+      WHERE scope_id = (SELECT active_scope_id FROM cloud_sync_control WHERE id = 1)
+        AND content_hash_sha256 = lower(NEW.content_hash_sha256)
+        AND NEW.content_hash_sha256 IS NOT NULL
+        AND NEW.content_hash_sha256 != '';
+
       UPDATE cloud_sync_control SET generation = generation + 1 WHERE id = 1;
       INSERT INTO cloud_sync_outbox(
         scope_id, entity_type, entity_key, local_id, operation, generation
@@ -32,6 +38,12 @@ export async function createCloudAutoSyncTrackTriggers009(db: SQLiteDatabase): P
     ON tracks
     WHEN (SELECT suppress_outbox FROM cloud_sync_control WHERE id = 1) = 0
     BEGIN
+      DELETE FROM cloud_sync_local_exclusions
+      WHERE scope_id = (SELECT active_scope_id FROM cloud_sync_control WHERE id = 1)
+        AND content_hash_sha256 = lower(NEW.content_hash_sha256)
+        AND NEW.content_hash_sha256 IS NOT NULL
+        AND NEW.content_hash_sha256 != '';
+
       UPDATE cloud_sync_control SET generation = generation + 1 WHERE id = 1;
       INSERT INTO cloud_sync_outbox(
         scope_id, entity_type, entity_key, local_id, operation, generation
@@ -68,6 +80,19 @@ export async function createCloudAutoSyncTrackTriggers009(db: SQLiteDatabase): P
     CREATE TRIGGER cloud_tracks_delete
     BEFORE DELETE ON tracks
     BEGIN
+      INSERT INTO cloud_sync_local_exclusions(
+        scope_id, content_hash_sha256, deleted_at
+      )
+      SELECT active_scope_id, lower(OLD.content_hash_sha256), strftime('%s','now')
+      FROM cloud_sync_control
+      WHERE id = 1
+        AND suppress_outbox = 0
+        AND active_scope_id != ''
+        AND OLD.content_hash_sha256 IS NOT NULL
+        AND OLD.content_hash_sha256 != ''
+      ON CONFLICT(scope_id, content_hash_sha256) DO UPDATE SET
+        deleted_at = excluded.deleted_at;
+
       UPDATE cloud_sync_control
       SET suppress_outbox = suppress_outbox + 1
       WHERE id = 1;

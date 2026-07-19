@@ -118,6 +118,7 @@ async function runCycle(origin: CloudSyncOrigin): Promise<{
       allowAudioDownloads: runtime.unmeteredNetwork || runtime.audioOverCellular,
       onProgress,
       signal: controller.signal,
+      restoreLocallyDeleted: Boolean(manual?.restoreLocallyDeleted),
     });
     if (manual) manual.result = result;
     return refreshPendingStatus(config);

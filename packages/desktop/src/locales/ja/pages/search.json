@@ -26,5 +26,8 @@
   "soundcloudProviderError": "SoundCloudの検索に失敗しました。",
   "openSettings": "設定を開く",
   "loadMore": "さらにロードする",
-  "downloadStarted": "{{title}}をダウンロード中"
+  "downloadStarted": "{{title}}をダウンロード中",
+  "sortResults": "結果を並べ替え",
+  "sortRelevance": "関連度",
+  "sortMostViewed": "再生回数順"
 }

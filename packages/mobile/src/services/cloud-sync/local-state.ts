@@ -61,6 +61,10 @@ export async function ensureMobileCloudScope(config: CloudStorageConfig): Promis
         [scopeId],
       );
       await txn.runAsync("DELETE FROM cloud_sync_outbox WHERE scope_id = ''");
+      await txn.runAsync(
+        'UPDATE cloud_sync_control SET active_scope_id = ? WHERE id = 1',
+        [scopeId],
+      );
     });
   });
   return scopeId;
@@ -120,9 +124,14 @@ export async function getMobileCloudMissingMirroredEntityCount(
           AND entity.entity_type = 'track'
           AND entity.deleted = 0
           AND NOT EXISTS (
-            SELECT 1 FROM tracks
-            WHERE lower(tracks.content_hash_sha256) = lower(entity.entity_key)
-          ))
+           SELECT 1 FROM tracks
+           WHERE lower(tracks.content_hash_sha256) = lower(entity.entity_key)
+         )
+         AND NOT EXISTS (
+           SELECT 1 FROM cloud_sync_local_exclusions AS exclusion
+           WHERE exclusion.scope_id = entity.scope_id
+             AND exclusion.content_hash_sha256 = lower(entity.entity_key)
+         ))
        +
        (SELECT COUNT(*)
         FROM cloud_sync_entities AS entity
@@ -145,6 +154,55 @@ export async function getMobileCloudJournalGeneration(): Promise<number> {
       'SELECT generation FROM cloud_sync_control WHERE id = 1',
     );
     return row?.generation ?? 0;
+  });
+}
+
+export async function getMobileCloudLocalExclusionHashes(scopeId: string): Promise<Set<string>> {
+  return runMobileCloudDbLane(async (db) => {
+    const rows = await db.getAllAsync<{ content_hash_sha256: string }>(
+      `SELECT content_hash_sha256 FROM cloud_sync_local_exclusions WHERE scope_id = ?`,
+      [scopeId],
+    );
+    return new Set(rows.map((row) => row.content_hash_sha256.toLowerCase()));
+  });
+}
+
+export async function clearMobileCloudLocalExclusions(
+  scopeId: string,
+  hashes: Iterable<string>,
+): Promise<number> {
+  const normalized = [...new Set([...hashes].map((hash) => hash.toLowerCase()))];
+  if (normalized.length === 0) return 0;
+  return runMobileCloudDbLane(async (db) => {
+    const placeholders = normalized.map(() => '?').join(',');
+    const result = await db.runAsync(
+      `DELETE FROM cloud_sync_local_exclusions
+       WHERE scope_id = ? AND content_hash_sha256 IN (${placeholders})`,
+      [scopeId, ...normalized],
+    );
+    return result.changes;
+  });
+}
+
+export async function pruneMobileCloudLocalExclusions(
+  scopeId: string,
+  liveHashes: ReadonlySet<string>,
+): Promise<void> {
+  await runMobileCloudDbLane(async (db) => {
+    const rows = await db.getAllAsync<{ content_hash_sha256: string }>(
+      `SELECT content_hash_sha256 FROM cloud_sync_local_exclusions WHERE scope_id = ?`,
+      [scopeId],
+    );
+    const stale = rows
+      .map((row) => row.content_hash_sha256)
+      .filter((hash) => !liveHashes.has(hash.toLowerCase()));
+    if (stale.length === 0) return;
+    const placeholders = stale.map(() => '?').join(',');
+    await db.runAsync(
+      `DELETE FROM cloud_sync_local_exclusions
+       WHERE scope_id = ? AND content_hash_sha256 IN (${placeholders})`,
+      [scopeId, ...stale],
+    );
   });
 }
 

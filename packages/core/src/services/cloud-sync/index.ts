@@ -38,6 +38,11 @@ export {
   type CloudR2CleanupExecutionOptions,
 } from './r2-cleanup-execution';
 export {
+  buildCloudLocalDeletionPreview,
+  partitionCloudManifestForLocalExclusions,
+  type CloudLocalExclusionPartition,
+} from './local-exclusions';
+export {
   buildCloudAudioObjectKey,
   buildCloudArtworkObjectKey,
   buildCloudContentArtworkObjectKey,

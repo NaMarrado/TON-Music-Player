@@ -188,6 +188,7 @@ export async function notifyMobileCloudConfigChanged(): Promise<void> {
 export async function runMobileCloudManualTask(
   mode: MobileCloudSyncMode,
   onProgress?: (progress: CloudSyncProgress) => void,
+  restoreLocallyDeleted = false,
 ): Promise<CloudSyncResult | null> {
   if (runtime.activeCyclePromise || runtime.currentController) {
     runtime.currentController?.abort();
@@ -207,7 +208,13 @@ export async function runMobileCloudManualTask(
   if (!runtime.coordinator) {
     runtime.coordinator = createCoordinator(await getMobileCloudAutoSyncEnabled(), Boolean(config));
   }
-  const request: PendingManualRun = { mode, onProgress, result: null, cancelled: false };
+  const request: PendingManualRun = {
+    mode,
+    onProgress,
+    result: null,
+    cancelled: false,
+    restoreLocallyDeleted,
+  };
   runtime.pendingManualRun = request;
   try {
     await runtime.coordinator.runNow('manual');

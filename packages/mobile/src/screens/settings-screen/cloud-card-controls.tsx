@@ -11,7 +11,11 @@ import {
 import { useMemo, useState } from 'react';
 import { Feather } from '@expo/vector-icons';
 import { FlatList } from 'react-native';
-import { formatSize, type CloudR2CleanupPreview } from '@ton/core';
+import {
+  formatSize,
+  type CloudLocalDeletionPreview,
+  type CloudR2CleanupPreview,
+} from '@ton/core';
 
 const INPUT_STYLE = {
   borderRadius: 12,
@@ -261,6 +265,71 @@ export function CloudCleanupModal({
             >
               <Text className="text-red-400 text-[13px] font-semibold">
                 {busy ? labels.working : labels.cleanupConfirm}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+export function CloudSyncModal({
+  busy,
+  formatRestoreDeleted,
+  labels,
+  onClose,
+  onConfirm,
+  preview,
+}: {
+  busy: boolean;
+  formatRestoreDeleted: (count: number) => string;
+  labels: Record<string, string>;
+  onClose: () => void;
+  onConfirm: (restoreLocallyDeleted: boolean) => void;
+  preview: CloudLocalDeletionPreview;
+}) {
+  const [restoreDeleted, setRestoreDeleted] = useState(false);
+  const canRestore = preview.deletedTracks > 0;
+  return (
+    <Modal transparent visible animationType="fade" onRequestClose={busy ? undefined : onClose}>
+      <View className="flex-1 items-center justify-center px-5" style={{ backgroundColor: 'rgba(0,0,0,0.78)' }}>
+        {!busy && <Pressable style={StyleSheet.absoluteFillObject} onPress={onClose} />}
+        <View className="bg-bg-surface border border-border w-full" style={{ borderRadius: 24, maxWidth: 420, padding: 20 }}>
+          <Text className="text-text-primary text-lg font-bold mb-3">{labels.syncDialogTitle}</Text>
+          <Text className="text-text-secondary text-sm leading-5">{labels.syncDialogDescription}</Text>
+          <Pressable
+            disabled={!canRestore || busy}
+            onPress={() => setRestoreDeleted((value) => !value)}
+            className="flex-row items-center border border-border bg-bg-deep mt-4"
+            style={{ borderRadius: 12, opacity: canRestore ? 1 : 0.5, padding: 12 }}
+          >
+            <Feather
+              name={restoreDeleted ? 'check-square' : 'square'}
+              size={19}
+              color={restoreDeleted ? '#e8e8e8' : '#777'}
+            />
+            <Text className="text-text-primary text-sm ml-3 flex-1">
+              {formatRestoreDeleted(preview.deletedTracks)}
+            </Text>
+          </Pressable>
+          <View className="flex-row justify-end mt-5">
+            <Pressable
+              disabled={busy}
+              onPress={onClose}
+              className="border border-border items-center mr-3"
+              style={{ borderRadius: 18, opacity: busy ? 0.5 : 1, paddingHorizontal: 18, paddingVertical: 10 }}
+            >
+              <Text className="text-text-primary text-[13px] font-semibold">{labels.cancel}</Text>
+            </Pressable>
+            <Pressable
+              disabled={busy}
+              onPress={() => onConfirm(restoreDeleted)}
+              className="bg-white items-center"
+              style={{ borderRadius: 18, opacity: busy ? 0.5 : 1, paddingHorizontal: 20, paddingVertical: 10 }}
+            >
+              <Text className="text-black text-[13px] font-semibold">
+                {busy ? labels.working : labels.syncConfirm}
               </Text>
             </Pressable>
           </View>

@@ -62,8 +62,8 @@ interface ElectronAPI {
     enabled: boolean,
   ): Promise<import('@ton/core').CloudAutoSyncStatus>;
   invoke(channel: 'cloud:upload-missing'): Promise<import('@ton/core').CloudSyncResult | null>;
-  invoke(channel: 'cloud:fetch-library'): Promise<import('@ton/core').CloudSyncResult | null>;
-  invoke(channel: 'cloud:sync-now'): Promise<import('@ton/core').CloudSyncResult | null>;
+  invoke(channel: 'cloud:sync-now', restoreLocallyDeleted?: boolean): Promise<import('@ton/core').CloudSyncResult | null>;
+  invoke(channel: 'cloud:preview-local-deletions'): Promise<import('@ton/core').CloudLocalDeletionPreview>;
   invoke(channel: 'cloud:preview-cleanup'): Promise<import('@ton/core').CloudR2CleanupPreview>;
   invoke(
     channel: 'cloud:execute-cleanup',

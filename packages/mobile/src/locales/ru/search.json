@@ -12,5 +12,8 @@
   "emptyHint": "Ищите музыку на YouTube, Spotify и в своей библиотеке.",
   "spotifyError": "Поиск Spotify не удался — проверьте свои учетные данные",
   "openSettings": "Открыть настройки",
-  "tabLabel": "Поиск"
+  "tabLabel": "Поиск",
+  "sortResults": "Сортировать результаты",
+  "sortRelevance": "По релевантности",
+  "sortMostViewed": "Самые просматриваемые"
 }

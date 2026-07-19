@@ -216,6 +216,7 @@ test('deleting a local track suppresses its cascade without changing cloud playl
       VALUES (?, ?, 0)
     `).run(playlistId, trackId);
     db.prepare('DELETE FROM cloud_sync_outbox').run();
+    db.prepare("UPDATE cloud_sync_control SET active_scope_id = 'fixture-scope' WHERE id = 1").run();
     const before = db.prepare('SELECT generation FROM cloud_sync_control WHERE id = 1')
       .get() as { generation: number };
 
@@ -228,10 +229,46 @@ test('deleting a local track suppresses its cascade without changing cloud playl
       .get() as { count: number };
     const memberships = db.prepare('SELECT COUNT(*) AS count FROM playlist_tracks')
       .get() as { count: number };
+    const exclusion = db.prepare(`
+      SELECT scope_id, content_hash_sha256
+      FROM cloud_sync_local_exclusions
+    `).get() as { scope_id: string; content_hash_sha256: string } | undefined;
     assert.equal(pending.count, 0);
     assert.equal(memberships.count, 0);
     assert.equal(control.generation, before.generation);
     assert.equal(control.suppress_outbox, 0);
+    assert.deepEqual(exclusion, {
+      scope_id: 'fixture-scope',
+      content_hash_sha256: HASH_A,
+    });
+  } finally {
+    db.close();
+  }
+});
+
+test('re-importing the same local audio clears its device-local cloud exclusion', () => {
+  const db = createTestDatabase();
+  try {
+    db.prepare("UPDATE cloud_sync_control SET active_scope_id = 'fixture-scope' WHERE id = 1").run();
+    const trackId = Number(db.prepare(`
+      INSERT INTO tracks (file_path, content_hash_sha256, title)
+      VALUES ('/music/original.m4a', ?, 'Original')
+    `).run(HASH_A).lastInsertRowid);
+    db.prepare('DELETE FROM tracks WHERE id = ?').run(trackId);
+    assert.equal(
+      (db.prepare('SELECT COUNT(*) AS count FROM cloud_sync_local_exclusions').get() as { count: number }).count,
+      1,
+    );
+
+    db.prepare(`
+      INSERT INTO tracks (file_path, content_hash_sha256, title)
+      VALUES ('/music/reimported.m4a', ?, 'Reimported')
+    `).run(HASH_A);
+
+    assert.equal(
+      (db.prepare('SELECT COUNT(*) AS count FROM cloud_sync_local_exclusions').get() as { count: number }).count,
+      0,
+    );
   } finally {
     db.close();
   }

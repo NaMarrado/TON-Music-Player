@@ -6,6 +6,7 @@ import {
   loadMore,
   setActiveSource,
   setSearchQuery,
+  setSearchSortMode,
   useSearchStore,
 } from '../../stores/search-store';
 import { startDownload } from '../../stores/download-store';
@@ -19,6 +20,7 @@ export function useSearchPageState(t: (key: string, vars?: Record<string, unknow
   const sourceErrors = useSearchStore((state) => state.sourceErrors);
   const results = useSearchStore((state) => state.results);
   const hasMoreBySource = useSearchStore((state) => state.hasMoreBySource);
+  const sortMode = useSearchStore((state) => state.sortMode);
 
   const [dismissed, setDismissed] = useState<Record<string, boolean>>(() => {
     try {
@@ -37,8 +39,8 @@ export function useSearchPageState(t: (key: string, vars?: Record<string, unknow
   }, []);
 
   const visibleResults = useMemo(
-    () => getVisibleResults(results, activeSource, query),
-    [results, activeSource, query],
+    () => getVisibleResults(results, activeSource, query, sortMode),
+    [results, activeSource, query, sortMode],
   );
   const counts = useMemo(() => getSourceCounts(results), [results]);
   const canLoadMore = useMemo(() => {
@@ -101,6 +103,8 @@ export function useSearchPageState(t: (key: string, vars?: Record<string, unknow
     query,
     setActiveSource,
     setSearchQuery,
+    setSearchSortMode,
+    sortMode,
     sourceErrors,
     visibleResults,
   };

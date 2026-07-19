@@ -6,6 +6,7 @@ import {
   isCurrentSearchRequest,
   parseDirectTrackUrl,
   type SearchQuery,
+  type SearchSortMode,
   type SearchSource,
   type SearchSourceEvent,
 } from '@ton/core';
@@ -157,6 +158,10 @@ export function setActiveSource(source: ActiveTab): void {
     sources,
     offsetBySource: {},
   });
+}
+
+export function setSearchSortMode(sortMode: SearchSortMode): void {
+  useSearchStore.setState({ sortMode });
 }
 
 export function loadMore(): void {

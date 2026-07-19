@@ -26,6 +26,7 @@ export interface MobileCloudV2SyncOptions {
   allowAudioDownloads: boolean;
   onProgress?: (progress: CloudSyncProgress) => void;
   signal?: AbortSignal;
+  restoreLocallyDeleted?: boolean;
 }
 
 export interface PreparedLocalManifest {

@@ -30,6 +30,7 @@ import {
   listDesktopCloudDownloadFailures,
 } from './download-failures';
 import { DesktopR2Client } from './r2-client';
+import { clearDesktopCloudLocalExclusions } from './local-exclusions';
 import { requireConfig } from './sync-common';
 
 type ProgressCallback = (progress: CloudSyncProgress) => void;
@@ -199,6 +200,10 @@ export async function executeDesktopCloudCleanup(
     },
     commitLocalState: async (plan, etag) => {
       storeDesktopCleanupMirror(scopeId, plan.manifest, etag);
+      clearDesktopCloudLocalExclusions(
+        scopeId,
+        plan.preview.tracks.map((track) => track.contentHash),
+      );
       clearDesktopCloudDownloadFailures(
         scopeId,
         plan.preview.failuresToClear.map((failure) => failure.contentHash),

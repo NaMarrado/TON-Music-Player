@@ -12,5 +12,8 @@
   "emptyHint": "חפש מוזיקה ברחבי YouTube, Spotify והספרייה שלך",
   "spotifyError": "חיפוש Spotify נכשל - בדוק את האישורים שלך",
   "openSettings": "פתח את ההגדרות",
-  "tabLabel": "חיפוש"
+  "tabLabel": "חיפוש",
+  "sortResults": "מיון תוצאות",
+  "sortRelevance": "רלוונטיות",
+  "sortMostViewed": "הנצפים ביותר"
 }

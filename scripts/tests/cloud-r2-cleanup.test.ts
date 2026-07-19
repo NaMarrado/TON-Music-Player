@@ -7,9 +7,11 @@ import type {
 } from '../../packages/core/src/index.ts';
 import {
   buildCloudR2CleanupPlan,
+  buildCloudLocalDeletionPreview,
   executeCloudR2CleanupPlan,
   createCloudLivePlaylistRecordV2,
   createCloudLiveTrackRecordV2,
+  partitionCloudManifestForLocalExclusions,
 } from '../../packages/core/src/index.ts';
 import { parseListBucketResult } from '../../packages/mobile/src/services/cloud-sync/r2-list-parser.ts';
 
@@ -131,6 +133,31 @@ test('57 local and 110 cloud tracks produce 53 cloud-only tracks', () => {
   const updated = plan.manifest.playlists[0];
   assert.ok(updated && !updated.deleted);
   assert.deepEqual(updated.entry.track_hashes, [hashes[0], hashes[1]]);
+});
+
+test('device-local exclusions filter apply without changing cloud playlist membership', () => {
+  const remote = manifest(
+    [track(hashes[0]), track(hashes[1]), track(hashes[2])],
+    [playlist([hashes[0], hashes[1], hashes[1], hashes[2]])],
+  );
+  const exclusions = new Set([hashes[1], hashes[99]]);
+  const filtered = partitionCloudManifestForLocalExclusions(remote, exclusions, false);
+
+  assert.deepEqual(
+    filtered.manifest.tracks.map((record) => record.content_hash_sha256),
+    [hashes[0], hashes[2]],
+  );
+  assert.deepEqual(filtered.manifest.playlists, remote.playlists);
+  assert.deepEqual([...filtered.matchingHashes], [hashes[1]]);
+  assert.equal(filtered.liveHashes.has(hashes[99]), false);
+  assert.deepEqual(buildCloudLocalDeletionPreview(remote.tracks, exclusions), {
+    deletedTracks: 1,
+    reclaimableBytes: 1_000,
+  });
+
+  const restored = partitionCloudManifestForLocalExclusions(remote, exclusions, true);
+  assert.equal(restored.manifest, remote);
+  assert.deepEqual([...restored.matchingHashes], [hashes[1]]);
 });
 
 test('shared artwork and playlist cover remain while orphan and unknown objects are handled safely', () => {

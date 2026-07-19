@@ -1,5 +1,9 @@
 import { useState } from 'react';
-import type { CloudAutoSyncStatus, CloudR2CleanupPreview } from '@ton/core';
+import type {
+  CloudAutoSyncStatus,
+  CloudLocalDeletionPreview,
+  CloudR2CleanupPreview,
+} from '@ton/core';
 import { Dialog } from '../../components/ui/dialog';
 import { VirtualizedList } from '../../components/player/virtualized-list';
 import type { Translator } from './cloud-section-types';
@@ -200,6 +204,75 @@ export function CloudCleanupDialog({
           }}
         >
           {busy ? t('cloudWorking') : t('cloudCleanupConfirm', { count: preview.cloudOnlyTracks })}
+        </button>
+      </div>
+    </Dialog>
+  );
+}
+
+export function CloudSyncDialog({
+  busy,
+  onCancel,
+  onConfirm,
+  preview,
+  restoreDeleted,
+  setRestoreDeleted,
+  t,
+}: {
+  busy: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+  preview: CloudLocalDeletionPreview;
+  restoreDeleted: boolean;
+  setRestoreDeleted: (value: boolean) => void;
+  t: Translator;
+}) {
+  return (
+    <Dialog open onClose={busy ? () => {} : onCancel} title={t('cloudSyncDialogTitle')}>
+      <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', lineHeight: 1.55 }}>
+        {t('cloudSyncDialogDescription')}
+      </p>
+      <label style={{
+        alignItems: 'center', background: 'var(--bg-deep)', border: '1px solid var(--border)',
+        borderRadius: '10px', cursor: preview.deletedTracks > 0 ? 'pointer' : 'default',
+        display: 'flex', gap: '10px', marginTop: '16px', padding: '12px',
+        opacity: preview.deletedTracks > 0 ? 1 : 0.55,
+      }}>
+        <input
+          type="checkbox"
+          checked={restoreDeleted}
+          disabled={preview.deletedTracks === 0 || busy}
+          onChange={(event) => setRestoreDeleted(event.target.checked)}
+        />
+        <span style={{ color: 'var(--text-primary)', fontSize: '0.82rem' }}>
+          {t('cloudSyncRestoreDeleted', { count: preview.deletedTracks })}
+        </span>
+      </label>
+      <div className="flex justify-end gap-3" style={{ marginTop: '22px' }}>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={onCancel}
+          style={{
+            padding: '9px 16px', borderRadius: '8px', border: '1px solid var(--border)',
+            background: 'var(--bg-elevated)', color: 'var(--text-primary)',
+            cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.55 : 1,
+          }}
+        >
+          {t('cloudCancel')}
+        </button>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={onConfirm}
+          className="play-all-btn"
+          style={{
+            padding: '9px 20px', borderRadius: '8px', border: 'none',
+            background: 'var(--white)', color: 'var(--bg-deep)',
+            cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.55 : 1,
+          }}
+        >
+          {busy ? t('cloudWorking') : t('cloudSyncConfirm')}
         </button>
       </div>
     </Dialog>
