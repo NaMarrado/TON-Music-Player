@@ -68,6 +68,14 @@ extension IosPlaybackEngine {
     }
   }
 
+  @objc(primeRemoteSession:rejecter:)
+  func primeRemoteSession(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    TONIosPlaybackEngineManager.sharedManager().primeRemoteSession { error in
+      if let error { reject("ios_playback_prime_remote_failed", error.localizedDescription, error); return }
+      resolve(nil)
+    }
+  }
+
   @objc(pause:rejecter:)
   func pause(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
     TONIosPlaybackEngineManager.sharedManager().pause { resolve(nil) }

@@ -105,7 +105,8 @@ class DesktopCloudAutoSyncRuntime {
               mode,
               // Full reconciliation is an explicit upload-repair operation;
               // a regular manual sync should process only durable changes.
-              force: origin === 'manual' || missingMirroredEntities > 0,
+              force: (origin === 'manual' && mode === 'upload')
+                || missingMirroredEntities > 0,
               restoreLocallyDeleted: origin === 'manual'
                 && this.requestedRestoreLocallyDeleted,
               onMetadataApplied: () => {

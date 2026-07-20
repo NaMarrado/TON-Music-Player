@@ -71,48 +71,56 @@ extension TONIosPlaybackEngineManager {
     remoteCommandsConfigured = true
     let commandCenter = MPRemoteCommandCenter.shared()
     commandCenter.playCommand.addTarget { [weak self] _ in
-      self?.emitEvent(type: "remote-play"); return .success
+      guard let self else { return .commandFailed }
+      self.play { _ in }
+      return .success
     }
     commandCenter.pauseCommand.addTarget { [weak self] _ in
-      self?.emitEvent(type: "remote-pause"); return .success
+      guard let self else { return .commandFailed }
+      self.pause {}
+      return .success
+    }
+    commandCenter.togglePlayPauseCommand.addTarget { [weak self] _ in
+      guard let self else { return .commandFailed }
+      self.togglePlayPauseFromRemote()
+      return .success
     }
     commandCenter.nextTrackCommand.addTarget { [weak self] _ in
-      self?.emitEvent(type: "remote-next"); return .success
+      guard let self else { return .commandFailed }
+      self.skipToNextFromRemote()
+      return .success
     }
     commandCenter.previousTrackCommand.addTarget { [weak self] _ in
-      self?.emitEvent(type: "remote-previous"); return .success
+      guard let self else { return .commandFailed }
+      self.skipToPreviousFromRemote()
+      return .success
     }
     commandCenter.changeShuffleModeCommand.addTarget { [weak self] event in
       guard let event = event as? MPChangeShuffleModeCommandEvent else {
         return .commandFailed
       }
       let enabled = event.shuffleType != .off
-      self?.shuffleEnabled = enabled
-      self?.emitEvent(type: "remote-shuffle", extra: ["enabled": enabled])
+      self?.setShuffleFromRemote(enabled)
       return .success
     }
     commandCenter.changeRepeatModeCommand.addTarget { [weak self] event in
       guard let event = event as? MPChangeRepeatModeCommandEvent else {
         return .commandFailed
       }
-      // Car head units commonly cycle off -> all before one. TON exposes one
-      // binary repeat control, so either active system mode means repeat-one.
-      let mode = event.repeatType == .off ? 2 : 1
-      self?.repeatMode = mode
-      self?.emitEvent(
-        type: "remote-repeat",
-        extra: ["mode": mode == 1 ? "one" : "all"]
-      )
+      let mode = event.repeatType == .one ? 1 : 2
+      self?.setRepeatFromRemote(mode)
       return .success
     }
     commandCenter.stopCommand.addTarget { [weak self] _ in
-      self?.emitEvent(type: "remote-stop"); return .success
+      guard let self else { return .commandFailed }
+      self.stop {}
+      return .success
     }
     commandCenter.changePlaybackPositionCommand.addTarget { [weak self] event in
       guard let event = event as? MPChangePlaybackPositionCommandEvent else {
         return .commandFailed
       }
-      self?.emitEvent(type: "remote-seek", extra: ["position": event.positionTime])
+      self?.seek(to: event.positionTime) { _ in }
       return .success
     }
     applyRemoteCommandCapabilities()
@@ -132,14 +140,74 @@ extension TONIosPlaybackEngineManager {
     let active = shouldPublishNowPlayingInfo
     commands.playCommand.isEnabled = active && remoteCapabilities.contains(.play)
     commands.pauseCommand.isEnabled = active && remoteCapabilities.contains(.pause)
+    commands.togglePlayPauseCommand.isEnabled = active
     commands.nextTrackCommand.isEnabled = active && remoteCapabilities.contains(.skipToNext)
     commands.previousTrackCommand.isEnabled = active && remoteCapabilities.contains(.skipToPrevious)
     commands.changeShuffleModeCommand.isEnabled = active
     commands.changeShuffleModeCommand.currentShuffleType = shuffleEnabled ? .items : .off
     commands.changeRepeatModeCommand.isEnabled = active
-    commands.changeRepeatModeCommand.currentRepeatType = repeatMode == 1 ? .one : .off
+    commands.changeRepeatModeCommand.currentRepeatType = repeatMode == 1 ? .one : .all
     commands.changePlaybackPositionCommand.isEnabled = active && remoteCapabilities.contains(.seekTo)
     commands.stopCommand.isEnabled = active && remoteCapabilities.contains(.stop)
+  }
+
+  private func togglePlayPauseFromRemote() {
+    stateQueue.async {
+      if self.state == "playing" || self.state == "loading" {
+        self.pause {}
+      } else {
+        self.play { _ in }
+      }
+    }
+  }
+
+  private func skipToNextFromRemote() {
+    stateQueue.async {
+      guard let targetIndex = self.resolveNextIndex() else {
+        // JS owns the full source queue and materializes the next rolling window.
+        self.emitEvent(type: "remote-next")
+        return
+      }
+      do {
+        try self.prepareTrack(at: targetIndex, autoplay: self.state == "playing")
+      } catch {
+        self.failPlayback(error)
+      }
+    }
+  }
+
+  private func skipToPreviousFromRemote() {
+    stateQueue.async {
+      guard let currentIndex = self.currentIndex, currentIndex > 0 else {
+        // The previous source item is outside the native rolling window.
+        self.emitEvent(type: "remote-previous")
+        return
+      }
+      do {
+        try self.prepareTrack(at: currentIndex - 1, autoplay: self.state == "playing")
+      } catch {
+        self.failPlayback(error)
+      }
+    }
+  }
+
+  private func setShuffleFromRemote(_ enabled: Bool) {
+    stateQueue.async {
+      self.shuffleEnabled = enabled
+      self.updateNowPlayingInfo()
+      self.emitEvent(type: "remote-shuffle", extra: ["enabled": enabled])
+    }
+  }
+
+  private func setRepeatFromRemote(_ mode: Int) {
+    stateQueue.async {
+      self.repeatMode = mode
+      self.updateNowPlayingInfo()
+      self.emitEvent(
+        type: "remote-repeat",
+        extra: ["mode": mode == 1 ? "one" : "all"]
+      )
+    }
   }
 
   func configureAudioSessionObserversIfNeeded() {

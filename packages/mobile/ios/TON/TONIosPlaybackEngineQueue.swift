@@ -83,6 +83,40 @@ extension TONIosPlaybackEngineManager {
     }
   }
 
+  func primeRemoteSession(completion: @escaping (Error?) -> Void) {
+    stateQueue.async {
+      guard self.currentIndex != nil, self.currentFile != nil else {
+        completion(nil)
+        return
+      }
+
+      let restoredVolume = self.volume
+      do {
+        // iOS only routes accessory commands to an app that has started
+        // playback in the current process. Prime it silently, then leave the
+        // restored session paused at the exact saved position.
+        self.volume = 0
+        try self.scheduleCurrentTrack(
+          startingAt: self.resumePositionSeconds,
+          playWhenReady: true
+        )
+        self.resumePositionSeconds = self.currentPositionSeconds()
+        self.scheduleToken += 1
+        self.stopAllPlayerNodes()
+        self.state = "paused"
+        self.volume = restoredVolume
+        self.applyEffectiveOutput()
+        self.updateNowPlayingInfo()
+        self.emitPlaybackSnapshot()
+        completion(nil)
+      } catch {
+        self.volume = restoredVolume
+        self.failPlayback(error)
+        completion(error)
+      }
+    }
+  }
+
   func pause(completion: @escaping () -> Void) {
     stateQueue.async {
       guard self.state == "playing" || self.state == "loading" else {

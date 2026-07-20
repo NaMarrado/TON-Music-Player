@@ -5,7 +5,7 @@ import {
   seekPlayback,
 } from '../../playback-runtime';
 import { skipToIndex } from '../queue-sync';
-import { advanceRollingQueueWindow } from './rolling';
+import { advanceRollingQueueWindow, retreatRollingQueueWindow } from './rolling';
 
 export async function nextTrack(): Promise<void> {
   const { items, currentIndex } = useQueueStore.getState();
@@ -41,11 +41,11 @@ export async function prevTrack(): Promise<void> {
   }
 
   const { repeat } = usePlaybackStore.getState();
-  if (repeat === 'all') {
-    await skipToIndex(items.length - 1);
-  } else {
-    await seekPlayback(0);
+  if (repeat === 'all' && await retreatRollingQueueWindow()) {
+    return;
   }
+
+  await seekPlayback(0);
 }
 
 export async function jumpToQueueIndex(index: number): Promise<void> {

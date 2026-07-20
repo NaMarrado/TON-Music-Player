@@ -83,7 +83,8 @@ export async function skipToIndex(index: number, countPlay = false): Promise<voi
 }
 
 export async function syncRntpQueue(items: QueueTrackRef[]): Promise<void> {
-  const ordered = await buildRntpQueue(items);
+  const sourceCount = useQueueStore.getState().originalOrder.length || items.length;
+  const ordered = await buildRntpQueue(items, 0, sourceCount);
   const { currentIndex } = useQueueStore.getState();
   const wasPlaying = usePlaybackStore.getState().isPlaying;
   const prevPosition = await getPlaybackPosition().catch(() => 0);
@@ -112,7 +113,8 @@ export async function syncUpcomingRntpQueue(
   await removeUpcomingPlaybackTracks();
   if (!upcoming.length) return;
 
-  const orderedUpcoming = await buildRntpQueue(upcoming, currentIndex + 1);
+  const sourceCount = useQueueStore.getState().originalOrder.length || items.length;
+  const orderedUpcoming = await buildRntpQueue(upcoming, currentIndex + 1, sourceCount);
   if (orderedUpcoming.length) {
     await addPlaybackTracks(orderedUpcoming);
   }

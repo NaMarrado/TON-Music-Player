@@ -9,6 +9,10 @@ import {
 import { applyManifestWithoutAudio } from './v2-apply-metadata';
 import { countMobileCloudDownloadFailures } from './download-failures';
 import {
+  selectMobileCloudApplyDelta,
+} from './v2-apply-delta';
+import { hasMobileCloudApplyDelta } from './v2-apply-delta-policy';
+import {
   projectManifestV2ToV1,
   throwIfAborted,
   type MobileCloudV2SyncOptions,
@@ -34,33 +38,36 @@ export async function applyMobileV2Publication(input: {
     scopeId, maxAcknowledgedGeneration,
   );
   const applicableManifest = omitProtectedManifestEntities(published, protectedEntities);
+  const applyDelta = await selectMobileCloudApplyDelta(scopeId, applicableManifest);
   const applyProtection = { scopeId, afterGeneration: maxAcknowledgedGeneration };
   if (options.allowAudioDownloads) {
-    await applyTombstones(applicableManifest, applyProtection, signal);
-    const fetched = await fetchCloudLibrary(
-      options.onProgress,
-      () => Boolean(signal?.aborted),
-      projectManifestV2ToV1(applicableManifest),
-      signal,
-      applyProtection,
-      options.origin === 'manual' ? 'user-visible' : 'background',
-      true,
-      {
-        scopeId,
-        manifestRevision: applicableManifest.revision,
-        retryFailed: options.origin === 'manual',
-      },
-    );
-    result.downloaded += fetched.downloaded;
-    result.skipped += fetched.skipped;
-    result.failed += fetched.failed;
-    result.importedTracks += fetched.importedTracks;
-    result.importedPlaylists += fetched.importedPlaylists;
-    await Promise.all([
-      reconcileLibraryTracks({ immediate: true, loadIfUninitialized: true }),
-      loadPlaylists(),
-    ]);
-    await reloadLoadedPlaylistDetails();
+    if (hasMobileCloudApplyDelta(applyDelta)) {
+      await applyTombstones(applyDelta, applyProtection, signal);
+      const fetched = await fetchCloudLibrary(
+        options.onProgress,
+        () => Boolean(signal?.aborted),
+        projectManifestV2ToV1(applyDelta),
+        signal,
+        applyProtection,
+        options.origin === 'manual' ? 'user-visible' : 'background',
+        true,
+        {
+          scopeId,
+          manifestRevision: applicableManifest.revision,
+          retryFailed: options.origin === 'manual',
+        },
+      );
+      result.downloaded += fetched.downloaded;
+      result.skipped += fetched.skipped;
+      result.failed += fetched.failed;
+      result.importedTracks += fetched.importedTracks;
+      result.importedPlaylists += fetched.importedPlaylists;
+      await Promise.all([
+        reconcileLibraryTracks({ immediate: true, loadIfUninitialized: true }),
+        loadPlaylists(),
+      ]);
+      await reloadLoadedPlaylistDetails();
+    }
     pendingDownloads = await countMobileCloudDownloadFailures(
       scopeId,
       applicableManifest.revision,

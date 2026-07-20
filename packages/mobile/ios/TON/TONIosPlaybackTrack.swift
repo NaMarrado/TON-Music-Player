@@ -7,6 +7,8 @@ struct TONIosPlaybackTrack {
   let duration: Double?
   let id: String
   let loudnessGainDb: Double
+  let playbackQueueCount: Int?
+  let playbackQueueIndex: Int?
   let title: String
   let url: String
 
@@ -27,6 +29,8 @@ struct TONIosPlaybackTrack {
     self.artwork = dictionary["artwork"] as? String
     self.duration = dictionary["duration"] as? Double
     self.loudnessGainDb = (dictionary["loudnessGainDb"] as? NSNumber)?.doubleValue ?? 0
+    self.playbackQueueCount = (dictionary["playbackQueueCount"] as? NSNumber)?.intValue
+    self.playbackQueueIndex = (dictionary["playbackQueueIndex"] as? NSNumber)?.intValue
   }
 
   func asDictionary() -> [String: Any] {
@@ -51,6 +55,14 @@ struct TONIosPlaybackTrack {
 
     if let duration {
       dictionary["duration"] = duration
+    }
+
+    if let playbackQueueCount {
+      dictionary["playbackQueueCount"] = playbackQueueCount
+    }
+
+    if let playbackQueueIndex {
+      dictionary["playbackQueueIndex"] = playbackQueueIndex
     }
 
     return dictionary

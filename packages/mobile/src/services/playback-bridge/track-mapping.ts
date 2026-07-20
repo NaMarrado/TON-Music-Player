@@ -2,9 +2,13 @@ import type { QueueItem, Track } from '@ton/core';
 import { getTracksByIds } from '../db-queries';
 import type { PlaybackRuntimeTrack } from '../playback-runtime';
 
-export type QueueTrackRef = { id?: string; track_id: number };
+export type QueueTrackRef = { id?: string; track_id: number; source_index?: number };
 
-export function trackToRntp(track: Track, uniqueSuffix?: string): PlaybackRuntimeTrack {
+export function trackToRntp(
+  track: Track,
+  uniqueSuffix?: string,
+  queuePosition?: { index: number; count: number },
+): PlaybackRuntimeTrack {
   return {
     id: uniqueSuffix ?? String(track.id),
     url: track.file_path,
@@ -14,12 +18,17 @@ export function trackToRntp(track: Track, uniqueSuffix?: string): PlaybackRuntim
     artwork: track.cover_art_path ?? undefined,
     duration: (track.duration_ms ?? 0) / 1000,
     loudnessGainDb: track.loudness_gain ?? 0,
+    ...(queuePosition ? {
+      playbackQueueIndex: queuePosition.index,
+      playbackQueueCount: queuePosition.count,
+    } : {}),
   };
 }
 
 export async function buildRntpQueue(
   items: QueueTrackRef[],
   startIndex = 0,
+  sourceCount = items.length,
 ): Promise<PlaybackRuntimeTrack[]> {
   const trackIds = items.map((item) => item.track_id);
   const tracks = await getTracksByIds(trackIds);
@@ -29,7 +38,15 @@ export async function buildRntpQueue(
   for (let index = 0; index < items.length; index++) {
     const track = trackMap.get(items[index].track_id);
     if (track) {
-      ordered.push(trackToRntp(track, items[index].id ?? `${startIndex + index}`));
+      const sourceIndex = items[index].source_index;
+      ordered.push(trackToRntp(
+        track,
+        items[index].id ?? `${startIndex + index}`,
+        {
+          index: sourceIndex ?? startIndex + index,
+          count: sourceCount,
+        },
+      ));
     }
   }
 

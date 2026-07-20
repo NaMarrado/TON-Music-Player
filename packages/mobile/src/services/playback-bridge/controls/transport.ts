@@ -57,7 +57,14 @@ export async function playTracks(
   try {
     await setupPlayer();
     await replacePlaybackQueue(
-      items.map((item) => trackToRntp(trackByItemId.get(item.id)!, item.id)),
+      items.map((item, index) => trackToRntp(
+        trackByItemId.get(item.id)!,
+        item.id,
+        {
+          index: item.source_index ?? index,
+          count: originalItems.length,
+        },
+      )),
       { autoplay: true, startIndex: currentIndex },
     );
     if (useQueueStore.getState().generation !== generation) return;
@@ -102,7 +109,7 @@ export async function playSingleTrack(track: Track): Promise<void> {
     generation,
   });
 
-  await loadPlaybackTrack(trackToRntp(track, queueItem.id));
+  await loadPlaybackTrack(trackToRntp(track, queueItem.id, { index: 0, count: 1 }));
   await playPlayback();
   await initializeVolumeBoost().catch(() => {});
   const started = await ensurePlaybackStarted();

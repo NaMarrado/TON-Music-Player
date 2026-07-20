@@ -7,6 +7,8 @@ export interface PlaybackRuntimeTrack {
   artwork?: string;
   duration?: number;
   loudnessGainDb?: number;
+  playbackQueueIndex?: number;
+  playbackQueueCount?: number;
   [key: string]: unknown;
 }
 

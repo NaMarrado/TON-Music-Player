@@ -35,6 +35,7 @@ export interface IosPlaybackRuntimeModule {
   add(tracks: PlaybackRuntimeTrack[]): Promise<void>;
   load(track: PlaybackRuntimeTrack): Promise<void>;
   play(): Promise<void>;
+  primeRemoteSession(): Promise<void>;
   pause(): Promise<void>;
   stop(): Promise<void>;
   seekTo(position: number): Promise<void>;

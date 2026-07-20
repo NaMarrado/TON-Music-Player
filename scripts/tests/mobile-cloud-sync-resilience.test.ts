@@ -11,6 +11,115 @@ import { migrate014 } from '../../packages/mobile/src/services/migrations/014-cl
 import { migrate015 } from '../../packages/mobile/src/services/migrations/015-cloud-outbox-path-repair.ts';
 import { migrate016 } from '../../packages/mobile/src/services/migrations/016-local-cloud-exclusions.ts';
 import { shouldRunManualCloudRepair } from '../../packages/mobile/src/services/cloud-sync/manual-repair-policy.ts';
+import { selectMobileCloudApplyDeltaFromState } from '../../packages/mobile/src/services/cloud-sync/v2-apply-delta-policy.ts';
+
+function createCloudRecord(index: number) {
+  const hash = index.toString(16).padStart(64, '0');
+  return {
+    deleted: false as const,
+    content_hash_sha256: hash,
+    version: { counter: index + 1, device_id: 'fixture' },
+    entry: {
+      content_hash_sha256: hash,
+      object_key: `ton/library/${hash}.m4a`,
+      file_name: `${hash}.m4a`,
+      file_size: 100,
+      format: 'm4a' as const,
+      artwork_hash_sha256: null,
+      artwork_object_key: null,
+      artwork_file_name: null,
+      youtube_id: null,
+      spotify_id: null,
+      soundcloud_id: null,
+      source_url: null,
+      downloaded_at: 1,
+      added_at: 1,
+      updated_at: 1,
+      metadata: {
+        title: `Track ${index}`, artist: 'Fixture', album: null, album_artist: null,
+        track_number: null, disc_number: null, duration_ms: 1_000, genre: null,
+        year: null, bitrate: 96_000, sample_rate: 44_100, loudness_lufs: null,
+        loudness_gain: null, rating: 0,
+      },
+    },
+  };
+}
+
+test('mobile sync applies only manifest deltas instead of all 1600 tracks', () => {
+  const tracks = Array.from({ length: 1_600 }, (_, index) => createCloudRecord(index));
+  const changed = createCloudRecord(1_600);
+  const manifest = {
+    schema_version: 2 as const,
+    app: 'TON' as const,
+    created_at: 1,
+    updated_at: 2,
+    writer_device_id: 'fixture',
+    revision: 'revision-2',
+    max_counter: 1_601,
+    tracks: [...tracks, changed],
+    playlists: [],
+  };
+  const mirror = new Map(
+    tracks.map((record) => [`track:${record.content_hash_sha256}`, JSON.stringify(record)]),
+  );
+  const localTracks = new Map(tracks.map((record) => [record.content_hash_sha256, null]));
+
+  const delta = selectMobileCloudApplyDeltaFromState(manifest, {
+    mirror,
+    localTrackArtworkByHash: localTracks,
+    localPlaylistCoverByCloudId: new Map(),
+    failedTrackHashes: new Set(),
+  });
+
+  assert.deepEqual(delta.tracks.map((record) => record.content_hash_sha256), [
+    changed.content_hash_sha256,
+  ]);
+});
+
+test('mobile sync keeps unchanged tracks and playlists out of the apply delta', () => {
+  const track = createCloudRecord(12);
+  const playlist = {
+    deleted: false as const,
+    cloud_id: 'fixture-playlist',
+    version: { counter: 14, device_id: 'fixture' },
+    entry: {
+      cloud_id: 'fixture-playlist',
+      name: 'Fixture playlist',
+      description: null,
+      cover_hash_sha256: null,
+      cover_object_key: null,
+      cover_file_name: null,
+      smart_rules: null,
+      track_hashes: [track.content_hash_sha256.toUpperCase()],
+      created_at: 1,
+      updated_at: 1,
+    },
+  };
+  const manifest = {
+    schema_version: 2 as const,
+    app: 'TON' as const,
+    created_at: 1,
+    updated_at: 2,
+    writer_device_id: 'fixture',
+    revision: 'revision-stable',
+    max_counter: 14,
+    tracks: [track],
+    playlists: [playlist],
+  };
+
+  const delta = selectMobileCloudApplyDeltaFromState(manifest, {
+    mirror: new Map([
+      [`track:${track.content_hash_sha256}`, JSON.stringify(track)],
+      [`playlist:${playlist.cloud_id}`, JSON.stringify(playlist)],
+    ]),
+    localTrackArtworkByHash: new Map([[track.content_hash_sha256, null]]),
+    localPlaylistCoverByCloudId: new Map([[playlist.cloud_id, null]]),
+    failedTrackHashes: new Set(),
+  });
+
+  assert.equal(delta.tracks.length, 0);
+  assert.equal(delta.playlists.length, 0);
+});
 
 test('a failed cloud track does not prevent the playlist from importing available tracks', () => {
   const trackIds = new Map([

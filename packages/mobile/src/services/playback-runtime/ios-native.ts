@@ -75,6 +75,10 @@ export async function playIosPlayback(): Promise<void> {
   await getIosPlaybackRuntimeModule().play();
 }
 
+export async function primeIosRemotePlaybackSession(): Promise<void> {
+  await getIosPlaybackRuntimeModule().primeRemoteSession();
+}
+
 export async function pauseIosPlayback(): Promise<void> {
   await getIosPlaybackRuntimeModule().pause();
 }

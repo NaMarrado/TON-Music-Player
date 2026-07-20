@@ -5,7 +5,7 @@ import {
   type QueueItem,
   type Track,
 } from '@ton/core';
-import { AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import { setupPlayer } from './audio-player';
 import { getSetting, getTracksByIds, setSetting } from './db-queries';
 import { syncRepeatMode } from './playback-bridge/player-runtime';
@@ -16,6 +16,7 @@ import {
   seekPlayback,
   setPlaybackShuffleEnabled,
 } from './playback-runtime';
+import { primeIosRemotePlaybackSession } from './playback-runtime/ios-native';
 import { usePlaybackStore } from '../stores/playback-store';
 import { useQueueStore } from '../stores/queue-store';
 
@@ -84,12 +85,20 @@ export async function restoreMobilePlaybackSession(): Promise<boolean> {
     setPlaybackShuffleEnabled(snapshot.shuffle),
   ]);
   await replacePlaybackQueue(
-    queue.map((item) => trackToRntp(trackMap.get(item.track_id)!, item.id)),
+    queue.map((item, index) => trackToRntp(
+      trackMap.get(item.track_id)!,
+      item.id,
+      {
+        index: item.source_index ?? index,
+        count: snapshot.source_items.length,
+      },
+    )),
     { autoplay: false, startIndex: currentIndex },
   );
 
   const position = clampSessionPosition(snapshot.position_seconds, currentTrack);
   if (position > 0) await seekPlayback(position);
+  if (Platform.OS === 'ios') await primeIosRemotePlaybackSession();
   usePlaybackStore.setState({ position, isPlaying: false });
   lastSerializedSession = serializeCurrentSession(position);
   return true;

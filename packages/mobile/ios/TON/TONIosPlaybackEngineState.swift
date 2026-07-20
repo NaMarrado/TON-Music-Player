@@ -10,6 +10,9 @@ private let nowPlayingArtworkQueue = DispatchQueue(
 
 extension TONIosPlaybackEngineManager {
   func updateNowPlayingInfo() {
+    // Accessories snapshot available commands when Now Playing metadata changes.
+    // Publish capabilities first so a restored session exposes every control.
+    applyRemoteCommandCapabilities()
     let center = MPNowPlayingInfoCenter.default()
     guard shouldPublishNowPlayingInfo,
           let currentIndex,
@@ -17,7 +20,6 @@ extension TONIosPlaybackEngineManager {
           currentIndex < queue.count else {
       center.nowPlayingInfo = nil
       if #available(iOS 13.0, *) { center.playbackState = .stopped }
-      applyRemoteCommandCapabilities()
       return
     }
     let track = queue[currentIndex]
@@ -29,8 +31,13 @@ extension TONIosPlaybackEngineManager {
     if let artist = track.artist, !artist.isEmpty { info[MPMediaItemPropertyArtist] = artist }
     if let album = track.album, !album.isEmpty { info[MPMediaItemPropertyAlbumTitle] = album }
     if currentDurationSeconds > 0 { info[MPMediaItemPropertyPlaybackDuration] = currentDurationSeconds }
-    info[MPNowPlayingInfoPropertyPlaybackQueueIndex] = currentIndex
-    info[MPNowPlayingInfoPropertyPlaybackQueueCount] = queue.count
+    if let queueIndex = track.playbackQueueIndex,
+       let queueCount = track.playbackQueueCount,
+       queueIndex >= 0,
+       queueIndex < queueCount {
+      info[MPNowPlayingInfoPropertyPlaybackQueueIndex] = queueIndex
+      info[MPNowPlayingInfoPropertyPlaybackQueueCount] = queueCount
+    }
     if let artworkURL = track.resolvedArtworkURL() {
       let cacheKey = artworkURL.path as NSString
       if let image = nowPlayingArtworkCache.object(forKey: cacheKey) {
@@ -45,8 +52,7 @@ extension TONIosPlaybackEngineManager {
     if #available(iOS 13.0, *) {
       center.playbackState = state == "playing" ? .playing : .paused
     }
-    // Publish controls after metadata so newly connected head units discover
-    // shuffle and repeat on the first track, without requiring a phone tap.
+    // Reapply after publishing for accessories that refresh commands separately.
     applyRemoteCommandCapabilities()
   }
 
