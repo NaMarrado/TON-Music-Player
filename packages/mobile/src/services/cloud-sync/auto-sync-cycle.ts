@@ -153,6 +153,7 @@ export function runTrackedCycle(origin: CloudSyncOrigin): Promise<{
   pendingChanges: number;
   pendingDownloads: number;
 }> {
+  if (runtime.activeCyclePromise) return runtime.activeCyclePromise;
   const cycle = runCycle(origin);
   const tracked = cycle.finally(() => {
     if (runtime.activeCyclePromise === tracked) runtime.activeCyclePromise = null;
@@ -162,5 +163,5 @@ export function runTrackedCycle(origin: CloudSyncOrigin): Promise<{
 }
 
 export async function runBackgroundCycle(): Promise<void> {
-  await runCycle('background');
+  await runTrackedCycle('background');
 }

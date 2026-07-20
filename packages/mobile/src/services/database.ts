@@ -2,6 +2,8 @@ import { openDatabaseAsync, type SQLiteDatabase } from 'expo-sqlite';
 import { PERSISTED_SETTING_DEFAULTS } from '@ton/core';
 import { runMigrations } from './migrations';
 
+const SQLITE_BUSY_TIMEOUT_MS = 5_000;
+
 let db: SQLiteDatabase | null = null;
 let initPromise: Promise<void> | null = null;
 
@@ -18,6 +20,7 @@ export async function initDatabase(): Promise<void> {
     try {
       const database = await openDatabaseAsync('ton.db');
       await database.execAsync('PRAGMA journal_mode = WAL');
+      await database.execAsync(`PRAGMA busy_timeout = ${SQLITE_BUSY_TIMEOUT_MS}`);
       await database.execAsync('PRAGMA foreign_keys = ON');
       await runMigrations(database);
       await seedDefaults(database);

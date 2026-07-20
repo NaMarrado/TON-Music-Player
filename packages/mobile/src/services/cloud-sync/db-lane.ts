@@ -1,5 +1,7 @@
 import { openDatabaseAsync, type SQLiteDatabase } from 'expo-sqlite';
 
+const SQLITE_BUSY_TIMEOUT_MS = 5_000;
+
 let cloudDbTail: Promise<void> = Promise.resolve();
 let cloudDbPromise: Promise<SQLiteDatabase> | null = null;
 
@@ -10,6 +12,7 @@ export function getMobileCloudDb(): Promise<SQLiteDatabase> {
       finalizeUnusedStatementsBeforeClosing: false,
     }).then(async (database) => {
       await database.execAsync('PRAGMA journal_mode = WAL');
+      await database.execAsync(`PRAGMA busy_timeout = ${SQLITE_BUSY_TIMEOUT_MS}`);
       await database.execAsync('PRAGMA foreign_keys = ON');
       return database;
     }).catch((error) => {

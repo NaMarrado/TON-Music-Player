@@ -118,13 +118,28 @@ export function getMobileCloudAutoSyncStatus(): CloudAutoSyncStatus {
 }
 
 export async function setMobileCloudAutoSyncEnabled(enabled: boolean): Promise<void> {
-  await persistMobileCloudAutoSyncEnabled(enabled);
+  const coordinator = runtime.coordinator;
+  const previousEnabled = coordinator?.getStatus().enabled
+    ?? await getMobileCloudAutoSyncEnabled();
+  if (!enabled) {
+    // Stop the automatic transaction before the settings connection writes to
+    // the same SQLite database. Otherwise a tap during apply can fail once and
+    // only succeed after the sync releases its transaction.
+    coordinator?.setEnabled(false);
+    await runtime.activeCyclePromise?.catch(() => {});
+  }
+  try {
+    await persistMobileCloudAutoSyncEnabled(enabled);
+  } catch (error) {
+    if (!enabled && previousEnabled) coordinator?.setEnabled(true);
+    throw error;
+  }
   const config = enabled ? await getMobileCloudConfig() : null;
   if (config) {
     const scopeId = await ensureMobileCloudScope(config);
     await updateMobileCloudPersistedState(scopeId, { last_error: null, next_retry_at: null });
   }
-  runtime.coordinator?.setEnabled(enabled);
+  coordinator?.setEnabled(enabled);
   if (enabled && config) {
     await registerMobileCloudBackgroundTask().catch(() => {});
     startForegroundCoordinator(true);
@@ -134,6 +149,12 @@ export async function setMobileCloudAutoSyncEnabled(enabled: boolean): Promise<v
     await unregisterMobileCloudBackgroundTask().catch(() => {});
   }
   emitStatus();
+}
+
+export async function stopMobileCloudAutoSyncCycle(): Promise<void> {
+  runtime.currentController?.abort();
+  runtime.coordinator?.cancelActive();
+  await runtime.activeCyclePromise?.catch(() => {});
 }
 
 export async function setMobileCloudAudioOverCellular(enabled: boolean): Promise<void> {

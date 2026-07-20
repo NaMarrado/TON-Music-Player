@@ -18,6 +18,7 @@ export type CloudForm = {
 export type CloudCardProps = {
   autoSyncDescription: string;
   autoSyncDetailsLabel: string;
+  autoSyncBusy: boolean;
   autoSyncEnabled: boolean;
   autoSyncLabel: string;
   autoSyncStatusLabel: string;

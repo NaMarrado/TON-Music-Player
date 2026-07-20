@@ -24,6 +24,7 @@ import {
   runMobileCloudManualTask,
   setMobileCloudAudioOverCellular,
   setMobileCloudAutoSyncEnabled,
+  stopMobileCloudAutoSyncCycle,
   subscribeMobileCloudAutoSyncStatus,
 } from '../../services/cloud-sync/auto-sync';
 import { getMobileCloudAudioOverCellularEnabled } from '../../services/cloud-sync/config';
@@ -76,6 +77,7 @@ export function useCloudSyncSettings() {
   const [cloudAutoSyncStatus, setCloudAutoSyncStatus] = useState(
     getMobileCloudAutoSyncStatus,
   );
+  const [cloudAutoSyncBusy, setCloudAutoSyncBusy] = useState(false);
   const [cloudAudioOverCellular, setCloudAudioOverCellular] = useState(false);
 
   const updateCloudForm = useCallback((patch: Partial<CloudForm>) => {
@@ -174,7 +176,7 @@ export function useCloudSyncSettings() {
     try {
       // Stop a run bound to the previous bucket/prefix before credentials are
       // replaced, so it cannot apply the old scope after this save.
-      cancelMobileCloudAutoSyncRun();
+      await stopMobileCloudAutoSyncCycle();
       const saved = await saveMobileCloudSyncConfig(buildConfig());
       setCloudHasSecret(saved.hasSecretAccessKey);
       setCloudForm({
@@ -296,13 +298,17 @@ export function useCloudSyncSettings() {
   }, []);
 
   const toggleCloudAutoSync = useCallback(async (enabled: boolean) => {
+    if (cloudAutoSyncBusy) return;
+    setCloudAutoSyncBusy(true);
     setCloudError(null);
     try {
       await setMobileCloudAutoSyncEnabled(enabled);
     } catch (error) {
       setCloudError(formatCloudError(error, t));
+    } finally {
+      setCloudAutoSyncBusy(false);
     }
-  }, [t]);
+  }, [cloudAutoSyncBusy, t]);
 
   const toggleCloudAudioOverCellular = useCallback(async (enabled: boolean) => {
     setCloudAudioOverCellular(enabled);
@@ -387,6 +393,7 @@ export function useCloudSyncSettings() {
     cloudCleanupStatus,
     cloudAutoSyncDetailsLabel,
     cloudAutoSyncEnabled: cloudAutoSyncStatus.enabled,
+    cloudAutoSyncBusy,
     cloudAudioOverCellular,
     cloudAutoSyncStatusLabel,
     cloudError,

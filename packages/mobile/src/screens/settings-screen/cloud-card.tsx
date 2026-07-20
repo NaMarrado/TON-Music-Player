@@ -15,6 +15,7 @@ import type { CloudCardProps } from './cloud-card-types';
 export function CloudCard({
   autoSyncDescription,
   autoSyncDetailsLabel,
+  autoSyncBusy,
   autoSyncEnabled,
   autoSyncLabel,
   autoSyncStatusLabel,
@@ -88,6 +89,7 @@ export function CloudCard({
         </View>
         <CompactToggle
           accessibilityLabel={autoSyncLabel}
+          disabled={autoSyncBusy || isBusy}
           value={autoSyncEnabled}
           onValueChange={onToggleAutoSync}
         />
@@ -106,6 +108,7 @@ export function CloudCard({
         </View>
         <CompactToggle
           accessibilityLabel={audioOverCellularLabel}
+          disabled={isBusy}
           value={audioOverCellularEnabled}
           onValueChange={onToggleAudioOverCellular}
         />

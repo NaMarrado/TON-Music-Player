@@ -19,6 +19,7 @@ export function SettingsConnectionsGroup({
   const {
     cancelCloudTask,
     cloudAutoSyncDetailsLabel,
+    cloudAutoSyncBusy,
     cloudAutoSyncEnabled,
     cloudAudioOverCellular,
     cloudAutoSyncStatusLabel,
@@ -81,6 +82,7 @@ export function SettingsConnectionsGroup({
           ? t('cloudAutoSyncEnabledDescription')
           : t('cloudAutoSyncDisabledDescription')}
         autoSyncDetailsLabel={cloudAutoSyncDetailsLabel}
+        autoSyncBusy={cloudAutoSyncBusy}
         autoSyncEnabled={cloudAutoSyncEnabled}
         autoSyncLabel={t('cloudAutoSync')}
         autoSyncStatusLabel={cloudAutoSyncStatusLabel}

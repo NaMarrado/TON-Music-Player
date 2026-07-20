@@ -73,11 +73,16 @@ export async function applyMobileV2Publication(input: {
       applicableManifest.revision,
     );
   } else {
-    const pending = await applyManifestWithoutAudio(
-      applicableManifest, scopeId, maxAcknowledgedGeneration, signal,
-    );
-    pendingDownloads = pending.pendingDownloads;
-    pendingAssets = pending.pendingAssets;
+    // Metered/offline metadata sync must stay incremental too. Applying the
+    // full publication here used to rewrite every track and playlist after a
+    // single manifest GET even when only one remote record had changed.
+    if (hasMobileCloudApplyDelta(applyDelta)) {
+      const pending = await applyManifestWithoutAudio(
+        applyDelta, scopeId, maxAcknowledgedGeneration, signal,
+      );
+      pendingDownloads = pending.pendingDownloads;
+      pendingAssets = pending.pendingAssets;
+    }
   }
   throwIfAborted(signal);
   return { pendingDownloads, pendingAssets };
