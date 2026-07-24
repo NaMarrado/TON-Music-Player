@@ -225,7 +225,7 @@ extension TONIosPlaybackEngineManager {
     guard !queue.isEmpty else { return nil }
     guard let currentIndex else { return 0 }
     if currentIndex < queue.count - 1 { return currentIndex + 1 }
-    return repeatMode == 2 ? 0 : nil
+    return nil
   }
 
   func resolvePreviousIndex() -> Int? {
@@ -238,7 +238,8 @@ extension TONIosPlaybackEngineManager {
   func resolveNextIndexForCompletion() -> Int? {
     guard !queue.isEmpty, let currentIndex else { return nil }
     if currentIndex < queue.count - 1 { return currentIndex + 1 }
-    return repeatMode == 2 ? 0 : nil
+    // The shared queue owns repeat-all and rolling-window progression.
+    return nil
   }
 
   func clampPosition(_ position: Double) -> Double {

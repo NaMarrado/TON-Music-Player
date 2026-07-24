@@ -14,6 +14,12 @@ function serializeRegistrationMutation(mutation: () => Promise<void>): Promise<v
 
 export function registerMobileCloudBackgroundTask(): Promise<void> {
   return serializeRegistrationMutation(async () => {
+    if (
+      await BackgroundTask.getStatusAsync()
+      !== BackgroundTask.BackgroundTaskStatus.Available
+    ) {
+      return;
+    }
     if (await TaskManager.isTaskRegisteredAsync(TON_CLOUD_AUTO_SYNC_TASK)) {
       return;
     }

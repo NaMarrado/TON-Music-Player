@@ -32,6 +32,7 @@ export async function toggleShuffle(): Promise<void> {
   useQueueStore.setState({
     items: hydratedItems,
     currentIndex: plan.currentIndex,
+    nextWindows: [],
     nextQueueSerial: plan.nextSerial,
   });
   usePlaybackStore.setState({ shuffle: nextShuffle });

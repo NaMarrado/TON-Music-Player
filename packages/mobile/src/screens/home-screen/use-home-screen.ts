@@ -7,7 +7,7 @@ import type { Track } from '@ton/core';
 import type { HomeStackParamList, TabParamList } from '../../types/navigation';
 import { loadTracks, useLibraryStore } from '../../stores/library-store';
 import { loadPlaylists, usePlaylistStore } from '../../stores/playlist-store';
-import { playSingleTrack } from '../../services/playback-bridge';
+import { playTracks } from '../../services/playback-bridge';
 
 export function useHomeScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
@@ -35,8 +35,10 @@ export function useHomeScreen() {
   );
 
   const handleTrackPress = useCallback((track: Track) => {
-    playSingleTrack(track);
-  }, []);
+    const startIndex = tracks.findIndex((candidate) => candidate.id === track.id);
+    if (startIndex < 0) return;
+    void playTracks(tracks, startIndex, { kind: 'library' });
+  }, [tracks]);
 
   const navigateToSearch = useCallback(() => {
     navigation

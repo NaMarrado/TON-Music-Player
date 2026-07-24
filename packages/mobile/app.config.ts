@@ -32,8 +32,10 @@ const config: ExpoConfig = {
     buildNumber: '1000041',
     icon: './assets/icon.png',
     infoPlist: {
+      LSSupportsOpeningDocumentsInPlace: true,
       NSSupportsLiveActivities: true,
       UIBackgroundModes: ['audio', 'processing'],
+      UIFileSharingEnabled: true,
     },
   },
   androidStatusBar: {

@@ -100,15 +100,24 @@ extension TONIosPlaybackEngineManager {
           startingAt: self.resumePositionSeconds,
           playWhenReady: true
         )
-        self.resumePositionSeconds = self.currentPositionSeconds()
-        self.scheduleToken += 1
-        self.stopAllPlayerNodes()
-        self.state = "paused"
-        self.volume = restoredVolume
-        self.applyEffectiveOutput()
-        self.updateNowPlayingInfo()
-        self.emitPlaybackSnapshot()
-        completion(nil)
+        let primeToken = self.scheduleToken
+        self.stateQueue.asyncAfter(deadline: .now() + 0.12) {
+          guard primeToken == self.scheduleToken else {
+            self.volume = restoredVolume
+            self.applyEffectiveOutput()
+            completion(nil)
+            return
+          }
+          self.resumePositionSeconds = self.currentPositionSeconds()
+          self.scheduleToken += 1
+          self.stopAllPlayerNodes()
+          self.state = "paused"
+          self.volume = restoredVolume
+          self.applyEffectiveOutput()
+          self.updateNowPlayingInfo()
+          self.emitPlaybackSnapshot()
+          completion(nil)
+        }
       } catch {
         self.volume = restoredVolume
         self.failPlayback(error)
@@ -197,7 +206,7 @@ extension TONIosPlaybackEngineManager {
   func skip(to index: Int, completion: @escaping (Error?) -> Void) {
     stateQueue.async {
       do {
-        try self.prepareTrack(at: index, autoplay: self.state == "playing")
+        try self.prepareTrack(at: index, autoplay: self.shouldAutoplayPreparedTrack())
         completion(nil)
       } catch {
         self.failPlayback(error)
@@ -210,7 +219,7 @@ extension TONIosPlaybackEngineManager {
     stateQueue.async {
       do {
         guard let targetIndex = self.resolveNextIndex() else { completion(nil); return }
-        try self.prepareTrack(at: targetIndex, autoplay: self.state == "playing")
+        try self.prepareTrack(at: targetIndex, autoplay: self.shouldAutoplayPreparedTrack())
         completion(nil)
       } catch {
         self.failPlayback(error)
@@ -223,7 +232,7 @@ extension TONIosPlaybackEngineManager {
     stateQueue.async {
       do {
         guard let targetIndex = self.resolvePreviousIndex() else { completion(nil); return }
-        try self.prepareTrack(at: targetIndex, autoplay: self.state == "playing")
+        try self.prepareTrack(at: targetIndex, autoplay: self.shouldAutoplayPreparedTrack())
         completion(nil)
       } catch {
         self.failPlayback(error)
@@ -254,7 +263,10 @@ extension TONIosPlaybackEngineManager {
   }
 
   func getPlaybackState(completion: @escaping ([String: Any]) -> Void) {
-    stateQueue.async { completion(["state": self.state]) }
+    stateQueue.async {
+      self.reconcilePlaybackStateIfNeeded()
+      completion(["state": self.state])
+    }
   }
 
   func getActiveTrack(completion: @escaping ([String: Any]?) -> Void) {

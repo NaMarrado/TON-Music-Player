@@ -11,8 +11,9 @@ export async function syncActiveTrack(event: {
   index?: number;
   track?: { id?: string | number } | unknown;
 }): Promise<void> {
-  const { items } = useQueueStore.getState();
+  const { generation, items } = useQueueStore.getState();
   let trackId: number | null = null;
+  let expectedQueueItemId: string | null = null;
 
   if (event.index != null) {
     if (event.index < 0 || event.index >= items.length) {
@@ -28,6 +29,7 @@ export async function syncActiveTrack(event: {
     }
     useQueueStore.setState({ currentIndex: event.index });
     trackId = item?.track_id ?? null;
+    expectedQueueItemId = item?.id ?? null;
   }
 
   if (trackId == null && event.track && typeof event.track === 'object' && 'id' in event.track) {
@@ -43,6 +45,14 @@ export async function syncActiveTrack(event: {
 
   const track = await getTrackById(trackId);
   if (!track) return;
+  const currentQueue = useQueueStore.getState();
+  if (currentQueue.generation !== generation) return;
+  if (
+    expectedQueueItemId != null
+    && currentQueue.items[currentQueue.currentIndex]?.id !== expectedQueueItemId
+  ) {
+    return;
+  }
 
   usePlaybackStore.setState({
     currentTrack: track,
@@ -90,7 +100,7 @@ export function syncPlaybackState(
 export async function handleQueueEnded(): Promise<void> {
   if (
     usePlaybackStore.getState().repeat === 'all'
-    && await advanceRollingQueueWindow().catch(() => false)
+    && await advanceRollingQueueWindow(true).catch(() => false)
   ) {
     return;
   }

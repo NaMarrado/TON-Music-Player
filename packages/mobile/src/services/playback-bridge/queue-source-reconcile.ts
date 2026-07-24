@@ -73,6 +73,8 @@ export async function reconcilePlaybackQueueSource(): Promise<void> {
     items: hydratedItems,
     currentIndex: plan.currentIndex,
     originalOrder: nextOriginalOrder,
+    previousWindows: [],
+    nextWindows: [],
     nextQueueSerial: plan.nextSerial,
   });
   await syncUpcomingRntpQueue(hydratedItems, plan.currentIndex);

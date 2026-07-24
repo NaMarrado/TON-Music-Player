@@ -46,6 +46,8 @@ export type RepeatMode = 'all' | 'one';
 export interface PlaybackSessionSnapshot {
   queue: QueueItem[];
   source_items: QueueItem[];
+  previous_windows?: QueueItem[][];
+  next_windows?: QueueItem[][];
   next_queue_serial: number;
   current_index: number;
   position_seconds: number;

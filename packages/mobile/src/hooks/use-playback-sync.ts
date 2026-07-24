@@ -33,14 +33,19 @@ export function usePlaybackSync({ enabled }: UsePlaybackSyncOptions): void {
   const lastActiveIndexRef = useRef<number | null>(null);
   const lastActiveTrackIdRef = useRef<string | number | null>(null);
   const lastPlaybackStateRef = useRef<PlaybackRuntimeStateSnapshot['state'] | null>(null);
+  const snapshotRequestRef = useRef(0);
   const syncAuthoritativePlaybackState = useCallback(async (): Promise<void> => {
+    const request = ++snapshotRequestRef.current;
     const expectedGeneration = useQueueStore.getState().generation;
     try {
       const [playbackState, activeTrack] = await Promise.all([
         getPlaybackState(),
         getActivePlaybackTrack(),
       ]);
-      if (useQueueStore.getState().generation !== expectedGeneration) return;
+      if (
+        snapshotRequestRef.current !== request
+        || useQueueStore.getState().generation !== expectedGeneration
+      ) return;
       lastPlaybackStateRef.current = playbackState.state;
       syncPlaybackState({ ...playbackState, trackId: activeTrack?.id });
     } catch {
@@ -55,6 +60,7 @@ export function usePlaybackSync({ enabled }: UsePlaybackSyncOptions): void {
         return;
       }
 
+      snapshotRequestRef.current += 1;
       switch (event.type) {
         case PlaybackEvent.PlaybackActiveTrackChanged:
           if ('index' in event || 'track' in event) {
@@ -95,12 +101,19 @@ export function usePlaybackSync({ enabled }: UsePlaybackSyncOptions): void {
     let cancelled = false;
 
     const syncPlayerSnapshot = async (): Promise<void> => {
+      const request = ++snapshotRequestRef.current;
+      const expectedGeneration = useQueueStore.getState().generation;
       try {
         const [activeIndex, activeTrack, playbackState] = await Promise.all([
           getActivePlaybackTrackIndex(),
           getActivePlaybackTrack(),
           getPlaybackState(),
         ]);
+        if (
+          cancelled
+          || snapshotRequestRef.current !== request
+          || useQueueStore.getState().generation !== expectedGeneration
+        ) return;
 
         if (playbackState.state === 'none'
             || playbackState.state === 'stopped'
@@ -121,6 +134,11 @@ export function usePlaybackSync({ enabled }: UsePlaybackSyncOptions): void {
             lastActiveIndexRef.current = activeIndex;
             lastActiveTrackIdRef.current = activeTrackId;
             await syncActiveTrack({ index: activeIndex, track: activeTrack });
+            if (
+              cancelled
+              || snapshotRequestRef.current !== request
+              || useQueueStore.getState().generation !== expectedGeneration
+            ) return;
           }
         } else {
           const activeTrackId = activeTrack?.id ?? null;
@@ -129,6 +147,11 @@ export function usePlaybackSync({ enabled }: UsePlaybackSyncOptions): void {
             lastActiveTrackIdRef.current = activeTrackId;
             lastActiveIndexRef.current = null;
             await syncActiveTrack({ track: activeTrack });
+            if (
+              cancelled
+              || snapshotRequestRef.current !== request
+              || useQueueStore.getState().generation !== expectedGeneration
+            ) return;
           } else if (activeTrackId == null) {
             lastActiveIndexRef.current = null;
             lastActiveTrackIdRef.current = null;

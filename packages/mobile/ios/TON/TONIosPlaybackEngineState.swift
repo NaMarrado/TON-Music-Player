@@ -13,13 +13,13 @@ extension TONIosPlaybackEngineManager {
     // Accessories snapshot available commands when Now Playing metadata changes.
     // Publish capabilities first so a restored session exposes every control.
     applyRemoteCommandCapabilities()
-    let center = MPNowPlayingInfoCenter.default()
     guard shouldPublishNowPlayingInfo,
           let currentIndex,
           currentIndex >= 0,
           currentIndex < queue.count else {
-      center.nowPlayingInfo = nil
-      if #available(iOS 13.0, *) { center.playbackState = .stopped }
+      performNowPlayingUpdate {
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+      }
       return
     }
     let track = queue[currentIndex]
@@ -27,6 +27,8 @@ extension TONIosPlaybackEngineManager {
       MPMediaItemPropertyTitle: track.title,
       MPNowPlayingInfoPropertyElapsedPlaybackTime: currentPositionSeconds(),
       MPNowPlayingInfoPropertyPlaybackRate: state == "playing" ? 1 : 0,
+      MPNowPlayingInfoPropertyDefaultPlaybackRate: 1,
+      MPNowPlayingInfoPropertyMediaType: MPNowPlayingInfoMediaType.audio.rawValue,
     ]
     if let artist = track.artist, !artist.isEmpty { info[MPMediaItemPropertyArtist] = artist }
     if let album = track.album, !album.isEmpty { info[MPMediaItemPropertyAlbumTitle] = album }
@@ -48,9 +50,8 @@ extension TONIosPlaybackEngineManager {
         )
       }
     }
-    center.nowPlayingInfo = info
-    if #available(iOS 13.0, *) {
-      center.playbackState = state == "playing" ? .playing : .paused
+    performNowPlayingUpdate {
+      MPNowPlayingInfoCenter.default().nowPlayingInfo = info
     }
     // Reapply after publishing for accessories that refresh commands separately.
     applyRemoteCommandCapabilities()
@@ -78,15 +79,42 @@ extension TONIosPlaybackEngineManager {
               let currentIndex = self.currentIndex,
               self.queue.indices.contains(currentIndex),
               self.queue[currentIndex].resolvedArtworkURL()?.path == path else { return }
-        var currentInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo ?? [:]
-        currentInfo[MPMediaItemPropertyArtwork] = self.makeNowPlayingArtwork(image)
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = currentInfo
+        self.performNowPlayingUpdate {
+          var currentInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo ?? [:]
+          currentInfo[MPMediaItemPropertyArtwork] = self.makeNowPlayingArtwork(image)
+          MPNowPlayingInfoCenter.default().nowPlayingInfo = currentInfo
+        }
       }
     }
   }
 
   var shouldPublishNowPlayingInfo: Bool {
     state == "playing" || state == "paused" || state == "loading" || state == "ready"
+  }
+
+  var isPlaybackActuallyRunning: Bool {
+    engineConfigured && playerNodes.contains(where: \.isPlaying)
+  }
+
+  func shouldAutoplayPreparedTrack() -> Bool {
+    state == "playing" && isPlaybackActuallyRunning
+  }
+
+  func reconcilePlaybackStateIfNeeded() {
+    guard (state == "playing" || state == "loading"),
+          !isPlaybackActuallyRunning else { return }
+    state = currentFile == nil ? "none" : "paused"
+    updateNowPlayingInfo()
+  }
+
+  func pauseForExternalInterruption() {
+    guard state == "playing" || state == "loading" else { return }
+    resumePositionSeconds = currentPositionSeconds()
+    scheduleToken += 1
+    stopAllPlayerNodes()
+    state = currentFile == nil ? "none" : "paused"
+    updateNowPlayingInfo()
+    emitPlaybackState()
   }
 
   func applyPitch() {

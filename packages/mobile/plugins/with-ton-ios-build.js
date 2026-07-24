@@ -68,7 +68,9 @@ function withTonIosBuild(config) {
       mod.modResults.UIBackgroundModes,
       IOS_BACKGROUND_MODES,
     );
+    mod.modResults.LSSupportsOpeningDocumentsInPlace = true;
     mod.modResults.NSSupportsLiveActivities = true;
+    mod.modResults.UIFileSharingEnabled = true;
 
     return mod;
   });

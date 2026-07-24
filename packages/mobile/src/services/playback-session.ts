@@ -33,7 +33,14 @@ export async function restoreMobilePlaybackSession(): Promise<boolean> {
   );
   if (!snapshot) return false;
 
-  const trackIds = [...new Set(snapshot.queue.map((item) => item.track_id))];
+  const snapshotWindows = [
+    ...(snapshot.previous_windows ?? []),
+    snapshot.queue,
+    ...(snapshot.next_windows ?? []),
+  ];
+  const trackIds = [...new Set(
+    snapshotWindows.flatMap((window) => window.map((item) => item.track_id)),
+  )];
   const tracks = await getTracksByIds(trackIds);
   const trackMap = new Map(
     tracks
@@ -43,6 +50,8 @@ export async function restoreMobilePlaybackSession(): Promise<boolean> {
   const queue = snapshot.queue
     .filter((item) => trackMap.has(item.track_id))
     .map((item) => hydrateQueueItem(item, trackMap.get(item.track_id)!));
+  const previousWindows = hydrateQueueWindows(snapshot.previous_windows, trackMap);
+  const nextWindows = hydrateQueueWindows(snapshot.next_windows, trackMap);
   if (!queue.length) {
     await setSetting(PLAYBACK_SESSION_SETTING_KEY, '');
     return false;
@@ -75,6 +84,8 @@ export async function restoreMobilePlaybackSession(): Promise<boolean> {
     source: snapshot.source ?? 'user',
     sourceDescriptor: snapshot.source_descriptor ?? { kind: 'custom' },
     originalOrder: snapshot.source_items,
+    previousWindows,
+    nextWindows,
     nextQueueSerial: snapshot.next_queue_serial,
     generation,
   });
@@ -163,6 +174,8 @@ function serializeCurrentSession(position: number): string {
   const snapshot: PlaybackSessionSnapshot = {
     queue: queue.items.map(toPersistentQueueItem),
     source_items: queue.originalOrder.map(toPersistentQueueItem),
+    previous_windows: queue.previousWindows.map((window) => window.map(toPersistentQueueItem)),
+    next_windows: queue.nextWindows.map((window) => window.map(toPersistentQueueItem)),
     next_queue_serial: queue.nextQueueSerial,
     current_index: Math.min(queue.currentIndex, queue.items.length - 1),
     position_seconds: Math.max(0, Math.round(position)),
@@ -172,6 +185,17 @@ function serializeCurrentSession(position: number): string {
     source_descriptor: queue.sourceDescriptor,
   };
   return JSON.stringify(snapshot);
+}
+
+function hydrateQueueWindows(
+  windows: QueueItem[][] | undefined,
+  trackMap: Map<number, Track>,
+): QueueItem[][] {
+  return (windows ?? [])
+    .map((window) => window
+      .filter((item) => trackMap.has(item.track_id))
+      .map((item) => hydrateQueueItem(item, trackMap.get(item.track_id)!)))
+    .filter((window) => window.length > 0);
 }
 
 function toPersistentQueueItem(item: QueueItem): QueueItem {

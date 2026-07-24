@@ -68,6 +68,7 @@ final class TONIosPlaybackEngineManager: NSObject {
   func initialize(completion: @escaping (Error?) -> Void) {
     stateQueue.async {
       self.configureAudioSessionObserversIfNeeded()
+      self.configureRemoteCommandsIfNeeded()
       MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
       completion(nil)
     }

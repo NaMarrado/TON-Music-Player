@@ -5,7 +5,6 @@ import {
   addPlaybackTracks,
   getPlaybackState,
   getPlaybackPosition,
-  playPlayback,
   PlaybackStateValue,
   removeUpcomingPlaybackTracks,
   seekPlayback,
@@ -26,24 +25,10 @@ export async function skipToIndex(index: number, countPlay = false): Promise<voi
   if (index < 0 || index >= items.length) return;
 
   const request = ++latestSkipRequest;
-  const wasPlaying = usePlaybackStore.getState().isPlaying;
   useQueueStore.setState({ currentIndex: index });
 
   try {
-    // Both native runtimes preserve active playback during a skip. Calling
-    // play again would reschedule the freshly-started iOS track and cause an
-    // audible restart. Only start explicitly when navigation began paused.
     await skipPlaybackIndex(index);
-    if (!wasPlaying) {
-      const nativeState = await getPlaybackState();
-      if (
-        nativeState.state !== PlaybackStateValue.Playing
-        && nativeState.state !== PlaybackStateValue.Buffering
-        && nativeState.state !== PlaybackStateValue.Loading
-      ) {
-        await playPlayback();
-      }
-    }
   } catch (error) {
     if (
       latestSkipRequest === request
@@ -63,12 +48,18 @@ export async function skipToIndex(index: number, countPlay = false): Promise<voi
   }
 
   const item = items[index];
+  const nativeState = await getPlaybackState().catch(() => null);
+  const isPlaying = nativeState != null && (
+    nativeState.state === PlaybackStateValue.Playing
+    || nativeState.state === PlaybackStateValue.Buffering
+    || nativeState.state === PlaybackStateValue.Loading
+  );
   if (item) {
     const track = await getTrackById(item.track_id);
     if (track) {
       usePlaybackStore.setState({
         currentTrack: track,
-        isPlaying: true,
+        isPlaying,
         position: 0,
         duration: (track.duration_ms ?? 0) / 1000,
       });

@@ -41,6 +41,8 @@ export function parsePlaybackSessionSnapshot(value: unknown): PlaybackSessionSna
   const sourceItems = parseQueue(parsed.source_items ?? parsed.original_queue);
   const validSourceItems = sourceItems.length ? sourceItems : [...queue];
   const normalized = normalizeActiveQueue(queue, validSourceItems, parsedCurrentIndex);
+  const previousWindows = parseQueueWindows(parsed.previous_windows);
+  const nextWindows = parseQueueWindows(parsed.next_windows);
 
   const source = parseQueueSource(parsed.source);
   const sourceDescriptor = parseSourceDescriptor(parsed.source_descriptor);
@@ -48,6 +50,8 @@ export function parsePlaybackSessionSnapshot(value: unknown): PlaybackSessionSna
   return {
     queue: normalized.queue,
     source_items: validSourceItems,
+    previous_windows: previousWindows,
+    next_windows: nextWindows,
     next_queue_serial: Math.max(
       queue.length,
       toInteger(parsed.next_queue_serial) ?? queue.length,
@@ -59,6 +63,13 @@ export function parsePlaybackSessionSnapshot(value: unknown): PlaybackSessionSna
     source,
     source_descriptor: sourceDescriptor,
   };
+}
+
+function parseQueueWindows(value: unknown): QueueItem[][] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map(parseQueue)
+    .filter((window) => window.length > 0 && window.length <= 20);
 }
 
 function normalizeActiveQueue(

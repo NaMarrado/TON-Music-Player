@@ -11,6 +11,8 @@ interface QueueState {
   source: QueueSource | null;
   sourceDescriptor: PlaybackQueueSourceDescriptor | null;
   originalOrder: QueueItem[];
+  previousWindows: QueueItem[][];
+  nextWindows: QueueItem[][];
   nextQueueSerial: number;
   generation: number;
 }
@@ -21,6 +23,8 @@ export const useQueueStore = create<QueueState>()(() => ({
   source: null,
   sourceDescriptor: null,
   originalOrder: [],
+  previousWindows: [],
+  nextWindows: [],
   nextQueueSerial: 0,
   generation: 0,
 }));

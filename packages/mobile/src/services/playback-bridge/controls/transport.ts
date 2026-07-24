@@ -44,6 +44,8 @@ export async function playTracks(
     source: 'user',
     sourceDescriptor,
     originalOrder: originalItems,
+    previousWindows: [],
+    nextWindows: [],
     nextQueueSerial,
     generation,
   });
@@ -105,6 +107,8 @@ export async function playSingleTrack(track: Track): Promise<void> {
     source: 'user',
     sourceDescriptor: { kind: 'single', source_id: track.id },
     originalOrder: [queueItem],
+    previousWindows: [],
+    nextWindows: [],
     nextQueueSerial: 1,
     generation,
   });
@@ -140,7 +144,8 @@ export async function resume(): Promise<void> {
   await setupPlayer();
   await playPlayback();
   await initializeVolumeBoost().catch(() => {});
-  usePlaybackStore.setState({ isPlaying: true });
+  const started = await ensurePlaybackStarted();
+  usePlaybackStore.setState({ isPlaying: started });
 }
 
 export async function pause(): Promise<void> {
