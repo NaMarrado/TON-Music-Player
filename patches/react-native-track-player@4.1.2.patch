@@ -186,9 +186,6 @@ index afa6b0f335714de0cc8741d5bbdd51b4e04bb3bb..ab3a2ea23f0599e9a3b0673503166fdd
      companion object {
          const val EMPTY_NOTIFICATION_ID = 1
          const val STATE_KEY = "state"
-@@ -825,4 +934,5 @@ class MusicService : HeadlessJsTaskService() {
-         const val BUFFERED_POSITION_KEY = "buffered"
-         const val TASK_KEY = "TrackPlayer"
+@@ -826,1 +935,2 @@ class MusicService : HeadlessJsTaskService() {
 +        const val CAR_BROWSER_BIND_ACTION = "com.ton.player.action.BIND_CAR_BROWSER"
-         const val MIN_BUFFER_KEY = "minBuffer"
-         const val MAX_BUFFER_KEY = "maxBuffer"
+         const val TASK_KEY = "TrackPlayer"

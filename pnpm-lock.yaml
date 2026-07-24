@@ -42,7 +42,7 @@ patchedDependencies:
     hash: 6c682880c77aa49ee01ceba7133f91ee4fae62f12c4d09b207d2fb9526e6d426
     path: patches/react-native-screens@4.4.0.patch
   react-native-track-player@4.1.2:
-    hash: 4c277c5c8eef9b81a0266c2353f15e96949c24a546377df2362e11264355e5d7
+    hash: 837a365790b3dbdb0ca6b3c255a7184af61dbddabe8f096492108829f5aa1da0
     path: patches/react-native-track-player@4.1.2.patch
 
 importers:
@@ -311,7 +311,7 @@ importers:
         version: 4.4.0(patch_hash=6c682880c77aa49ee01ceba7133f91ee4fae62f12c4d09b207d2fb9526e6d426)(react-native@0.76.9(@babel/core@7.29.0)(@babel/preset-env@7.29.0(@babel/core@7.29.0))(@types/react@18.3.28)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
       react-native-track-player:
         specifier: 4.1.2
-        version: 4.1.2(patch_hash=4c277c5c8eef9b81a0266c2353f15e96949c24a546377df2362e11264355e5d7)(react-native@0.76.9(@babel/core@7.29.0)(@babel/preset-env@7.29.0(@babel/core@7.29.0))(@types/react@18.3.28)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
+        version: 4.1.2(patch_hash=837a365790b3dbdb0ca6b3c255a7184af61dbddabe8f096492108829f5aa1da0)(react-native@0.76.9(@babel/core@7.29.0)(@babel/preset-env@7.29.0(@babel/core@7.29.0))(@types/react@18.3.28)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
       react-native-url-polyfill:
         specifier: ^2.0.0
         version: 2.0.0(react-native@0.76.9(@babel/core@7.29.0)(@babel/preset-env@7.29.0(@babel/core@7.29.0))(@types/react@18.3.28)(encoding@0.1.13)(react@18.3.1))
@@ -12014,7 +12014,7 @@ snapshots:
       react-native: 0.76.9(@babel/core@7.29.0)(@babel/preset-env@7.29.0(@babel/core@7.29.0))(@types/react@18.3.28)(encoding@0.1.13)(react@18.3.1)
       warn-once: 0.1.1
 
-  react-native-track-player@4.1.2(patch_hash=4c277c5c8eef9b81a0266c2353f15e96949c24a546377df2362e11264355e5d7)(react-native@0.76.9(@babel/core@7.29.0)(@babel/preset-env@7.29.0(@babel/core@7.29.0))(@types/react@18.3.28)(encoding@0.1.13)(react@18.3.1))(react@18.3.1):
+  react-native-track-player@4.1.2(patch_hash=837a365790b3dbdb0ca6b3c255a7184af61dbddabe8f096492108829f5aa1da0)(react-native@0.76.9(@babel/core@7.29.0)(@babel/preset-env@7.29.0(@babel/core@7.29.0))(@types/react@18.3.28)(encoding@0.1.13)(react@18.3.1))(react@18.3.1):
     dependencies:
       react: 18.3.1
       react-native: 0.76.9(@babel/core@7.29.0)(@babel/preset-env@7.29.0(@babel/core@7.29.0))(@types/react@18.3.28)(encoding@0.1.13)(react@18.3.1)
