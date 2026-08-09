@@ -274,8 +274,8 @@ importers:
         specifier: ^1.0.6
         version: 1.0.6
       ffmpeg-kit-react-native:
-        specifier: github:RebootMotion/ffmpeg-kit-react-native#772fe1cf25200e720319993d2c9e8107db480360
-        version: https://codeload.github.com/RebootMotion/ffmpeg-kit-react-native/tar.gz/772fe1cf25200e720319993d2c9e8107db480360(patch_hash=eb5d77c76305934ae986e09fb658dd22ca7ee160dd345bf1f629c0206ff9aa88)(react-native@0.76.9(@babel/core@7.29.0)(@babel/preset-env@7.29.0(@babel/core@7.29.0))(@types/react@18.3.28)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
+        specifier: 6.0.2
+        version: 6.0.2(patch_hash=eb5d77c76305934ae986e09fb658dd22ca7ee160dd345bf1f629c0206ff9aa88)(react-native@0.76.9(@babel/core@7.29.0)(@babel/preset-env@7.29.0(@babel/core@7.29.0))(@types/react@18.3.28)(encoding@0.1.13)(react@18.3.1))(react@18.3.1)
       i18next:
         specifier: ^24.0.0
         version: 24.2.3(typescript@5.9.3)
@@ -3560,9 +3560,9 @@ packages:
   fflate@0.8.3:
     resolution: {integrity: sha512-tbZNuJrLwGUp3zshBtdy4W+ORxZuIh8a5ilyIEQDC5rY1f3U20JMry0Ll3WBzU58EZKsEuJFXhb5gwv8CsPvgA==}
 
-  ffmpeg-kit-react-native@https://codeload.github.com/RebootMotion/ffmpeg-kit-react-native/tar.gz/772fe1cf25200e720319993d2c9e8107db480360:
-    resolution: {tarball: https://codeload.github.com/RebootMotion/ffmpeg-kit-react-native/tar.gz/772fe1cf25200e720319993d2c9e8107db480360}
-    version: 6.0.2
+  ffmpeg-kit-react-native@6.0.2:
+    resolution: {integrity: sha512-r9uSmahq8TeyIb7fXf3ft+uUXyoeWRFa99+khjo0TAzWO9y0z9wU7eGnab9JLw1MmCB9v64o4yojNluJhVm9nQ==}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
     peerDependencies:
       react: '*'
       react-native: '*'
@@ -10190,7 +10190,7 @@ snapshots:
 
   fflate@0.8.3: {}
 
-  ffmpeg-kit-react-native@https://codeload.github.com/RebootMotion/ffmpeg-kit-react-native/tar.gz/772fe1cf25200e720319993d2c9e8107db480360(patch_hash=eb5d77c76305934ae986e09fb658dd22ca7ee160dd345bf1f629c0206ff9aa88)(react-native@0.76.9(@babel/core@7.29.0)(@babel/preset-env@7.29.0(@babel/core@7.29.0))(@types/react@18.3.28)(encoding@0.1.13)(react@18.3.1))(react@18.3.1):
+  ffmpeg-kit-react-native@6.0.2(patch_hash=eb5d77c76305934ae986e09fb658dd22ca7ee160dd345bf1f629c0206ff9aa88)(react-native@0.76.9(@babel/core@7.29.0)(@babel/preset-env@7.29.0(@babel/core@7.29.0))(@types/react@18.3.28)(encoding@0.1.13)(react@18.3.1))(react@18.3.1):
     dependencies:
       react: 18.3.1
       react-native: 0.76.9(@babel/core@7.29.0)(@babel/preset-env@7.29.0(@babel/core@7.29.0))(@types/react@18.3.28)(encoding@0.1.13)(react@18.3.1)
