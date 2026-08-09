@@ -1,9 +1,14 @@
-import type { CloudSyncResult } from '@ton/core';
+import {
+  buildCloudV2ManifestObjectKey,
+  type CloudSyncProgress,
+  type CloudSyncResult,
+} from '@ton/core';
 import { scheduleMobileJob } from '../job-scheduler';
 import { getMobileCloudDeviceId } from './config';
 import {
   acknowledgeMobileCloudOutbox,
   ensureMobileCloudScope,
+  getMobileCloudMissingMirroredEntityCount,
   getMobileCloudOutbox,
   getMobileCloudPersistedState,
   updateMobileCloudPersistedState,
@@ -18,11 +23,11 @@ import {
 } from './v2-common';
 import { queueBlobGcTransitions } from './v2-maintenance';
 import { storeEntityMirror } from './v2-mirror';
-import { prepareLocalManifest } from './v2-prepare-full';
 import { prepareIncrementalManifest } from './v2-prepare-incremental';
 import { publishMobileV2Head } from './v2-publish';
-import { shouldRunManualCloudRepair } from './manual-repair-policy';
+import { shouldDiscoverMissingLocalEntities } from './missing-local-policy';
 import { prepareMobileManifestForLocalDevice } from './local-exclusions';
+import { prepareMissingLocalUpload } from './v2-prepare-upload';
 
 export type { MobileCloudSyncMode, MobileCloudV2SyncOptions } from './v2-common';
 
@@ -35,6 +40,20 @@ export async function runMobileCloudV2Sync(
     priority: options.origin === 'manual' ? 'user-visible' : 'background',
     run: async () => {
       const { config, mode, signal } = options;
+      const trackProgress = {
+        downloading: { current: 0, total: 0 },
+        uploading: { current: 0, total: 0 },
+      };
+      const onProgress = (progress: CloudSyncProgress) => {
+        if (progress.phase === 'downloading' || progress.phase === 'uploading') {
+          trackProgress[progress.phase] = {
+            current: progress.current,
+            total: progress.total,
+          };
+        }
+        options.onProgress?.(progress);
+      };
+      const trackedOptions = { ...options, onProgress };
       const result: CloudSyncResult = { ...EMPTY_RESULT };
       const scopeId = await ensureMobileCloudScope(config);
       const state = await getMobileCloudPersistedState(scopeId);
@@ -47,17 +66,45 @@ export async function runMobileCloudV2Sync(
       const client = new MobileR2Client(config);
       // Full object verification is intentionally reserved for the explicit
       // "Upload missing local" action. A normal manual sync must stay incremental.
-      const manualRecovery = shouldRunManualCloudRepair(options.origin, mode);
+      const manualRecovery = shouldDiscoverMissingLocalEntities(options.origin, mode);
+      if (mode === 'fetch'
+          && !options.restoreLocallyDeleted
+          && state.etag
+          && state.pending_downloads === 0
+          && state.pending_assets === 0
+          && await getMobileCloudMissingMirroredEntityCount(scopeId) === 0) {
+        emitProgress(onProgress, { phase: 'reading-manifest', current: 0, total: 1 });
+        const unchanged = await client.getJsonConditional(
+          buildCloudV2ManifestObjectKey(config.prefix), state.etag, signal,
+        );
+        if (unchanged.status === 'not-modified') {
+          await updateMobileCloudPersistedState(scopeId, {
+            last_success_at: Math.floor(Date.now() / 1000),
+            last_error: null,
+            next_retry_at: null,
+          });
+          emitProgress(onProgress, {
+            phase: 'done', current: 1, total: 1,
+          });
+          return { ...EMPTY_RESULT, revision: state.revision };
+        }
+      }
       const needsLocal = mode !== 'fetch'
         && (manualRecovery || outbox.length > 0 || state.needs_full_reconcile === 1);
-      const prepared = needsLocal
-        ? state.needs_full_reconcile === 1 || manualRecovery
-          ? await prepareLocalManifest(config, deviceId, options.onProgress, signal)
-          : await prepareIncrementalManifest(config, deviceId, outbox, signal)
+      const discoverMissingLocal = needsLocal
+        && (state.needs_full_reconcile === 1 || manualRecovery);
+      const prepared = needsLocal && !discoverMissingLocal
+        ? await prepareIncrementalManifest(config, deviceId, outbox, signal)
         : null;
       const publication = await publishMobileV2Head({
-        client, options, scopeId, state, outbox, deviceId,
-        prepared, needsLocal, result,
+        client, options: trackedOptions, scopeId, state, outbox, deviceId,
+        prepared,
+        prepareForRemote: discoverMissingLocal
+          ? (remote) => prepareMissingLocalUpload(
+            config, deviceId, remote, outbox, onProgress, signal,
+          )
+          : undefined,
+        needsLocal, result,
       });
       await queueBlobGcTransitions(
         scopeId, publication.previousRemoteForGc, publication.published,
@@ -70,7 +117,7 @@ export async function runMobileCloudV2Sync(
           Boolean(options.restoreLocallyDeleted),
         );
       const pending = await applyMobileV2Publication({
-        options,
+        options: trackedOptions,
         scopeId,
         state,
         maxAcknowledgedGeneration: maxGeneration,
@@ -93,13 +140,18 @@ export async function runMobileCloudV2Sync(
         last_success_at: Math.floor(Date.now() / 1000),
         last_error: null,
         next_retry_at: null,
-        needs_full_reconcile: mode === 'fetch' && state.needs_full_reconcile === 1 ? 1 : 0,
+        needs_full_reconcile: discoverMissingLocal ? 0 : state.needs_full_reconcile,
         pending_downloads: mode === 'upload' ? state.pending_downloads : pending.pendingDownloads,
         pending_assets: mode === 'upload' ? state.pending_assets : pending.pendingAssets,
       });
       result.revision = publication.published.revision;
-      emitProgress(options.onProgress, {
-        phase: 'done', current: 1, total: 1, uploaded: result.uploaded,
+      const completedTracks = trackProgress.uploading.current + trackProgress.downloading.current;
+      const totalTracks = trackProgress.uploading.total + trackProgress.downloading.total;
+      emitProgress(onProgress, {
+        phase: 'done',
+        current: totalTracks > 0 ? completedTracks : 1,
+        total: totalTracks > 0 ? totalTracks : 1,
+        uploaded: result.uploaded,
         downloaded: result.downloaded, skipped: result.skipped, failed: result.failed,
       });
       return result;

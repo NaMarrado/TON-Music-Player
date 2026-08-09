@@ -16,7 +16,10 @@ import {
   seekPlayback,
   setPlaybackShuffleEnabled,
 } from './playback-runtime';
-import { primeIosRemotePlaybackSession } from './playback-runtime/ios-native';
+import {
+  getIosPlaybackCheckpoint,
+  primeIosRemotePlaybackSession,
+} from './playback-runtime/ios-native';
 import { usePlaybackStore } from '../stores/playback-store';
 import { useQueueStore } from '../stores/queue-store';
 
@@ -32,6 +35,9 @@ export async function restoreMobilePlaybackSession(): Promise<boolean> {
     await getSetting(PLAYBACK_SESSION_SETTING_KEY),
   );
   if (!snapshot) return false;
+  const iosCheckpoint = Platform.OS === 'ios'
+    ? await getIosPlaybackCheckpoint().catch(() => null)
+    : null;
 
   const snapshotWindows = [
     ...(snapshot.previous_windows ?? []),
@@ -57,10 +63,15 @@ export async function restoreMobilePlaybackSession(): Promise<boolean> {
     return false;
   }
 
+  const checkpointIndex = iosCheckpoint?.queueItemId
+    ? queue.findIndex((item) => item.id === iosCheckpoint.queueItemId)
+    : -1;
   const previousCurrentItem = snapshot.queue[snapshot.current_index];
   const currentIndex = Math.max(
     0,
-    previousCurrentItem
+    checkpointIndex >= 0
+      ? checkpointIndex
+      : previousCurrentItem
       ? queue.findIndex((item) => item.id === previousCurrentItem.id)
       : 0,
   );
@@ -70,11 +81,15 @@ export async function restoreMobilePlaybackSession(): Promise<boolean> {
 
   const generation = useQueueStore.getState().generation + 1;
 
+  const restoredPosition = checkpointIndex === currentIndex && iosCheckpoint
+    ? iosCheckpoint.position
+    : snapshot.position_seconds;
+
   usePlaybackStore.setState({
     currentTrack,
     duration: (currentTrack.duration_ms ?? 0) / 1000,
     isPlaying: false,
-    position: snapshot.position_seconds,
+    position: restoredPosition,
     repeat: snapshot.repeat,
     shuffle: snapshot.shuffle,
   });
@@ -107,11 +122,15 @@ export async function restoreMobilePlaybackSession(): Promise<boolean> {
     { autoplay: false, startIndex: currentIndex },
   );
 
-  const position = clampSessionPosition(snapshot.position_seconds, currentTrack);
+  const position = clampSessionPosition(restoredPosition, currentTrack);
   if (position > 0) await seekPlayback(position);
   if (Platform.OS === 'ios') await primeIosRemotePlaybackSession();
   usePlaybackStore.setState({ position, isPlaying: false });
-  lastSerializedSession = serializeCurrentSession(position);
+  const serializedSession = serializeCurrentSession(position);
+  if (checkpointIndex >= 0) {
+    await setSetting(PLAYBACK_SESSION_SETTING_KEY, serializedSession);
+  }
+  lastSerializedSession = serializedSession;
   return true;
 }
 

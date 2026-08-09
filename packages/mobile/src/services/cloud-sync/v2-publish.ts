@@ -35,6 +35,10 @@ export async function publishMobileV2Head(input: {
   outbox: MobileCloudOutboxRow[];
   deviceId: string;
   prepared: PreparedLocalManifest | null;
+  prepareForRemote?: (remote: CloudLibraryManifestV2) => Promise<{
+    prepared: PreparedLocalManifest;
+    outbox: MobileCloudOutboxRow[];
+  }>;
   needsLocal: boolean;
   result: CloudSyncResult;
 }): Promise<{
@@ -44,7 +48,7 @@ export async function publishMobileV2Head(input: {
 }> {
   const {
     client, options, scopeId, state, outbox, deviceId,
-    prepared, needsLocal, result,
+    prepared, prepareForRemote, needsLocal, result,
   } = input;
   const { config, signal } = options;
   let published: CloudLibraryManifestV2 | null = null;
@@ -89,19 +93,25 @@ export async function publishMobileV2Head(input: {
     }
     if (remoteRead.status === 'missing' && remoteSource !== 'v2') bootstrapLiveMerge = true;
     previousRemoteForGc = remote;
+    const remotePreparation = prepareForRemote ? await prepareForRemote(remote) : null;
+    const effectivePrepared = remotePreparation?.prepared ?? prepared;
+    const effectiveOutbox = remotePreparation?.outbox ?? outbox;
     const versionedLocal = buildLocalMutationManifest(
       remote,
-      prepared,
-      outbox,
+      effectivePrepared,
+      effectiveOutbox,
       deviceId,
       Math.max(state.lamport_counter, remote.max_counter),
-      bootstrapLiveMerge && prepared?.incremental === false,
+      bootstrapLiveMerge && effectivePrepared?.incremental === false,
     );
     await uploadPreparedObjects(
-      client, prepared, versionedLocal, attemptedUploadKeys,
+      client, effectivePrepared, versionedLocal, attemptedUploadKeys,
       liveManifestObjectKeys(remote), result, options.onProgress, signal,
     );
-    if (!needsLocal && (remoteRead.status !== 'missing' || options.mode === 'fetch')) {
+    const hasLocalMutations = versionedLocal.tracks.length > 0
+      || versionedLocal.playlists.length > 0;
+    if ((!needsLocal || !hasLocalMutations)
+        && (remoteRead.status !== 'missing' || options.mode === 'fetch')) {
       published = remote;
       publishedEtag = currentEtag;
       break;

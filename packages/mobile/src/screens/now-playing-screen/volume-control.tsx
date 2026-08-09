@@ -41,7 +41,6 @@ export const VolumeControl = memo(function VolumeControl({
   const frameRef = useRef<number | null>(null);
   const pendingVolumeRef = useRef(volumePercent);
   const isScrubbingRef = useRef(false);
-  const hasScrubbedRef = useRef(false);
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [committedSliderValue, setCommittedSliderValue] = useState(() => (
     volumePercentToSliderPosition(volumePercent)
@@ -55,30 +54,28 @@ export const VolumeControl = memo(function VolumeControl({
   const updateScrubbingState = useCallback((value: number) => {
     const nextVolumePercent = sliderPositionToVolumePercent(value);
     pendingVolumeRef.current = nextVolumePercent;
+    // Keep the controlled native value aligned with the finger. Updating only
+    // the label here makes each render push the previous value back into the
+    // iOS slider, which causes its thumb and fill to jump during slow drags.
+    setCommittedSliderValue(value);
     setDisplayVolumePercent(nextVolumePercent);
     return nextVolumePercent;
   }, []);
   const handleSlidingStart = useCallback(() => {
     isScrubbingRef.current = true;
-    hasScrubbedRef.current = false;
     setIsScrubbing(true);
   }, []);
   const handleVolumeChange = useCallback((value: number) => {
-    if (!isScrubbingRef.current) return;
-    hasScrubbedRef.current = true;
+    // Fabric can deliver value/complete before sliding-start for slow drags.
+    // Treat the first real value event as the authoritative scrub start.
+    if (!isScrubbingRef.current) {
+      isScrubbingRef.current = true;
+      setIsScrubbing(true);
+    }
     updateScrubbingState(value);
     if (frameRef.current == null) frameRef.current = requestAnimationFrame(flushPreview);
   }, [flushPreview, updateScrubbingState]);
   const handleVolumeComplete = useCallback((value: number) => {
-    if (!isScrubbingRef.current) return;
-    if (!hasScrubbedRef.current) {
-      isScrubbingRef.current = false;
-      hasScrubbedRef.current = false;
-      setIsScrubbing(false);
-      setDisplayVolumePercent(volumePercent);
-      setCommittedSliderValue(volumePercentToSliderPosition(volumePercent));
-      return;
-    }
     const nextVolumePercent = updateScrubbingState(value);
     if (frameRef.current != null) {
       cancelAnimationFrame(frameRef.current);
@@ -87,10 +84,9 @@ export const VolumeControl = memo(function VolumeControl({
     setCommittedSliderValue(value);
     setDisplayVolumePercent(nextVolumePercent);
     isScrubbingRef.current = false;
-    hasScrubbedRef.current = false;
     setIsScrubbing(false);
     void setVolume(nextVolumePercent);
-  }, [updateScrubbingState, volumePercent]);
+  }, [updateScrubbingState]);
 
   useEffect(() => {
     pendingVolumeRef.current = volumePercent;
@@ -102,7 +98,6 @@ export const VolumeControl = memo(function VolumeControl({
   useEffect(() => () => {
     if (frameRef.current != null) cancelAnimationFrame(frameRef.current);
     isScrubbingRef.current = false;
-    hasScrubbedRef.current = false;
   }, []);
 
   const effectiveVolumePercent = isScrubbing ? displayVolumePercent : volumePercent;

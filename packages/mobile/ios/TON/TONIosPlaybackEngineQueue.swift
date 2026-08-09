@@ -175,6 +175,7 @@ extension TONIosPlaybackEngineManager {
         return
       }
       self.updateNowPlayingInfo()
+      self.persistPlaybackCheckpoint()
       completion(nil)
     }
   }
@@ -189,7 +190,9 @@ extension TONIosPlaybackEngineManager {
 
   func setRepeatMode(_ mode: Int, completion: @escaping () -> Void) {
     stateQueue.async {
-      self.repeatMode = mode
+      // The shared player represents repeat-all as RNTP "off" because JS
+      // advances rolling windows. Keep the native/accessory state normalized.
+      self.repeatMode = mode == 1 ? 1 : 2
       if self.remoteCommandsConfigured { self.applyRemoteCommandCapabilities() }
       completion()
     }

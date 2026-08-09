@@ -4,20 +4,18 @@ import { cleanupFailedDownload } from '../downloader/filesystem';
 import { invalidatePoToken } from '../po-token-service';
 import { resetPlayerClient } from '../youtube-search/client';
 import {
-  recoverIosBackgroundDownload,
+  startIosBackgroundDownload,
   type IosBackgroundDownloadSnapshotItem,
 } from '../download-runtime/ios-background-session';
 import { updateQueueItemFormat, updateQueueItemProgress, updateQueueItemStatus } from './db';
 import {
   attachActiveHandle,
   beginQueueItemDownloadActivity,
-  clearFailedStrategies,
   getActiveNotificationCopy,
   getFailedStrategies,
   releaseActiveSlot,
   rememberFailedStrategy,
 } from './ios-background-activity';
-import { finalizeCompletedBackgroundItem } from './ios-background-finalize';
 import { iosBackgroundState as state, type IosBackgroundQueueFacade } from './ios-background-state';
 import { updateQueueItem } from './mutations';
 import { markQueueItemActive } from './runtime';
@@ -58,7 +56,7 @@ function combineCandidateErrors(originalError: string | null | undefined, nextEr
   return `${prefix}; next candidate failed: ${message}`;
 }
 
-export async function recoverPreparedIosQueueItem(
+export async function startPreparedIosQueueItem(
   queue: IosBackgroundQueueFacade,
   itemId: number,
   queueItem: IosBackgroundQueueFacade['runtime']['items'][number],
@@ -66,32 +64,21 @@ export async function recoverPreparedIosQueueItem(
 ): Promise<void> {
   updateQueueItem(queue.runtime, itemId, (current) => ({ ...current, format: prepared.format }));
   await updateQueueItemFormat(itemId, prepared.format);
-  state.foregroundPromiseItemIds.add(itemId);
-  try {
-    const completedItem = await recoverIosBackgroundDownload({
-      ...getActiveNotificationCopy(queueItem.input.title, queueItem.input.artist),
-      artist: queueItem.input.artist,
-      contentLength: prepared.contentLength,
-      coverUrl: prepared.coverUrl,
-      destinationPath: prepared.filePath,
-      format: prepared.format,
-      headers: prepared.headers,
-      itemId,
-      safeName: prepared.safeName,
-      strategy: prepared.strategy,
-      title: queueItem.input.title,
-      url: prepared.url,
-      videoId: prepared.videoId,
-    });
-    if (queue.runtime.cancellingIds.has(itemId)) {
-      await cleanupFailedDownload(completedItem.destinationPath);
-      throw new Error('download_cancelled');
-    }
-    await finalizeCompletedBackgroundItem(queue, completedItem);
-    clearFailedStrategies(itemId);
-  } finally {
-    state.foregroundPromiseItemIds.delete(itemId);
-  }
+  await startIosBackgroundDownload({
+    ...getActiveNotificationCopy(queueItem.input.title, queueItem.input.artist),
+    artist: queueItem.input.artist,
+    contentLength: prepared.contentLength,
+    coverUrl: prepared.coverUrl,
+    destinationPath: prepared.filePath,
+    format: prepared.format,
+    headers: prepared.headers,
+    itemId,
+    safeName: prepared.safeName,
+    strategy: prepared.strategy,
+    title: queueItem.input.title,
+    url: prepared.url,
+    videoId: prepared.videoId,
+  });
 }
 
 export async function tryStartNextIosBackgroundCandidate(
@@ -143,10 +130,8 @@ async function tryStartNextCandidateOnce(
   if (!alreadyActive) markQueueItemActive(queue.runtime, item.itemId);
   attachActiveHandle(queue, item.itemId);
   try {
-    await recoverPreparedIosQueueItem(queue, item.itemId, queueItem, prepared);
-    releaseActiveSlot(queue, item.itemId);
+    await startPreparedIosQueueItem(queue, item.itemId, queueItem, prepared);
     queue.notify();
-    queue.processNext();
   } catch (error) {
     rememberFailedStrategy(item.itemId, prepared.strategy);
     item.error = combineCandidateErrors(item.error, error);

@@ -14,19 +14,24 @@ export async function syncActiveTrack(event: {
   const { generation, items } = useQueueStore.getState();
   let trackId: number | null = null;
   let expectedQueueItemId: string | null = null;
+  const runtimeQueueItemId = event.track && typeof event.track === 'object' && 'id' in event.track
+    ? String(event.track.id ?? '')
+    : '';
+  const runtimeQueueIndex = runtimeQueueItemId
+    ? items.findIndex((item) => item.id === runtimeQueueItemId)
+    : -1;
 
-  if (event.index != null) {
-    if (event.index < 0 || event.index >= items.length) {
-      return;
-    }
-
+  if (runtimeQueueIndex >= 0) {
+    const item = items[runtimeQueueIndex];
+    useQueueStore.setState({ currentIndex: runtimeQueueIndex });
+    trackId = item?.track_id ?? null;
+    expectedQueueItemId = item?.id ?? null;
+  } else if (runtimeQueueItemId) {
+    // The event belongs to a replaced queue generation.
+    return;
+  } else if (event.index != null) {
+    if (event.index < 0 || event.index >= items.length) return;
     const item = items[event.index];
-    if (event.track && typeof event.track === 'object' && 'id' in event.track) {
-      const runtimeId = String(event.track.id ?? '');
-      if (runtimeId && runtimeId !== item?.id) {
-        return;
-      }
-    }
     useQueueStore.setState({ currentIndex: event.index });
     trackId = item?.track_id ?? null;
     expectedQueueItemId = item?.id ?? null;

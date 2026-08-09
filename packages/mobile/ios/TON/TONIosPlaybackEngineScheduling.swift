@@ -103,6 +103,17 @@ extension TONIosPlaybackEngineManager {
     }
     updateNowPlayingInfo()
     emitPlaybackSnapshot()
+    schedulePlaybackCheckpoint(for: token)
+  }
+
+  func schedulePlaybackCheckpoint(for token: Int) {
+    stateQueue.asyncAfter(deadline: .now() + 3) {
+      guard token == self.scheduleToken,
+            self.state == "playing",
+            self.playerNode.isPlaying else { return }
+      self.persistPlaybackCheckpoint()
+      self.schedulePlaybackCheckpoint(for: token)
+    }
   }
 
   func rampPlayerVolume(for token: Int) {
@@ -174,6 +185,7 @@ extension TONIosPlaybackEngineManager {
     )
     updateNowPlayingInfo()
     emitPlaybackSnapshot()
+    schedulePlaybackCheckpoint(for: token)
   }
 
   func crossfade(

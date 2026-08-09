@@ -16,7 +16,7 @@ import {
 } from './ios-background-activity';
 import {
   createFailedCandidateSnapshotItem,
-  recoverPreparedIosQueueItem,
+  startPreparedIosQueueItem,
   tryStartNextIosBackgroundCandidate,
 } from './ios-background-candidates';
 import {
@@ -66,6 +66,7 @@ export function startIosBackgroundQueueItem(
     const item = queue.runtime.items.find((entry) => entry.id === itemId);
     if (!item) return;
     let prepared: Awaited<ReturnType<typeof prepareDownloadSource>> | null = null;
+    let handedOffToBackgroundSession = false;
     try {
       await initializeIosBackgroundDownloadsNative();
       if (queue.runtime.cancellingIds.has(itemId)) return;
@@ -82,13 +83,16 @@ export function startIosBackgroundQueueItem(
         return;
       }
       attachActiveHandle(queue, itemId);
-      await recoverPreparedIosQueueItem(queue, itemId, item, prepared);
+      await startPreparedIosQueueItem(queue, itemId, item, prepared);
+      handedOffToBackgroundSession = true;
+      ensureIosBackgroundQueueReconcile(queue);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       if (!queue.runtime.cancellingIds.has(itemId) && message !== 'download_cancelled') {
         const failedCandidate = createFailedCandidateSnapshotItem(itemId, item, message, prepared);
         const restarted = await tryStartNextIosBackgroundCandidate(queue, failedCandidate);
         if (restarted) {
+          handedOffToBackgroundSession = true;
           ensureIosBackgroundQueueReconcile(queue);
           return;
         }
@@ -101,10 +105,12 @@ export function startIosBackgroundQueueItem(
       }
       await acknowledgeIosBackgroundSettled(itemId);
     } finally {
-      queue.runtime.cancellingIds.delete(itemId);
-      releaseActiveSlot(queue, itemId);
       queue.notify();
-      queue.processNext();
+      if (!handedOffToBackgroundSession) {
+        queue.runtime.cancellingIds.delete(itemId);
+        releaseActiveSlot(queue, itemId);
+        queue.processNext();
+      }
     }
   })();
   return true;

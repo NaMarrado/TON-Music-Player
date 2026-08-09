@@ -10,8 +10,9 @@ import { migrate013 } from '../../packages/mobile/src/services/migrations/013-cl
 import { migrate014 } from '../../packages/mobile/src/services/migrations/014-cloud-download-retries.ts';
 import { migrate015 } from '../../packages/mobile/src/services/migrations/015-cloud-outbox-path-repair.ts';
 import { migrate016 } from '../../packages/mobile/src/services/migrations/016-local-cloud-exclusions.ts';
-import { shouldRunManualCloudRepair } from '../../packages/mobile/src/services/cloud-sync/manual-repair-policy.ts';
+import { shouldDiscoverMissingLocalEntities } from '../../packages/mobile/src/services/cloud-sync/missing-local-policy.ts';
 import { selectMobileCloudApplyDeltaFromState } from '../../packages/mobile/src/services/cloud-sync/v2-apply-delta-policy.ts';
+import { selectMissingLocalEntityIds } from '../../packages/mobile/src/services/cloud-sync/v2-prepare-upload-policy.ts';
 
 function createCloudRecord(index: number) {
   const hash = index.toString(16).padStart(64, '0');
@@ -165,11 +166,32 @@ test('cloud audio retry backoff grows and is capped', () => {
   assert.equal(getCloudDownloadRetryDelaySeconds(30), 900);
 });
 
-test('only explicit manual upload runs a full cloud object repair', () => {
-  assert.equal(shouldRunManualCloudRepair('manual', 'sync'), false);
-  assert.equal(shouldRunManualCloudRepair('manual', 'fetch'), false);
-  assert.equal(shouldRunManualCloudRepair('manual', 'upload'), true);
-  assert.equal(shouldRunManualCloudRepair('auto', 'upload'), false);
+test('only explicit manual upload discovers local entities missing from the manifest', () => {
+  assert.equal(shouldDiscoverMissingLocalEntities('manual', 'sync'), false);
+  assert.equal(shouldDiscoverMissingLocalEntities('manual', 'fetch'), false);
+  assert.equal(shouldDiscoverMissingLocalEntities('manual', 'upload'), true);
+  assert.equal(shouldDiscoverMissingLocalEntities('auto', 'upload'), false);
+});
+
+test('mobile upload selects only identities missing from a 1600-track manifest', () => {
+  const remoteHashes = new Set(
+    Array.from({ length: 1_600 }, (_, index) => index.toString(16).padStart(64, '0')),
+  );
+  const snapshot = {
+    tracks: [
+      ...[...remoteHashes].map((hash, index) => ({ id: index + 1, content_hash_sha256: hash })),
+      { id: 1_601, content_hash_sha256: 'f'.repeat(64) },
+      { id: 1_602, content_hash_sha256: null },
+    ],
+    playlists: [
+      { id: 1, cloud_id: 'existing' },
+      { id: 2, cloud_id: 'missing' },
+    ],
+  };
+  assert.deepEqual(
+    selectMissingLocalEntityIds(snapshot, remoteHashes, new Set(['existing'])),
+    { trackIds: [1_601], unhashedTrackIds: [1_602], playlistIds: [2] },
+  );
 });
 
 test('mobile migration stores one failure per scope and track hash', async () => {

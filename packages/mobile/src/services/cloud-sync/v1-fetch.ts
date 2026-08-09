@@ -72,8 +72,9 @@ export async function fetchCloudLibrary(
     });
     throwIfCancelled(shouldCancel);
     await setMobileCloudLastRevision(manifest.revision);
+    const completedTracks = Math.max(1, manifest.tracks.length);
     emitProgress(onProgress, {
-      phase: 'done', current: 1, total: 1,
+      phase: 'done', current: completedTracks, total: completedTracks,
       downloaded: result.downloaded, skipped: result.skipped, failed: result.failed,
     });
     return result;

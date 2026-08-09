@@ -5,6 +5,7 @@ import type {
   PlaybackRuntimeUpdateOptions,
 } from './types';
 import type {
+  IosPlaybackCheckpoint,
   IosPlaybackRuntimeEvent,
   IosPlaybackRuntimeModule,
   IosPlaybackRuntimeStateSnapshot,
@@ -138,4 +139,8 @@ export async function getActiveIosPlaybackTrack(): Promise<PlaybackRuntimeTrack 
 export async function getActiveIosPlaybackTrackIndex(): Promise<number | undefined> {
   const index = await getIosPlaybackRuntimeModule().getActiveTrackIndex();
   return index == null ? undefined : index;
+}
+
+export async function getIosPlaybackCheckpoint(): Promise<IosPlaybackCheckpoint | null> {
+  return getIosPlaybackRuntimeModule().getPlaybackCheckpoint();
 }

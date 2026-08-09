@@ -10,7 +10,7 @@ class DownloadTaskService : HeadlessJsTaskService() {
     HeadlessJsTaskConfig(
       "TONDownloadTask",
       Arguments.fromBundle(it),
-      30 * 60 * 1000,
+      0,
       true,
     )
   }

@@ -7,6 +7,7 @@ private let nowPlayingArtworkQueue = DispatchQueue(
   label: "cz.ton.player.now-playing-artwork",
   qos: .userInitiated
 )
+private let playbackCheckpointDefaultsKey = "ton.ios.playback-checkpoint"
 
 extension TONIosPlaybackEngineManager {
   func updateNowPlayingInfo() {
@@ -18,7 +19,9 @@ extension TONIosPlaybackEngineManager {
           currentIndex >= 0,
           currentIndex < queue.count else {
       performNowPlayingUpdate {
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+        let nowPlayingCenter = MPNowPlayingInfoCenter.default()
+        nowPlayingCenter.nowPlayingInfo = nil
+        nowPlayingCenter.playbackState = .stopped
       }
       return
     }
@@ -26,6 +29,7 @@ extension TONIosPlaybackEngineManager {
     var info: [String: Any] = [
       MPMediaItemPropertyTitle: track.title,
       MPNowPlayingInfoPropertyElapsedPlaybackTime: currentPositionSeconds(),
+      MPNowPlayingInfoPropertyCurrentPlaybackDate: Date(),
       MPNowPlayingInfoPropertyPlaybackRate: state == "playing" ? 1 : 0,
       MPNowPlayingInfoPropertyDefaultPlaybackRate: 1,
       MPNowPlayingInfoPropertyMediaType: MPNowPlayingInfoMediaType.audio.rawValue,
@@ -50,8 +54,14 @@ extension TONIosPlaybackEngineManager {
         )
       }
     }
+    let publishedPlaybackState: MPNowPlayingPlaybackState = isPlaybackActuallyRunning
+      && state == "playing"
+      ? .playing
+      : .paused
     performNowPlayingUpdate {
-      MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+      let nowPlayingCenter = MPNowPlayingInfoCenter.default()
+      nowPlayingCenter.nowPlayingInfo = info
+      nowPlayingCenter.playbackState = publishedPlaybackState
     }
     // Reapply after publishing for accessories that refresh commands separately.
     applyRemoteCommandCapabilities()
@@ -170,6 +180,7 @@ extension TONIosPlaybackEngineManager {
   }
 
   func emitPlaybackState() {
+    persistPlaybackCheckpoint()
     var payload: [String: Any] = ["state": state]
     if let currentIndex, currentIndex >= 0, currentIndex < queue.count {
       payload["trackId"] = queue[currentIndex].id
@@ -215,5 +226,29 @@ extension TONIosPlaybackEngineManager {
     updateNowPlayingInfo()
     deactivateAudioSessionIfNeeded()
     emitPlaybackState()
+  }
+
+  func getPlaybackCheckpoint(completion: @escaping ([String: Any]?) -> Void) {
+    stateQueue.async {
+      completion(UserDefaults.standard.dictionary(forKey: playbackCheckpointDefaultsKey))
+    }
+  }
+
+  func persistPlaybackCheckpoint() {
+    guard let currentIndex,
+          currentIndex >= 0,
+          currentIndex < queue.count else {
+      UserDefaults.standard.removeObject(forKey: playbackCheckpointDefaultsKey)
+      return
+    }
+    UserDefaults.standard.set(
+      [
+        "queueItemId": queue[currentIndex].id,
+        "position": currentPositionSeconds(),
+        "state": state,
+        "updatedAt": Date().timeIntervalSince1970,
+      ],
+      forKey: playbackCheckpointDefaultsKey
+    )
   }
 }

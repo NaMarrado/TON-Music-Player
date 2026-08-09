@@ -18,6 +18,13 @@ export interface IosPlaybackRuntimeStateSnapshot {
   state: IosPlaybackRuntimeState;
 }
 
+export interface IosPlaybackCheckpoint {
+  queueItemId: string;
+  position: number;
+  state: IosPlaybackRuntimeState;
+  updatedAt: number;
+}
+
 export interface IosPlaybackRuntimeEvent {
   type: string;
   [key: string]: unknown;
@@ -51,6 +58,7 @@ export interface IosPlaybackRuntimeModule {
   getPlaybackState(): Promise<IosPlaybackRuntimeStateSnapshot>;
   getActiveTrack(): Promise<PlaybackRuntimeTrack | null>;
   getActiveTrackIndex(): Promise<number | null>;
+  getPlaybackCheckpoint(): Promise<IosPlaybackCheckpoint | null>;
   setPitch(ratio: number): Promise<void>;
   getAudioSessionId(): Promise<number>;
   attachEqualizer(sessionId: number): Promise<{

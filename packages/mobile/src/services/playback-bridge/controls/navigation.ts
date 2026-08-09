@@ -1,9 +1,6 @@
 import { usePlaybackStore } from '../../../stores/playback-store';
 import { useQueueStore } from '../../../stores/queue-store';
-import {
-  getPlaybackProgress,
-  seekPlayback,
-} from '../../playback-runtime';
+import { seekPlayback } from '../../playback-runtime';
 import { skipToIndex } from '../queue-sync';
 import { advanceRollingQueueWindow, retreatRollingQueueWindow } from './rolling';
 
@@ -26,12 +23,6 @@ export async function nextTrack(): Promise<void> {
 }
 
 export async function prevTrack(): Promise<void> {
-  const progress = await getPlaybackProgress();
-  if (progress.position > 3) {
-    await seekPlayback(0);
-    return;
-  }
-
   const { items, currentIndex } = useQueueStore.getState();
   if (items.length === 0) return;
 

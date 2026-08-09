@@ -84,6 +84,9 @@ RCT_EXTERN_METHOD(getActiveTrack:(RCTPromiseResolveBlock)resolve
 RCT_EXTERN_METHOD(getActiveTrackIndex:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(getPlaybackCheckpoint:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
 RCT_EXTERN_METHOD(setPitch:(nonnull NSNumber *)ratio
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)

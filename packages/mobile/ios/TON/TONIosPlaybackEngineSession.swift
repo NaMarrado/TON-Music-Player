@@ -222,11 +222,17 @@ extension TONIosPlaybackEngineManager {
 
   private func setRepeatFromRemote(_ mode: Int) {
     stateQueue.async {
-      self.repeatMode = mode
+      // Some car head units resend the currently advertised repeat value
+      // instead of advancing it. TON exposes one repeat toggle: all <-> one.
+      let requestedMode = mode == 1 ? 1 : 2
+      let resolvedMode = requestedMode == self.repeatMode
+        ? (self.repeatMode == 1 ? 2 : 1)
+        : requestedMode
+      self.repeatMode = resolvedMode
       self.updateNowPlayingInfo()
       self.emitEvent(
         type: "remote-repeat",
-        extra: ["mode": mode == 1 ? "one" : "all"]
+        extra: ["mode": resolvedMode == 1 ? "one" : "all"]
       )
     }
   }

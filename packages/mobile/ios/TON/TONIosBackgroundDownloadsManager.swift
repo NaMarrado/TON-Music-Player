@@ -15,10 +15,14 @@ final class TONIosBackgroundDownloadsManager: NSObject, URLSessionDownloadDelega
   let encoder = JSONEncoder()
   let stateFileURL: URL
   var backgroundCompletionHandler: (() -> Void)?
+  var backgroundCompletionDeadline: DispatchWorkItem?
+  var backgroundCompletionGeneration = 0
+  var backgroundEventsFinished = false
   var eventSink: (([String: Any]) -> Void)?
   var recordsByItemId: [Int: TONIosBackgroundDownloadRecord] = [:]
   var recoveryCompletions: [Int: (Result<TONIosBackgroundDownloadRecord, Error>) -> Void] = [:]
   var recoveryTasksByItemId: [Int: URLSessionTask] = [:]
+  var progressBucketByItemId: [Int: Int] = [:]
   lazy var session: URLSession = makeSession()
   lazy var recoverySession: URLSession = makeRecoverySession()
 
@@ -35,6 +39,10 @@ final class TONIosBackgroundDownloadsManager: NSObject, URLSessionDownloadDelega
   @objc(setBackgroundSessionCompletionHandler:)
   func setBackgroundSessionCompletionHandler(_ handler: @escaping () -> Void) {
     stateQueue.async {
+      self.backgroundCompletionDeadline?.cancel()
+      self.backgroundCompletionDeadline = nil
+      self.backgroundCompletionGeneration += 1
+      self.backgroundEventsFinished = false
       self.backgroundCompletionHandler = handler
       _ = self.session
     }
@@ -85,6 +93,7 @@ final class TONIosBackgroundDownloadsManager: NSObject, URLSessionDownloadDelega
       task.taskDescription = String(request.itemId)
       let record = TONIosBackgroundDownloadRecord(request: request, taskId: task.taskIdentifier)
       self.recordsByItemId[request.itemId] = record
+      self.progressBucketByItemId[request.itemId] = 0
       self.persistState()
       task.resume()
       self.emit(record)
@@ -128,6 +137,7 @@ final class TONIosBackgroundDownloadsManager: NSObject, URLSessionDownloadDelega
       self.recoveryCompletions[request.itemId] = completion
       self.recoveryTasksByItemId[request.itemId] = task
       self.recordsByItemId[request.itemId] = record
+      self.progressBucketByItemId[request.itemId] = 0
       self.persistState()
       task.resume()
       self.emit(record)
@@ -143,6 +153,7 @@ final class TONIosBackgroundDownloadsManager: NSObject, URLSessionDownloadDelega
       nextRecord.state = "cancelled"
       nextRecord.error = nil
       self.recordsByItemId[itemId] = nextRecord
+      self.progressBucketByItemId.removeValue(forKey: itemId)
       self.persistState()
       self.emit(nextRecord)
       if self.recoveryCompletions[itemId] != nil {
@@ -162,7 +173,9 @@ final class TONIosBackgroundDownloadsManager: NSObject, URLSessionDownloadDelega
   func acknowledgeSettled(itemId: Int, completion: @escaping () -> Void) {
     stateQueue.async {
       self.recordsByItemId.removeValue(forKey: itemId)
+      self.progressBucketByItemId.removeValue(forKey: itemId)
       self.persistState()
+      self.completeBackgroundSessionIfPossible()
       completion()
     }
   }

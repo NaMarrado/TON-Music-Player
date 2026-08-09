@@ -19,6 +19,11 @@ extension TONIosBackgroundDownloadsManager {
         record.progress = min(max(Double(totalBytesWritten) / Double(totalBytesExpectedToWrite), 0), 0.999)
       }
       self.recordsByItemId[itemId] = record
+      let progressBucket = totalBytesExpectedToWrite > 0
+        ? Int((record.progress * 100).rounded(.down))
+        : Int(totalBytesWritten / 1_048_576)
+      guard self.progressBucketByItemId[itemId] != progressBucket else { return }
+      self.progressBucketByItemId[itemId] = progressBucket
       self.persistState()
       self.emit(record)
     }
@@ -91,6 +96,7 @@ extension TONIosBackgroundDownloadsManager {
         record.error = error.localizedDescription
       }
       self.recordsByItemId[itemId] = record
+      self.progressBucketByItemId.removeValue(forKey: itemId)
       self.persistState()
       self.emit(record)
       if isRecoveryTask {
@@ -121,6 +127,7 @@ extension TONIosBackgroundDownloadsManager {
       record.state = nsError.code == NSURLErrorCancelled ? "cancelled" : "failed"
       record.error = nsError.code == NSURLErrorCancelled ? nil : error.localizedDescription
       self.recordsByItemId[itemId] = record
+      self.progressBucketByItemId.removeValue(forKey: itemId)
       self.persistState()
       self.emit(record)
       if isRecoveryTask { self.completeRecovery(itemId: itemId, result: .failure(error)) }
@@ -129,9 +136,32 @@ extension TONIosBackgroundDownloadsManager {
 
   func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
     stateQueue.async {
-      guard let completionHandler = self.backgroundCompletionHandler else { return }
-      self.backgroundCompletionHandler = nil
-      DispatchQueue.main.async { completionHandler() }
+      self.backgroundEventsFinished = true
+      self.completeBackgroundSessionIfPossible()
+      guard self.backgroundCompletionHandler != nil else { return }
+      let generation = self.backgroundCompletionGeneration
+      let deadline = DispatchWorkItem { [weak self] in
+        guard let self, self.backgroundCompletionGeneration == generation else { return }
+        self.completeBackgroundSessionIfPossible(force: true)
+      }
+      self.backgroundCompletionDeadline?.cancel()
+      self.backgroundCompletionDeadline = deadline
+      self.stateQueue.asyncAfter(deadline: .now() + 25, execute: deadline)
     }
+  }
+
+  func completeBackgroundSessionIfPossible(force: Bool = false) {
+    guard backgroundEventsFinished,
+          let completionHandler = backgroundCompletionHandler else { return }
+    let hasUnsettledResult = recordsByItemId.values.contains {
+      $0.state == "completed" || $0.state == "failed" || $0.state == "cancelled"
+    }
+    guard force || !hasUnsettledResult else { return }
+    backgroundCompletionHandler = nil
+    backgroundCompletionDeadline?.cancel()
+    backgroundCompletionDeadline = nil
+    backgroundCompletionGeneration += 1
+    backgroundEventsFinished = false
+    DispatchQueue.main.async { completionHandler() }
   }
 }

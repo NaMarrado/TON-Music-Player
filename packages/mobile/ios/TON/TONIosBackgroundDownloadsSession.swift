@@ -25,8 +25,12 @@ extension TONIosBackgroundDownloadsManager {
         from: Data(contentsOf: stateFileURL)
       )
       recordsByItemId = Dictionary(uniqueKeysWithValues: records.map { ($0.itemId, $0) })
+      progressBucketByItemId = Dictionary(uniqueKeysWithValues: records.map {
+        ($0.itemId, Int(($0.progress * 100).rounded(.down)))
+      })
     } catch {
       recordsByItemId = [:]
+      progressBucketByItemId = [:]
     }
   }
 

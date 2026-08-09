@@ -162,4 +162,9 @@ extension IosPlaybackEngine {
   func getActiveTrackIndex(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
     TONIosPlaybackEngineManager.sharedManager().getActiveTrackIndex { resolve($0) }
   }
+
+  @objc(getPlaybackCheckpoint:rejecter:)
+  func getPlaybackCheckpoint(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    TONIosPlaybackEngineManager.sharedManager().getPlaybackCheckpoint { resolve($0) }
+  }
 }
