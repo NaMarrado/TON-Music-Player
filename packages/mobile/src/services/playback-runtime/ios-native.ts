@@ -116,6 +116,11 @@ export async function skipToPreviousIosPlayback(): Promise<void> {
   await getIosPlaybackRuntimeModule().skipToPrevious();
 }
 
+export async function removeIosPlaybackTracks(indices: number[]): Promise<void> {
+  if (!indices.length) return;
+  await getIosPlaybackRuntimeModule().removeTracks(indices);
+}
+
 export async function removeUpcomingIosPlaybackTracks(): Promise<void> {
   await getIosPlaybackRuntimeModule().removeUpcomingTracks();
 }

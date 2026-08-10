@@ -253,6 +253,35 @@ extension TONIosPlaybackEngineManager {
     }
   }
 
+  func removeTracks(_ indices: [Int], completion: @escaping (Error?) -> Void) {
+    stateQueue.async {
+      let valid = Array(Set(indices))
+        .filter { self.queue.indices.contains($0) }
+        .sorted()
+      guard !valid.isEmpty else {
+        completion(nil)
+        return
+      }
+      if let currentIndex = self.currentIndex,
+         valid.contains(where: { $0 >= currentIndex }) {
+        completion(NSError(
+          domain: "TONIosPlaybackEngine",
+          code: 4,
+          userInfo: [NSLocalizedDescriptionKey: "Only completed tracks can be removed."],
+        ))
+        return
+      }
+
+      for index in valid.reversed() { self.queue.remove(at: index) }
+      if let currentIndex = self.currentIndex {
+        self.currentIndex = currentIndex - valid.count
+      }
+      self.updateNowPlayingInfo()
+      self.persistPlaybackCheckpoint()
+      completion(nil)
+    }
+  }
+
   func getPosition(completion: @escaping (Double) -> Void) {
     stateQueue.async { completion(self.currentPositionSeconds()) }
   }

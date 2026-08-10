@@ -5,7 +5,10 @@ import { useQueueStore } from '../../stores/queue-store';
 import { getTrackById } from '../db-queries';
 import { ensureAudioEffectsAttached } from '../audio-settings';
 import { syncVolumeOutputToState } from './volume';
-import { advanceRollingQueueWindow } from './controls/rolling';
+import {
+  advanceRollingQueueWindow,
+  ensureRollingQueueBuffer,
+} from './controls/rolling';
 
 export async function syncActiveTrack(event: {
   index?: number;
@@ -65,6 +68,7 @@ export async function syncActiveTrack(event: {
     duration: (track.duration_ms ?? 0) / 1000,
   });
   await syncVolumeOutputToState().catch(() => {});
+  await ensureRollingQueueBuffer().catch(() => false);
 }
 
 export function syncPlaybackState(

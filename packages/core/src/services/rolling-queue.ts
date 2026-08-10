@@ -2,6 +2,9 @@ import type { QueueItem } from '../types/queue';
 
 export const PLAYBACK_QUEUE_WINDOW_SIZE = 20;
 export const PLAYBACK_QUEUE_COMPACT_INDEX = 10;
+export const PLAYBACK_QUEUE_HISTORY_SIZE = 100;
+export const PLAYBACK_QUEUE_MAX_SIZE =
+  PLAYBACK_QUEUE_HISTORY_SIZE + 1 + PLAYBACK_QUEUE_WINDOW_SIZE;
 
 export interface RollingQueueWindow {
   items: QueueItem[];
@@ -84,10 +87,14 @@ export function compactAndRefillRollingQueue(
     return { items: [], currentIndex: -1, nextSerial };
   }
 
-  const trimCount = Math.max(0, currentIndex - 1);
+  const trimCount = Math.max(0, currentIndex - PLAYBACK_QUEUE_HISTORY_SIZE);
   const retained = items.slice(trimCount);
   const nextCurrentIndex = currentIndex - trimCount;
-  const targetSize = Math.min(PLAYBACK_QUEUE_WINDOW_SIZE, sourceItems.length);
+  const upcomingTarget = Math.min(PLAYBACK_QUEUE_WINDOW_SIZE, sourceItems.length);
+  const targetSize = Math.min(
+    PLAYBACK_QUEUE_MAX_SIZE,
+    nextCurrentIndex + 1 + upcomingTarget,
+  );
   let sourceIndex = resolveNextSourceIndex(retained, sourceItems.length, shuffle, random);
 
   while (retained.length < targetSize) {
@@ -119,8 +126,14 @@ export function rebuildRollingQueueUpcoming(
     return { items: [], currentIndex: -1, nextSerial };
   }
 
-  const retained = items.slice(0, currentIndex + 1);
-  const targetSize = Math.min(PLAYBACK_QUEUE_WINDOW_SIZE, sourceItems.length);
+  const startIndex = Math.max(0, currentIndex - PLAYBACK_QUEUE_HISTORY_SIZE);
+  const retained = items.slice(startIndex, currentIndex + 1);
+  const nextCurrentIndex = currentIndex - startIndex;
+  const upcomingTarget = Math.min(PLAYBACK_QUEUE_WINDOW_SIZE, sourceItems.length);
+  const targetSize = Math.min(
+    PLAYBACK_QUEUE_MAX_SIZE,
+    retained.length + upcomingTarget,
+  );
   let sourceIndex = shuffle
     ? randomSourceIndex(sourceItems.length, random)
     : ((retained[retained.length - 1]?.source_index ?? 0) + 1) % sourceItems.length;
@@ -138,7 +151,7 @@ export function rebuildRollingQueueUpcoming(
       : (sourceIndex + 1) % sourceItems.length;
   }
 
-  return { items: retained, currentIndex, nextSerial };
+  return { items: retained, currentIndex: nextCurrentIndex, nextSerial };
 }
 
 function resolveNextSourceIndex(

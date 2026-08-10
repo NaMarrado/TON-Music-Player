@@ -24,6 +24,7 @@ const QUEUE_EVENTS = [
   PlaybackEvent.PlaybackError,
   PlaybackEvent.PlaybackState,
 ] as const;
+const PLAYBACK_SYNC_EVENTS = [...QUEUE_EVENTS];
 
 type UsePlaybackSyncOptions = {
   enabled: boolean;
@@ -54,7 +55,7 @@ export function usePlaybackSync({ enabled }: UsePlaybackSyncOptions): void {
   }, []);
 
   usePlaybackRuntimeEvents(
-    [...QUEUE_EVENTS],
+    PLAYBACK_SYNC_EVENTS,
     (event) => {
       if (!enabled) {
         return;

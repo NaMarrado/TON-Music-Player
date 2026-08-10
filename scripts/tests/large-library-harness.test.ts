@@ -9,6 +9,7 @@ import {
   getFilteredPlaylistTracks,
   compactAndRefillRollingQueue,
   createFollowingRollingQueueWindow,
+  rebuildRollingQueueUpcoming,
 } from '../../packages/core/src/index.ts';
 import {
   createPlaybackQueuePlan,
@@ -129,7 +130,7 @@ test('pre-enabled shuffle retains the full compact source separately from the ac
   assert.equal(shuffled.items[0].source_index, selectedIndex);
 });
 
-test('rolling queue stays at 20 while compacting and refilling from the full source', () => {
+test('rolling queue keeps history while refilling 20 upcoming tracks', () => {
   const tracks = Array.from({ length: 1_600 }, (_, index) => track(index));
   const initial = createPlaybackQueuePlan(tracks, 700, 12, false);
   const compacted = compactAndRefillRollingQueue(
@@ -141,10 +142,86 @@ test('rolling queue stays at 20 while compacting and refilling from the full sou
     initial.nextQueueSerial,
   );
 
-  assert.equal(compacted.items.length, 20);
-  assert.equal(compacted.currentIndex, 1);
-  assert.equal(compacted.items[1].source_index, 710);
-  assert.equal(compacted.items.at(-1)?.source_index, 728);
+  assert.equal(compacted.items.length, 31);
+  assert.equal(compacted.currentIndex, 10);
+  assert.equal(compacted.items[10].source_index, 710);
+  assert.equal(compacted.items.at(-1)?.source_index, 730);
+});
+
+test('rolling queue crosses hundreds of tracks without exhausting and retains 100 previous', () => {
+  const tracks = Array.from({ length: 1_600 }, (_, index) => track(index));
+  const initial = createPlaybackQueuePlan(tracks, 700, 14, false);
+  let items = initial.items;
+  let currentIndex = initial.currentIndex;
+  let nextSerial = initial.nextQueueSerial;
+
+  for (let transition = 0; transition < 350; transition += 1) {
+    const nextIndex = currentIndex + 1;
+    assert.ok(nextIndex < items.length, `queue exhausted at transition ${transition}`);
+    const expectedSourceIndex = (701 + transition) % tracks.length;
+    assert.equal(items[nextIndex]?.source_index, expectedSourceIndex);
+
+    const compacted = compactAndRefillRollingQueue(
+      items,
+      initial.originalItems,
+      nextIndex,
+      14,
+      false,
+      nextSerial,
+    );
+    items = compacted.items;
+    currentIndex = compacted.currentIndex;
+    nextSerial = compacted.nextSerial;
+
+    assert.ok(currentIndex <= 100);
+    assert.equal(items.length - currentIndex - 1, 20);
+    assert.ok(items.length <= 121);
+  }
+
+  assert.equal(currentIndex, 100);
+  assert.equal(items.length, 121);
+});
+
+test('rolling queue also remains continuous for playlists shorter than the refill threshold', () => {
+  const tracks = Array.from({ length: 5 }, (_, index) => track(index));
+  const initial = createPlaybackQueuePlan(tracks, 0, 15, false);
+  let items = initial.items;
+  let currentIndex = initial.currentIndex;
+  let nextSerial = initial.nextQueueSerial;
+
+  for (let transition = 0; transition < 150; transition += 1) {
+    if (!items[currentIndex + 1]) {
+      const prepared = compactAndRefillRollingQueue(
+        items,
+        initial.originalItems,
+        currentIndex,
+        15,
+        false,
+        nextSerial,
+      );
+      items = prepared.items;
+      currentIndex = prepared.currentIndex;
+      nextSerial = prepared.nextSerial;
+    }
+    assert.ok(items[currentIndex + 1], `short queue exhausted at transition ${transition}`);
+    currentIndex += 1;
+    assert.equal(items[currentIndex]?.source_index, (transition + 1) % tracks.length);
+
+    const compacted = compactAndRefillRollingQueue(
+      items,
+      initial.originalItems,
+      currentIndex,
+      15,
+      false,
+      nextSerial,
+    );
+    items = compacted.items;
+    currentIndex = compacted.currentIndex;
+    nextSerial = compacted.nextSerial;
+  }
+
+  assert.equal(currentIndex, 100);
+  assert.equal(items.length - currentIndex - 1, 5);
 });
 
 test('shuffle refills independently with replacement', () => {
@@ -162,6 +239,30 @@ test('shuffle refills independently with replacement', () => {
   assert.equal(following.items.length, 20);
   assert.equal(new Set(following.items.map((item) => item.track_id)).size, 1);
   assert.equal(following.items[0].track_id, tracks[800].id);
+});
+
+test('changing shuffle after long playback preserves history and refills upcoming tracks', () => {
+  const tracks = Array.from({ length: 1_600 }, (_, index) => track(index));
+  const sourceItems = createPlaybackQueuePlan(tracks, 0, 16, false).originalItems;
+  const activeItems = Array.from({ length: 121 }, (_, index) => ({
+    ...sourceItems[index],
+    id: `active-${index}`,
+    source_index: index,
+  }));
+  const rebuilt = rebuildRollingQueueUpcoming(
+    activeItems,
+    sourceItems,
+    100,
+    16,
+    true,
+    121,
+    () => 0.5,
+  );
+
+  assert.equal(rebuilt.currentIndex, 100);
+  assert.equal(rebuilt.items.length, 121);
+  assert.deepEqual(rebuilt.items.slice(0, 101), activeItems.slice(0, 101));
+  assert.ok(rebuilt.items.slice(101).every((item) => item.source_index === 800));
 });
 
 test('10,000-track playlist filtering and persisted sort inputs are viewport-independent', () => {

@@ -1,5 +1,5 @@
 import {
-  createFollowingRollingQueueWindow,
+  compactAndRefillRollingQueue,
   rebuildRollingQueueUpcoming,
 } from '@ton/core';
 import { usePlaybackStore } from '../../stores/playback-store';
@@ -27,21 +27,23 @@ export async function nextTrack(auto = false): Promise<void> {
     nextIndex = currentIndex + 1;
   } else {
     const queue = useQueueStore.getState();
-    const window = createFollowingRollingQueueWindow(
+    const window = compactAndRefillRollingQueue(
+      queue.items,
       queue.originalOrder,
-      items[currentIndex],
+      queue.currentIndex,
       queue.generation,
       shuffle,
       queue.nextQueueSerial,
     );
-    if (!window.items.length) return;
+    const nextWindowIndex = window.currentIndex + 1;
+    if (!window.items[nextWindowIndex]) return;
     const hydratedItems = await hydrateQueueItems(window.items);
     useQueueStore.setState({
       items: hydratedItems,
-      currentIndex: 0,
+      currentIndex: window.currentIndex,
       nextQueueSerial: window.nextSerial,
     });
-    await loadQueueIndex(0);
+    await loadQueueIndex(nextWindowIndex);
     return;
   }
 
@@ -62,8 +64,14 @@ export async function prevTrack(): Promise<void> {
     return;
   }
 
-  const prevIndex = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
-  await loadQueueIndex(prevIndex);
+  if (currentIndex > 0) {
+    await loadQueueIndex(currentIndex - 1);
+    return;
+  }
+
+  getActiveElement().currentTime = 0;
+  usePlaybackStore.setState({ position: 0 });
+  updateMediaSessionPosition();
 }
 
 export async function toggleShuffle(): Promise<void> {

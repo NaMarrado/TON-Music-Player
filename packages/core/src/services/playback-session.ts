@@ -4,6 +4,10 @@ import type {
   QueueItem,
   QueueSource,
 } from '../types/queue';
+import {
+  PLAYBACK_QUEUE_HISTORY_SIZE,
+  PLAYBACK_QUEUE_WINDOW_SIZE,
+} from './rolling-queue';
 
 export const PLAYBACK_SESSION_SETTING_KEY = 'playback_session';
 
@@ -67,9 +71,18 @@ export function parsePlaybackSessionSnapshot(value: unknown): PlaybackSessionSna
 
 function parseQueueWindows(value: unknown): QueueItem[][] {
   if (!Array.isArray(value)) return [];
-  return value
+  const windows = value
     .map(parseQueue)
     .filter((window) => window.length > 0 && window.length <= 20);
+  const retained: QueueItem[][] = [];
+  let remaining = PLAYBACK_QUEUE_HISTORY_SIZE;
+  for (let index = windows.length - 1; index >= 0 && remaining > 0; index -= 1) {
+    const window = windows[index];
+    const slice = window.slice(-remaining);
+    retained.unshift(slice);
+    remaining -= slice.length;
+  }
+  return retained;
 }
 
 function normalizeActiveQueue(
@@ -77,10 +90,10 @@ function normalizeActiveQueue(
   sourceItems: QueueItem[],
   currentIndex: number,
 ): { queue: QueueItem[]; currentIndex: number } {
-  const active = queue.length <= 20
-    ? [...queue]
-    : [...queue.slice(currentIndex), ...queue.slice(0, currentIndex)].slice(0, 20);
-  const normalizedCurrentIndex = queue.length <= 20 ? currentIndex : 0;
+  const startIndex = Math.max(0, currentIndex - PLAYBACK_QUEUE_HISTORY_SIZE);
+  const endIndex = Math.min(queue.length, currentIndex + PLAYBACK_QUEUE_WINDOW_SIZE + 1);
+  const active = queue.slice(startIndex, endIndex);
+  const normalizedCurrentIndex = currentIndex - startIndex;
 
   return {
     queue: active.map((item) => item.source_index != null

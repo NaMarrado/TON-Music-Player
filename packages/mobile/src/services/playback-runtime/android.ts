@@ -120,6 +120,11 @@ export async function removeUpcomingPlaybackTracks(): Promise<void> {
   await TrackPlayer.removeUpcomingTracks();
 }
 
+export async function removePlaybackTracks(indices: number[]): Promise<void> {
+  if (!indices.length) return;
+  await TrackPlayer.remove(indices);
+}
+
 export async function getPlaybackPosition(): Promise<number> {
   return TrackPlayer.getPosition();
 }

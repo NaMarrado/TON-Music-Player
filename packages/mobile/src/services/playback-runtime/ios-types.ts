@@ -52,6 +52,7 @@ export interface IosPlaybackRuntimeModule {
   skip(index: number): Promise<void>;
   skipToNext(): Promise<void>;
   skipToPrevious(): Promise<void>;
+  removeTracks(indices: number[]): Promise<void>;
   removeUpcomingTracks(): Promise<void>;
   getPosition(): Promise<number>;
   getProgress(): Promise<PlaybackRuntimeProgress>;

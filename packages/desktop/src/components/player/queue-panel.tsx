@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useQueueStore } from '../../stores/queue-store';
 import { usePlaybackStore } from '../../stores/playback-store';
 import { jumpToQueueIndex } from '../../audio/playback-service';
-import { CUSTOM_PROTOCOL } from '@ton/core';
+import { CUSTOM_PROTOCOL, PLAYBACK_QUEUE_WINDOW_SIZE } from '@ton/core';
 import { NoCoverArt } from '../ui/no-cover-art';
 import { HoverMarqueeText } from '../ui/hover-marquee-text';
 import { memo } from 'react';
@@ -15,7 +15,10 @@ export function QueuePanel({ onClose }: { onClose: () => void }) {
   const items = useQueueStore((s) => s.items);
   const currentIndex = useQueueStore((s) => s.currentIndex);
   const currentTrack = usePlaybackStore((s) => s.currentTrack);
-  const upcomingItems = items.slice(currentIndex + 1);
+  const upcomingItems = items.slice(
+    currentIndex + 1,
+    currentIndex + 1 + PLAYBACK_QUEUE_WINDOW_SIZE,
+  );
 
   return (
     <div
@@ -58,7 +61,7 @@ export function QueuePanel({ onClose }: { onClose: () => void }) {
       {/* Up next */}
       <div className="flex min-h-0 flex-1 flex-col" style={{ padding: '12px 16px' }}>
         <p className="uppercase font-semibold" style={{ fontSize: '0.65rem', letterSpacing: '0.12em', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-          {t('upNext')} ({Math.max(0, items.length - currentIndex - 1)})
+          {t('upNext')} ({upcomingItems.length})
         </p>
         {upcomingItems.length > 0 ? (
           <VirtualizedList

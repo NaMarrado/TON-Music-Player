@@ -96,3 +96,60 @@ test('drops malformed or oversized persisted history windows', () => {
   assert.ok(snapshot);
   assert.deepEqual(snapshot.previous_windows, []);
 });
+
+test('restores 100 previous and 20 upcoming tracks around the current item', () => {
+  const queue = Array.from({ length: 180 }, (_, index) => ({
+    ...sourceItem(index + 1),
+    id: `queue-${index}`,
+    source_index: index,
+  }));
+  const snapshot = parsePlaybackSessionSnapshot({
+    queue,
+    source_items: queue,
+    previous_windows: [],
+    next_queue_serial: queue.length,
+    current_index: 140,
+    position_seconds: 12,
+    repeat: 'all',
+    shuffle: false,
+    source: 'user',
+  });
+
+  assert.ok(snapshot);
+  assert.equal(snapshot.queue.length, 121);
+  assert.equal(snapshot.current_index, 100);
+  assert.equal(snapshot.queue[0]?.track_id, 41);
+  assert.equal(snapshot.queue[100]?.track_id, 141);
+  assert.equal(snapshot.queue.at(-1)?.track_id, 161);
+});
+
+test('persisted rolling history keeps only the latest 100 tracks', () => {
+  const windows = Array.from({ length: 7 }, (_, windowIndex) => (
+    Array.from({ length: 20 }, (_, itemIndex) => {
+      const index = windowIndex * 20 + itemIndex;
+      return {
+        ...sourceItem(index + 1),
+        id: `history-${index}`,
+        source_index: index,
+      };
+    })
+  ));
+  const current = [{ ...sourceItem(1_000), id: 'current', source_index: 999 }];
+  const snapshot = parsePlaybackSessionSnapshot({
+    queue: current,
+    source_items: [...windows.flat(), ...current],
+    previous_windows: windows,
+    next_queue_serial: 141,
+    current_index: 0,
+    position_seconds: 0,
+    repeat: 'all',
+    shuffle: false,
+    source: 'user',
+  });
+
+  assert.ok(snapshot);
+  const retainedHistory = snapshot.previous_windows?.flat() ?? [];
+  assert.equal(retainedHistory.length, 100);
+  assert.equal(retainedHistory[0]?.track_id, 41);
+  assert.equal(retainedHistory.at(-1)?.track_id, 140);
+});

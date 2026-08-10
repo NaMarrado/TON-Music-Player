@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { PlaybackRuntimeEventPayload } from './types';
 import type {
   PlaybackRuntimeEventType,
@@ -20,6 +20,7 @@ import {
   pauseIosPlayback,
   playIosPlayback,
   removeUpcomingIosPlaybackTracks,
+  removeIosPlaybackTracks,
   replaceIosPlaybackQueue,
   seekIosPlayback,
   setIosPlaybackQueue,
@@ -136,6 +137,10 @@ export async function removeUpcomingPlaybackTracks(): Promise<void> {
   await removeUpcomingIosPlaybackTracks();
 }
 
+export async function removePlaybackTracks(indices: number[]): Promise<void> {
+  await removeIosPlaybackTracks(indices);
+}
+
 export async function getPlaybackPosition(): Promise<number> {
   return getIosPlaybackPosition();
 }
@@ -203,20 +208,28 @@ export function usePlaybackRuntimeEvents<T extends PlaybackRuntimeEventType>(
   events: T[],
   listener: (event: PlaybackRuntimeEventPayload<T> & { type: T }) => void,
 ): void {
+  const eventsRef = useRef(events);
+  const listenerRef = useRef(listener);
+  eventsRef.current = events;
+  listenerRef.current = listener;
+  const eventKey = events.join('\u0000');
+
   useEffect(() => {
     const subscription = subscribeToIosPlaybackEvents((event) => {
       const type = event.type as T | undefined;
-      if (!type || !events.includes(type)) {
+      if (!type || !eventsRef.current.includes(type)) {
         return;
       }
 
-      listener(event as unknown as PlaybackRuntimeEventPayload<T> & { type: T });
+      listenerRef.current(
+        event as unknown as PlaybackRuntimeEventPayload<T> & { type: T },
+      );
     });
 
     return () => {
       subscription.remove();
     };
-  }, [events, listener]);
+  }, [eventKey]);
 }
 
 export function addPlaybackRuntimeEventListener<T extends PlaybackRuntimeEventType>(

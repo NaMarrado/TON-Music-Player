@@ -25,6 +25,7 @@ export const skipPlaybackIndex = runtime.skipPlaybackIndex as typeof import('./a
 export const skipToNextPlayback = runtime.skipToNextPlayback as typeof import('./android').skipToNextPlayback;
 export const skipToPreviousPlayback = runtime.skipToPreviousPlayback as typeof import('./android').skipToPreviousPlayback;
 export const removeUpcomingPlaybackTracks = runtime.removeUpcomingPlaybackTracks as typeof import('./android').removeUpcomingPlaybackTracks;
+export const removePlaybackTracks = runtime.removePlaybackTracks as typeof import('./android').removePlaybackTracks;
 export const getPlaybackPosition = runtime.getPlaybackPosition as typeof import('./android').getPlaybackPosition;
 export const getPlaybackProgress = runtime.getPlaybackProgress as typeof import('./android').getPlaybackProgress;
 export const getPlaybackState = runtime.getPlaybackState as typeof import('./android').getPlaybackState;

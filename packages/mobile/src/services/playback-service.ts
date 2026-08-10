@@ -12,6 +12,8 @@ import {
   setRepeatMode,
   setShuffleEnabled,
 } from './playback-bridge/controls';
+import { ensureRollingQueueBuffer } from './playback-bridge/controls/rolling';
+import { useQueueStore } from '../stores/queue-store';
 import { setupPlayer } from './audio-player';
 import { playCarMediaId } from './car-playback';
 import { Platform } from 'react-native';
@@ -109,6 +111,27 @@ export async function PlaybackService(): Promise<void> {
   });
 
   if (Platform.OS === 'android') {
+    addPlaybackRuntimeEventListener(
+      PlaybackEvent.PlaybackActiveTrackChanged,
+      async ({ index, track }) => {
+        try {
+          const queue = useQueueStore.getState();
+          const queueItemId = track?.id == null ? '' : String(track.id);
+          const runtimeIndex = queueItemId
+            ? queue.items.findIndex((item) => item.id === queueItemId)
+            : index;
+          if (
+            runtimeIndex == null
+            || runtimeIndex < 0
+            || runtimeIndex >= queue.items.length
+          ) return;
+          useQueueStore.setState({ currentIndex: runtimeIndex });
+          await ensureRollingQueueBuffer();
+        } catch (error) {
+          console.warn('[RNTP Remote] rolling queue refill failed:', error);
+        }
+      },
+    );
     await setupPlayer();
   }
 

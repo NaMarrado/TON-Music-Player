@@ -162,9 +162,10 @@ export async function loadQueueIndex(index: number): Promise<void> {
 }
 
 async function compactQueueAfterNavigation(index: number): Promise<void> {
-  if (index < PLAYBACK_QUEUE_COMPACT_INDEX) return;
   const queue = useQueueStore.getState();
   if (queue.currentIndex !== index || !queue.originalOrder.length) return;
+  const upcomingCount = queue.items.length - index - 1;
+  if (upcomingCount > PLAYBACK_QUEUE_COMPACT_INDEX) return;
   const plan = compactAndRefillRollingQueue(
     queue.items,
     queue.originalOrder,

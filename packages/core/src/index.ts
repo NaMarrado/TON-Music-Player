@@ -109,6 +109,8 @@ export {
 } from './services/playback-session';
 export {
   PLAYBACK_QUEUE_COMPACT_INDEX,
+  PLAYBACK_QUEUE_HISTORY_SIZE,
+  PLAYBACK_QUEUE_MAX_SIZE,
   PLAYBACK_QUEUE_WINDOW_SIZE,
   compactAndRefillRollingQueue,
   createFollowingRollingQueueWindow,

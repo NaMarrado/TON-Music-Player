@@ -138,6 +138,23 @@ extension IosPlaybackEngine {
     TONIosPlaybackEngineManager.sharedManager().removeUpcomingTracks { resolve(nil) }
   }
 
+  @objc(removeTracks:resolver:rejecter:)
+  func removeTracks(
+    _ indices: [NSNumber],
+    resolver resolve: @escaping RCTPromiseResolveBlock,
+    rejecter reject: @escaping RCTPromiseRejectBlock
+  ) {
+    TONIosPlaybackEngineManager.sharedManager().removeTracks(
+      indices.map(\.intValue)
+    ) { error in
+      if let error {
+        reject("ios_playback_remove_tracks_failed", error.localizedDescription, error)
+        return
+      }
+      resolve(nil)
+    }
+  }
+
   @objc(getPosition:rejecter:)
   func getPosition(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
     TONIosPlaybackEngineManager.sharedManager().getPosition { resolve($0) }
