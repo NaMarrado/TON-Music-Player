@@ -9,6 +9,7 @@ import {
   getFilteredPlaylistTracks,
   compactAndRefillRollingQueue,
   createFollowingRollingQueueWindow,
+  createRollingQueueWindow,
   rebuildRollingQueueUpcoming,
 } from '../../packages/core/src/index.ts';
 import {
@@ -91,16 +92,16 @@ function cloudEntry(item: Track): CloudTrackEntry {
   };
 }
 
-test('pre-enabled shuffle keeps a bounded active queue and samples with replacement', () => {
+test('pre-enabled shuffle gives native playback a full source-sized safety queue', () => {
   const tracks = Array.from({ length: 1_600 }, (_, index) => track(index));
   const selectedIndex = 731;
   const plan = createPlaybackQueuePlan(tracks, selectedIndex, 9, true, () => 0.37);
 
-  assert.equal(plan.items.length, 20);
+  assert.equal(plan.items.length, 1_600);
   assert.equal(plan.originalItems.length, 1_600);
   assert.equal(plan.currentIndex, 0);
   assert.equal(plan.items[0].track_id, tracks[selectedIndex].id);
-  assert.equal(new Set(plan.items.map((item) => item.id)).size, 20);
+  assert.equal(new Set(plan.items.map((item) => item.id)).size, 1_600);
   assert.deepEqual(plan.originalItems.map((item) => item.track_id), tracks.map((item) => item.id));
   assert.equal(new Set(plan.items.slice(1).map((item) => item.track_id)).size, 1);
 });
@@ -121,11 +122,11 @@ test('runtime shuffle covers every upcoming item and disabling restores exact so
   assert.equal(restored.requiresFullReplacement, false);
 });
 
-test('pre-enabled shuffle retains the full compact source separately from the active queue', () => {
+test('pre-enabled shuffle retains the full source and native queue', () => {
   const tracks = Array.from({ length: 1_600 }, (_, index) => track(index));
   const selectedIndex = 731;
   const shuffled = createPlaybackQueuePlan(tracks, selectedIndex, 11, true, () => 0.61);
-  assert.equal(shuffled.items.length, 20);
+  assert.equal(shuffled.items.length, 1_600);
   assert.equal(shuffled.originalItems.length, 1_600);
   assert.equal(shuffled.items[0].source_index, selectedIndex);
 });
@@ -133,13 +134,19 @@ test('pre-enabled shuffle retains the full compact source separately from the ac
 test('rolling queue keeps history while refilling 20 upcoming tracks', () => {
   const tracks = Array.from({ length: 1_600 }, (_, index) => track(index));
   const initial = createPlaybackQueuePlan(tracks, 700, 12, false);
+  const boundedWindow = createRollingQueueWindow(
+    initial.originalItems,
+    700,
+    12,
+    false,
+  );
   const compacted = compactAndRefillRollingQueue(
-    initial.items,
+    boundedWindow.items,
     initial.originalItems,
     10,
     12,
     false,
-    initial.nextQueueSerial,
+    boundedWindow.nextSerial,
   );
 
   assert.equal(compacted.items.length, 31);
@@ -151,9 +158,15 @@ test('rolling queue keeps history while refilling 20 upcoming tracks', () => {
 test('rolling queue crosses hundreds of tracks without exhausting and retains 100 previous', () => {
   const tracks = Array.from({ length: 1_600 }, (_, index) => track(index));
   const initial = createPlaybackQueuePlan(tracks, 700, 14, false);
-  let items = initial.items;
-  let currentIndex = initial.currentIndex;
-  let nextSerial = initial.nextQueueSerial;
+  const boundedWindow = createRollingQueueWindow(
+    initial.originalItems,
+    700,
+    14,
+    false,
+  );
+  let items = boundedWindow.items;
+  let currentIndex = boundedWindow.currentIndex;
+  let nextSerial = boundedWindow.nextSerial;
 
   for (let transition = 0; transition < 350; transition += 1) {
     const nextIndex = currentIndex + 1;
@@ -180,6 +193,17 @@ test('rolling queue crosses hundreds of tracks without exhausting and retains 10
 
   assert.equal(currentIndex, 100);
   assert.equal(items.length, 121);
+});
+
+test('mobile native queue cannot exhaust when JS refill is suspended', () => {
+  const tracks = Array.from({ length: 1_600 }, (_, index) => track(index));
+  const plan = createPlaybackQueuePlan(tracks, 731, 17, true, () => 0.37);
+
+  let nativeIndex = 0;
+  for (let transition = 0; transition < 10_000; transition += 1) {
+    nativeIndex = nativeIndex < plan.items.length - 1 ? nativeIndex + 1 : 0;
+    assert.ok(plan.items[nativeIndex], `native queue exhausted at ${transition}`);
+  }
 });
 
 test('rolling queue also remains continuous for playlists shorter than the refill threshold', () => {

@@ -19,8 +19,9 @@ export async function syncRepeatMode(mode: 'all' | 'one'): Promise<void> {
     if (mode === 'one') {
       await setPlaybackRepeatMode(PlaybackRepeatModeValue.Track);
     } else {
-      // The JS rolling queue refills from the full source pool at its boundary.
-      await setPlaybackRepeatMode(PlaybackRepeatModeValue.Off);
+      // The native queue contains the full source, so repeat-all remains
+      // reliable even while the React Native runtime is suspended.
+      await setPlaybackRepeatMode(PlaybackRepeatModeValue.Queue);
     }
   } catch {
     // RNTP may not be ready yet.

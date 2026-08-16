@@ -18,12 +18,13 @@ export function createRollingQueueWindow(
   generation: number,
   shuffle: boolean,
   random: () => number = Math.random,
+  requestedSize = PLAYBACK_QUEUE_WINDOW_SIZE,
 ): RollingQueueWindow {
   if (!sourceItems.length || startSourceIndex < 0 || startSourceIndex >= sourceItems.length) {
     throw new Error('invalid-playback-queue-source');
   }
 
-  const targetSize = Math.min(PLAYBACK_QUEUE_WINDOW_SIZE, sourceItems.length);
+  const targetSize = Math.min(Math.max(1, requestedSize), sourceItems.length);
   const items: QueueItem[] = [];
   let nextSerial = 0;
   let sourceIndex = startSourceIndex;

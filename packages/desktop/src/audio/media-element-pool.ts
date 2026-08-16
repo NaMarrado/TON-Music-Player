@@ -53,7 +53,16 @@ export function swapElements(): void {
   // Release decoded audio buffers from old element after a short delay
   // (wait for any pending ended/timeupdate events to fire)
   if (oldActive) {
+    const releasedSource = oldActive.audio.currentSrc || oldActive.audio.src;
     setTimeout(() => {
+      const currentActive = activeSlot === 'A' ? elementA : elementB;
+      const currentSource = oldActive.audio.currentSrc || oldActive.audio.src;
+
+      // A rapid second transition can reuse this slot before the delayed
+      // cleanup runs. Never clear an element that has become active again or
+      // has already been assigned a different preload source.
+      if (currentActive === oldActive || currentSource !== releasedSource) return;
+
       oldActive.audio.removeAttribute('src');
       oldActive.audio.load();
     }, 500);

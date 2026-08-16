@@ -1,5 +1,6 @@
 import {
   addPlaybackRuntimeEventListener,
+  getActivePlaybackTrackIndex,
   pausePlayback,
   PlaybackEvent,
   playPlayback,
@@ -19,6 +20,8 @@ import { playCarMediaId } from './car-playback';
 import { Platform } from 'react-native';
 
 let listenersRegistered = false;
+let failedQueueGeneration = -1;
+const failedQueueItems = new Set<string>();
 
 function logRemote(event: string, details?: string): void {
   console.log(`[RNTP Remote] ${event}${details ? ` ${details}` : ''}`);
@@ -111,6 +114,32 @@ export async function PlaybackService(): Promise<void> {
   });
 
   if (Platform.OS === 'android') {
+    addPlaybackRuntimeEventListener(PlaybackEvent.PlaybackError, async () => {
+      const queue = useQueueStore.getState();
+      if (failedQueueGeneration !== queue.generation) {
+        failedQueueGeneration = queue.generation;
+        failedQueueItems.clear();
+      }
+      const nativeIndex = await getActivePlaybackTrackIndex().catch(() => undefined);
+      const failedIndex = nativeIndex == null ? queue.currentIndex : nativeIndex;
+      if (failedIndex >= 0 && failedIndex < queue.items.length) {
+        useQueueStore.setState({ currentIndex: failedIndex });
+      }
+      const currentItem = queue.items[failedIndex];
+      if (currentItem) failedQueueItems.add(currentItem.id);
+      const failureLimit = Math.max(1, queue.items.length);
+      if (failedQueueItems.size >= failureLimit) {
+        console.warn('[RNTP Remote] every queued track failed playback');
+        await stopPlayback();
+        return;
+      }
+      try {
+        await nextTrack();
+      } catch (error) {
+        console.warn('[RNTP Remote] failed to skip unavailable track:', error);
+      }
+    });
+
     addPlaybackRuntimeEventListener(
       PlaybackEvent.PlaybackActiveTrackChanged,
       async ({ index, track }) => {

@@ -222,10 +222,37 @@ extension TONIosPlaybackEngineManager {
       do { try prepareTrack(at: currentIndex, autoplay: true) } catch { failPlayback(error) }
       return
     }
-    if let nextIndex = resolveNextIndexForCompletion() {
-      do { try prepareTrack(at: nextIndex, autoplay: true) } catch { failPlayback(error) }
+    if prepareNextPlayableTrackAfterCompletion() {
       return
     }
+    finishPlaybackQueue()
+  }
+
+  func prepareNextPlayableTrackAfterCompletion() -> Bool {
+    guard !queue.isEmpty, let startingIndex = currentIndex else { return false }
+    var candidate = nextCompletionIndex(after: startingIndex)
+    var attempted = 0
+
+    while let index = candidate, attempted < queue.count {
+      do {
+        try prepareTrack(at: index, autoplay: true)
+        return true
+      } catch {
+        emitEvent(
+          type: "playback-error",
+          extra: [
+            "message": "Skipped an unavailable queue track: \(error.localizedDescription)",
+            "recoverable": true,
+          ]
+        )
+        attempted += 1
+        candidate = nextCompletionIndex(after: index)
+      }
+    }
+    return false
+  }
+
+  func finishPlaybackQueue() {
     state = "ended"
     updateNowPlayingInfo()
     deactivateAudioSessionIfNeeded()
@@ -249,9 +276,12 @@ extension TONIosPlaybackEngineManager {
 
   func resolveNextIndexForCompletion() -> Int? {
     guard !queue.isEmpty, let currentIndex else { return nil }
-    if currentIndex < queue.count - 1 { return currentIndex + 1 }
-    // The shared queue owns repeat-all and rolling-window progression.
-    return nil
+    return nextCompletionIndex(after: currentIndex)
+  }
+
+  func nextCompletionIndex(after index: Int) -> Int? {
+    if index < queue.count - 1 { return index + 1 }
+    return repeatMode == 2 ? 0 : nil
   }
 
   func clampPosition(_ position: Double) -> Double {

@@ -10,7 +10,20 @@ export function createRangeResponse(
   rangeMatch: RegExpExecArray,
 ): Response {
   const start = parseInt(rangeMatch[1], 10);
-  const end = rangeMatch[2] ? parseInt(rangeMatch[2], 10) : totalSize - 1;
+  if (!Number.isSafeInteger(start) || start < 0 || start >= totalSize) {
+    return new Response(null, {
+      status: 416,
+      headers: { 'Content-Range': `bytes */${totalSize}` },
+    });
+  }
+  const requestedEnd = rangeMatch[2] ? parseInt(rangeMatch[2], 10) : totalSize - 1;
+  const end = Math.min(requestedEnd, totalSize - 1);
+  if (!Number.isSafeInteger(end) || end < start) {
+    return new Response(null, {
+      status: 416,
+      headers: { 'Content-Range': `bytes */${totalSize}` },
+    });
+  }
   const chunkSize = end - start + 1;
   const stream = fs.createReadStream(filePath, { start, end });
   const cacheControl = ALLOWED_IMAGE_EXTENSIONS.has(ext)

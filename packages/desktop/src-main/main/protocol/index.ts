@@ -33,6 +33,10 @@ export function registerMediaProtocolHandler(): void {
       return new Response('Not Found', { status: 404 });
     }
 
+    if (!stat.isFile() || stat.size <= 0) {
+      return new Response('Not Found', { status: 404 });
+    }
+
     const ext = extname(filePath).toLowerCase();
     const contentType = MIME_BY_EXTENSION[ext] || 'application/octet-stream';
     const totalSize = stat.size;

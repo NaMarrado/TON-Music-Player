@@ -6,10 +6,12 @@ import { getPlaybackRuntimeState } from './state';
 
 type AudioEventDependencies = {
   preloadNextTrack: (index: number) => Promise<void>;
-  loadQueueIndex: (index: number) => Promise<void>;
+  loadQueueIndex: (index: number) => Promise<boolean>;
   nextTrack: (auto?: boolean) => Promise<void>;
   updateMediaSessionPosition: () => void;
 };
+
+let terminalAdvancePromise: Promise<void> | null = null;
 
 export function setupAudioEvents(deps: AudioEventDependencies): void {
   const activeElement = getActiveElement();
@@ -19,11 +21,14 @@ export function setupAudioEvents(deps: AudioEventDependencies): void {
     element.addEventListener('loadedmetadata', (event) => {
       handleMetadata(event, deps.updateMediaSessionPosition);
     });
-    element.addEventListener('ended', () => {
-      void handleEnded(deps.nextTrack);
+    element.addEventListener('ended', (event) => {
+      void handleEnded(event, deps.nextTrack);
     });
-    element.addEventListener('timeupdate', () => {
-      void handleTimeUpdate(deps);
+    element.addEventListener('error', (event) => {
+      void handlePlaybackError(event, deps.nextTrack);
+    });
+    element.addEventListener('timeupdate', (event) => {
+      void handleTimeUpdate(event, deps);
     });
   }
 }
@@ -39,17 +44,55 @@ function handleMetadata(
   }
 }
 
-async function handleEnded(nextTrack: (auto?: boolean) => Promise<void>): Promise<void> {
+async function handleEnded(
+  event: Event,
+  nextTrack: (auto?: boolean) => Promise<void>,
+): Promise<void> {
   const state = getPlaybackRuntimeState();
+  if (event.target !== getActiveElement()) {
+    if (state.crossfadeTriggered) state.crossfadeTriggered = false;
+    return;
+  }
   if (state.crossfadeTriggered) {
     state.crossfadeTriggered = false;
     return;
   }
 
-  await nextTrack(true);
+  await advanceAfterTerminalEvent(nextTrack);
 }
 
-async function handleTimeUpdate(deps: AudioEventDependencies): Promise<void> {
+async function handlePlaybackError(
+  event: Event,
+  nextTrack: (auto?: boolean) => Promise<void>,
+): Promise<void> {
+  const target = event.target as HTMLAudioElement;
+  if (target !== getActiveElement()) return;
+
+  const mediaError = target.error;
+  console.warn('[Playback] Active media failed; advancing queue.', {
+    code: mediaError?.code ?? null,
+    message: mediaError?.message ?? null,
+  });
+  getPlaybackRuntimeState().crossfadeTriggered = false;
+  usePlaybackStore.setState({ isPlaying: false });
+  await advanceAfterTerminalEvent(nextTrack);
+}
+
+async function advanceAfterTerminalEvent(
+  nextTrack: (auto?: boolean) => Promise<void>,
+): Promise<void> {
+  if (terminalAdvancePromise) return terminalAdvancePromise;
+  terminalAdvancePromise = nextTrack(true).finally(() => {
+    terminalAdvancePromise = null;
+  });
+  return terminalAdvancePromise;
+}
+
+async function handleTimeUpdate(
+  event: Event,
+  deps: AudioEventDependencies,
+): Promise<void> {
+  if (event.target !== getActiveElement()) return;
   const state = getPlaybackRuntimeState();
   const element = getActiveElement();
   const { items, currentIndex } = useQueueStore.getState();
@@ -78,7 +121,20 @@ async function handleTimeUpdate(deps: AudioEventDependencies): Promise<void> {
       }
 
       if (nextIndex !== null) {
-        await deps.loadQueueIndex(nextIndex);
+        let loaded = false;
+        try {
+          loaded = await deps.loadQueueIndex(nextIndex);
+        } catch (error) {
+          console.warn('[Playback] Gapless transition failed; advancing queue.', error);
+        } finally {
+          // The previous element is paused before its natural end during a
+          // successful A/B swap, so its `ended` event cannot be responsible
+          // for releasing this transition guard.
+          state.crossfadeTriggered = false;
+        }
+        if (!loaded) {
+          await advanceAfterTerminalEvent(deps.nextTrack);
+        }
       }
     }
   }

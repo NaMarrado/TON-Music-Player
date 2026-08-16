@@ -1,5 +1,8 @@
 import {
   PLAYBACK_SESSION_SETTING_KEY,
+  PLAYBACK_QUEUE_HISTORY_SIZE,
+  PLAYBACK_QUEUE_WINDOW_SIZE,
+  createRollingQueueWindow,
   parsePlaybackSessionSnapshot,
   type PlaybackSessionSnapshot,
   type QueueItem,
@@ -43,6 +46,7 @@ export async function restoreMobilePlaybackSession(): Promise<boolean> {
     ...(snapshot.previous_windows ?? []),
     snapshot.queue,
     ...(snapshot.next_windows ?? []),
+    snapshot.source_items,
   ];
   const trackIds = [...new Set(
     snapshotWindows.flatMap((window) => window.map((item) => item.track_id)),
@@ -53,35 +57,58 @@ export async function restoreMobilePlaybackSession(): Promise<boolean> {
       .filter((track) => Boolean(track.file_path))
       .map((track) => [track.id, track]),
   );
-  const queue = snapshot.queue
+  const restoredQueue = snapshot.queue
     .filter((item) => trackMap.has(item.track_id))
     .map((item) => hydrateQueueItem(item, trackMap.get(item.track_id)!));
-  const previousWindows = hydrateQueueWindows(snapshot.previous_windows, trackMap);
-  const nextWindows = hydrateQueueWindows(snapshot.next_windows, trackMap);
-  if (!queue.length) {
+  if (!restoredQueue.length) {
     await setSetting(PLAYBACK_SESSION_SETTING_KEY, '');
     return false;
   }
 
   const checkpointIndex = iosCheckpoint?.queueItemId
-    ? queue.findIndex((item) => item.id === iosCheckpoint.queueItemId)
+    ? restoredQueue.findIndex((item) => item.id === iosCheckpoint.queueItemId)
     : -1;
   const previousCurrentItem = snapshot.queue[snapshot.current_index];
-  const currentIndex = Math.max(
+  const restoredCurrentIndex = Math.max(
     0,
     checkpointIndex >= 0
       ? checkpointIndex
       : previousCurrentItem
-      ? queue.findIndex((item) => item.id === previousCurrentItem.id)
+      ? restoredQueue.findIndex((item) => item.id === previousCurrentItem.id)
       : 0,
   );
-  const currentItem = queue[currentIndex];
+  const currentItem = restoredQueue[restoredCurrentIndex];
   const currentTrack = trackMap.get(currentItem.track_id);
   if (!currentTrack) return false;
 
   const generation = useQueueStore.getState().generation + 1;
+  const originalOrder = snapshot.source_items
+    .filter((item) => trackMap.has(item.track_id))
+    .map((item) => hydrateQueueItem(item, trackMap.get(item.track_id)!));
+  const currentSourceIndex = findQueueSourceIndex(originalOrder, currentItem);
+  const activeWindow = createRollingQueueWindow(
+    originalOrder.length ? originalOrder : [currentItem],
+    currentSourceIndex,
+    generation,
+    snapshot.shuffle,
+    Math.random,
+    Math.max(1, originalOrder.length),
+  );
+  const queue = activeWindow.items.map((item) => hydrateQueueItem(
+    item,
+    trackMap.get(item.track_id)!,
+  ));
+  const currentIndex = activeWindow.currentIndex;
+  const priorItems = restoredQueue.slice(0, restoredCurrentIndex);
+  const previousWindows = chunkQueueHistory([
+    ...(snapshot.previous_windows ?? []).flat(),
+    ...priorItems,
+  ].filter((item) => trackMap.has(item.track_id)).map((item) => (
+    hydrateQueueItem(item, trackMap.get(item.track_id)!)
+  )));
+  const nextWindows: QueueItem[][] = [];
 
-  const restoredPosition = checkpointIndex === currentIndex && iosCheckpoint
+  const restoredPosition = checkpointIndex === restoredCurrentIndex && iosCheckpoint
     ? iosCheckpoint.position
     : snapshot.position_seconds;
 
@@ -98,10 +125,10 @@ export async function restoreMobilePlaybackSession(): Promise<boolean> {
     currentIndex,
     source: snapshot.source ?? 'user',
     sourceDescriptor: snapshot.source_descriptor ?? { kind: 'custom' },
-    originalOrder: snapshot.source_items,
+    originalOrder: originalOrder.length ? originalOrder : [currentItem],
     previousWindows,
     nextWindows,
-    nextQueueSerial: snapshot.next_queue_serial,
+    nextQueueSerial: Math.max(snapshot.next_queue_serial, activeWindow.nextSerial),
     generation,
   });
 
@@ -116,7 +143,7 @@ export async function restoreMobilePlaybackSession(): Promise<boolean> {
       item.id,
       {
         index: item.source_index ?? index,
-        count: snapshot.source_items.length,
+        count: originalOrder.length || 1,
       },
     )),
     { autoplay: false, startIndex: currentIndex },
@@ -190,13 +217,19 @@ function serializeCurrentSession(position: number): string {
   const queue = useQueueStore.getState();
   if (!playback.currentTrack || !queue.items.length || queue.currentIndex < 0) return '';
 
+  const startIndex = Math.max(0, queue.currentIndex - PLAYBACK_QUEUE_HISTORY_SIZE);
+  const endIndex = Math.min(
+    queue.items.length,
+    queue.currentIndex + PLAYBACK_QUEUE_WINDOW_SIZE + 1,
+  );
+  const persistedQueue = queue.items.slice(startIndex, endIndex);
   const snapshot: PlaybackSessionSnapshot = {
-    queue: queue.items.map(toPersistentQueueItem),
+    queue: persistedQueue.map(toPersistentQueueItem),
     source_items: queue.originalOrder.map(toPersistentQueueItem),
     previous_windows: queue.previousWindows.map((window) => window.map(toPersistentQueueItem)),
     next_windows: queue.nextWindows.map((window) => window.map(toPersistentQueueItem)),
     next_queue_serial: queue.nextQueueSerial,
-    current_index: Math.min(queue.currentIndex, queue.items.length - 1),
+    current_index: queue.currentIndex - startIndex,
     position_seconds: Math.max(0, Math.round(position)),
     repeat: playback.repeat,
     shuffle: playback.shuffle,
@@ -206,15 +239,24 @@ function serializeCurrentSession(position: number): string {
   return JSON.stringify(snapshot);
 }
 
-function hydrateQueueWindows(
-  windows: QueueItem[][] | undefined,
-  trackMap: Map<number, Track>,
-): QueueItem[][] {
-  return (windows ?? [])
-    .map((window) => window
-      .filter((item) => trackMap.has(item.track_id))
-      .map((item) => hydrateQueueItem(item, trackMap.get(item.track_id)!)))
-    .filter((window) => window.length > 0);
+function findQueueSourceIndex(sourceItems: QueueItem[], currentItem: QueueItem): number {
+  const membershipIndex = currentItem.playlist_track_id == null
+    ? -1
+    : sourceItems.findIndex(
+      (item) => item.playlist_track_id === currentItem.playlist_track_id,
+    );
+  if (membershipIndex >= 0) return membershipIndex;
+  const trackIndex = sourceItems.findIndex((item) => item.track_id === currentItem.track_id);
+  return Math.max(0, trackIndex);
+}
+
+function chunkQueueHistory(items: QueueItem[]): QueueItem[][] {
+  const retained = items.slice(-PLAYBACK_QUEUE_HISTORY_SIZE);
+  const windows: QueueItem[][] = [];
+  for (let index = 0; index < retained.length; index += PLAYBACK_QUEUE_WINDOW_SIZE) {
+    windows.push(retained.slice(index, index + PLAYBACK_QUEUE_WINDOW_SIZE));
+  }
+  return windows;
 }
 
 function toPersistentQueueItem(item: QueueItem): QueueItem {

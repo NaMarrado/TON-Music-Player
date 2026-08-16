@@ -10,44 +10,57 @@ import { loadQueueIndex } from './track-loading';
 import { hydrateQueueItems } from './queue-helpers';
 
 export async function nextTrack(auto = false): Promise<void> {
-  const { items, currentIndex } = useQueueStore.getState();
-  const { repeat, shuffle } = usePlaybackStore.getState();
+  const initialQueue = useQueueStore.getState();
+  const { repeat } = usePlaybackStore.getState();
 
-  if (items.length === 0) {
+  if (initialQueue.items.length === 0) {
     return;
   }
 
   if (auto && repeat === 'one') {
-    await loadQueueIndex(currentIndex);
+    await loadQueueIndex(initialQueue.currentIndex);
     return;
   }
 
-  let nextIndex: number;
-  if (currentIndex < items.length - 1) {
-    nextIndex = currentIndex + 1;
-  } else {
-    const queue = useQueueStore.getState();
-    const window = compactAndRefillRollingQueue(
-      queue.items,
-      queue.originalOrder,
-      queue.currentIndex,
-      queue.generation,
-      shuffle,
-      queue.nextQueueSerial,
-    );
-    const nextWindowIndex = window.currentIndex + 1;
-    if (!window.items[nextWindowIndex]) return;
-    const hydratedItems = await hydrateQueueItems(window.items);
-    useQueueStore.setState({
-      items: hydratedItems,
-      currentIndex: window.currentIndex,
-      nextQueueSerial: window.nextSerial,
-    });
-    await loadQueueIndex(nextWindowIndex);
-    return;
+  const attemptLimit = Math.max(
+    1,
+    initialQueue.originalOrder.length || initialQueue.items.length,
+  );
+  for (let attempt = 0; attempt < attemptLimit; attempt += 1) {
+    const nextIndex = await prepareNextQueueIndex();
+    if (nextIndex == null) return;
+    try {
+      if (await loadQueueIndex(nextIndex)) return;
+    } catch (error) {
+      console.warn('[Playback] Skipping unavailable queue track:', error);
+    }
+  }
+  usePlaybackStore.setState({ isPlaying: false });
+}
+
+async function prepareNextQueueIndex(): Promise<number | null> {
+  const queue = useQueueStore.getState();
+  if (queue.currentIndex < queue.items.length - 1) {
+    return queue.currentIndex + 1;
   }
 
-  await loadQueueIndex(nextIndex);
+  const window = compactAndRefillRollingQueue(
+    queue.items,
+    queue.originalOrder,
+    queue.currentIndex,
+    queue.generation,
+    usePlaybackStore.getState().shuffle,
+    queue.nextQueueSerial,
+  );
+  const nextIndex = window.currentIndex + 1;
+  if (!window.items[nextIndex]) return null;
+  const hydratedItems = await hydrateQueueItems(window.items);
+  useQueueStore.setState({
+    items: hydratedItems,
+    currentIndex: window.currentIndex,
+    nextQueueSerial: window.nextSerial,
+  });
+  return nextIndex;
 }
 
 export async function prevTrack(): Promise<void> {

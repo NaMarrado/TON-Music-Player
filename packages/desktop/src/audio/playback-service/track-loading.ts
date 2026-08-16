@@ -29,21 +29,22 @@ import {
 import { safePlayElement } from './safe-play';
 import { getPlaybackRuntimeState } from './state';
 
-async function playActiveElement(): Promise<void> {
+async function playActiveElement(): Promise<boolean> {
   await resumeContext();
   const element = getActiveElement();
   if (!element.src) {
-    return;
+    return false;
   }
 
   const didPlay = await safePlayElement(element);
   if (!didPlay) {
-    return;
+    return false;
   }
 
   usePlaybackStore.setState({ isPlaying: true });
   startPositionTracking();
   updateMediaSessionPosition();
+  return true;
 }
 
 function applyTrackLoudness(track: Track): void {
@@ -55,7 +56,7 @@ function applyTrackLoudness(track: Track): void {
   }
 }
 
-export async function startTrack(track: Track): Promise<void> {
+export async function startTrack(track: Track): Promise<boolean> {
   const runtimeState = getPlaybackRuntimeState();
   runtimeState.crossfadeTriggered = false;
   runtimeState.preloadedIndex = -1;
@@ -72,8 +73,10 @@ export async function startTrack(track: Track): Promise<void> {
   });
   loadTrack(track.file_path);
 
-  await playActiveElement();
+  const started = await playActiveElement();
   unmuteHead();
+
+  if (!started) return false;
 
   window.api
     .invoke(
@@ -83,6 +86,7 @@ export async function startTrack(track: Track): Promise<void> {
     )
     .catch(() => {});
   markTrackPlayed(track.id);
+  return true;
 }
 
 export async function restorePausedTrack(track: Track, position: number): Promise<void> {
@@ -121,11 +125,11 @@ export async function restorePausedTrack(track: Track, position: number): Promis
   updateMediaSessionPosition();
 }
 
-export async function loadQueueIndex(index: number): Promise<void> {
+export async function loadQueueIndex(index: number): Promise<boolean> {
   const { items } = useQueueStore.getState();
   const item = items[index];
   if (!item) {
-    return;
+    return false;
   }
 
   useQueueStore.setState({ currentIndex: index });
@@ -133,7 +137,7 @@ export async function loadQueueIndex(index: number): Promise<void> {
   const snapshotTrack = getQueueItemTrackSnapshot(item);
   const track = snapshotTrack ?? await loadTrackById(item.track_id);
   if (!track) {
-    return;
+    return false;
   }
 
   const preloadElement = getPreloadElement();
@@ -151,14 +155,17 @@ export async function loadQueueIndex(index: number): Promise<void> {
       duration: track.duration_ms ? track.duration_ms / 1000 : 0,
     });
 
-    await playActiveElement();
+    const started = await playActiveElement();
     unmuteHead();
+    if (!started) return false;
     await compactQueueAfterNavigation(index);
-    return;
+    return true;
   }
 
-  await startTrack(track);
+  const started = await startTrack(track);
+  if (!started) return false;
   await compactQueueAfterNavigation(index);
+  return true;
 }
 
 async function compactQueueAfterNavigation(index: number): Promise<void> {
