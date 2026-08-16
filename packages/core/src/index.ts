@@ -112,6 +112,7 @@ export {
   PLAYBACK_QUEUE_HISTORY_SIZE,
   PLAYBACK_QUEUE_MAX_SIZE,
   PLAYBACK_QUEUE_WINDOW_SIZE,
+  compactAndRefillBoundedRollingQueue,
   compactAndRefillRollingQueue,
   createFollowingRollingQueueWindow,
   createRollingQueueWindow,

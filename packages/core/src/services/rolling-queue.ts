@@ -12,6 +12,11 @@ export interface RollingQueueWindow {
   nextSerial: number;
 }
 
+export interface BoundedRollingQueueWindow extends RollingQueueWindow {
+  addedItems: QueueItem[];
+  removedItems: QueueItem[];
+}
+
 export function createRollingQueueWindow(
   sourceItems: QueueItem[],
   startSourceIndex: number,
@@ -112,6 +117,55 @@ export function compactAndRefillRollingQueue(
   }
 
   return { items: retained, currentIndex: nextCurrentIndex, nextSerial };
+}
+
+export function compactAndRefillBoundedRollingQueue(
+  items: QueueItem[],
+  sourceItems: QueueItem[],
+  currentIndex: number,
+  generation: number,
+  shuffle: boolean,
+  nextSerial: number,
+  random: () => number = Math.random,
+): BoundedRollingQueueWindow {
+  if (!items.length || !sourceItems.length || currentIndex < 0 || currentIndex >= items.length) {
+    return {
+      items: [],
+      currentIndex: -1,
+      nextSerial,
+      addedItems: [],
+      removedItems: [],
+    };
+  }
+
+  const trimCount = currentIndex >= PLAYBACK_QUEUE_COMPACT_INDEX ? currentIndex : 0;
+  const removedItems = items.slice(0, trimCount);
+  const retainedItems = items.slice(trimCount);
+  const nextCurrentIndex = currentIndex - trimCount;
+  const targetSize = Math.min(PLAYBACK_QUEUE_WINDOW_SIZE, sourceItems.length);
+  const addedItems: QueueItem[] = [];
+  let sourceIndex = resolveNextSourceIndex(retainedItems, sourceItems.length, shuffle, random);
+
+  while (retainedItems.length + addedItems.length < targetSize) {
+    addedItems.push(materializeQueueItem(
+      sourceItems[sourceIndex],
+      sourceIndex,
+      generation,
+      nextSerial,
+    ));
+    nextSerial += 1;
+    sourceIndex = shuffle
+      ? randomSourceIndex(sourceItems.length, random)
+      : (sourceIndex + 1) % sourceItems.length;
+  }
+
+  return {
+    items: [...retainedItems, ...addedItems],
+    currentIndex: nextCurrentIndex,
+    nextSerial,
+    addedItems,
+    removedItems,
+  };
 }
 
 export function rebuildRollingQueueUpcoming(

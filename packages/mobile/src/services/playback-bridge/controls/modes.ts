@@ -5,6 +5,7 @@ import { syncRepeatMode } from '../player-runtime';
 import { setPlaybackShuffleEnabled } from '../../playback-runtime';
 import { rebuildRollingQueueUpcoming, type RepeatMode } from '@ton/core';
 import { hydrateMobileQueueItems } from '../track-mapping';
+import { appendRollingQueueHistory } from './rolling';
 
 export async function toggleShuffle(): Promise<void> {
   const { shuffle } = usePlaybackStore.getState();
@@ -19,6 +20,7 @@ export async function toggleShuffle(): Promise<void> {
   }
 
   const nextShuffle = !shuffle;
+  usePlaybackStore.setState({ shuffle: nextShuffle });
   const plan = rebuildRollingQueueUpcoming(
     items,
     queue.originalOrder,
@@ -28,16 +30,25 @@ export async function toggleShuffle(): Promise<void> {
     queue.nextQueueSerial,
   );
 
-  const hydratedItems = await hydrateMobileQueueItems(plan.items);
-  useQueueStore.setState({
-    items: hydratedItems,
-    currentIndex: plan.currentIndex,
-    nextWindows: [],
-    nextQueueSerial: plan.nextSerial,
-  });
-  usePlaybackStore.setState({ shuffle: nextShuffle });
-  await syncUpcomingRntpQueue(hydratedItems, plan.currentIndex);
-  await setPlaybackShuffleEnabled(nextShuffle);
+  try {
+    const hydratedItems = await hydrateMobileQueueItems(plan.items);
+    const boundedItems = await syncUpcomingRntpQueue(hydratedItems, plan.currentIndex);
+    if (useQueueStore.getState().generation !== queue.generation) return;
+    useQueueStore.setState({
+      items: boundedItems,
+      currentIndex: 0,
+      previousWindows: appendRollingQueueHistory(
+        queue.previousWindows,
+        items.slice(0, currentIndex),
+      ),
+      nextWindows: [],
+      nextQueueSerial: plan.nextSerial,
+    });
+    await setPlaybackShuffleEnabled(nextShuffle);
+  } catch (error) {
+    usePlaybackStore.setState({ shuffle });
+    throw error;
+  }
 }
 
 export async function setShuffleEnabled(enabled: boolean): Promise<void> {

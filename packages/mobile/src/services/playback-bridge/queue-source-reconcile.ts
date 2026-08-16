@@ -69,15 +69,16 @@ export async function reconcilePlaybackQueueSource(): Promise<void> {
     queue.nextQueueSerial,
   );
   const hydratedItems = await hydrateMobileQueueItems(plan.items);
+  const boundedItems = await syncUpcomingRntpQueue(hydratedItems, plan.currentIndex);
+  if (useQueueStore.getState().generation !== queue.generation) return;
   useQueueStore.setState({
-    items: hydratedItems,
-    currentIndex: plan.currentIndex,
+    items: boundedItems,
+    currentIndex: 0,
     originalOrder: nextOriginalOrder,
     previousWindows: [],
     nextWindows: [],
     nextQueueSerial: plan.nextSerial,
   });
-  await syncUpcomingRntpQueue(hydratedItems, plan.currentIndex);
 }
 
 function getSourceTracks(descriptor: PlaybackQueueSourceDescriptor): Track[] | null {

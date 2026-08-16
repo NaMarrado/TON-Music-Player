@@ -4,6 +4,7 @@ import type { CloudTrackEntry, PlaylistTrackEntry, Track } from '../../packages/
 import {
   buildCloudR2CleanupPlan,
   compareCloudTracksForLibrary,
+  compactAndRefillBoundedRollingQueue,
   createCloudLivePlaylistRecordV2,
   createCloudLiveTrackRecordV2,
   getFilteredPlaylistTracks,
@@ -92,16 +93,16 @@ function cloudEntry(item: Track): CloudTrackEntry {
   };
 }
 
-test('pre-enabled shuffle gives native playback a full source-sized safety queue', () => {
+test('pre-enabled shuffle materializes only the active mobile window', () => {
   const tracks = Array.from({ length: 1_600 }, (_, index) => track(index));
   const selectedIndex = 731;
   const plan = createPlaybackQueuePlan(tracks, selectedIndex, 9, true, () => 0.37);
 
-  assert.equal(plan.items.length, 1_600);
+  assert.equal(plan.items.length, 20);
   assert.equal(plan.originalItems.length, 1_600);
   assert.equal(plan.currentIndex, 0);
   assert.equal(plan.items[0].track_id, tracks[selectedIndex].id);
-  assert.equal(new Set(plan.items.map((item) => item.id)).size, 1_600);
+  assert.equal(new Set(plan.items.map((item) => item.id)).size, 20);
   assert.deepEqual(plan.originalItems.map((item) => item.track_id), tracks.map((item) => item.id));
   assert.equal(new Set(plan.items.slice(1).map((item) => item.track_id)).size, 1);
 });
@@ -122,11 +123,11 @@ test('runtime shuffle covers every upcoming item and disabling restores exact so
   assert.equal(restored.requiresFullReplacement, false);
 });
 
-test('pre-enabled shuffle retains the full source and native queue', () => {
+test('pre-enabled shuffle retains the full source outside the bounded native queue', () => {
   const tracks = Array.from({ length: 1_600 }, (_, index) => track(index));
   const selectedIndex = 731;
   const shuffled = createPlaybackQueuePlan(tracks, selectedIndex, 11, true, () => 0.61);
-  assert.equal(shuffled.items.length, 1_600);
+  assert.equal(shuffled.items.length, 20);
   assert.equal(shuffled.originalItems.length, 1_600);
   assert.equal(shuffled.items[0].source_index, selectedIndex);
 });
@@ -195,14 +196,66 @@ test('rolling queue crosses hundreds of tracks without exhausting and retains 10
   assert.equal(items.length, 121);
 });
 
-test('mobile native queue cannot exhaust when JS refill is suspended', () => {
+test('mobile bounded queue refills indefinitely without growing past twenty tracks', () => {
   const tracks = Array.from({ length: 1_600 }, (_, index) => track(index));
   const plan = createPlaybackQueuePlan(tracks, 731, 17, true, () => 0.37);
+  let items = plan.items;
+  let currentIndex = plan.currentIndex;
+  let nextSerial = plan.nextQueueSerial;
+  let compactionCount = 0;
 
-  let nativeIndex = 0;
   for (let transition = 0; transition < 10_000; transition += 1) {
-    nativeIndex = nativeIndex < plan.items.length - 1 ? nativeIndex + 1 : 0;
-    assert.ok(plan.items[nativeIndex], `native queue exhausted at ${transition}`);
+    currentIndex += 1;
+    assert.ok(items[currentIndex], `native queue exhausted at ${transition}`);
+    const refill = compactAndRefillBoundedRollingQueue(
+      items,
+      plan.originalItems,
+      currentIndex,
+      17,
+      true,
+      nextSerial,
+      () => 0.37,
+    );
+    items = refill.items;
+    currentIndex = refill.currentIndex;
+    nextSerial = refill.nextSerial;
+    if (refill.removedItems.length) {
+      compactionCount += 1;
+      assert.equal(refill.removedItems.length, 10);
+      assert.equal(refill.addedItems.length, 10);
+    }
+    assert.equal(items.length, 20);
+    assert.ok(currentIndex >= 0 && currentIndex < 10);
+  }
+  assert.equal(compactionCount, 1_000);
+});
+
+test('mobile bounded queue preserves source order across every refill boundary', () => {
+  const tracks = Array.from({ length: 1_600 }, (_, index) => track(index));
+  const plan = createPlaybackQueuePlan(tracks, 731, 18, false);
+  let items = plan.items;
+  let currentIndex = plan.currentIndex;
+  let nextSerial = plan.nextQueueSerial;
+
+  for (let transition = 1; transition <= 5_000; transition += 1) {
+    currentIndex += 1;
+    assert.equal(
+      items[currentIndex]?.source_index,
+      (731 + transition) % tracks.length,
+      `source order changed at transition ${transition}`,
+    );
+    const refill = compactAndRefillBoundedRollingQueue(
+      items,
+      plan.originalItems,
+      currentIndex,
+      18,
+      false,
+      nextSerial,
+    );
+    items = refill.items;
+    currentIndex = refill.currentIndex;
+    nextSerial = refill.nextSerial;
+    assert.equal(items.length, 20);
   }
 });
 

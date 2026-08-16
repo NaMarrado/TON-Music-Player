@@ -19,8 +19,8 @@ export async function syncRepeatMode(mode: 'all' | 'one'): Promise<void> {
     if (mode === 'one') {
       await setPlaybackRepeatMode(PlaybackRepeatModeValue.Track);
     } else {
-      // The native queue contains the full source, so repeat-all remains
-      // reliable even while the React Native runtime is suspended.
+      // Keep the bounded native window cycling if JS is briefly suspended;
+      // active-track events refill it from the full source when JS resumes.
       await setPlaybackRepeatMode(PlaybackRepeatModeValue.Queue);
     }
   } catch {

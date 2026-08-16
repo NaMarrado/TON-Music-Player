@@ -51,7 +51,6 @@ export function createPlaybackQueuePlan(
     generation,
     shuffleEnabled,
     random,
-    originalItems.length,
   );
   const trackByItemId = new Map(
     window.items.map((item) => [item.id, tracks[item.source_index ?? startIndex]]),
