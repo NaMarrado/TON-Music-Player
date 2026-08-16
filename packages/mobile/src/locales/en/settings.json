@@ -47,7 +47,7 @@
   "cloudSection": "Cloud Library / Cloudflare R2",
   "cloudDescription": "Sync canonical tracks, playlists, their order, and loudness metadata without duplicate audio files.",
   "cloudAutoSync": "Auto Sync",
-  "cloudAutoSyncEnabledDescription": "Auto Sync is enabled by default and continuously syncs changes between devices. While TON is open, it checks for changes every 10 seconds; in the background, synchronization is scheduled by the system. If an error occurs, use the manual buttons below.",
+  "cloudAutoSyncEnabledDescription": "Auto Sync is enabled and continuously syncs changes between devices. While TON is open, it checks for changes every 10 seconds; in the background, synchronization is scheduled by the system. If an error occurs, use the manual buttons below.",
   "cloudAutoSyncDisabledDescription": "Auto Sync is disabled. Synchronization runs only when you use the manual buttons below.",
   "cloudAudioOverCellular": "Sync audio over mobile data",
   "cloudAudioOverCellularDescription": "Allow cloud audio downloads over mobile data. Metadata and playlists still sync on any network.",

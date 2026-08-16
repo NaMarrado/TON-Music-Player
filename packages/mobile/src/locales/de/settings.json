@@ -47,7 +47,7 @@
   "cloudSection": "Cloud-Mediathek / Cloudflare R2",
   "cloudDescription": "Synchronisiere kanonische Titel, Playlists, ihre Reihenfolge und Lautstärkedaten ohne doppelte Audiodateien.",
   "cloudAutoSync": "Auto Sync",
-  "cloudAutoSyncEnabledDescription": "Auto Sync ist standardmäßig aktiviert und synchronisiert Änderungen laufend zwischen Geräten. Solange TON geöffnet ist, wird alle 10 Sekunden geprüft; im Hintergrund plant das System die Synchronisierung. Verwende bei einem Fehler die manuellen Schaltflächen unten.",
+  "cloudAutoSyncEnabledDescription": "Auto Sync ist aktiviert und synchronisiert Änderungen laufend zwischen Geräten. Solange TON geöffnet ist, wird alle 10 Sekunden geprüft; im Hintergrund plant das System die Synchronisierung. Verwende bei einem Fehler die manuellen Schaltflächen unten.",
   "cloudAutoSyncDisabledDescription": "Auto Sync ist deaktiviert. Die Synchronisierung läuft nur über die manuellen Schaltflächen unten.",
   "cloudAudioOverCellular": "Audio über mobile Daten synchronisieren",
   "cloudAudioOverCellularDescription": "Cloud-Audio über mobile Daten herunterladen. Metadaten und Playlists werden in jedem Netzwerk synchronisiert.",

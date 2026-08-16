@@ -47,7 +47,7 @@
   "cloudSection": "Cloud knihovna / Cloudflare R2",
   "cloudDescription": "Syncuj canonical skladby, playlisty, jejich pořadí a loudness metadata bez duplicitních audio souborů.",
   "cloudAutoSync": "Auto Sync",
-  "cloudAutoSyncEnabledDescription": "Auto Sync je automaticky zapnutý a průběžně synchronizuje změny mezi zařízeními. Při otevřeném TONu kontroluje změny každých 10 sekund; na pozadí synchronizaci spouští systém. Pokud nastane chyba, použij ruční tlačítka níže.",
+  "cloudAutoSyncEnabledDescription": "Auto Sync je zapnutý a průběžně synchronizuje změny mezi zařízeními. Při otevřeném TONu kontroluje změny každých 10 sekund; na pozadí synchronizaci spouští systém. Pokud nastane chyba, použij ruční tlačítka níže.",
   "cloudAutoSyncDisabledDescription": "Auto Sync je vypnutý. Synchronizace proběhne pouze pomocí ručních tlačítek níže.",
   "cloudAudioOverCellular": "Synchronizovat audio přes mobilní data",
   "cloudAudioOverCellularDescription": "Povolí stahování audia z cloudu přes mobilní data. Metadata a playlisty se synchronizují na každé síti.",

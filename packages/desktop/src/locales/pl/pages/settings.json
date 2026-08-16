@@ -72,7 +72,7 @@
   "cloudSection": "Biblioteka w chmurze / Cloudflare R2",
   "cloudDescription": "Połącz swój bucket R2, aby synchronizować kanoniczne utwory, playlisty, ich kolejność i metadane głośności bez duplikowania plików audio.",
   "cloudAutoSync": "Automatyczna synchronizacja",
-  "cloudAutoSyncEnabledDescription": "Automatyczna synchronizacja jest domyślnie włączona i stale synchronizuje zmiany między urządzeniami. Gdy TON jest otwarty, sprawdza zmiany co 10 sekund; w tle synchronizację planuje system. W razie błędu użyj ręcznych przycisków poniżej.",
+  "cloudAutoSyncEnabledDescription": "Automatyczna synchronizacja jest włączona i stale synchronizuje zmiany między urządzeniami. Gdy TON jest otwarty, sprawdza zmiany co 10 sekund; w tle synchronizację planuje system. W razie błędu użyj ręcznych przycisków poniżej.",
   "cloudAutoSyncDisabledDescription": "Automatyczna synchronizacja jest wyłączona. Synchronizacja odbywa się tylko za pomocą ręcznych przycisków poniżej.",
   "cloudAutoSyncState_idle": "Aktualne",
   "cloudAutoSyncState_syncing": "Synchronizowanie",

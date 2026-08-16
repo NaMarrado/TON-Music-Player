@@ -23,9 +23,9 @@ type CycleResult = { pendingChanges: number; pendingDownloads: number };
 export const mobileAutoSyncRuntime = {
   coordinator: null as CloudAutoSyncCoordinator | null,
   baseStatus: {
-    enabled: true,
+    enabled: false,
     configured: false,
-    state: 'unconfigured',
+    state: 'disabled',
     pendingChanges: 0,
     pendingDownloads: 0,
     lastSuccessAt: null,

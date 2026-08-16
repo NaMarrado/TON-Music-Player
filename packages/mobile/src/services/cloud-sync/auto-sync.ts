@@ -126,12 +126,17 @@ export async function setMobileCloudAutoSyncEnabled(enabled: boolean): Promise<v
     // the same SQLite database. Otherwise a tap during apply can fail once and
     // only succeed after the sync releases its transaction.
     coordinator?.setEnabled(false);
+    runtime.currentController?.abort();
+    emitStatus();
     await runtime.activeCyclePromise?.catch(() => {});
   }
   try {
     await persistMobileCloudAutoSyncEnabled(enabled);
   } catch (error) {
-    if (!enabled && previousEnabled) coordinator?.setEnabled(true);
+    if (!enabled && previousEnabled) {
+      coordinator?.setEnabled(true);
+      emitStatus();
+    }
     throw error;
   }
   const config = enabled ? await getMobileCloudConfig() : null;

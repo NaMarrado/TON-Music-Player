@@ -37,9 +37,7 @@ export async function setMobileCloudLastRevision(revision: string): Promise<void
 }
 
 export async function getMobileCloudAutoSyncEnabled(): Promise<boolean> {
-  // Missing is intentionally enabled so existing installations receive the
-  // same default as a fresh install without a destructive settings migration.
-  return (await getSetting(AUTO_SYNC_ENABLED_KEY)) !== 'false';
+  return (await getSetting(AUTO_SYNC_ENABLED_KEY)) === 'true';
 }
 
 export async function setMobileCloudAutoSyncEnabled(enabled: boolean): Promise<void> {

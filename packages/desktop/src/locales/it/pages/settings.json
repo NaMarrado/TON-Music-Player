@@ -72,7 +72,7 @@
   "cloudSection": "Libreria cloud / Cloudflare R2",
   "cloudDescription": "Sincronizza brani canonici, playlist, il loro ordine e metadati loudness senza file audio duplicati.",
   "cloudAutoSync": "Sincronizzazione automatica",
-  "cloudAutoSyncEnabledDescription": "La sincronizzazione automatica è attiva per impostazione predefinita e sincronizza continuamente le modifiche tra i dispositivi. Quando TON è aperto controlla ogni 10 secondi; in background la sincronizzazione viene pianificata dal sistema. In caso di errore usa i pulsanti manuali qui sotto.",
+  "cloudAutoSyncEnabledDescription": "La sincronizzazione automatica è attiva e sincronizza continuamente le modifiche tra i dispositivi. Quando TON è aperto controlla ogni 10 secondi; in background la sincronizzazione viene pianificata dal sistema. In caso di errore usa i pulsanti manuali qui sotto.",
   "cloudAutoSyncDisabledDescription": "La sincronizzazione automatica è disattivata. La sincronizzazione avviene solo tramite i pulsanti manuali qui sotto.",
   "cloudAutoSyncState_idle": "Aggiornato",
   "cloudAutoSyncState_syncing": "Sincronizzazione",

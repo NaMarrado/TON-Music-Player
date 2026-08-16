@@ -47,7 +47,7 @@
   "cloudSection": "Biblioteca na nuvem / Cloudflare R2",
   "cloudDescription": "Sincronize faixas canónicas, playlists, a sua ordem e dados de volume sem ficheiros de áudio duplicados.",
   "cloudAutoSync": "Sincronização automática",
-  "cloudAutoSyncEnabledDescription": "A sincronização automática está ativada por predefinição e sincroniza continuamente as alterações entre dispositivos. Com o TON aberto, verifica alterações a cada 10 segundos; em segundo plano, o sistema agenda a sincronização. Se ocorrer um erro, use os botões manuais abaixo.",
+  "cloudAutoSyncEnabledDescription": "A sincronização automática está ativada e sincroniza continuamente as alterações entre dispositivos. Com o TON aberto, verifica alterações a cada 10 segundos; em segundo plano, o sistema agenda a sincronização. Se ocorrer um erro, use os botões manuais abaixo.",
   "cloudAutoSyncDisabledDescription": "A sincronização automática está desativada. A sincronização ocorre apenas através dos botões manuais abaixo.",
   "cloudAudioOverCellular": "Sincronizar áudio por dados móveis",
   "cloudAudioOverCellularDescription": "Permite transferir áudio da nuvem por dados móveis. Os metadados e playlists sincronizam em qualquer rede.",

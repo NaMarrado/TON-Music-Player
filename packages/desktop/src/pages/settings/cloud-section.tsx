@@ -255,7 +255,7 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
             </span>
             <ToggleSwitch
               disabled={!autoSyncStatus || autoSyncBusy}
-              enabled={autoSyncStatus?.enabled ?? true}
+              enabled={autoSyncStatus?.enabled ?? false}
               onClick={() => void toggleAutoSync()}
             />
           </div>
