@@ -114,10 +114,16 @@ export function CloudCard({
         />
       </View>
       {!loaded ? (
-        <View className="flex-row items-center">
-          <Text className="text-text-muted text-xs">{loadLabel}</Text>
-          <Feather name="chevron-right" size={14} color="#555" style={{ marginLeft: 4 }} />
-        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={loadLabel}
+          onPress={onLoad}
+          className="flex-row items-center justify-between border border-border bg-bg-deep"
+          style={{ borderRadius: 14, minHeight: 46, paddingHorizontal: 12, paddingVertical: 10 }}
+        >
+          <Text className="text-text-primary text-sm font-semibold">{loadLabel}</Text>
+          <Feather name="chevron-right" size={17} color="#888" />
+        </Pressable>
       ) : (
         <View>
           {progressLabel && (
@@ -210,7 +216,7 @@ export function CloudCard({
 
   return (
     <>
-      {loaded ? card : <Pressable onPress={onLoad}>{card}</Pressable>}
+      {card}
       {showHelp && (
         <CloudHelpModal title={helpTitle} steps={helpSteps} onClose={() => setShowHelp(false)} />
       )}

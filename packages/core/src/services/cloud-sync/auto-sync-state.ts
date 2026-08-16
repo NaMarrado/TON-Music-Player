@@ -15,7 +15,7 @@ export class CloudAutoSyncStateStore {
   private readonly onStatus: CloudAutoSyncCoordinatorOptions['onStatus'];
 
   constructor(options: CloudAutoSyncCoordinatorOptions, now: () => number) {
-    const enabled = options.enabled ?? true;
+    const enabled = options.enabled ?? false;
     const configured = options.configured ?? false;
     this.online = options.online ?? true;
     const initialStatus = options.initialStatus;

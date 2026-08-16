@@ -39,9 +39,9 @@ import { migrate010 } from '../../packages/mobile/src/services/migrations/010-cl
 const HASH_A = 'a'.repeat(64);
 const HASH_B = 'b'.repeat(64);
 
-test('automatic cloud sync is enabled in shared defaults', () => {
-  assert.equal(SETTING_DEFAULTS.cloud_auto_sync_enabled, true);
-  assert.equal(PERSISTED_SETTING_DEFAULTS.cloud_auto_sync_enabled, true);
+test('automatic cloud sync requires explicit opt-in in shared defaults', () => {
+  assert.equal(SETTING_DEFAULTS.cloud_auto_sync_enabled, false);
+  assert.equal(PERSISTED_SETTING_DEFAULTS.cloud_auto_sync_enabled, false);
 });
 
 test('normalizes React Native weak R2 ETags for strong CAS writes', () => {

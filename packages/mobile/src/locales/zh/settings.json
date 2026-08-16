@@ -47,7 +47,7 @@
   "cloudSection": "云音乐库 / Cloudflare R2",
   "cloudDescription": "同步规范曲目、播放列表、顺序和响度元数据，而不重复音频文件。",
   "cloudAutoSync": "自动同步",
-  "cloudAutoSyncEnabledDescription": "自动同步默认开启，并持续同步设备之间的更改。TON 打开时每 10 秒检查一次更改；在后台时由系统安排同步。如果出现错误，请使用下方的手动按钮。",
+  "cloudAutoSyncEnabledDescription": "自动同步已开启，并持续同步设备之间的更改。TON 打开时每 10 秒检查一次更改；在后台时由系统安排同步。如果出现错误，请使用下方的手动按钮。",
   "cloudAutoSyncDisabledDescription": "自动同步已关闭。仅在使用下方手动按钮时进行同步。",
   "cloudAudioOverCellular": "使用移动数据同步音频",
   "cloudAudioOverCellularDescription": "允许通过移动数据下载云端音频。元数据和播放列表仍会在任何网络上同步。",

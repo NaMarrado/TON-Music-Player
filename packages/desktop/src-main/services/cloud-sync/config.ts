@@ -72,8 +72,7 @@ export function setDesktopCloudLastRevision(revision: string): void {
 
 export function getDesktopCloudAutoSyncEnabled(): boolean {
   const raw = getSetting(AUTO_SYNC_ENABLED_KEY);
-  // Missing means enabled so upgrades receive the requested opt-out behavior.
-  return raw === '' || raw === 'true' || raw === '1';
+  return raw === 'true' || raw === '1';
 }
 
 export function setDesktopCloudAutoSyncEnabled(enabled: boolean): void {

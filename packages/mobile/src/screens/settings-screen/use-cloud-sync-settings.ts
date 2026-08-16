@@ -143,20 +143,27 @@ export function useCloudSyncSettings() {
     if (cloudLoaded) {
       return;
     }
-    const config = await getMobileCloudSyncConfig();
-    if (config) {
-      setCloudForm({
-        accountId: config.accountId,
-        bucket: config.bucket,
-        prefix: config.prefix || 'ton',
-        accessKeyId: config.accessKeyId,
-        secretAccessKey: '',
-        jurisdiction: config.jurisdiction,
-      });
-      setCloudHasSecret(config.hasSecretAccessKey);
-    }
+    // Open the editor before reading SecureStore. A damaged or temporarily
+    // unavailable keychain entry must not leave the whole R2 card untappable.
     setCloudLoaded(true);
-  }, [cloudLoaded]);
+    setCloudError(null);
+    try {
+      const config = await getMobileCloudSyncConfig();
+      if (config) {
+        setCloudForm({
+          accountId: config.accountId,
+          bucket: config.bucket,
+          prefix: config.prefix || 'ton',
+          accessKeyId: config.accessKeyId,
+          secretAccessKey: '',
+          jurisdiction: config.jurisdiction,
+        });
+        setCloudHasSecret(config.hasSecretAccessKey);
+      }
+    } catch (error) {
+      setCloudError(formatCloudError(error, t));
+    }
+  }, [cloudLoaded, t]);
 
   const buildConfig = useCallback((): CloudStorageConfig => ({
     accountId: cloudForm.accountId,
