@@ -1,3 +1,4 @@
+import { PLAYBACK_QUEUE_WINDOW_SIZE } from '@ton/core';
 import { usePlaybackStore } from '../../stores/playback-store';
 import { useQueueStore } from '../../stores/queue-store';
 import { getTrackById } from '../db-queries';
@@ -6,6 +7,7 @@ import {
   getPlaybackState,
   getPlaybackPosition,
   PlaybackStateValue,
+  removePlaybackTracks,
   removeUpcomingPlaybackTracks,
   seekPlayback,
   replacePlaybackQueue,
@@ -84,31 +86,44 @@ export async function syncRntpQueue(items: QueueTrackRef[]): Promise<void> {
     autoplay: wasPlaying,
     startIndex: currentIndex,
   });
-  if (currentIndex >= 0 && currentIndex < ordered.length) {
+  if (currentIndex >= 0 && currentIndex < items.length) {
     if (prevPosition > 0) {
       await seekPlayback(prevPosition);
     }
   }
 }
 
-export async function syncUpcomingRntpQueue(
-  items: QueueTrackRef[],
+export async function syncUpcomingRntpQueue<T extends QueueTrackRef>(
+  items: T[],
   currentIndex: number,
-): Promise<void> {
+): Promise<T[]> {
   if (currentIndex < 0 || currentIndex >= items.length) {
     await syncRntpQueue(items);
-    return;
+    return items;
   }
 
-  const upcoming = items.slice(currentIndex + 1);
+  const boundedItems = items.slice(
+    currentIndex,
+    currentIndex + PLAYBACK_QUEUE_WINDOW_SIZE,
+  );
+  const upcoming = boundedItems.slice(1);
+  const generation = useQueueStore.getState().generation;
+  let orderedUpcoming: Awaited<ReturnType<typeof buildRntpQueue>> = [];
+  if (upcoming.length) {
+    const sourceCount = useQueueStore.getState().originalOrder.length || items.length;
+    orderedUpcoming = await buildRntpQueue(upcoming, 1, sourceCount);
+    if (orderedUpcoming.length !== upcoming.length) {
+      throw new Error('playback-queue-hydration-incomplete');
+    }
+  }
+  if (useQueueStore.getState().generation !== generation) return [];
+
   await removeUpcomingPlaybackTracks();
-  if (!upcoming.length) return;
-
-  const sourceCount = useQueueStore.getState().originalOrder.length || items.length;
-  const orderedUpcoming = await buildRntpQueue(upcoming, currentIndex + 1, sourceCount);
-  if (orderedUpcoming.length) {
-    await addPlaybackTracks(orderedUpcoming);
+  if (orderedUpcoming.length) await addPlaybackTracks(orderedUpcoming);
+  if (currentIndex > 0) {
+    await removePlaybackTracks(Array.from({ length: currentIndex }, (_, index) => index));
   }
+  return boundedItems;
 }
 
 export function shuffleArray<T>(items: T[]): void {

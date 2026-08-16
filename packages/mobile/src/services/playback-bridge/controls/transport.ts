@@ -9,8 +9,8 @@ import {
   pausePlayback,
   playPlayback,
   PlaybackStateValue,
-  seekPlayback,
   replacePlaybackQueue,
+  seekPlayback,
 } from '../../playback-runtime';
 import { incrementPlayCount, runFirstPlaySetup } from '../player-runtime';
 import { trackToRntp } from '../track-mapping';

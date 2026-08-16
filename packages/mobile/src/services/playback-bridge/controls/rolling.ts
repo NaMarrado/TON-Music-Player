@@ -1,7 +1,7 @@
 import {
-  PLAYBACK_QUEUE_COMPACT_INDEX,
   PLAYBACK_QUEUE_HISTORY_SIZE,
   PLAYBACK_QUEUE_WINDOW_SIZE,
+  compactAndRefillBoundedRollingQueue,
   createFollowingRollingQueueWindow,
   createRollingQueueWindow,
   type QueueItem,
@@ -28,7 +28,7 @@ export function ensureRollingQueueBuffer(): Promise<boolean> {
 }
 
 async function ensureRollingQueueBufferNow(): Promise<boolean> {
-  let queue = useQueueStore.getState();
+  const queue = useQueueStore.getState();
   if (
     !queue.originalOrder.length
     || !queue.items.length
@@ -38,62 +38,54 @@ async function ensureRollingQueueBufferNow(): Promise<boolean> {
     return false;
   }
 
-  if (queue.currentIndex > PLAYBACK_QUEUE_HISTORY_SIZE) {
-    const trimCount = queue.currentIndex - PLAYBACK_QUEUE_HISTORY_SIZE;
-    const generation = queue.generation;
-    const firstRetainedId = queue.items[trimCount]?.id;
-    await removePlaybackTracks(Array.from({ length: trimCount }, (_, index) => index));
-    const latest = useQueueStore.getState();
-    if (
-      latest.generation !== generation
-      || latest.items[trimCount]?.id !== firstRetainedId
-    ) {
-      return false;
-    }
-    useQueueStore.setState({
-      items: latest.items.slice(trimCount),
-      currentIndex: Math.max(0, latest.currentIndex - trimCount),
-    });
-    queue = useQueueStore.getState();
-  }
-
-  const upcomingCount = queue.items.length - queue.currentIndex - 1;
-  const upcomingTarget = Math.min(
-    PLAYBACK_QUEUE_WINDOW_SIZE,
-    queue.originalOrder.length,
-  );
-  if (upcomingCount > PLAYBACK_QUEUE_COMPACT_INDEX || upcomingCount >= upcomingTarget) {
-    return false;
-  }
-
-  const lastItem = queue.items.at(-1);
-  if (!lastItem) return false;
-  const generated = createFollowingRollingQueueWindow(
+  const plan = compactAndRefillBoundedRollingQueue(
+    queue.items,
     queue.originalOrder,
-    lastItem,
+    queue.currentIndex,
     queue.generation,
     usePlaybackStore.getState().shuffle,
     queue.nextQueueSerial,
   );
-  const missingCount = upcomingTarget - upcomingCount;
-  const nextItems = generated.items.slice(0, missingCount);
-  if (!nextItems.length) return false;
+  if (!plan.removedItems.length && !plan.addedItems.length) {
+    return false;
+  }
 
-  const hydratedItems = await hydrateMobileQueueItems(nextItems);
+  const hydratedItems = await hydrateMobileQueueItems(plan.addedItems);
   const tracks = await buildRntpQueue(
     hydratedItems,
-    queue.items.length,
+    plan.items.length - plan.addedItems.length,
     queue.originalOrder.length,
   );
   if (tracks.length !== hydratedItems.length) return false;
-  if (useQueueStore.getState().generation !== queue.generation) return false;
+  const beforeMutation = useQueueStore.getState();
+  if (
+    beforeMutation.generation !== queue.generation
+    || beforeMutation.items[beforeMutation.currentIndex]?.id
+      !== queue.items[queue.currentIndex]?.id
+  ) {
+    return false;
+  }
 
-  await addPlaybackTracks(tracks);
+  // Append first so playback always has upcoming audio while the completed
+  // prefix is compacted out of the native queue.
+  if (tracks.length) await addPlaybackTracks(tracks);
+  if (plan.removedItems.length > 0) {
+    await removePlaybackTracks(
+      Array.from({ length: plan.removedItems.length }, (_, index) => index),
+    );
+  }
+
   const latest = useQueueStore.getState();
   if (latest.generation !== queue.generation) return false;
+  const nextCurrentIndex = Math.max(0, latest.currentIndex - plan.removedItems.length);
+  const retainedItems = plan.items.slice(0, plan.items.length - plan.addedItems.length);
   useQueueStore.setState({
-    items: [...latest.items, ...hydratedItems],
-    nextQueueSerial: generated.nextSerial,
+    items: [...retainedItems, ...hydratedItems],
+    currentIndex: nextCurrentIndex,
+    previousWindows: plan.removedItems.length > 0
+      ? appendRollingQueueHistory(queue.previousWindows, plan.removedItems)
+      : queue.previousWindows,
+    nextQueueSerial: plan.nextSerial,
   });
   return true;
 }
@@ -129,7 +121,7 @@ async function advanceRollingQueueWindowNow(autoplay: boolean): Promise<boolean>
   useQueueStore.setState({
     items: hydratedItems,
     currentIndex: 0,
-    previousWindows: appendHistoryItems(
+    previousWindows: appendRollingQueueHistory(
       queue.previousWindows,
       queue.items.slice(0, queue.currentIndex + 1),
     ),
@@ -203,7 +195,10 @@ async function retreatRollingQueueWindowNow(autoplay: boolean): Promise<boolean>
   return true;
 }
 
-function appendHistoryItems(windows: QueueItem[][], items: QueueItem[]): QueueItem[][] {
+export function appendRollingQueueHistory(
+  windows: QueueItem[][],
+  items: QueueItem[],
+): QueueItem[][] {
   return chunkQueueItems(
     [...windows.flat(), ...items].slice(-PLAYBACK_QUEUE_HISTORY_SIZE),
   );

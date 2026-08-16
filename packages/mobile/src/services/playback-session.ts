@@ -92,7 +92,6 @@ export async function restoreMobilePlaybackSession(): Promise<boolean> {
     generation,
     snapshot.shuffle,
     Math.random,
-    Math.max(1, originalOrder.length),
   );
   const queue = activeWindow.items.map((item) => hydrateQueueItem(
     item,
