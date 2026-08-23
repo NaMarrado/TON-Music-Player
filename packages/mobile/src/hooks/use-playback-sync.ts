@@ -16,6 +16,7 @@ import {
 import { schedulePlaybackQueueSourceReconcile } from '../services/playback-bridge/queue-source-reconcile';
 import { useLibraryStore } from '../stores/library-store';
 import { usePlaylistStore } from '../stores/playlist-store';
+import { usePlaybackStore } from '../stores/playback-store';
 import { useQueueStore } from '../stores/queue-store';
 
 const QUEUE_EVENTS = [
@@ -128,31 +129,43 @@ export function usePlaybackSync({ enabled }: UsePlaybackSyncOptions): void {
 
         if (activeIndex != null) {
           const activeTrackId = activeTrack?.id ?? null;
+          const queue = useQueueStore.getState();
+          const runtimeQueueItemId = activeTrackId == null ? '' : String(activeTrackId);
+          const runtimeQueueIndex = runtimeQueueItemId
+            ? queue.items.findIndex((item) => item.id === runtimeQueueItemId)
+            : activeIndex;
+          const expectedTrackId = runtimeQueueIndex >= 0
+            ? queue.items[runtimeQueueIndex]?.track_id ?? null
+            : null;
+          const uiTrackId = usePlaybackStore.getState().currentTrack?.id ?? null;
           if (
             activeIndex !== lastActiveIndexRef.current
             || activeTrackId !== lastActiveTrackIdRef.current
+            || (expectedTrackId != null && expectedTrackId !== uiTrackId)
           ) {
-            lastActiveIndexRef.current = activeIndex;
-            lastActiveTrackIdRef.current = activeTrackId;
-            await syncActiveTrack({ index: activeIndex, track: activeTrack });
+            const synced = await syncActiveTrack({ index: activeIndex, track: activeTrack });
             if (
               cancelled
               || snapshotRequestRef.current !== request
               || useQueueStore.getState().generation !== expectedGeneration
             ) return;
+            if (!synced) return;
+            lastActiveIndexRef.current = activeIndex;
+            lastActiveTrackIdRef.current = activeTrackId;
           }
         } else {
           const activeTrackId = activeTrack?.id ?? null;
 
           if (activeTrackId != null && activeTrackId !== lastActiveTrackIdRef.current) {
-            lastActiveTrackIdRef.current = activeTrackId;
-            lastActiveIndexRef.current = null;
-            await syncActiveTrack({ track: activeTrack });
+            const synced = await syncActiveTrack({ track: activeTrack });
             if (
               cancelled
               || snapshotRequestRef.current !== request
               || useQueueStore.getState().generation !== expectedGeneration
             ) return;
+            if (!synced) return;
+            lastActiveTrackIdRef.current = activeTrackId;
+            lastActiveIndexRef.current = null;
           } else if (activeTrackId == null) {
             lastActiveIndexRef.current = null;
             lastActiveTrackIdRef.current = null;

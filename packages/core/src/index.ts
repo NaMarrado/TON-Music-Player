@@ -109,14 +109,21 @@ export {
 } from './services/playback-session';
 export {
   PLAYBACK_QUEUE_COMPACT_INDEX,
+  PLAYBACK_QUEUE_BACKTRACK_SIZE,
   PLAYBACK_QUEUE_HISTORY_SIZE,
   PLAYBACK_QUEUE_MAX_SIZE,
   PLAYBACK_QUEUE_WINDOW_SIZE,
   compactAndRefillBoundedRollingQueue,
+  createRollingQueueBacktrackWindow,
   compactAndRefillRollingQueue,
   createFollowingRollingQueueWindow,
   createRollingQueueWindow,
   rebuildRollingQueueUpcoming,
+} from './services/rolling-queue';
+export type {
+  BoundedRollingQueueWindow,
+  RollingQueueBacktrackWindow,
+  RollingQueueWindow,
 } from './services/rolling-queue';
 export {
   TON_REPOSITORY_URL,

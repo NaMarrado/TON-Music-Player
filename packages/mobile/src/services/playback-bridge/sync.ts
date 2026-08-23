@@ -13,7 +13,7 @@ import {
 export async function syncActiveTrack(event: {
   index?: number;
   track?: { id?: string | number } | unknown;
-}): Promise<void> {
+}): Promise<boolean> {
   const { generation, items } = useQueueStore.getState();
   let trackId: number | null = null;
   let expectedQueueItemId: string | null = null;
@@ -31,9 +31,9 @@ export async function syncActiveTrack(event: {
     expectedQueueItemId = item?.id ?? null;
   } else if (runtimeQueueItemId) {
     // The event belongs to a replaced queue generation.
-    return;
+    return false;
   } else if (event.index != null) {
-    if (event.index < 0 || event.index >= items.length) return;
+    if (event.index < 0 || event.index >= items.length) return false;
     const item = items[event.index];
     useQueueStore.setState({ currentIndex: event.index });
     trackId = item?.track_id ?? null;
@@ -48,18 +48,18 @@ export async function syncActiveTrack(event: {
   }
 
   if (trackId == null) {
-    return;
+    return false;
   }
 
   const track = await getTrackById(trackId);
-  if (!track) return;
+  if (!track) return false;
   const currentQueue = useQueueStore.getState();
-  if (currentQueue.generation !== generation) return;
+  if (currentQueue.generation !== generation) return false;
   if (
     expectedQueueItemId != null
     && currentQueue.items[currentQueue.currentIndex]?.id !== expectedQueueItemId
   ) {
-    return;
+    return false;
   }
 
   usePlaybackStore.setState({
@@ -69,6 +69,7 @@ export async function syncActiveTrack(event: {
   });
   await syncVolumeOutputToState().catch(() => {});
   await ensureRollingQueueBuffer().catch(() => false);
+  return true;
 }
 
 export function syncPlaybackState(

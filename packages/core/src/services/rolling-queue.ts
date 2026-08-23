@@ -2,6 +2,7 @@ import type { QueueItem } from '../types/queue';
 
 export const PLAYBACK_QUEUE_WINDOW_SIZE = 20;
 export const PLAYBACK_QUEUE_COMPACT_INDEX = 10;
+export const PLAYBACK_QUEUE_BACKTRACK_SIZE = 3;
 export const PLAYBACK_QUEUE_HISTORY_SIZE = 100;
 export const PLAYBACK_QUEUE_MAX_SIZE =
   PLAYBACK_QUEUE_HISTORY_SIZE + 1 + PLAYBACK_QUEUE_WINDOW_SIZE;
@@ -15,6 +16,13 @@ export interface RollingQueueWindow {
 export interface BoundedRollingQueueWindow extends RollingQueueWindow {
   addedItems: QueueItem[];
   removedItems: QueueItem[];
+}
+
+export interface RollingQueueBacktrackWindow {
+  items: QueueItem[];
+  currentIndex: number;
+  previousItems: QueueItem[];
+  futureItems: QueueItem[];
 }
 
 export function createRollingQueueWindow(
@@ -127,6 +135,7 @@ export function compactAndRefillBoundedRollingQueue(
   shuffle: boolean,
   nextSerial: number,
   random: () => number = Math.random,
+  preservedFutureItems: QueueItem[] = [],
 ): BoundedRollingQueueWindow {
   if (!items.length || !sourceItems.length || currentIndex < 0 || currentIndex >= items.length) {
     return {
@@ -143,8 +152,14 @@ export function compactAndRefillBoundedRollingQueue(
   const retainedItems = items.slice(trimCount);
   const nextCurrentIndex = currentIndex - trimCount;
   const targetSize = Math.min(PLAYBACK_QUEUE_WINDOW_SIZE, sourceItems.length);
-  const addedItems: QueueItem[] = [];
-  let sourceIndex = resolveNextSourceIndex(retainedItems, sourceItems.length, shuffle, random);
+  const missingCount = Math.max(0, targetSize - retainedItems.length);
+  const addedItems = preservedFutureItems.slice(0, missingCount);
+  let sourceIndex = resolveNextSourceIndex(
+    [...retainedItems, ...addedItems],
+    sourceItems.length,
+    shuffle,
+    random,
+  );
 
   while (retainedItems.length + addedItems.length < targetSize) {
     addedItems.push(materializeQueueItem(
@@ -165,6 +180,40 @@ export function compactAndRefillBoundedRollingQueue(
     nextSerial,
     addedItems,
     removedItems,
+  };
+}
+
+export function createRollingQueueBacktrackWindow(
+  items: QueueItem[],
+  previousItems: QueueItem[],
+  futureItems: QueueItem[] = [],
+): RollingQueueBacktrackWindow {
+  if (!items.length || !previousItems.length) {
+    return {
+      items: [...items],
+      currentIndex: items.length ? 0 : -1,
+      previousItems: [...previousItems],
+      futureItems: [...futureItems],
+    };
+  }
+
+  const backtrackItems = previousItems.slice(-PLAYBACK_QUEUE_BACKTRACK_SIZE);
+  const retainedPreviousItems = previousItems.slice(0, -backtrackItems.length);
+  const currentCapacity = Math.max(
+    1,
+    PLAYBACK_QUEUE_WINDOW_SIZE - backtrackItems.length,
+  );
+  const retainedCurrentItems = items.slice(0, currentCapacity);
+  const overflowCurrentItems = items.slice(currentCapacity);
+
+  return {
+    items: [...backtrackItems, ...retainedCurrentItems],
+    currentIndex: backtrackItems.length - 1,
+    previousItems: retainedPreviousItems,
+    futureItems: [...overflowCurrentItems, ...futureItems].slice(
+      0,
+      PLAYBACK_QUEUE_HISTORY_SIZE,
+    ),
   };
 }
 

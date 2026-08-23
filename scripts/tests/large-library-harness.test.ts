@@ -5,6 +5,7 @@ import {
   buildCloudR2CleanupPlan,
   compareCloudTracksForLibrary,
   compactAndRefillBoundedRollingQueue,
+  createRollingQueueBacktrackWindow,
   createCloudLivePlaylistRecordV2,
   createCloudLiveTrackRecordV2,
   getFilteredPlaylistTracks,
@@ -257,6 +258,57 @@ test('mobile bounded queue preserves source order across every refill boundary',
     nextSerial = refill.nextSerial;
     assert.equal(items.length, 20);
   }
+});
+
+test('shuffle previous then next returns to the exact same queued song', () => {
+  const tracks = Array.from({ length: 100 }, (_, index) => track(index));
+  const sourceItems = createPlaybackQueuePlan(tracks, 0, 19, false).originalItems;
+  const timeline = sourceItems.slice(0, 21).map((item, index) => ({
+    ...item,
+    id: `timeline-${index}`,
+    source_index: index,
+  }));
+  const backtracked = createRollingQueueBacktrackWindow(
+    timeline.slice(1),
+    [timeline[0]],
+  );
+
+  assert.equal(backtracked.items.length, 20);
+  assert.equal(backtracked.currentIndex, 0);
+  assert.equal(backtracked.items[0]?.track_id, tracks[0].id);
+  assert.equal(backtracked.items[backtracked.currentIndex + 1]?.track_id, tracks[1].id);
+  assert.deepEqual(backtracked.futureItems.map((item) => item.track_id), [tracks[20].id]);
+});
+
+test('backtracked shuffle window restores planned future before random refill', () => {
+  const tracks = Array.from({ length: 100 }, (_, index) => track(index));
+  const sourceItems = createPlaybackQueuePlan(tracks, 0, 20, false).originalItems;
+  const timeline = sourceItems.slice(0, 21).map((item, index) => ({
+    ...item,
+    id: `planned-${index}`,
+    source_index: index,
+  }));
+  const backtracked = createRollingQueueBacktrackWindow(
+    timeline.slice(1),
+    [timeline[0]],
+  );
+  const compacted = compactAndRefillBoundedRollingQueue(
+    backtracked.items,
+    sourceItems,
+    10,
+    20,
+    true,
+    21,
+    () => 0.75,
+    backtracked.futureItems,
+  );
+
+  assert.equal(compacted.items.length, 20);
+  assert.deepEqual(
+    compacted.items.slice(0, 11).map((item) => item.track_id),
+    tracks.slice(10, 21).map((item) => item.id),
+  );
+  assert.ok(compacted.items.slice(11).every((item) => item.track_id === tracks[75].id));
 });
 
 test('rolling queue also remains continuous for playlists shorter than the refill threshold', () => {
