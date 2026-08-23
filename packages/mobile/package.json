@@ -1,6 +1,6 @@
 {
   "name": "@ton/mobile",
-  "version": "1.0.45",
+  "version": "1.0.46",
   "private": true,
   "main": "./index.js",
   "author": "NaMarrado",
