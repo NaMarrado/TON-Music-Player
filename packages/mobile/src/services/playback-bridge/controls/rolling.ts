@@ -3,6 +3,7 @@ import {
   PLAYBACK_QUEUE_WINDOW_SIZE,
   compactAndRefillBoundedRollingQueue,
   createFollowingRollingQueueWindow,
+  createRollingQueueBacktrackWindow,
   createRollingQueueWindow,
   type QueueItem,
 } from '@ton/core';
@@ -45,6 +46,8 @@ async function ensureRollingQueueBufferNow(): Promise<boolean> {
     queue.generation,
     usePlaybackStore.getState().shuffle,
     queue.nextQueueSerial,
+    Math.random,
+    queue.nextWindows.flat(),
   );
   if (!plan.removedItems.length && !plan.addedItems.length) {
     return false;
@@ -79,12 +82,19 @@ async function ensureRollingQueueBufferNow(): Promise<boolean> {
   if (latest.generation !== queue.generation) return false;
   const nextCurrentIndex = Math.max(0, latest.currentIndex - plan.removedItems.length);
   const retainedItems = plan.items.slice(0, plan.items.length - plan.addedItems.length);
+  const restoredFutureCount = Math.min(
+    queue.nextWindows.flat().length,
+    plan.addedItems.length,
+  );
   useQueueStore.setState({
     items: [...retainedItems, ...hydratedItems],
     currentIndex: nextCurrentIndex,
     previousWindows: plan.removedItems.length > 0
       ? appendRollingQueueHistory(queue.previousWindows, plan.removedItems)
       : queue.previousWindows,
+    nextWindows: restoredFutureCount > 0
+      ? chunkQueueItems(queue.nextWindows.flat().slice(restoredFutureCount))
+      : queue.nextWindows,
     nextQueueSerial: plan.nextSerial,
   });
   return true;
@@ -143,10 +153,15 @@ async function retreatRollingQueueWindowNow(autoplay: boolean): Promise<boolean>
   const currentItem = queue.items[queue.currentIndex] ?? queue.items[0];
   if (!currentItem || !queue.originalOrder.length) return false;
 
-  const previousWindow = queue.previousWindows[queue.previousWindows.length - 1];
-  if (previousWindow?.length) {
-    const hydratedItems = await hydrateMobileQueueItems(previousWindow);
-    const startIndex = hydratedItems.length - 1;
+  const historyItems = queue.previousWindows.flat();
+  if (historyItems.length) {
+    const backtrack = createRollingQueueBacktrackWindow(
+      queue.items,
+      historyItems,
+      queue.nextWindows.flat(),
+    );
+    const hydratedItems = await hydrateMobileQueueItems(backtrack.items);
+    const startIndex = backtrack.currentIndex;
     const tracks = await buildRntpQueue(
       hydratedItems,
       startIndex,
@@ -157,8 +172,8 @@ async function retreatRollingQueueWindowNow(autoplay: boolean): Promise<boolean>
     useQueueStore.setState({
       items: hydratedItems,
       currentIndex: startIndex,
-      previousWindows: queue.previousWindows.slice(0, -1),
-      nextWindows: prependFutureWindow(queue.nextWindows, queue.items),
+      previousWindows: chunkQueueItems(backtrack.previousItems),
+      nextWindows: chunkQueueItems(backtrack.futureItems),
     });
     await replacePlaybackQueue(tracks, { autoplay, startIndex });
     return true;
@@ -201,12 +216,6 @@ export function appendRollingQueueHistory(
 ): QueueItem[][] {
   return chunkQueueItems(
     [...windows.flat(), ...items].slice(-PLAYBACK_QUEUE_HISTORY_SIZE),
-  );
-}
-
-function prependFutureWindow(windows: QueueItem[][], items: QueueItem[]): QueueItem[][] {
-  return chunkQueueItems(
-    [...items, ...windows.flat()].slice(0, PLAYBACK_QUEUE_HISTORY_SIZE),
   );
 }
 
