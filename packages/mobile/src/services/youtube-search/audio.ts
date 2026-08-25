@@ -10,7 +10,7 @@ import {
   getAudioUrlViaIos,
   getAudioUrlViaMweb,
 } from './audio-strategies';
-import { isAacM4aAudioMimeType } from './audio-strategies/format-helpers';
+import { isIosCompatibleAudioMimeType } from './audio-strategies/format-helpers';
 import { validateIosAudioCandidate } from './audio-strategies/validation';
 import {
   getAndroidCandidateViolation,
@@ -34,6 +34,7 @@ export type ResolvedAudioCandidate = ResolvedAudioUrl & {
 };
 
 export interface GetYouTubeAudioUrlOptions {
+  allowIosMuxedFallback?: boolean;
   forceFreshStrategies?: readonly string[];
   signal?: AbortSignal;
   skipStrategies?: readonly string[];
@@ -78,7 +79,7 @@ function ensurePlatformCompatibleAudio(
     return resolved;
   }
 
-  if (!isAacM4aAudioMimeType(resolved.mimeType)) {
+  if (!isIosCompatibleAudioMimeType(resolved.mimeType)) {
     throw new Error(`${strategy}: incompatible AAC/M4A audio format (${resolved.mimeType})`);
   }
 
@@ -167,7 +168,10 @@ export async function getYouTubeAudioUrl(
           signal: options.signal,
         })],
         ['IOS', getAudioUrlViaIos],
-        ['ANDROID', (id) => getAudioUrlViaAndroid(id, { requireIosCompatibleFormat: true })],
+        ['ANDROID', (id) => getAudioUrlViaAndroid(id, {
+          allowMuxedFallback: options.allowIosMuxedFallback ?? false,
+          requireIosCompatibleFormat: true,
+        })],
         ['ANDROID_VR', (id) => getAudioUrlViaAndroidVR(id, {
           forceFreshVisitor: forceFreshStrategies.has('ANDROID_VR'),
           signal: options.signal,

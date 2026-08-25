@@ -12,6 +12,7 @@ import { generateCpn, generateT } from './request-tokens';
 import type { RawReelResponse } from './types';
 
 export interface GetAudioUrlViaAndroidOptions {
+  allowMuxedFallback?: boolean;
   requireIosCompatibleFormat?: boolean;
 }
 
@@ -88,7 +89,7 @@ export async function getAudioUrlViaAndroid(
 
     const audioFormats = getAudioFormats(streamingData, true);
     if (audioFormats.length === 0) {
-      if (options.requireIosCompatibleFormat) {
+      if (options.requireIosCompatibleFormat && options.allowMuxedFallback) {
         const muxedCandidates = getIosCompatibleMuxedFormats(streamingData, true);
         if (muxedCandidates.length > 0) {
           muxedCandidates.sort(sortFormatsByBitrateDescending);
@@ -113,7 +114,7 @@ export async function getAudioUrlViaAndroid(
       continue;
     }
 
-    if (options.requireIosCompatibleFormat) {
+    if (options.requireIosCompatibleFormat && options.allowMuxedFallback) {
       const muxedCandidates = getIosCompatibleMuxedFormats(streamingData, true);
       if (muxedCandidates.length > 0) {
         muxedCandidates.sort(sortFormatsByBitrateDescending);

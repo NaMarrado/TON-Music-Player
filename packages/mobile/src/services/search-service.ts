@@ -3,6 +3,8 @@ import {
   buildSearchFtsQuery,
   canonicalizeSearchQuery,
   createSearchPageRequest,
+  getDirectTrackOEmbedUrl,
+  mapDirectTrackOEmbedResult,
   parseDirectTrackUrl,
   relaxSearchQuery,
   type DirectTrackUrl,
@@ -190,7 +192,7 @@ async function getDirectTrackPage(
   switch (directTrack.source) {
     case 'youtube':
       return {
-        results: [await getYouTubeTrackById(directTrack.id, signal)],
+        results: [await resolveYouTubeTrackUrl(directTrack, signal)],
         hasMore: false,
       };
     case 'spotify':
@@ -200,6 +202,20 @@ async function getDirectTrackPage(
       };
     case 'soundcloud':
       throw new Error('SoundCloud is available on desktop only');
+  }
+}
+
+async function resolveYouTubeTrackUrl(
+  directTrack: DirectTrackUrl,
+  signal?: AbortSignal,
+): Promise<SearchResult> {
+  try {
+    return await getYouTubeTrackById(directTrack.id, signal);
+  } catch (primaryError) {
+    if (signal?.aborted) throw primaryError;
+    const response = await fetch(getDirectTrackOEmbedUrl(directTrack), { signal });
+    if (!response.ok) throw primaryError;
+    return mapDirectTrackOEmbedResult(directTrack, await response.json());
   }
 }
 

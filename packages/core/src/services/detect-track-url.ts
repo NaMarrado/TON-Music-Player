@@ -20,12 +20,21 @@ interface ParsedUrl {
 type UrlConstructor = new (value: string) => ParsedUrl;
 
 function parseHttpUrl(value: string): ParsedUrl | null {
+  const trimmed = value.trim();
   try {
     const Url = (globalThis as unknown as { URL: UrlConstructor }).URL;
-    const url = new Url(value.trim());
+    const url = new Url(trimmed);
     return url.protocol === 'http:' || url.protocol === 'https:' ? url : null;
   } catch {
-    return null;
+    if (!/^(?:www\.|m\.|music\.)?(?:youtube\.com|youtu\.be)\//i.test(trimmed)) {
+      return null;
+    }
+    try {
+      const Url = (globalThis as unknown as { URL: UrlConstructor }).URL;
+      return new Url(`https://${trimmed}`);
+    } catch {
+      return null;
+    }
   }
 }
 
@@ -47,7 +56,7 @@ function parseYouTubeTrackUrl(url: ParsedUrl): DirectTrackUrl | null {
     const segments = url.pathname.split('/').filter(Boolean);
     if (url.pathname === '/watch') {
       id = url.searchParams.get('v');
-    } else if (['shorts', 'live', 'embed'].includes(segments[0] ?? '')) {
+    } else if (['shorts', 'live', 'embed', 'v'].includes(segments[0] ?? '')) {
       id = segments[1] ?? null;
     }
   }
@@ -64,8 +73,13 @@ function parseSpotifyTrackUrl(value: string, url: ParsedUrl | null): DirectTrack
   const uriMatch = /^spotify:track:([A-Za-z0-9]{22})$/i.exec(value.trim());
   const host = url ? normalizeHost(url.hostname) : '';
   const segments = url?.pathname.split('/').filter(Boolean) ?? [];
+  const trackSegment = segments[0]?.toLowerCase().startsWith('intl-') ? 1 : 0;
   const id = uriMatch?.[1]
-    ?? (host === 'open.spotify.com' && segments[0] === 'track' ? segments[1] : null);
+    ?? (
+      host === 'open.spotify.com' && segments[trackSegment] === 'track'
+        ? segments[trackSegment + 1]
+        : null
+    );
 
   if (!id || !SPOTIFY_TRACK_ID.test(id)) return null;
   return {

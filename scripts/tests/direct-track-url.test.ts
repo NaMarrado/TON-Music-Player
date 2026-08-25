@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { parseDirectTrackUrl } from '../../packages/core/src/services/detect-track-url';
+import {
+  getDirectTrackOEmbedUrl,
+  mapDirectTrackOEmbedResult,
+} from '../../packages/core/src/services/direct-track-oembed';
 
 test('detects supported YouTube track URL shapes', () => {
   for (const value of [
@@ -8,6 +12,8 @@ test('detects supported YouTube track URL shapes', () => {
     'https://music.youtube.com/watch?v=dQw4w9WgXcQ&list=RDAMVM',
     'https://youtu.be/dQw4w9WgXcQ?t=12',
     'https://www.youtube.com/shorts/dQw4w9WgXcQ',
+    'youtube.com/watch?v=dQw4w9WgXcQ',
+    'https://www.youtube.com/v/dQw4w9WgXcQ',
   ]) {
     assert.deepEqual(parseDirectTrackUrl(value), {
       id: 'dQw4w9WgXcQ',
@@ -26,6 +32,12 @@ test('detects Spotify and SoundCloud tracks but not playlists', () => {
       url: 'https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC',
     },
   );
+  assert.equal(
+    parseDirectTrackUrl(
+      'https://open.spotify.com/intl-de/track/4uLU6hMCjMI75M1A2tKUQC?si=test',
+    )?.id,
+    '4uLU6hMCjMI75M1A2tKUQC',
+  );
   assert.deepEqual(
     parseDirectTrackUrl('https://soundcloud.com/artist/track-name?utm_source=test'),
     {
@@ -36,6 +48,27 @@ test('detects Spotify and SoundCloud tracks but not playlists', () => {
   );
   assert.equal(parseDirectTrackUrl('https://open.spotify.com/playlist/abc'), null);
   assert.equal(parseDirectTrackUrl('https://soundcloud.com/artist/sets/playlist'), null);
+});
+
+test('maps exact YouTube oEmbed metadata without changing its canonical URL', () => {
+  const track = parseDirectTrackUrl('https://youtu.be/dQw4w9WgXcQ');
+  assert.ok(track);
+  assert.match(getDirectTrackOEmbedUrl(track), /^https:\/\/www\.youtube\.com\/oembed\?/);
+  assert.deepEqual(mapDirectTrackOEmbedResult(track, {
+    title: 'Never Gonna Give You Up',
+    author_name: 'Rick Astley',
+    thumbnail_url: 'https://example.com/cover.jpg',
+  }), {
+    id: 'dQw4w9WgXcQ',
+    source: 'youtube',
+    title: 'Never Gonna Give You Up',
+    artist: 'Rick Astley',
+    album: null,
+    duration_ms: null,
+    thumbnail_url: 'https://example.com/cover.jpg',
+    url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    is_downloaded: false,
+  });
 });
 
 test('does not classify text or arbitrary URLs as track URLs', () => {

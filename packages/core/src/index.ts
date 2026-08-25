@@ -104,6 +104,11 @@ export type { PlaylistSource } from './services/detect-playlist-source';
 export { parseDirectTrackUrl } from './services/detect-track-url';
 export type { DirectTrackSource, DirectTrackUrl } from './services/detect-track-url';
 export {
+  getDirectTrackOEmbedUrl,
+  mapDirectTrackOEmbedResult,
+} from './services/direct-track-oembed';
+export type { DirectTrackOEmbedPayload } from './services/direct-track-oembed';
+export {
   PLAYBACK_SESSION_SETTING_KEY,
   parsePlaybackSessionSnapshot,
 } from './services/playback-session';

@@ -1,6 +1,8 @@
 import {
   canonicalizeSearchQuery,
   createSearchPageRequest,
+  getDirectTrackOEmbedUrl,
+  mapDirectTrackOEmbedResult,
   parseDirectTrackUrl,
   type DirectTrackUrl,
   type SearchQuery,
@@ -190,7 +192,7 @@ async function getDirectTrackPage(
   switch (directTrack.source) {
     case 'youtube':
       return {
-        results: [await getYouTubeTrackById(directTrack.id, signal)],
+        results: [await resolveYouTubeTrackUrl(directTrack, signal)],
         hasMore: false,
       };
     case 'spotify':
@@ -203,5 +205,19 @@ async function getDirectTrackPage(
         results: [await getSoundCloudTrackByUrl(directTrack.url, signal)],
         hasMore: false,
       };
+  }
+}
+
+async function resolveYouTubeTrackUrl(
+  directTrack: DirectTrackUrl,
+  signal: AbortSignal,
+) {
+  try {
+    return await getYouTubeTrackById(directTrack.id, signal);
+  } catch (primaryError) {
+    if (signal.aborted) throw primaryError;
+    const response = await fetch(getDirectTrackOEmbedUrl(directTrack), { signal });
+    if (!response.ok) throw primaryError;
+    return mapDirectTrackOEmbedResult(directTrack, await response.json());
   }
 }

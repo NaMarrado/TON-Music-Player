@@ -12,6 +12,7 @@ import {
   getAndroidProviderRecoveryAction,
 } from '../../packages/mobile/src/services/downloader/android-provider-recovery.ts';
 import { createSingleFlightValue } from '../../packages/mobile/src/services/youtube-search/single-flight-value.ts';
+import { isIosCompatibleAudioMimeType } from '../../packages/mobile/src/services/youtube-search/audio-strategies/format-helpers.ts';
 
 test('uses the direct-format Android VR client profile', () => {
   assert.equal(ANDROID_VR_CLIENT.name, 'ANDROID_VR');
@@ -83,6 +84,14 @@ test('rejects SABR-only audio metadata without a direct URL or cipher', () => {
   });
 
   assert.equal(selected, null);
+});
+
+test('accepts the existing MP4/AAC fallback for iOS normalization', () => {
+  assert.equal(
+    isIosCompatibleAudioMimeType('video/mp4; codecs="avc1.64001F, mp4a.40.2"'),
+    true,
+  );
+  assert.equal(isIosCompatibleAudioMimeType('audio/webm; codecs="opus"'), false);
 });
 
 test('rejects video, Apple, foreign-client, and foreign-token Android candidates', () => {

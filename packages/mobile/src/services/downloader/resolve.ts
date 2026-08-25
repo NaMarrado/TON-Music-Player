@@ -91,6 +91,7 @@ export async function resolveDownloadSource(
     strategy,
     url,
   } = await getYouTubeAudioUrl(videoId, {
+    allowIosMuxedFallback: (input.qualityProfile ?? 'normal') === 'normal',
     forceFreshStrategies: options.forceFreshStrategies,
     signal: options.signal,
     skipStrategies: options.skipStrategies,
