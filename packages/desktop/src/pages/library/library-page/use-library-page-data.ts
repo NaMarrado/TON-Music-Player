@@ -8,6 +8,7 @@ export function useLibraryPageData() {
   const sortBy = useLibraryStore((state) => state.sortBy);
   const sortOrder = useLibraryStore((state) => state.sortOrder);
   const filterQuery = useLibraryStore((state) => state.filterQuery);
+  const starredOnly = useLibraryStore((state) => state.starredOnly);
   const playlists = usePlaylistStore((state) => state.playlists);
   const { canExport, refreshSummary, summary } = useExportSummary(`${tracks.length}:${playlists.length}`);
 
@@ -26,6 +27,7 @@ export function useLibraryPageData() {
     refreshExportSummary: refreshSummary,
     sortBy,
     sortOrder,
+    starredOnly,
     tracks,
   };
 }

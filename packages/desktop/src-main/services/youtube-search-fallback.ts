@@ -1,11 +1,13 @@
 import { execFile } from 'child_process';
-import { parseYouTubeViewCount, type SearchResult } from '@ton/core';
+import { normalizeTrackDurationMs, parseYouTubeViewCount, type SearchResult } from '@ton/core';
 import { getYtDlpPathAsync } from './binary-manager';
 
 interface YtDlpYouTubeEntry {
   channel?: string;
   duration?: number;
   id?: string;
+  is_live?: boolean;
+  live_status?: string;
   thumbnail?: string;
   thumbnails?: Array<{ height?: number; url?: string; width?: number }>;
   title?: string;
@@ -14,8 +16,29 @@ interface YtDlpYouTubeEntry {
   view_count?: number;
 }
 
-interface YtDlpYouTubeSearch {
+interface YtDlpYouTubeSearch extends YtDlpYouTubeEntry {
   entries?: YtDlpYouTubeEntry[];
+}
+
+/** Resolve the pasted video itself, rather than searching for a similar title. */
+export async function getYouTubeTrackWithYtDlp(
+  videoId: string,
+  signal?: AbortSignal,
+): Promise<SearchResult> {
+  const result = await runYtDlp(await getYtDlpPathAsync(), [
+    `https://www.youtube.com/watch?v=${videoId}`,
+    '--dump-single-json',
+    '--no-playlist',
+    '--skip-download',
+    '--ignore-no-formats-error',
+    '--no-warnings',
+    '--extractor-args', 'youtube:player_client=default,-android_sdkless',
+    '--js-runtimes', 'node',
+  ], signal);
+  if (result.id !== videoId || !result.title?.trim()) {
+    throw new Error('YouTube video metadata is unavailable');
+  }
+  return mapYouTubeEntry(result, videoId);
 }
 
 export async function searchYouTubeWithYtDlp(
@@ -25,7 +48,7 @@ export async function searchYouTubeWithYtDlp(
   signal?: AbortSignal,
 ): Promise<{ results: SearchResult[]; hasMore: boolean }> {
   const requestedCount = offset + limit + 1;
-  const result = await runYtDlpSearch(await getYtDlpPathAsync(), [
+  const result = await runYtDlp(await getYtDlpPathAsync(), [
     `ytsearch${requestedCount}:${query}`,
     '--dump-single-json',
     '--flat-playlist',
@@ -40,23 +63,29 @@ export async function searchYouTubeWithYtDlp(
       return [];
     }
 
-    return [{
-      id,
-      source: 'youtube',
-      title: entry.title ?? '',
-      artist: entry.uploader ?? entry.channel ?? '',
-      album: null,
-      duration_ms: entry.duration == null ? null : Math.round(entry.duration * 1000),
-      thumbnail_url: pickThumbnail(entry),
-      url: entry.webpage_url || `https://www.youtube.com/watch?v=${id}`,
-      is_downloaded: false,
-      view_count: parseYouTubeViewCount(entry.view_count),
-    }];
+    return [mapYouTubeEntry(entry, id)];
   });
 
   return {
     results: results.slice(offset, offset + limit),
     hasMore: results.length > offset + limit,
+  };
+}
+
+function mapYouTubeEntry(entry: YtDlpYouTubeEntry, id: string): SearchResult {
+  return {
+    id,
+    source: 'youtube',
+    title: entry.title ?? '',
+    artist: entry.uploader ?? entry.channel ?? '',
+    album: null,
+    duration_ms: entry.is_live || entry.live_status === 'is_upcoming'
+      ? null
+      : normalizeTrackDurationMs(entry.duration, 'seconds'),
+    thumbnail_url: pickThumbnail(entry),
+    url: entry.webpage_url || `https://www.youtube.com/watch?v=${id}`,
+    is_downloaded: false,
+    view_count: parseYouTubeViewCount(entry.view_count),
   };
 }
 
@@ -68,7 +97,7 @@ function pickThumbnail(entry: YtDlpYouTubeEntry): string | null {
   return thumbnail ?? entry.thumbnail ?? null;
 }
 
-function runYtDlpSearch(
+function runYtDlp(
   binaryPath: string,
   args: string[],
   signal?: AbortSignal,
@@ -88,7 +117,7 @@ function runYtDlpSearch(
         try {
           resolve(JSON.parse(stdout) as YtDlpYouTubeSearch);
         } catch {
-          reject(new Error('Failed to parse fallback YouTube search results'));
+          reject(new Error('Failed to parse fallback YouTube metadata'));
         }
       },
     );

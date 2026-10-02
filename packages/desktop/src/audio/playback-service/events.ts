@@ -3,10 +3,11 @@ import { getActiveElement, getPreloadElement } from '../media-element-pool';
 import { usePlaybackStore } from '../../stores/playback-store';
 import { useQueueStore } from '../../stores/queue-store';
 import { getPlaybackRuntimeState } from './state';
+import { finishListeningSession } from './listening';
 
 type AudioEventDependencies = {
   preloadNextTrack: (index: number) => Promise<void>;
-  loadQueueIndex: (index: number) => Promise<boolean>;
+  loadQueueIndex: (index: number, completedPrevious?: boolean) => Promise<boolean>;
   nextTrack: (auto?: boolean) => Promise<void>;
   updateMediaSessionPosition: () => void;
 };
@@ -58,6 +59,7 @@ async function handleEnded(
     return;
   }
 
+  finishListeningSession(true);
   await advanceAfterTerminalEvent(nextTrack);
 }
 
@@ -67,6 +69,7 @@ async function handlePlaybackError(
 ): Promise<void> {
   const target = event.target as HTMLAudioElement;
   if (target !== getActiveElement()) return;
+  finishListeningSession(false);
 
   const mediaError = target.error;
   console.warn('[Playback] Active media failed; advancing queue.', {
@@ -123,7 +126,7 @@ async function handleTimeUpdate(
       if (nextIndex !== null) {
         let loaded = false;
         try {
-          loaded = await deps.loadQueueIndex(nextIndex);
+          loaded = await deps.loadQueueIndex(nextIndex, true);
         } catch (error) {
           console.warn('[Playback] Gapless transition failed; advancing queue.', error);
         } finally {

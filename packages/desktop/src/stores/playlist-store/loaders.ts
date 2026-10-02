@@ -8,6 +8,19 @@ import { invokeIpc } from './ipc';
 import { usePlaylistStore } from './store';
 
 let loadPlaylistsPromise: Promise<void> | null = null;
+let trackRatingRevision = 0;
+
+export function invalidatePlaylistTrackRatings(): void {
+  trackRatingRevision += 1;
+}
+
+export async function applyPlaylistTrackRating(trackId: number, rating: number | null): Promise<void> {
+  usePlaylistStore.setState((state) => ({
+    currentTracks: state.currentTracks.map((track) => track.id === trackId ? { ...track, rating } : track),
+  }));
+  const playlist = usePlaylistStore.getState().currentPlaylist;
+  if (playlist?.is_smart) await loadPlaylist(playlist.id);
+}
 
 export async function loadPlaylists(options: { force?: boolean } = {}): Promise<void> {
   const { force = false } = options;
@@ -44,23 +57,18 @@ export async function loadPlaylist(id: number): Promise<void> {
   }
 
   try {
-    const result = (await invokeIpc('playlist:get', id)) as PlaylistFetchResult | null;
-    if (result) {
+    while (true) {
+      const revision = trackRatingRevision;
+      const result = await invokeIpc('playlist:get', id) as PlaylistFetchResult | null;
+      if (revision !== trackRatingRevision) continue;
       usePlaylistStore.setState({
-        currentPlaylist: result.playlist,
-        currentTracks: result.tracks,
+        currentPlaylist: result?.playlist ?? null,
+        currentTracks: result?.tracks ?? [],
         isLoading: false,
         hasLoaded: true,
       });
       return;
     }
-
-    usePlaylistStore.setState({
-      currentPlaylist: null,
-      currentTracks: [],
-      isLoading: false,
-      hasLoaded: true,
-    });
   } catch {
     usePlaylistStore.setState({ isLoading: false });
   }
@@ -87,11 +95,16 @@ export async function mergeCompletedTrackIntoPlaylists(
 ): Promise<void> {
   const uniqueIds = [...new Set(playlistIds)];
   if (uniqueIds.length === 0) return;
-  const memberships = await invokeIpc(
-    'playlist:get-track-memberships',
-    trackId,
-    uniqueIds,
-  ) as Array<PlaylistTrackEntry & { playlist_id: number; position: number }>;
+  let memberships: Array<PlaylistTrackEntry & { playlist_id: number; position: number }>;
+  while (true) {
+    const revision = trackRatingRevision;
+    memberships = await invokeIpc(
+      'playlist:get-track-memberships',
+      trackId,
+      uniqueIds,
+    ) as typeof memberships;
+    if (revision === trackRatingRevision) break;
+  }
   const currentPlaylistId = usePlaylistStore.getState().currentPlaylist?.id;
   if (currentPlaylistId == null || !uniqueIds.includes(currentPlaylistId)) return;
   const incoming = memberships.filter((row) => row.playlist_id === currentPlaylistId);
@@ -113,11 +126,17 @@ export async function mergeCompletedTrackIntoPlaylists(
 export async function mergeCloudTrackBatchIntoCurrentPlaylist(trackIds: number[]): Promise<void> {
   const currentPlaylistId = usePlaylistStore.getState().currentPlaylist?.id;
   if (currentPlaylistId == null || trackIds.length === 0) return;
-  const incoming = await invokeIpc(
-    'playlist:get-track-memberships-batch',
-    [...new Set(trackIds)],
-    currentPlaylistId,
-  ) as Array<PlaylistTrackEntry & { playlist_id: number; position: number }>;
+  let incoming: Array<PlaylistTrackEntry & { playlist_id: number; position: number }>;
+  while (true) {
+    const revision = trackRatingRevision;
+    incoming = await invokeIpc(
+      'playlist:get-track-memberships-batch',
+      [...new Set(trackIds)],
+      currentPlaylistId,
+    ) as typeof incoming;
+    if (revision === trackRatingRevision) break;
+  }
+  if (usePlaylistStore.getState().currentPlaylist?.id !== currentPlaylistId) return;
   if (incoming.length === 0) return;
   const incomingPositions = new Set(incoming.map((row) => row.position));
   usePlaylistStore.setState((state) => ({

@@ -8,17 +8,32 @@ import {
   getDesktopCloudAutoSyncRuntime,
   startDesktopCloudAutoSync,
 } from '../services/cloud-sync/auto-sync-runtime';
+import { flushListeningBeforeClose } from '../handlers/profile-handler';
 
 export function attachWindowCloseBehavior(
   mainWindow: BrowserWindow,
   shouldForceQuit: () => boolean,
 ): void {
+  let flushing = false;
+  let flushed = false;
   mainWindow.on('close', (event) => {
     const queue = getDownloadQueue();
     const keepAliveForCloud = getDesktopCloudAutoSyncRuntime().shouldKeepApplicationAlive();
     if ((queue.hasActive() || keepAliveForCloud) && !shouldForceQuit()) {
       event.preventDefault();
       mainWindow.hide();
+      return;
+    }
+    if (!shouldForceQuit() && !flushed) {
+      event.preventDefault();
+      if (flushing) return;
+      flushing = true;
+      void flushListeningBeforeClose(mainWindow).catch((error: unknown) => {
+        console.error('Listening flush failed:', error);
+      }).finally(() => {
+        flushed = true;
+        if (!mainWindow.isDestroyed()) mainWindow.close();
+      });
     }
   });
 }

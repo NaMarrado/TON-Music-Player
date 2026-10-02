@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router';
 import { TrackContextMenu } from '../context-menu';
 import { LibraryHeader } from '../library-header';
 import { TrackListView } from '../track-list-view';
-import { EmptyFilterState, EmptyLibraryState } from './empty-states';
+import { EmptyFilterState, EmptyLibraryState, EmptyStarredState } from './empty-states';
 import { useLibraryPageActions } from './use-library-page-actions';
 import { useLibraryPageData } from './use-library-page-data';
 import { useLibraryLayout } from './use-library-layout';
@@ -24,6 +24,7 @@ export function LibraryPage() {
     refreshExportSummary,
     sortBy,
     sortOrder,
+    starredOnly,
     tracks,
   } = useLibraryPageData();
 
@@ -31,7 +32,8 @@ export function LibraryPage() {
     contextMenu,
     deleteConfirm,
     filteredTracks,
-    filteredTracksRef,
+    playbackTracks,
+    playbackTracksRef,
     handleSelectAll,
     handleToggleSelect,
     playlistPickerPos,
@@ -42,7 +44,7 @@ export function LibraryPage() {
     setSelectedIds,
     totalDuration,
     totalSizeLabel,
-  } = useLibraryViewState(tracks, filterQuery, sortBy, sortOrder);
+  } = useLibraryViewState(tracks, filterQuery, sortBy, sortOrder, starredOnly);
 
   const {
     handleAddToPlaylist,
@@ -62,7 +64,7 @@ export function LibraryPage() {
     handleSkipDuplicate,
   } = useLibraryPageActions({
     contextMenu,
-    filteredTracksRef,
+    playbackTracksRef,
     selectedIds,
     setContextMenu,
     setDeleteConfirm,
@@ -81,6 +83,8 @@ export function LibraryPage() {
         totalDuration={totalDuration}
         totalSizeLabel={totalSizeLabel}
         filterQuery={filterQuery}
+        starredOnly={starredOnly}
+        playbackTrackCount={playbackTracks.length}
         selectedIds={selectedIds}
         deleteConfirm={deleteConfirm}
         canExport={canExport}
@@ -107,6 +111,8 @@ export function LibraryPage() {
             onSearchMusic={() => navigate('/search')}
             t={t}
           />
+        ) : starredOnly && playbackTracks.length === 0 ? (
+          <EmptyStarredState t={t} />
         ) : filteredTracks.length === 0 ? (
           <EmptyFilterState t={t} />
         ) : (

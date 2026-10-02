@@ -12,11 +12,22 @@ export async function storeEntityMirror(
   throwIfAborted(signal);
   await runMobileCloudDbLane((connection) => connection.withExclusiveTransactionAsync(async (db) => {
     const protectedEntities = await getMobileCloudProtectedEntities(scopeId, afterGeneration, db);
+    const rows = await db.getAllAsync<{
+      entity_type: 'track' | 'playlist'; entity_key: string; record_json: string;
+    }>(
+      'SELECT entity_type, entity_key, record_json FROM cloud_sync_entities WHERE scope_id = ?',
+      [scopeId],
+    );
+    const previous = new Map(
+      rows.map((row) => [`${row.entity_type}:${row.entity_key}`, row.record_json]),
+    );
     const upsert = async (
       entityType: 'track' | 'playlist',
       entityKey: string,
       record: CloudLibraryManifestV2['tracks'][number] | CloudLibraryManifestV2['playlists'][number],
     ) => {
+      const json = JSON.stringify(record);
+      if (previous.get(`${entityType}:${entityKey}`) === json) return;
       await db.runAsync(
         `INSERT INTO cloud_sync_entities(
           scope_id, entity_type, entity_key, version_counter,
@@ -30,7 +41,7 @@ export async function storeEntityMirror(
           updated_at = excluded.updated_at`,
         [
           scopeId, entityType, entityKey, record.version.counter,
-          record.version.device_id, JSON.stringify(record), record.deleted ? 1 : 0,
+          record.version.device_id, json, record.deleted ? 1 : 0,
         ],
       );
     };

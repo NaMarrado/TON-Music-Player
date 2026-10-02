@@ -4,7 +4,6 @@ import {
   playlistTrackIndexCellStyle,
   playlistTrackTimeCellStyle,
 } from './cell-styles';
-import { getPlaylistTrackGridStyle } from './layout';
 
 type PlaylistTrackGridShellProps = {
   artistSlot?: ReactNode;
@@ -13,8 +12,7 @@ type PlaylistTrackGridShellProps = {
   downloadedSlot?: ReactNode;
   dragSlot?: ReactNode;
   indexSlot: ReactNode;
-  showArtist: boolean;
-  showDownloaded: boolean;
+  starSlot?: ReactNode;
   showDrag: boolean;
   timeSlot: ReactNode;
   titleSlot: ReactNode;
@@ -27,8 +25,7 @@ export function PlaylistTrackGridShell({
   downloadedSlot,
   dragSlot,
   indexSlot,
-  showArtist,
-  showDownloaded,
+  starSlot,
   showDrag,
   timeSlot,
   titleSlot,
@@ -36,15 +33,14 @@ export function PlaylistTrackGridShell({
   return (
     <>
       {showDrag && <div>{dragSlot}</div>}
-      <div style={playlistTrackIndexCellStyle}>{indexSlot}</div>
-      <div>{coverSlot}</div>
+      <div className="track-index-cell" style={playlistTrackIndexCellStyle}>{indexSlot}</div>
+      <div className="track-cover-cell">{coverSlot}</div>
       <div className="min-w-0">{titleSlot}</div>
-      {showArtist && <div className="min-w-0">{artistSlot}</div>}
-      {showDownloaded && <div className="min-w-0">{downloadedSlot}</div>}
-      <div style={playlistTrackTimeCellStyle}>{timeSlot}</div>
+      <div className="track-artist-cell min-w-0">{artistSlot}</div>
+      <div className="track-downloaded-cell min-w-0">{downloadedSlot}</div>
+      <div className="track-time-cell" style={playlistTrackTimeCellStyle}>{timeSlot}</div>
       <div style={playlistTrackCheckboxCellStyle}>{checkboxSlot}</div>
+      <div style={playlistTrackCheckboxCellStyle}>{starSlot}</div>
     </>
   );
 }
-
-export { getPlaylistTrackGridStyle };

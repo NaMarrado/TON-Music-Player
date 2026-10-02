@@ -15,6 +15,7 @@ const {
   upsertFfmpegKitLocalRepo,
   upsertFfmpegKitPackage,
   upsertHermesFlags,
+  upsertExpoEntryArgs,
 } = require('./with-ton-android-gradle');
 const {
   loadAndroidTemplate,
@@ -31,6 +32,7 @@ const {
 module.exports = function withTonAndroidBuild(config) {
   config = withAppBuildGradle(config, (gradleConfig) => {
     gradleConfig.modResults.contents = upsertHermesFlags(gradleConfig.modResults.contents);
+    gradleConfig.modResults.contents = upsertExpoEntryArgs(gradleConfig.modResults.contents);
     gradleConfig.modResults.contents = upsertDependency(
       gradleConfig.modResults.contents,
       COROUTINES_DEPENDENCY_LINE,

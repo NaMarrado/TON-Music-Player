@@ -2,6 +2,7 @@ import {
   DownloadsIcon,
   HomeIcon,
   LibraryIcon,
+  ProfileIcon,
   SearchIcon,
   SettingsIcon,
 } from '../sidebar-icons';
@@ -28,6 +29,7 @@ export function SidebarNav({
       <SidebarNavItem collapsed={collapsed} to="/search" icon={<SearchIcon />} label={t('search')} />
       <SidebarNavItem collapsed={collapsed} to="/library" icon={<LibraryIcon />} label={t('library')} />
       <SidebarNavItem collapsed={collapsed} to="/downloads" icon={<DownloadsIcon />} label={t('downloads')} />
+      <SidebarNavItem collapsed={collapsed} to="/profile" icon={<ProfileIcon />} label={t('profile')} />
       <SidebarNavItem collapsed={collapsed} to="/settings" icon={<SettingsIcon />} label={t('settings')} badge={hasUnreadUpdate} />
     </nav>
   );

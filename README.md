@@ -50,11 +50,13 @@ If TON is useful to you, the easiest way to support the project is to star the r
 - 🔀 **Actual Shuffle:** TON shuffles your entire queue and plays through every song instead of repeatedly picking from the same small group.
 - ⚡ **Lightweight by Design:** A fast, focused player without ads, bloated dashboards, or unnecessary background services.
 - 🧼 **Simple, Intentional UI:** A clean interface that stays out of the way. Every screen and control exists for a reason instead of filling the app with visual clutter.
-- 🔎 **Unified Music Search:** Find music from YouTube, Spotify, and SoundCloud without switching apps.
+- 🔎 **Unified Music Search:** Find music from YouTube, Spotify, and SoundCloud without switching apps. Pasted YouTube song links recover available duration from exact-song metadata; live or unavailable durations remain unknown.
 - 🎮 **Discord Rich Presence on Desktop:** Share the current track, artist, artwork, and live playback progress on your Discord profile, with pause and resume reflected automatically.
 - ⬇️ **Local Downloads:** Save playable audio directly to your device and listen offline.
-- 🎵 **Library and Playlists:** Keep a separate main library, create playlists, reorder tracks, and preserve playlist order.
-- ☁️ **Cloud Library:** Connect your own Cloudflare R2 bucket and move your library and playlists between devices.
+- 🎵 **Library and Playlists:** Keep a separate main library, create playlists, reorder tracks, and preserve playlist order. Desktop tables hide less-important columns as available space shrinks, while retaining song titles, selection, and favorites.
+- **Starred Favorites:** Mark songs with the star beside their selection control and use Library’s **Starred** filter to play only favorites. Stars are stored in the shared R2 manifest. Text search only filters displayed rows; it does not narrow the Library or playlist playback source.
+- 📊 **Profile Statistics (Desktop):** A Profile page above Settings shows listening time, plays, unique tracks/artists, active days, completed and skipped songs, pauses, resumes, seeks and repeats, plus charts over time, by time of day and by weekday. Every song has its own detail with time spent at each app volume, the devices used and each listening session with its events. Filter by last 7 days, last 30 days, a year or all time, and by device. App volume is recorded, not system or speaker volume; anything not recorded stays “Not recorded”. Listening time from before detailed tracking existed has no time placement and is reported separately instead of being drawn on the charts. Desktop and mobile record statistics locally (checkpoints about every 5 seconds while playing) and, when cloud sync is configured, exchange them through your own R2 under `system/profile/v1/` — separate from the music manifest, one record set per device. Nothing is sent to any other service.
+- ☁️ **Cloud Library:** Connect your own Cloudflare R2 bucket and move your library and playlists between devices. Auto Sync publishes local changes as well as receiving remote changes. After initial identity reconciliation, unchanged libraries use conditional manifest reads instead of rechecking every audio file.
 - 🗂️ **Structured Cloud Storage:** Keep the main library and each playlist in clearly named folders with track order, metadata, and playlist covers preserved.
 - 🎚️ **Advanced Audio Tools:** Loudness normalization, equalizer support, frequency tuning, repeat, and shuffle.
 - 📱 **Native Mobile Playback:** Background audio, lock-screen controls, media notifications, and download progress on supported devices.
@@ -88,6 +90,8 @@ corepack pnpm install
 corepack pnpm dev
 ```
 
+Desktop development uses an isolated `.ton-dev/` profile, including its database, media and downloads. It can run alongside the installed player without sharing its singleton lock or files. The profile is ignored by Git.
+
 ### Mobile Development
 
 ```bash
@@ -97,6 +101,10 @@ corepack pnpm --filter @ton/mobile android
 # iOS
 corepack pnpm --filter @ton/mobile ios
 ```
+
+Android Gradle builds use JDK 17. The existing Android prebuild plugin resolves the release entry relative to Expo’s workspace server root, including on Windows; no repository-root `index.js` is required.
+
+For isolated sync testing, `scripts/tests/local-r2-harness.ts` provides a local S3-compatible server with generated audio, request counters, and failure/conflict injection. Point only a separate test profile at `TON_R2_TEST_ENDPOINT` (desktop) or `EXPO_PUBLIC_TON_R2_TEST_ENDPOINT` (mobile). This exercises the real application transport but is not a Cloudflare service test. Never reuse personal bucket credentials or publish a build containing a test endpoint.
 
 ## 📦 Production Builds
 

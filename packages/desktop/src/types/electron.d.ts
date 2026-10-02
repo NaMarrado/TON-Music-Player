@@ -1,5 +1,6 @@
 import type { AllowedInvokeChannel, AllowedOnChannel } from '../shared/ipc-channels';
 import type { DiscordPresencePayload } from '../shared/discord-presence';
+import type { ListeningProfileSummary, ListeningSessionSnapshot, PlaybackObservation, ProfileDevice, ProfileQuery } from '@ton/core';
 
 interface TransactionStatement {
   sql: string;
@@ -99,6 +100,13 @@ interface ElectronAPI {
     url: string,
   ): Promise<{ name: string; tracks: import('@ton/core').SpotifyPlaylistTrack[]; total: number }>;
   invoke(channel: 'library:import-files'): Promise<{ imported: number }>;
+  invoke(channel: 'library:toggle-star', trackId: number): Promise<{ rating: number | null }>;
+  invoke(channel: 'profile:get-summary', query?: ProfileQuery): Promise<ListeningProfileSummary>;
+  invoke(channel: 'profile:get-device'): Promise<ProfileDevice>;
+  invoke(channel: 'profile:get-session', trackId: number): Promise<ListeningSessionSnapshot | null>;
+  invoke(channel: 'profile:record-listening', snapshot: ListeningSessionSnapshot): Promise<void>;
+  invoke(channel: 'profile:record-events', events: PlaybackObservation[]): Promise<void>;
+  invoke(channel: 'profile:flush-complete', requestId: string): Promise<void>;
   invoke(channel: 'library:scan', dirPath?: string): Promise<{ imported: number; skipped: number }>;
   invoke(
     channel: 'library:analyze-loudness',
@@ -189,6 +197,7 @@ interface ElectronAPI {
     options?: { bundlePath?: string },
   ): Promise<{ importedTracks: number; skippedTracks: number; importedPlaylists: number }>;
   on(channel: AllowedOnChannel, callback: (...args: unknown[]) => void): void;
+  on(channel: 'profile:flush-listening', callback: (requestId: string) => void): void;
   on(
     channel:
       | 'download:progress'

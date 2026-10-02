@@ -5,13 +5,13 @@ import type { UsePlaylistActionsArgs } from './types';
 
 export function usePlaylistActions({
   clearSelection,
-  displayTracksRef,
+  playbackTracksRef,
   navigate,
   playlist,
   selectedIds,
   t,
 }: UsePlaylistActionsArgs) {
-  const playbackActions = usePlaybackActions(displayTracksRef);
+  const playbackActions = usePlaybackActions(playbackTracksRef);
   const fileActions = usePlaylistFileActions({ playlist, t });
   const mutationActions = usePlaylistMutationActions({
     clearSelection,

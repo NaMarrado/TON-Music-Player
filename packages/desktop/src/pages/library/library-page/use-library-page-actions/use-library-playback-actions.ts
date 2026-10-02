@@ -1,28 +1,29 @@
 import { useCallback } from 'react';
 import { playTracks } from '../../../../audio/playback-service';
 import type { LibraryPageActionsArgs } from './types';
+import { getLibraryPlaybackIndex } from '../track-sources';
 
-type UseLibraryPlaybackActionsArgs = Pick<LibraryPageActionsArgs, 'filteredTracksRef'>;
+type UseLibraryPlaybackActionsArgs = Pick<LibraryPageActionsArgs, 'playbackTracksRef'>;
 
 export function useLibraryPlaybackActions({
-  filteredTracksRef,
+  playbackTracksRef,
 }: UseLibraryPlaybackActionsArgs) {
   const handlePlayAll = useCallback(() => {
-    const currentTracks = filteredTracksRef.current;
+    const currentTracks = playbackTracksRef.current;
     if (currentTracks.length > 0) {
       playTracks(currentTracks, 0);
     }
-  }, [filteredTracksRef]);
+  }, [playbackTracksRef]);
 
   const handlePlayTrack = useCallback(
     (trackId: number) => {
-      const currentTracks = filteredTracksRef.current;
-      const currentIndex = currentTracks.findIndex((track) => track.id === trackId);
+      const currentTracks = playbackTracksRef.current;
+      const currentIndex = getLibraryPlaybackIndex(currentTracks, trackId);
       if (currentIndex >= 0) {
         playTracks(currentTracks, currentIndex);
       }
     },
-    [filteredTracksRef],
+    [playbackTracksRef],
   );
 
   return {

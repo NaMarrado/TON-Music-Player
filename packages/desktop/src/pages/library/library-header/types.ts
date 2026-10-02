@@ -8,6 +8,8 @@ export interface LibraryHeaderProps {
   totalDuration: number;
   totalSizeLabel: string;
   filterQuery: string;
+  starredOnly: boolean;
+  playbackTrackCount: number;
   selectedIds: Set<number>;
   deleteConfirm: boolean;
   exportablePlaylistCount: number;

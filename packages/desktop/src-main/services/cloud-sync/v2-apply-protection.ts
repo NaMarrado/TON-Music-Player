@@ -8,12 +8,16 @@ import {
 export function readCloudApplyProtection(
   scopeId: string,
   capturedGeneration: number,
+  protectPendingEntities = false,
 ): DesktopCloudApplyProtection {
   const db = getDb();
   const trackHash = db.prepare('SELECT content_hash_sha256 FROM tracks WHERE id = ?');
   const playlistCloudId = db.prepare('SELECT cloud_id FROM playlists WHERE id = ?');
   const entries = readDesktopCloudOutbox(scopeId)
-    .filter((entry) => entry.generation > capturedGeneration);
+    .filter((entry) => (
+      entry.generation > capturedGeneration
+      || (protectPendingEntities && entry.entity_type !== 'library' && entry.operation !== 'reconcile')
+    ));
   return deriveDesktopCloudApplyProtection(entries, {
     trackHash: (localId) => {
       const row = trackHash.get(localId) as { content_hash_sha256: string | null } | undefined;

@@ -1,18 +1,10 @@
-import {
-  buildCloudV2ManifestObjectKey,
-  type CloudSyncProgress,
-  type CloudSyncOrigin,
-} from '@ton/core';
+import type { CloudSyncProgress, CloudSyncOrigin } from '@ton/core';
 import {
   acquireMobileCloudLease,
-  getMobileCloudMissingMirroredEntityCount,
-  getMobileCloudOutbox,
-  getMobileCloudPersistedState,
   releaseMobileCloudLease,
   renewMobileCloudLease,
   updateMobileCloudPersistedState,
 } from './local-state';
-import { MobileR2Client } from './r2-client';
 import { mobileAutoSyncRuntime as runtime } from './auto-sync-state';
 import {
   classifyError,
@@ -83,11 +75,6 @@ async function runCycle(origin: CloudSyncOrigin): Promise<{
     }
   };
   try {
-    const [state, outbox, missingMirroredEntities] = await Promise.all([
-      getMobileCloudPersistedState(scopeId),
-      getMobileCloudOutbox(scopeId),
-      getMobileCloudMissingMirroredEntityCount(scopeId),
-    ]);
     const manual = origin === 'manual' ? runtime.pendingManualRun : null;
     if (manual?.cancelled) throw new Error('cloud_sync_cancelled');
     // Automatic runs merge safe local upserts and remote changes. Track delete
@@ -96,21 +83,6 @@ async function runCycle(origin: CloudSyncOrigin): Promise<{
     const requestedMode = manual?.mode ?? 'sync';
     const onProgress = reportProgress;
     const mode = requestedMode;
-    if (origin !== 'manual'
-        && outbox.length === 0
-        && missingMirroredEntities === 0
-        && state.activation_marker_confirmed === 1
-        && !((state.pending_downloads > 0 || state.pending_assets > 0)
-          && (runtime.unmeteredNetwork || runtime.audioOverCellular))
-        && state.last_cleanup_at != null
-        && Math.floor(Date.now() / 1000) - state.last_cleanup_at < 24 * 60 * 60) {
-      const poll = await new MobileR2Client(config).getJsonConditional(
-        buildCloudV2ManifestObjectKey(config.prefix), state.etag ?? undefined, controller.signal,
-      );
-      if (poll.status === 'not-modified') {
-        return { pendingChanges: 0, pendingDownloads: state.pending_downloads };
-      }
-    }
     const result = await runMobileCloudV2Sync({
       config,
       mode,

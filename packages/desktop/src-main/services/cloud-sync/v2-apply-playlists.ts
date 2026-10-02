@@ -36,7 +36,7 @@ type PlaylistShellInput = Pick<
 export function prepareCloudPlaylistShellsV2(input: PlaylistShellInput): void {
   const { scopeId, manifest, options, capturedGeneration, playlistMirror } = input;
   const db = getDb();
-  const protection = readCloudApplyProtection(scopeId, capturedGeneration);
+  const protection = readCloudApplyProtection(scopeId, capturedGeneration, options.mode === 'fetch');
   const records = manifest.playlists.filter((record) => (
     (options.force || playlistMirror.get(record.cloud_id) !== JSON.stringify(record))
     && !protection.protectAll
@@ -97,7 +97,7 @@ export async function applyCloudPlaylistsV2(input: PlaylistApplyInput): Promise<
     || (!record.deleted && record.entry.track_hashes.some((hash) => changedTrackHashes.has(hash)))
   );
   const changedPlaylistRecords = manifest.playlists.filter(recordChanged);
-  let protection = readCloudApplyProtection(scopeId, capturedGeneration);
+  let protection = readCloudApplyProtection(scopeId, capturedGeneration, options.mode === 'fetch');
   const trackIsProtected = (hash: string) => protection.protectAll || protection.trackHashes.has(hash);
   const playlistIsProtected = (cloudId: string) => (
     protection.protectAll || protection.playlistCloudIds.has(cloudId)
@@ -158,7 +158,7 @@ export async function applyCloudPlaylistsV2(input: PlaylistApplyInput): Promise<
     downloadedCovers.set(entry.cloud_id, coverPath);
   }
 
-  protection = readCloudApplyProtection(scopeId, capturedGeneration);
+  protection = readCloudApplyProtection(scopeId, capturedGeneration, options.mode === 'fetch');
   const finalLivePlaylists = livePlaylists.filter((record) => !playlistIsProtected(record.cloud_id));
   setDesktopCloudOutboxSuppressed(() => {
     db.transaction(() => {

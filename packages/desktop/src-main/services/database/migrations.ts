@@ -1,4 +1,5 @@
 import type Database from 'better-sqlite3';
+import { PROFILE_SCHEMA_SQL } from '@ton/core';
 import { createCloudAutoSyncSchema } from './cloud-auto-sync-schema';
 
 export function migrateSchema(db: Database.Database): void {
@@ -15,6 +16,21 @@ function migrateSchemaInTransaction(db: Database.Database): void {
   const downloadColumns = db.prepare("PRAGMA table_info('download_queue')").all() as Array<{ name: string }>;
   const downloadColumnNames = new Set(downloadColumns.map((column) => column.name));
   const shouldBackfillDownloadedAt = !trackColumnNames.has('downloaded_at');
+  const historyColumns = new Set(
+    (db.prepare("PRAGMA table_info('play_history')").all() as Array<{ name: string }>)
+      .map((column) => column.name),
+  );
+  if (!historyColumns.has('session_id')) {
+    db.exec('ALTER TABLE play_history ADD COLUMN session_id TEXT');
+  }
+  if (!historyColumns.has('listened_ms')) {
+    db.exec('ALTER TABLE play_history ADD COLUMN listened_ms INTEGER NOT NULL DEFAULT 0');
+  }
+  if (!historyColumns.has('ended_at')) {
+    db.exec('ALTER TABLE play_history ADD COLUMN ended_at INTEGER');
+  }
+  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_play_history_session ON play_history(session_id)');
+  db.exec(PROFILE_SCHEMA_SQL);
 
   if (!playlistColumnNames.has('sort_order')) {
     db.exec('ALTER TABLE playlists ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0');

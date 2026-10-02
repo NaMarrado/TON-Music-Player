@@ -1,4 +1,6 @@
 import { app, BrowserWindow } from 'electron';
+import fs from 'node:fs';
+import path from 'node:path';
 import { closeDatabase, initDatabase } from '../services/database';
 import { getDownloadQueue } from '../services/download-queue';
 import { disposeLibraryOffloadWorker } from '../services/library-offload';
@@ -12,6 +14,20 @@ import { updateTrayDownloads } from '../tray';
 import { applyDockIcon, applyPlatformAppIdentity } from './app-icon';
 import { disposeDiscordPresenceService } from '../services/discord-presence';
 import { getDesktopCloudAutoSyncRuntime } from '../services/cloud-sync/auto-sync-runtime';
+import { flushListeningBeforeClose } from '../handlers/profile-handler';
+
+// Local development must never share the installed player's database or media.
+if (!app.isPackaged && process.env.TON_DEV_PROFILE_DIR) {
+  const profile = path.resolve(process.env.TON_DEV_PROFILE_DIR);
+  const music = path.join(profile, 'Music');
+  const downloads = path.join(profile, 'Downloads');
+  fs.mkdirSync(music, { recursive: true });
+  fs.mkdirSync(downloads, { recursive: true });
+  app.setPath('userData', profile);
+  app.setPath('music', music);
+  app.setPath('downloads', downloads);
+  console.info('TON development profile:', profile);
+}
 
 prepareSmokeMode();
 
@@ -79,7 +95,12 @@ export function startMainProcess(): void {
     forceQuit = true;
     if (cleanupBackgroundServices && !quitAfterCloudShutdown) {
       event.preventDefault();
-      void getDesktopCloudAutoSyncRuntime().shutdownForQuit().finally(() => {
+      void Promise.all([
+        getDesktopCloudAutoSyncRuntime().shutdownForQuit(),
+        ...BrowserWindow.getAllWindows().map(flushListeningBeforeClose),
+      ]).catch((error: unknown) => {
+        console.error('Shutdown flush failed:', error);
+      }).finally(() => {
         quitAfterCloudShutdown = true;
         app.quit();
       });

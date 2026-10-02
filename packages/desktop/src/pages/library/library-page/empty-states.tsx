@@ -106,3 +106,15 @@ export function EmptyFilterState({ t }: LibraryPageStateProps) {
     </div>
   );
 }
+
+export function EmptyStarredState({ t }: LibraryPageStateProps) {
+  return (
+    <div className="flex flex-col items-center gap-3" style={{ paddingTop: '80px' }}>
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--text-secondary)' }}>
+        <path d="m12 3 2.78 5.63L21 9.54l-4.5 4.39 1.06 6.2L12 17.2l-5.56 2.93 1.06-6.2L3 9.54l6.22-.91L12 3Z" />
+      </svg>
+      <span style={{ color: 'var(--text-secondary)', fontSize: '0.88rem' }}>{t('emptyStarred')}</span>
+      <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>{t('emptyStarredHint')}</span>
+    </div>
+  );
+}

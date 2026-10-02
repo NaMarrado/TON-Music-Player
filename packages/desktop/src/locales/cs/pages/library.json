@@ -1,4 +1,10 @@
 {
+  "starred": "Oblíbené",
+  "starTrack": "Přidat mezi oblíbené",
+  "unstarTrack": "Odebrat z oblíbených",
+  "starFailed": "Nepodařilo se změnit oblíbenou skladbu",
+  "emptyStarred": "Zatím žádné oblíbené skladby",
+  "emptyStarredHint": "Označ skladbu hvězdičkou a najdeš ji zde.",
   "title": "Knihovna",
   "filterPlaceholder": "Filtrovat knihovnu...",
   "recentlyAdded": "Nedávno přidané",

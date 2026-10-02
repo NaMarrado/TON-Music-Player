@@ -1,4 +1,10 @@
 {
+  "starred": "Ulubione",
+  "starTrack": "Dodaj do ulubionych",
+  "unstarTrack": "Usuń z ulubionych",
+  "starFailed": "Nie udało się zmienić ulubionego utworu",
+  "emptyStarred": "Brak ulubionych utworów",
+  "emptyStarredHint": "Oznacz utwór gwiazdką, aby znaleźć go tutaj.",
   "title": "Biblioteka",
   "filterPlaceholder": "Biblioteka filtrów...",
   "recentlyAdded": "Ostatnio dodane",

@@ -1,4 +1,5 @@
 {
+  "profile": "Profilo",
   "home": "Home", "collapse": "Comprimi barra laterale", "expand": "Espandi barra laterale", "search": "Cerca", "library": "Libreria", "createPlaylist": "Crea playlist", "yourPlaylists": "Le tue playlist",
   "createTitle": "Nuova playlist", "playlistName": "Nome playlist", "create": "Crea", "cancel": "Annulla", "settings": "Impostazioni", "downloads": "Download", "dropFolder": "Trascina una cartella per creare una playlist",
   "folderImported": "Playlist “{{name}}” creata", "folderEmpty": "Nessun file audio trovato nella cartella", "importPlaylist": "Scarica playlist", "folderImportError": "Impossibile importare la cartella",

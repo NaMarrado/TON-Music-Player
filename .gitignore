@@ -13,6 +13,7 @@ out/
 release/
 !scripts/release/
 !scripts/release/**
+.ton-dev/
 
 # React Native / Expo
 .expo/

@@ -73,9 +73,9 @@ export function getDesktopCloudMissingMirroredEntityCount(scopeId: string): numb
        WHERE entity.scope_id = ?
          AND entity.entity_type = 'track'
          AND entity.is_deleted = 0
-         AND NOT EXISTS (
-           SELECT 1 FROM tracks
-           WHERE lower(tracks.content_hash_sha256) = lower(entity.entity_key)
+         AND lower(entity.entity_key) NOT IN (
+           SELECT lower(content_hash_sha256) FROM tracks
+           WHERE content_hash_sha256 IS NOT NULL AND content_hash_sha256 != ''
          )
          AND NOT EXISTS (
            SELECT 1 FROM cloud_sync_local_exclusions AS exclusion

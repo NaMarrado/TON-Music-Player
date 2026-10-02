@@ -4,7 +4,7 @@ import type { ContextMenuState } from '../types';
 
 export type LibraryPageActionsArgs = {
   contextMenu: ContextMenuState | null;
-  filteredTracksRef: MutableRefObject<LibraryTrack[]>;
+  playbackTracksRef: MutableRefObject<LibraryTrack[]>;
   refreshExportSummary: () => Promise<void>;
   selectedIds: Set<number>;
   setContextMenu: Dispatch<SetStateAction<ContextMenuState | null>>;

@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { libraryTrackCheckboxCellStyle, libraryTrackTimeCellStyle } from './cell-styles';
-import { getLibraryTrackGridStyle } from './layout';
 
 type LibraryTrackGridShellProps = {
   artistSlot?: ReactNode;
@@ -8,9 +7,7 @@ type LibraryTrackGridShellProps = {
   coverSlot: ReactNode;
   downloadedSlot?: ReactNode;
   playlistSlot?: ReactNode;
-  showArtist: boolean;
-  showDownloaded: boolean;
-  showPlaylist: boolean;
+  starSlot?: ReactNode;
   timeSlot: ReactNode;
   titleSlot: ReactNode;
 };
@@ -21,23 +18,20 @@ export function LibraryTrackGridShell({
   coverSlot,
   downloadedSlot,
   playlistSlot,
-  showArtist,
-  showDownloaded,
-  showPlaylist,
+  starSlot,
   timeSlot,
   titleSlot,
 }: LibraryTrackGridShellProps) {
   return (
     <>
-      <div>{coverSlot}</div>
+      <div className="track-cover-cell">{coverSlot}</div>
       <div className="min-w-0">{titleSlot}</div>
-      {showArtist && <div className="min-w-0">{artistSlot}</div>}
-      {showPlaylist && <div className="min-w-0">{playlistSlot}</div>}
-      {showDownloaded && <div className="min-w-0">{downloadedSlot}</div>}
-      <div style={libraryTrackTimeCellStyle}>{timeSlot}</div>
+      <div className="track-artist-cell min-w-0">{artistSlot}</div>
+      <div className="track-playlist-cell min-w-0">{playlistSlot}</div>
+      <div className="track-downloaded-cell min-w-0">{downloadedSlot}</div>
+      <div className="track-time-cell" style={libraryTrackTimeCellStyle}>{timeSlot}</div>
       <div style={libraryTrackCheckboxCellStyle}>{checkboxSlot}</div>
+      <div style={libraryTrackCheckboxCellStyle}>{starSlot}</div>
     </>
   );
 }
-
-export { getLibraryTrackGridStyle };

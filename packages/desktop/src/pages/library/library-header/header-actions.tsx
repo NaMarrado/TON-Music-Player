@@ -69,7 +69,7 @@ export function HeaderActions({
       style={{
         display: compact ? 'grid' : 'flex',
         alignItems: 'center',
-        flexWrap: compact ? undefined : 'nowrap',
+        flexWrap: compact ? undefined : 'wrap',
         gridTemplateColumns: compact ? 'repeat(2, minmax(0, 1fr))' : undefined,
         width: compact ? '100%' : undefined,
       }}

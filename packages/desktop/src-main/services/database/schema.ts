@@ -1,4 +1,5 @@
 import type Database from 'better-sqlite3';
+import { PROFILE_SCHEMA_SQL } from '@ton/core';
 
 export function createSchema(db: Database.Database): void {
   db.exec(`
@@ -69,6 +70,9 @@ export function createSchema(db: Database.Database): void {
       played_at   INTEGER NOT NULL DEFAULT (strftime('%s','now')),
       duration_ms INTEGER,
       completed   INTEGER NOT NULL DEFAULT 0,
+      session_id  TEXT,
+      listened_ms INTEGER NOT NULL DEFAULT 0,
+      ended_at    INTEGER,
       FOREIGN KEY (track_id) REFERENCES tracks(id) ON DELETE CASCADE
     );
 
@@ -191,4 +195,5 @@ export function createSchema(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_download_queue_status ON download_queue(status);
     CREATE INDEX IF NOT EXISTS idx_download_queue_prio ON download_queue(priority, created_at);
   `);
+  db.exec(PROFILE_SCHEMA_SQL);
 }

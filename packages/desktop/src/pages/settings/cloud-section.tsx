@@ -222,6 +222,12 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
       const preview = await window.api.invoke(
         'cloud:preview-local-deletions',
       ) as CloudLocalDeletionPreview;
+      if (preview.deletedTracks === 0) {
+        setShowSync(false);
+        setSyncPreview(null);
+        await runTask('cloud:sync-now');
+        return;
+      }
       setSyncPreview(preview);
       setRestoreDeleted(false);
       setShowSync(true);
@@ -230,7 +236,7 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
     } finally {
       setSyncPreparing(false);
     }
-  }, [t]);
+  }, [runTask, t]);
 
   const progressText = formatCloudProgress(progress, result, t);
   const lastSuccessText = formatCloudAutoSyncTime(autoSyncStatus?.lastSuccessAt ?? null);

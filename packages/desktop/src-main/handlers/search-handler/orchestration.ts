@@ -94,7 +94,7 @@ export function resetSearchProviderQueryAliases(): void {
   providerQueryAliases.clear();
 }
 
-function runWithDeadline<T>(
+export function runWithDeadline<T>(
   run: (signal: AbortSignal) => Promise<T>,
   parentSignal: AbortSignal,
   deadlineMs?: number,

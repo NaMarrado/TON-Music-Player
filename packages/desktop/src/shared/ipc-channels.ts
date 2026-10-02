@@ -43,6 +43,13 @@ export const ALLOWED_INVOKE_CHANNELS = [
   'library:list-summary-by-ids',
   'library:home-summary',
   'library:get-track-snapshot',
+  'library:toggle-star',
+  'profile:get-summary',
+  'profile:get-device',
+  'profile:get-session',
+  'profile:record-listening',
+  'profile:record-events',
+  'profile:flush-complete',
   'library:delete-tracks',
   'file:exists',
   'file:read-metadata',
@@ -95,6 +102,7 @@ export const ALLOWED_ON_CHANNELS = [
   'cloud:progress',
   'cloud:state',
   'cloud:applied',
+  'profile:flush-listening',
   'search:source-results',
 ] as const;
 

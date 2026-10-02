@@ -3,32 +3,28 @@ import type { PlaylistTrackEntry } from '@ton/core';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { CoverArt } from './cover-art';
-import { PlaylistTrackGridShell, getPlaylistTrackGridStyle } from './grid-shell';
+import { PlaylistTrackGridShell } from './grid-shell';
+import { getPlaylistTrackGridStyle } from './layout';
 import { RowCheckbox } from './row-checkbox';
 import { HoverMarqueeText } from '../../../components/ui/hover-marquee-text';
+import { StarButton } from '../../library/track-list-view/star-button';
 
 export function SortableTrackRow({
-  dense = false,
   index,
   isPlaying,
   isSelected,
   locale,
   onClick,
-  showArtist,
-  showDownloaded,
   onToggleSelect,
   sortId,
   track,
 }: {
   track: PlaylistTrackEntry;
-  dense?: boolean;
   index: number;
   sortId: string;
   isPlaying: boolean;
   isSelected: boolean;
   locale: string;
-  showArtist: boolean;
-  showDownloaded: boolean;
   onClick: () => void;
   onToggleSelect: (shiftKey: boolean) => void;
 }) {
@@ -44,15 +40,10 @@ export function SortableTrackRow({
   return (
     <div
       ref={setNodeRef}
-      className="track-row group cursor-pointer"
+      className="playlist-track-grid track-row group cursor-pointer"
       style={{
         paddingBlock: 'var(--track-row-block-padding)',
-        ...getPlaylistTrackGridStyle({
-          dense,
-          showArtist,
-          showDownloaded,
-          showDrag: true,
-        }),
+        ...getPlaylistTrackGridStyle(true),
         borderRadius: '6px',
         transform: CSS.Transform.toString(transform),
         transition: isDragging ? 'none' : transition || undefined,
@@ -65,12 +56,11 @@ export function SortableTrackRow({
       onClick={onClick}
     >
       <PlaylistTrackGridShell
-        showArtist={showArtist}
-        showDownloaded={showDownloaded}
         showDrag
         dragSlot={
           <button
             className="flex items-center justify-center cursor-grab"
+            onClick={(event) => event.stopPropagation()}
             style={{
               background: 'none',
               border: 'none',
@@ -114,24 +104,24 @@ export function SortableTrackRow({
               }}
             />
             <HoverMarqueeText
-              className="lg:hidden"
+              className="track-inline-artist"
               text={track.artist || 'Unknown'}
               style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '1px' }}
             />
           </>
         }
-        artistSlot={showArtist ? (
+        artistSlot={
           <HoverMarqueeText
             text={track.artist || 'Unknown'}
             style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}
           />
-        ) : undefined}
-        downloadedSlot={showDownloaded ? (
+        }
+        downloadedSlot={
           <HoverMarqueeText
             text={formatDownloadedDate(track.downloaded_at, locale)}
             style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}
           />
-        ) : undefined}
+        }
         timeSlot={
           <HoverMarqueeText
             text={formatTime(track.duration_ms)}
@@ -139,6 +129,7 @@ export function SortableTrackRow({
           />
         }
         checkboxSlot={<RowCheckbox isSelected={isSelected} onToggle={onToggleSelect} />}
+        starSlot={<StarButton trackId={track.id} rating={track.rating} />}
       />
     </div>
   );

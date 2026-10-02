@@ -22,6 +22,11 @@ export async function serializePendingV2Entities(
 }> {
   const db = getDb();
   const trackIds = new Set<number>();
+  const pendingTrackIds = new Set(
+    outbox.filter((item) => item.entity_type === 'track'
+      && item.operation === 'upsert' && item.local_id != null)
+      .map((item) => item.local_id as number),
+  );
   const playlistIds = new Set<number>();
   if (fullReconcile) {
     (db.prepare('SELECT id FROM tracks ORDER BY id').all() as Array<{ id: number }>)
@@ -52,6 +57,12 @@ export async function serializePendingV2Entities(
   for (const id of trackIds) {
     throwIfV2Cancelled(options);
     const serialized = await serializeTrackForV2(config, id);
+    if (!serialized && pendingTrackIds.has(id)
+        && db.prepare('SELECT id FROM tracks WHERE id = ?').get(id)) {
+      // Never acknowledge an existing local entity that could not be
+      // serialized. Its durable mutation must survive until the file returns.
+      throw new Error('cloud_sync_local_file_missing');
+    }
     if (serialized) tracks.set(id, serialized);
     if (missingTrackHashIds.has(id)) {
       emitProgress(options.onProgress, { phase: 'hashing', current: ++current, total });

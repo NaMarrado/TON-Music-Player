@@ -111,4 +111,25 @@ export type {
   ExportTrackEntry,
   ExportPlaylistEntry,
 } from './export';
-export type { PlayHistoryEntry } from './history';
+export type {
+  PlayHistoryEntry,
+  ListeningSessionSnapshot,
+  ListeningProfileSummary,
+  ProfileHistoryEntry,
+} from './history';
+export type {
+  ProfileDevice,
+  ListeningInterval,
+  ProfileVolumeStat,
+  ProfilePeriod,
+  ProfileQuery,
+  PlaybackObservationKind,
+  PlaybackObservation,
+  ProfileTotals,
+  ProfileTimelinePoint,
+  ProfileTimeBucket,
+  ProfileCategoryStat,
+  ProfileTrackStat,
+  ProfileDetailedHistory,
+  ProfileAnalytics,
+} from './profile';
