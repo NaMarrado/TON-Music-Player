@@ -30,7 +30,7 @@ function HeaderButton({
       onClick={onClick}
       disabled={disabled}
       style={{
-        padding: compact ? '8px 12px' : '7px 16px',
+        padding: compact ? '0 12px' : '0 16px',
         borderRadius: compact ? '14px' : '20px',
         background: primary ? 'var(--white)' : 'var(--bg-surface)',
         border: primary ? 'none' : '1px solid var(--border)',
@@ -41,7 +41,7 @@ function HeaderButton({
         transition: 'all var(--transition)',
         letterSpacing: primary ? undefined : '0.01em',
         justifyContent: 'center',
-        minHeight: compact ? '38px' : undefined,
+        height: compact ? '38px' : '36px',
         width: fillWidth ? '100%' : undefined,
         whiteSpace: 'nowrap',
         opacity: disabled ? 0.45 : 1,
