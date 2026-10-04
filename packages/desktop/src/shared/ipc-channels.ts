@@ -49,6 +49,10 @@ export const ALLOWED_INVOKE_CHANNELS = [
   'profile:get-session',
   'profile:record-listening',
   'profile:record-events',
+  'studio:download-temp',
+  'studio:export',
+  'studio:cancel',
+  'studio:cleanup-temp',
   'profile:flush-complete',
   'library:delete-tracks',
   'file:exists',
@@ -74,6 +78,8 @@ export const ALLOWED_INVOKE_CHANNELS = [
   'export:start',
   'export:summary',
   'import:start',
+  'profile:export',
+  'profile:import',
   'app:get-version',
   'app:get-platform',
   'app:get-ui-scale',
@@ -103,6 +109,7 @@ export const ALLOWED_ON_CHANNELS = [
   'cloud:state',
   'cloud:applied',
   'profile:flush-listening',
+  'studio:progress',
   'search:source-results',
 ] as const;
 

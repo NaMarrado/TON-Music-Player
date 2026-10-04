@@ -41,9 +41,6 @@
 .profile-explorer-tools input:focus { border-color: var(--text-dim); }
 .profile-explorer-body { min-height: 560px; }
 
-/* Tooltip */
-.profile-hint { position: fixed; z-index: 1000; max-width: 300px; padding: 8px 10px; transform: translate(-50%, 8px); border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-elevated); color: var(--text-primary); font-size: 0.75rem; line-height: 1.4; text-align: center; pointer-events: none; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); }
-.profile-hint[data-above='true'] { transform: translate(-50%, calc(-100% - 8px)); }
 
 .profile-muted { color: var(--text-secondary); font-size: 0.8rem; }
 .profile-note { color: var(--text-secondary); font-size: 0.75rem; margin: 8px 0 12px; }

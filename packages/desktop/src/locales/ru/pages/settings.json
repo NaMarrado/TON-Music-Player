@@ -117,7 +117,7 @@
   "cloudCleanupFailureLabel": "Старая ошибка синхронизации",
   "cloudCleanupUnknownTrack": "Неизвестный трек",
   "cloudCleanupPlaylistRemoved": "Удалено {{removed}} · осталось {{remaining}}",
-"cloudCleanupTitle": "Безвозвратно очистить R2",
+  "cloudCleanupTitle": "Безвозвратно очистить R2",
   "cloudCleanupSongs": "{{count}} треков будут навсегда удалены из R2.",
   "cloudCleanupPlaylists": "Будет обновлено плейлистов: {{count}}.",
   "cloudCleanupSpace": "Будет освобождено {{size}}.",
@@ -212,5 +212,17 @@
   "uiScaleTitle": "Масштаб интерфейса",
   "uiScaleDescription": "Уменьшите или увеличьте весь интерфейс TON.",
   "uiScaleReset": "Сбросить до 100 %",
-  "newVersionAvailable": "Доступна новая версия"
+  "newVersionAvailable": "Доступна новая версия",
+  "profileExportSection": "Экспорт / импорт профиля",
+  "profileExportDescription": "Сохраняет весь ваш профиль в одном небольшом файле: настройки, избранные песни, плейлисты и историю прослушивания. Пароли и ключи (облачное хранилище, Spotify) никогда не включаются, как и сами аудиофайлы. Для них используйте экспорт библиотеки.",
+  "profileExportButton": "Экспортировать профиль",
+  "profileImportButton": "Импортировать профиль",
+  "profileExporting": "Сохранение...",
+  "profileImporting": "Восстановление...",
+  "profileExportSuccess": "Профиль сохранён: избранных песен — {{starred}}, плейлистов — {{playlists}}, сеансов прослушивания — {{sessions}}.",
+  "profileExportSkipped": "Песен, которые не удалось включить, потому что у них пока нет цифрового отпечатка: {{count}}.",
+  "profileExportFailed": "Не удалось сохранить профиль.",
+  "profileImportSuccess": "Профиль восстановлен: избранных песен — {{starred}}, добавлено плейлистов — {{playlists}}, сеансов прослушивания — {{sessions}}. Сейчас приложение перезагрузится.",
+  "profileImportMissing": "Записей, относящихся к песням, которых нет в этой библиотеке: {{count}}. Сначала импортируйте библиотеку, а затем снова импортируйте профиль.",
+  "profileImportInvalid": "Это не корректный файл профиля TON."
 }

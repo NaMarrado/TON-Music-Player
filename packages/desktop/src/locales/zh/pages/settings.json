@@ -117,7 +117,7 @@
   "cloudCleanupFailureLabel": "旧同步错误",
   "cloudCleanupUnknownTrack": "未知歌曲",
   "cloudCleanupPlaylistRemoved": "移除 {{removed}} 首 · 保留 {{remaining}} 首",
-"cloudCleanupTitle": "永久清理 R2",
+  "cloudCleanupTitle": "永久清理 R2",
   "cloudCleanupSongs": "将从 R2 永久删除 {{count}} 首歌曲。",
   "cloudCleanupPlaylists": "将更新 {{count}} 个播放列表。",
   "cloudCleanupSpace": "将释放 {{size}}。",
@@ -212,5 +212,17 @@
   "uiScaleTitle": "界面缩放",
   "uiScaleDescription": "缩小或放大整个 TON 界面。",
   "uiScaleReset": "重置为 100%",
-  "newVersionAvailable": "有新版本可用"
+  "newVersionAvailable": "有新版本可用",
+  "profileExportSection": "个人资料导出 / 导入",
+  "profileExportDescription": "将您的完整个人资料保存到一个小文件中:包括设置、已加星标的歌曲、播放列表以及您的收听历史。密码和密钥(云存储、Spotify)绝不会被包含在内,音频文件同样不会包含。如需导出这些内容,请使用媒体库导出功能。",
+  "profileExportButton": "导出个人资料",
+  "profileImportButton": "导入个人资料",
+  "profileExporting": "正在保存...",
+  "profileImporting": "正在恢复...",
+  "profileExportSuccess": "个人资料已保存:{{starred}} 首加星标歌曲、{{playlists}} 个播放列表、{{sessions}} 次收听记录。",
+  "profileExportSkipped": "有 {{count}} 首歌曲无法包含在内,因为它们尚未生成指纹。",
+  "profileExportFailed": "无法保存个人资料。",
+  "profileImportSuccess": "个人资料已恢复:已为 {{starred}} 首歌曲加星标、新增 {{playlists}} 个播放列表、{{sessions}} 次收听记录。应用现在将重新加载。",
+  "profileImportMissing": "有 {{count}} 条记录对应的歌曲不在当前媒体库中。请先导入您的媒体库,然后再次导入个人资料。",
+  "profileImportInvalid": "这不是有效的 TON 个人资料文件。"
 }

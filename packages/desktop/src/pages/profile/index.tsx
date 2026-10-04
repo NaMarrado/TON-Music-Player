@@ -2,10 +2,10 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ProfileAnalytics, ProfilePeriod } from '@ton/core';
 import { Button } from '../../components/ui/button';
+import { HintLayer } from '../../components/ui/hint-layer';
 import { ActivityChart, VolumeDistribution, type ChartPoint } from './profile-charts';
 import { ProfileExplorer } from './profile-explorer';
 import { useProfileFormat, type ProfileFormat } from './profile-format';
-import { ProfileHintLayer } from './profile-hint-layer';
 import { ProfileSelect } from './profile-select';
 import { useProfileData } from './use-profile-data';
 import './profile.css';
@@ -64,7 +64,7 @@ export function ProfilePage() {
   return (
     <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">
       <div className="profile-page">
-        <ProfileHintLayer />
+        <HintLayer scope=".profile-page" />
         <header className="profile-header">
           <h1>{t('title')}</h1>
           <div className="profile-controls">

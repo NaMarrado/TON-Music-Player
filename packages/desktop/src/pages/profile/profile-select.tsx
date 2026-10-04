@@ -69,7 +69,7 @@ export function ProfileSelect({ value, options, onChange, label, hint }: {
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
       </button>
       {open && (
-        <ul id={listId} className="profile-select-list" role="listbox" aria-label={label}>
+        <ul id={listId} className="profile-select-list" data-hint-suppress="" role="listbox" aria-label={label}>
           {options.map((option, index) => (
             <li
               key={option.value}

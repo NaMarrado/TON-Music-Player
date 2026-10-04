@@ -117,7 +117,7 @@
   "cloudCleanupFailureLabel": "Stará chyba synchronizace",
   "cloudCleanupUnknownTrack": "Neznámá skladba",
   "cloudCleanupPlaylistRemoved": "Odebráno {{removed}} · zbývá {{remaining}}",
-"cloudCleanupTitle": "Trvale vyčistit R2",
+  "cloudCleanupTitle": "Trvale vyčistit R2",
   "cloudCleanupSongs": "Z R2 bude trvale smazáno {{count}} skladeb.",
   "cloudCleanupPlaylists": "Aktualizuje se {{count}} playlistů.",
   "cloudCleanupSpace": "Uvolní se {{size}}.",
@@ -212,5 +212,17 @@
   "uiScaleTitle": "Měřítko rozhraní",
   "uiScaleDescription": "Zmenšete nebo zvětšete celé rozhraní TON.",
   "uiScaleReset": "Obnovit 100 %",
-  "newVersionAvailable": "K dispozici je nová verze"
+  "newVersionAvailable": "K dispozici je nová verze",
+  "profileExportSection": "Export / import profilu",
+  "profileExportDescription": "Uloží celý váš profil do jednoho malého souboru: nastavení, oblíbené skladby s hvězdičkou, playlisty a historii poslechu. Hesla a klíče (cloudové úložiště, Spotify) se do něj nikdy neukládají, stejně jako zvukové soubory. K těm použijte Export knihovny.",
+  "profileExportButton": "Exportovat profil",
+  "profileImportButton": "Importovat profil",
+  "profileExporting": "Ukládání...",
+  "profileImporting": "Obnovování...",
+  "profileExportSuccess": "Profil byl uložen: {{starred}} oblíbených skladeb, {{playlists}} playlistů, {{sessions}} poslechových relací.",
+  "profileExportSkipped": "Počet skladeb, které se nepodařilo zahrnout, protože zatím nemají otisk: {{count}}.",
+  "profileExportFailed": "Profil se nepodařilo uložit.",
+  "profileImportSuccess": "Profil byl obnoven: {{starred}} skladeb označeno hvězdičkou, {{playlists}} playlistů přidáno, {{sessions}} poslechových relací. Aplikace se nyní načte znovu.",
+  "profileImportMissing": "Počet položek, které odkazují na skladby, jež v této knihovně nejsou: {{count}}. Nejprve naimportujte svou knihovnu a potom profil naimportujte znovu.",
+  "profileImportInvalid": "Toto není platný soubor profilu TON."
 }

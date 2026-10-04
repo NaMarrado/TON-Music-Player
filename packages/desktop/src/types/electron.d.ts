@@ -1,5 +1,7 @@
 import type { AllowedInvokeChannel, AllowedOnChannel } from '../shared/ipc-channels';
 import type { DiscordPresencePayload } from '../shared/discord-presence';
+import type { ProfileExportResult, ProfileImportSummary } from '../shared/profile-ipc';
+import type { StudioExportRequest, StudioExportResult, StudioProgressEvent, StudioTempDownloadRequest, StudioTempDownloadResult } from '../shared/studio-ipc';
 import type { ListeningProfileSummary, ListeningSessionSnapshot, PlaybackObservation, ProfileDevice, ProfileQuery } from '@ton/core';
 
 interface TransactionStatement {
@@ -106,6 +108,10 @@ interface ElectronAPI {
   invoke(channel: 'profile:get-session', trackId: number): Promise<ListeningSessionSnapshot | null>;
   invoke(channel: 'profile:record-listening', snapshot: ListeningSessionSnapshot): Promise<void>;
   invoke(channel: 'profile:record-events', events: PlaybackObservation[]): Promise<void>;
+  invoke(channel: 'studio:download-temp', id: string, request: StudioTempDownloadRequest): Promise<StudioTempDownloadResult>;
+  invoke(channel: 'studio:export', id: string, request: StudioExportRequest): Promise<StudioExportResult>;
+  invoke(channel: 'studio:cancel', id: string): Promise<void>;
+  invoke(channel: 'studio:cleanup-temp', keep: string[]): Promise<number>;
   invoke(channel: 'profile:flush-complete', requestId: string): Promise<void>;
   invoke(channel: 'library:scan', dirPath?: string): Promise<{ imported: number; skipped: number }>;
   invoke(
@@ -196,8 +202,11 @@ interface ElectronAPI {
     channel: 'import:start',
     options?: { bundlePath?: string },
   ): Promise<{ importedTracks: number; skippedTracks: number; importedPlaylists: number }>;
+  invoke(channel: 'profile:export', options?: { destinationPath?: string }): Promise<ProfileExportResult>;
+  invoke(channel: 'profile:import', options?: { sourcePath?: string }): Promise<ProfileImportSummary>;
   on(channel: AllowedOnChannel, callback: (...args: unknown[]) => void): void;
   on(channel: 'profile:flush-listening', callback: (requestId: string) => void): void;
+  on(channel: 'studio:progress', callback: (event: StudioProgressEvent) => void): void;
   on(
     channel:
       | 'download:progress'

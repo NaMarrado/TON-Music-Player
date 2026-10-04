@@ -117,7 +117,7 @@
   "cloudCleanupFailureLabel": "以前の同期エラー",
   "cloudCleanupUnknownTrack": "不明な曲",
   "cloudCleanupPlaylistRemoved": "{{removed}} 件削除 · {{remaining}} 件残る",
-"cloudCleanupTitle": "R2を完全にクリーンアップ",
+  "cloudCleanupTitle": "R2を完全にクリーンアップ",
   "cloudCleanupSongs": "{{count}}曲がR2から完全に削除されます。",
   "cloudCleanupPlaylists": "{{count}}個のプレイリストが更新されます。",
   "cloudCleanupSpace": "{{size}}が解放されます。",
@@ -212,5 +212,17 @@
   "uiScaleTitle": "UIスケール",
   "uiScaleDescription": "TONのインターフェース全体を拡大・縮小します。",
   "uiScaleReset": "100%に戻す",
-  "newVersionAvailable": "新しいバージョンがあります"
+  "newVersionAvailable": "新しいバージョンがあります",
+  "profileExportSection": "プロフィールのエクスポート/インポート",
+  "profileExportDescription": "設定、お気に入りの曲、プレイリスト、再生履歴など、プロフィール全体を小さな1つのファイルに保存します。パスワードやキー(クラウドストレージ、Spotify)は含まれません。音声ファイルも含まれません。それらにはライブラリのエクスポートをご利用ください。",
+  "profileExportButton": "プロフィールをエクスポート",
+  "profileImportButton": "プロフィールをインポート",
+  "profileExporting": "保存中...",
+  "profileImporting": "復元中...",
+  "profileExportSuccess": "プロフィールを保存しました:お気に入りの曲 {{starred}} 曲、プレイリスト {{playlists}} 件、再生セッション {{sessions}} 件。",
+  "profileExportSkipped": "{{count}} 曲は、まだ識別用のフィンガープリントがないため含めることができませんでした。",
+  "profileExportFailed": "プロフィールを保存できませんでした。",
+  "profileImportSuccess": "プロフィールを復元しました:お気に入り {{starred}} 曲、プレイリスト {{playlists}} 件の追加、再生セッション {{sessions}} 件。アプリを再読み込みします。",
+  "profileImportMissing": "{{count}} 件のデータは、このライブラリにない曲に関連しています。先にライブラリをインポートしてから、もう一度プロフィールをインポートしてください。",
+  "profileImportInvalid": "これは有効な TON のプロフィールファイルではありません。"
 }

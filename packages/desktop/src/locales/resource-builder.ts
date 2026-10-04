@@ -15,6 +15,7 @@ export function buildDesktopNamespaces(
   playlist: LocaleResourceObject,
   artist: LocaleResourceObject,
   profile: LocaleResourceObject,
+  studio: LocaleResourceObject,
 ) {
   return {
     'components/layout/sidebar': sidebar,
@@ -31,5 +32,6 @@ export function buildDesktopNamespaces(
     'pages/playlist': playlist,
     'pages/artist': artist,
     'pages/profile': profile,
+    'pages/studio': studio,
   };
 }

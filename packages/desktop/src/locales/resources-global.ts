@@ -12,6 +12,7 @@ import artistsRu from './ru/pages/artists.json';
 import playlistRu from './ru/pages/playlist.json';
 import artistRu from './ru/pages/artist.json';
 import profileRu from './ru/pages/profile.json';
+import studioRu from './ru/pages/studio.json';
 import sidebarJa from './ja/components/layout/sidebar.json';
 import nowPlayingBarJa from './ja/components/layout/now-playing-bar.json';
 import playbackControlsJa from './ja/components/player/playback-controls.json';
@@ -26,6 +27,7 @@ import artistsJa from './ja/pages/artists.json';
 import playlistJa from './ja/pages/playlist.json';
 import artistJa from './ja/pages/artist.json';
 import profileJa from './ja/pages/profile.json';
+import studioJa from './ja/pages/studio.json';
 import sidebarAr from './ar/components/layout/sidebar.json';
 import nowPlayingBarAr from './ar/components/layout/now-playing-bar.json';
 import playbackControlsAr from './ar/components/player/playback-controls.json';
@@ -40,6 +42,7 @@ import artistsAr from './ar/pages/artists.json';
 import playlistAr from './ar/pages/playlist.json';
 import artistAr from './ar/pages/artist.json';
 import profileAr from './ar/pages/profile.json';
+import studioAr from './ar/pages/studio.json';
 import sidebarHe from './he/components/layout/sidebar.json';
 import nowPlayingBarHe from './he/components/layout/now-playing-bar.json';
 import playbackControlsHe from './he/components/player/playback-controls.json';
@@ -54,6 +57,7 @@ import artistsHe from './he/pages/artists.json';
 import playlistHe from './he/pages/playlist.json';
 import artistHe from './he/pages/artist.json';
 import profileHe from './he/pages/profile.json';
+import studioHe from './he/pages/studio.json';
 import sidebarZh from './zh/components/layout/sidebar.json';
 import nowPlayingBarZh from './zh/components/layout/now-playing-bar.json';
 import playbackControlsZh from './zh/components/player/playback-controls.json';
@@ -68,13 +72,14 @@ import artistsZh from './zh/pages/artists.json';
 import playlistZh from './zh/pages/playlist.json';
 import artistZh from './zh/pages/artist.json';
 import profileZh from './zh/pages/profile.json';
+import studioZh from './zh/pages/studio.json';
 import { buildDesktopNamespaces as namespaces } from './resource-builder';
 import type { DesktopResourceGroup } from './resource-types';
 
 export const globalDesktopResources = {
-  ru: namespaces(sidebarRu, nowPlayingBarRu, playbackControlsRu, volumeSliderRu, queuePanelRu, homeRu, searchRu, libraryRu, downloadsRu, settingsRu, artistsRu, playlistRu, artistRu, profileRu),
-  ja: namespaces(sidebarJa, nowPlayingBarJa, playbackControlsJa, volumeSliderJa, queuePanelJa, homeJa, searchJa, libraryJa, downloadsJa, settingsJa, artistsJa, playlistJa, artistJa, profileJa),
-  ar: namespaces(sidebarAr, nowPlayingBarAr, playbackControlsAr, volumeSliderAr, queuePanelAr, homeAr, searchAr, libraryAr, downloadsAr, settingsAr, artistsAr, playlistAr, artistAr, profileAr),
-  he: namespaces(sidebarHe, nowPlayingBarHe, playbackControlsHe, volumeSliderHe, queuePanelHe, homeHe, searchHe, libraryHe, downloadsHe, settingsHe, artistsHe, playlistHe, artistHe, profileHe),
-  zh: namespaces(sidebarZh, nowPlayingBarZh, playbackControlsZh, volumeSliderZh, queuePanelZh, homeZh, searchZh, libraryZh, downloadsZh, settingsZh, artistsZh, playlistZh, artistZh, profileZh),
+  ru: namespaces(sidebarRu, nowPlayingBarRu, playbackControlsRu, volumeSliderRu, queuePanelRu, homeRu, searchRu, libraryRu, downloadsRu, settingsRu, artistsRu, playlistRu, artistRu, profileRu, studioRu),
+  ja: namespaces(sidebarJa, nowPlayingBarJa, playbackControlsJa, volumeSliderJa, queuePanelJa, homeJa, searchJa, libraryJa, downloadsJa, settingsJa, artistsJa, playlistJa, artistJa, profileJa, studioJa),
+  ar: namespaces(sidebarAr, nowPlayingBarAr, playbackControlsAr, volumeSliderAr, queuePanelAr, homeAr, searchAr, libraryAr, downloadsAr, settingsAr, artistsAr, playlistAr, artistAr, profileAr, studioAr),
+  he: namespaces(sidebarHe, nowPlayingBarHe, playbackControlsHe, volumeSliderHe, queuePanelHe, homeHe, searchHe, libraryHe, downloadsHe, settingsHe, artistsHe, playlistHe, artistHe, profileHe, studioHe),
+  zh: namespaces(sidebarZh, nowPlayingBarZh, playbackControlsZh, volumeSliderZh, queuePanelZh, homeZh, searchZh, libraryZh, downloadsZh, settingsZh, artistsZh, playlistZh, artistZh, profileZh, studioZh),
 } satisfies DesktopResourceGroup;

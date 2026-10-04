@@ -117,7 +117,7 @@
   "cloudCleanupFailureLabel": "Old sync error",
   "cloudCleanupUnknownTrack": "Unknown track",
   "cloudCleanupPlaylistRemoved": "{{removed}} removed · {{remaining}} remain",
-"cloudCleanupTitle": "Permanently clean R2",
+  "cloudCleanupTitle": "Permanently clean R2",
   "cloudCleanupSongs": "{{count}} songs will be permanently deleted from R2.",
   "cloudCleanupPlaylists": "{{count}} playlists will be updated.",
   "cloudCleanupSpace": "{{size}} will be freed.",
@@ -212,5 +212,17 @@
   "uiScaleTitle": "UI scale",
   "uiScaleDescription": "Make the entire TON interface smaller or larger.",
   "uiScaleReset": "Reset to 100%",
-  "newVersionAvailable": "New version available"
+  "newVersionAvailable": "New version available",
+  "profileExportSection": "Profile Export / Import",
+  "profileExportDescription": "Saves your whole profile in one small file: settings, starred songs, playlists and your listening history. Passwords and keys (cloud storage, Spotify) are never included, and neither are the audio files. Use Library Export for those.",
+  "profileExportButton": "Export profile",
+  "profileImportButton": "Import profile",
+  "profileExporting": "Saving...",
+  "profileImporting": "Restoring...",
+  "profileExportSuccess": "Profile saved: {{starred}} starred songs, {{playlists}} playlists, {{sessions}} listening sessions.",
+  "profileExportSkipped": "{{count}} songs could not be included because they have no fingerprint yet.",
+  "profileExportFailed": "The profile could not be saved.",
+  "profileImportSuccess": "Profile restored: {{starred}} songs starred, {{playlists}} playlists added, {{sessions}} listening sessions. The app reloads now.",
+  "profileImportMissing": "{{count}} entries refer to songs that are not in this library. Import your library first, then import the profile again.",
+  "profileImportInvalid": "This is not a valid TON profile file."
 }

@@ -307,3 +307,6 @@ export type {
   LocaleResources,
   LocaleResourceValue,
 } from './i18n/types';
+
+export * from './studio';
+export * from './profile-bundle';

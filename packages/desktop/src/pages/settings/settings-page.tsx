@@ -5,6 +5,7 @@ import { EqualizerSection } from './equalizer-section';
 import { FrequencySection } from './frequency-section';
 import { LoudnessSection } from './loudness-section';
 import { ExportImportSection } from './export-import-section';
+import { ProfileExportSection } from './profile-export-section';
 import { SpotifySection } from './spotify-section';
 import { CloudSection } from './cloud-section';
 import { DownloadSection } from './download-section';
@@ -104,6 +105,9 @@ export function SettingsPage() {
           </SettingsCard>
           <SettingsCard layout={layout}>
             <ExportImportSection layout={layout} t={t} />
+          </SettingsCard>
+          <SettingsCard layout={layout}>
+            <ProfileExportSection layout={layout} t={t} />
           </SettingsCard>
         </SettingsGroup>
 

@@ -117,7 +117,7 @@
   "cloudCleanupFailureLabel": "خطأ مزامنة قديم",
   "cloudCleanupUnknownTrack": "مقطع غير معروف",
   "cloudCleanupPlaylistRemoved": "تمت إزالة {{removed}} · بقي {{remaining}}",
-"cloudCleanupTitle": "تنظيف R2 نهائيًا",
+  "cloudCleanupTitle": "تنظيف R2 نهائيًا",
   "cloudCleanupSongs": "سيتم حذف {{count}} أغنية نهائيًا من R2.",
   "cloudCleanupPlaylists": "سيتم تحديث {{count}} قائمة تشغيل.",
   "cloudCleanupSpace": "سيتم تحرير {{size}}.",
@@ -212,5 +212,17 @@
   "uiScaleTitle": "حجم الواجهة",
   "uiScaleDescription": "صغّر واجهة TON بالكامل أو كبّرها.",
   "uiScaleReset": "إعادة الضبط إلى 100٪",
-  "newVersionAvailable": "يتوفر إصدار جديد"
+  "newVersionAvailable": "يتوفر إصدار جديد",
+  "profileExportSection": "تصدير / استيراد الملف الشخصي",
+  "profileExportDescription": "يحفظ ملفك الشخصي بالكامل في ملف صغير واحد: الإعدادات والأغاني المفضلة وقوائم التشغيل وسجل الاستماع الخاص بك. لا تُضاف كلمات المرور والمفاتيح (التخزين السحابي وSpotify) أبدًا، ولا الملفات الصوتية أيضًا. استخدم تصدير المكتبة لهذه الملفات.",
+  "profileExportButton": "تصدير الملف الشخصي",
+  "profileImportButton": "استيراد الملف الشخصي",
+  "profileExporting": "جارٍ الحفظ...",
+  "profileImporting": "جارٍ الاستعادة...",
+  "profileExportSuccess": "تم حفظ الملف الشخصي: {{starred}} أغنية مفضلة، {{playlists}} قائمة تشغيل، {{sessions}} جلسة استماع.",
+  "profileExportSkipped": "تعذّر تضمين {{count}} أغنية لأنها لا تملك بصمة بعد.",
+  "profileExportFailed": "تعذّر حفظ الملف الشخصي.",
+  "profileImportSuccess": "تمت استعادة الملف الشخصي: {{starred}} أغنية مفضلة، {{playlists}} قائمة تشغيل مضافة، {{sessions}} جلسة استماع. سيُعاد تحميل التطبيق الآن.",
+  "profileImportMissing": "{{count}} عنصر يشير إلى أغانٍ غير موجودة في هذه المكتبة. استورد مكتبتك أولًا، ثم استورد الملف الشخصي مرة أخرى.",
+  "profileImportInvalid": "هذا ليس ملف ملف شخصي صالحًا لتطبيق TON."
 }

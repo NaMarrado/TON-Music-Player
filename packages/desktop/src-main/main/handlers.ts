@@ -9,6 +9,8 @@ import { registerSearchHandlers } from '../handlers/search-handler';
 import { registerSettingsHandlers } from '../handlers/settings-handler';
 import { registerDiscordPresenceHandlers } from '../handlers/discord-presence-handler';
 import { registerProfileHandlers } from '../handlers/profile-handler';
+import { registerProfileBundleHandlers } from '../handlers/profile-bundle-handler';
+import { registerStudioHandlers } from '../handlers/studio-handler';
 
 export function registerMainProcessHandlers(): void {
   registerDbHandlers();
@@ -22,4 +24,6 @@ export function registerMainProcessHandlers(): void {
   registerDownloadHandlers();
   registerPlaylistHandlers();
   registerExportImportHandlers();
+  registerProfileBundleHandlers();
+  registerStudioHandlers();
 }

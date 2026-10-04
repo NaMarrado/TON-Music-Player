@@ -1,0 +1,284 @@
+{
+  "controls": {
+    "play": {
+      "name": "Lecture",
+      "text": "Joue tous les morceaux ensemble à partir de la ligne verte, exactement comme sonnera le mix final."
+    },
+    "pause": {
+      "name": "Pause",
+      "text": "Arrête le son à l'endroit où il est. Appuyez sur Lecture pour reprendre au même endroit."
+    },
+    "stop": {
+      "name": "Arrêt",
+      "text": "Arrête la lecture et revient tout au début."
+    },
+    "undo": {
+      "name": "Annuler",
+      "text": "Annule votre dernière modification. Appuyez encore pour revenir plus loin en arrière."
+    },
+    "redo": {
+      "name": "Rétablir",
+      "text": "Rétablit une modification que vous venez d'annuler."
+    },
+    "zoom-out": {
+      "name": "Zoom arrière",
+      "text": "Rétrécit la frise pour voir plus de morceaux à la fois."
+    },
+    "zoom-slider": {
+      "name": "Zoom",
+      "text": "Faites glisser pour agrandir ou rétrécir la frise. À gauche, vous voyez tout ; à droite, vous voyez les plus petits détails. Vous pouvez aussi tourner la molette de la souris au-dessus des morceaux."
+    },
+    "zoom-in": {
+      "name": "Zoom avant",
+      "text": "Agrandit la frise pour placer précisément les coupes et les bords."
+    },
+    "zoom-fit": {
+      "name": "Ajuster",
+      "text": "Fait tenir exactement tout ce que vous avez ajouté dans la fenêtre."
+    },
+    "snap-off": {
+      "name": "Libre",
+      "text": "Les extraits se déplacent en douceur et restent exactement là où vous les déposez."
+    },
+    "snap-beat": {
+      "name": "Temps",
+      "text": "Les extraits sautent au temps de musique le plus proche, pour que les morceaux restent en rythme."
+    },
+    "snap-bar": {
+      "name": "Mesure",
+      "text": "Les extraits sautent au début de la mesure la plus proche (quatre temps). La façon la plus simple d'aligner les morceaux."
+    },
+    "clear": {
+      "name": "Tout effacer",
+      "text": "Retire tous les morceaux de l’éditeur. Annuler les fait revenir. Votre bibliothèque reste intacte."
+    },
+    "export": {
+      "name": "Exporter",
+      "text": "Enregistre le mix terminé comme un nouveau morceau dans votre Bibliothèque."
+    },
+    "tab-songs": {
+      "name": "Morceaux",
+      "text": "Choisissez des morceaux à ajouter : depuis votre Bibliothèque, une playlist ou une recherche en ligne."
+    },
+    "tab-edit": {
+      "name": "Modifier",
+      "text": "Modifiez le morceau sélectionné : vitesse, effets, volume, fondus et enchaînements."
+    },
+    "songs-library": {
+      "name": "Bibliothèque",
+      "text": "Affiche tous les morceaux que vous avez déjà dans TON."
+    },
+    "songs-playlists": {
+      "name": "Playlists",
+      "text": "Choisissez des morceaux dans l'une de vos playlists."
+    },
+    "songs-search": {
+      "name": "Recherche",
+      "text": "Trouve des morceaux en ligne. Un morceau ajouté d'ici n'est gardé que temporairement et n'arrive jamais dans votre Bibliothèque."
+    },
+    "songs-filter": {
+      "name": "Filtrer",
+      "text": "Tapez une partie d'un titre ou d'un artiste pour réduire la liste."
+    },
+    "lane-mute": {
+      "name": "Muet",
+      "text": "Rend ce morceau silencieux sans le retirer. Cliquez à nouveau pour l'entendre."
+    },
+    "lane-solo": {
+      "name": "Solo",
+      "text": "Joue uniquement ce morceau pour l'entendre seul. Cliquez à nouveau pour tout entendre."
+    },
+    "lane-remove": {
+      "name": "Retirer",
+      "text": "Retire ce morceau de l'éditeur. La copie dans votre Bibliothèque reste intacte."
+    },
+    "clip-split": {
+      "name": "Couper ici",
+      "text": "Coupe l'extrait sélectionné en deux à la ligne verte, pour pouvoir supprimer ou déplacer une partie."
+    },
+    "clip-join": {
+      "name": "Relier",
+      "text": "Recolle le morceau choisi au reste de son titre pour qu’il joue sans trou, l’inverse de couper. Un morceau d’un autre titre est placé juste après le clip qui le précède."
+    },
+    "clip-duplicate": {
+      "name": "Copier",
+      "text": "Fait une deuxième copie de l'extrait sélectionné juste derrière lui."
+    },
+    "clip-delete": {
+      "name": "Supprimer",
+      "text": "Retire l'extrait sélectionné de la frise."
+    },
+    "look-slowed": {
+      "name": "Ralenti",
+      "text": "Joue le morceau plus lentement, ce qui le rend aussi plus grave, comme un disque ralenti."
+    },
+    "look-slowed-reverb": {
+      "name": "Ralenti + reverb",
+      "text": "Ralentit le morceau et ajoute un écho rêveur de grande salle. Le fameux son « slowed and reverb »."
+    },
+    "look-sped-up": {
+      "name": "Accéléré",
+      "text": "Joue le morceau plus vite et plus aigu, comme un disque en avance rapide."
+    },
+    "look-bass-boost": {
+      "name": "Basses fortes",
+      "text": "Rend les sons graves et rebondissants plus forts."
+    },
+    "look-muffled": {
+      "name": "Étouffé",
+      "text": "Donne l'impression que le morceau joue derrière un mur, en coupant les sons aigus."
+    },
+    "look-reset": {
+      "name": "Réinitialiser",
+      "text": "Remet la vitesse, les effets et le ton de ce morceau à la normale. Vos coupes et vos fondus restent."
+    },
+    "speed": {
+      "name": "Vitesse",
+      "text": "La vitesse de lecture de l'extrait. 1,00× est normal, plus bas est plus lent et plus grave, plus haut est plus rapide."
+    },
+    "pitch": {
+      "name": "Hauteur",
+      "text": "Rend l'extrait plus aigu ou plus grave par petits pas appelés demi-tons. 12 pas font une octave entière."
+    },
+    "keep-pitch": {
+      "name": "Garder la hauteur",
+      "text": "Quand vous changez la vitesse, garde la voix et les notes identiques au lieu de les rendre plus graves ou plus aiguës."
+    },
+    "reverse": {
+      "name": "Inverser",
+      "text": "Joue l'extrait sélectionné à l'envers."
+    },
+    "match-tempo": {
+      "name": "Caler le tempo",
+      "text": "Change la vitesse pour que ce morceau ait le même nombre de battements par minute que le premier morceau, ce qui facilite le mixage."
+    },
+    "clip-volume": {
+      "name": "Volume extrait",
+      "text": "Rend uniquement l'extrait sélectionné plus faible ou plus fort."
+    },
+    "lane-volume": {
+      "name": "Volume morceau",
+      "text": "Le volume de tout le morceau sur cette ligne."
+    },
+    "balance": {
+      "name": "Gauche / droite",
+      "text": "Déplace le son entre votre enceinte gauche et votre enceinte droite."
+    },
+    "bass": {
+      "name": "Graves",
+      "text": "Monte ou baisse les sons graves."
+    },
+    "treble": {
+      "name": "Aigus",
+      "text": "Monte ou baisse les sons aigus et brillants."
+    },
+    "reverb": {
+      "name": "Reverb",
+      "text": "Ajoute un écho comme dans une grande salle. Plus il y en a, plus le morceau semble lointain et rêveur."
+    },
+    "reverb-size": {
+      "name": "Taille salle",
+      "text": "La taille de la salle imaginaire. Plus la salle est grande, plus l'écho dure longtemps."
+    },
+    "reverb-dark": {
+      "name": "Écho doux",
+      "text": "Rend l'écho plus sourd et plus chaud au lieu de brillant et tranchant."
+    },
+    "echo": {
+      "name": "Écho",
+      "text": "Répète le son un instant plus tard, comme quand on crie dans les montagnes."
+    },
+    "echo-time": {
+      "name": "Délai d'écho",
+      "text": "Combien de temps attendre avant chaque répétition."
+    },
+    "echo-repeats": {
+      "name": "Répétitions",
+      "text": "Combien de fois l'écho se répète avant de s'éteindre."
+    },
+    "filter-off": {
+      "name": "Sans filtre",
+      "text": "Joue le morceau avec tous ses sons."
+    },
+    "filter-low": {
+      "name": "Couper aigus",
+      "text": "Retire les sons aigus, le morceau semble alors étouffé et lointain."
+    },
+    "filter-high": {
+      "name": "Couper graves",
+      "text": "Retire les sons profonds, le morceau semble alors mince, comme sorti d'un minuscule haut-parleur."
+    },
+    "filter-freq": {
+      "name": "Force du filtre",
+      "text": "L'endroit où commence la coupure. Déplacez-le jusqu'à ce que le morceau sonne comme vous l'aimez."
+    },
+    "fade-in": {
+      "name": "Fondu entrant",
+      "text": "Le temps que met l'extrait pour passer du silence au plein volume au début."
+    },
+    "fade-out": {
+      "name": "Fondu sortant",
+      "text": "Le temps que met l'extrait pour passer du plein volume au silence à la fin."
+    },
+    "transition-bars-2": {
+      "name": "2 mesures",
+      "text": "Un enchaînement court : les deux morceaux se chevauchent pendant 2 mesures de musique."
+    },
+    "transition-bars-4": {
+      "name": "4 mesures",
+      "text": "Un enchaînement moyen : les deux morceaux se chevauchent pendant 4 mesures de musique."
+    },
+    "transition-bars-8": {
+      "name": "8 mesures",
+      "text": "Un enchaînement long et fluide : les deux morceaux se chevauchent pendant 8 mesures. La durée la plus courante chez les DJ."
+    },
+    "transition-bars-16": {
+      "name": "16 mesures",
+      "text": "Un enchaînement très lent : les deux morceaux se chevauchent pendant 16 mesures."
+    },
+    "curve-smooth": {
+      "name": "Doux",
+      "text": "Les morceaux échangent leur place de façon à garder un volume régulier. Le meilleur choix pour la plupart des mix."
+    },
+    "curve-straight": {
+      "name": "Linéaire",
+      "text": "Un morceau disparaît pendant que l'autre apparaît, tous deux à la même vitesse régulière."
+    },
+    "curve-slow": {
+      "name": "Départ lent",
+      "text": "Le nouveau morceau s'installe discrètement et devient fort vers la fin."
+    },
+    "transition-apply": {
+      "name": "Enchaîner",
+      "text": "Fait chevaucher l'extrait sélectionné avec le morceau voisin et les fond ensemble avec la durée et le style choisis ci-dessus."
+    }
+  },
+  "sections": {
+    "clip": "Extrait choisi",
+    "looks": "Styles rapides",
+    "speed": "Vitesse et hauteur",
+    "sound": "Son",
+    "effects": "Effets",
+    "fades": "Fondus",
+    "transition": "Enchaîner deux morceaux"
+  },
+  "editEmpty": "Cliquez sur un morceau de la frise pour le modifier.",
+  "editLaneOnly": "Cliquez sur un extrait de cette ligne pour changer sa vitesse et ses fondus.",
+  "emptyText": "Vos morceaux sont dans le panneau de droite. Cliquez sur un morceau pour le placer ici. Ensuite, vous pourrez le couper, le ralentir, ajouter des effets et exporter le résultat.",
+  "addToStudio": "Ajouter",
+  "downloading": "Téléchargement… {{percent}} %",
+  "downloadFailed": "Un téléchargement a échoué. Essayez un autre résultat.",
+  "exportTitle": "Exporter votre mix",
+  "exportText": "Le mix terminé est enregistré comme un nouveau morceau dans votre Bibliothèque.",
+  "mixName": "Nom du morceau",
+  "defaultName": "Mix Studio",
+  "save": "Enregistrer",
+  "cancel": "Annuler",
+  "clear": "Tout effacer",
+  "clearTitle": "Vider le Studio ?",
+  "clearText": "Tous les morceaux sont retirés de l’éditeur. Vous pouvez les récupérer avec Annuler. Votre bibliothèque et les mix exportés restent intacts.",
+  "exporting": "Enregistrement du mix",
+  "saved": "Mix enregistré dans votre Bibliothèque",
+  "removeConfirmText": "Retirer ce morceau de l’éditeur ? Votre bibliothèque reste intacte.",
+  "removeConfirmAction": "Retirer"
+}

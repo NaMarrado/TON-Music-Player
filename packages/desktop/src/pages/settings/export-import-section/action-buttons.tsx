@@ -6,6 +6,10 @@ interface ActionButtonsProps {
   onImport: () => void;
   phase: string;
   t: (key: string, opts?: Record<string, unknown>) => string;
+  /** Own button texts. Without them the buttons are the library export and import buttons. */
+  labels?: { export: string; exporting: string; import: string; importing: string };
+  /** Names the two buttons (`<control>-export`, `<control>-import`) for tests. */
+  control?: string;
 }
 
 export function ActionButtons({
@@ -16,6 +20,8 @@ export function ActionButtons({
   onImport,
   phase,
   t,
+  labels,
+  control,
 }: ActionButtonsProps) {
   return (
     <div
@@ -31,6 +37,7 @@ export function ActionButtons({
       <button
         className="play-all-btn cursor-pointer"
         onClick={onExport}
+        data-control={control ? `${control}-export` : undefined}
         disabled={busy || !canExport}
         style={{
           padding: compact ? '10px 14px' : '7px 18px',
@@ -47,11 +54,14 @@ export function ActionButtons({
           minHeight: compact ? '42px' : undefined,
         }}
       >
-        {busy && phase && !phase.startsWith('import') ? t('exporting') : t('exportButton')}
+        {labels
+          ? (busy && phase === 'export' ? labels.exporting : labels.export)
+          : busy && phase && !phase.startsWith('import') ? t('exporting') : t('exportButton')}
       </button>
       <button
         className="preset-btn cursor-pointer"
         onClick={onImport}
+        data-control={control ? `${control}-import` : undefined}
         disabled={busy}
         style={{
           padding: compact ? '10px 14px' : '7px 18px',
@@ -68,9 +78,11 @@ export function ActionButtons({
           minHeight: compact ? '42px' : undefined,
         }}
       >
-        {busy && phase && phase !== 'manifest' && phase !== 'artwork'
-          ? t('importing')
-          : t('importButton')}
+        {labels
+          ? (busy && phase === 'import' ? labels.importing : labels.import)
+          : busy && phase && phase !== 'manifest' && phase !== 'artwork'
+            ? t('importing')
+            : t('importButton')}
       </button>
     </div>
   );

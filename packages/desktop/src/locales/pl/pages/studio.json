@@ -1,0 +1,284 @@
+{
+  "controls": {
+    "play": {
+      "name": "Odtwarzaj",
+      "text": "Odtwarza wszystkie piosenki naraz od zielonej linii, dokładnie tak, jak zabrzmi gotowy miks."
+    },
+    "pause": {
+      "name": "Pauza",
+      "text": "Zatrzymuje dźwięk w tym miejscu. Naciśnij Odtwarzaj, aby kontynuować od tego samego momentu."
+    },
+    "stop": {
+      "name": "Stop",
+      "text": "Zatrzymuje odtwarzanie i wraca na sam początek."
+    },
+    "undo": {
+      "name": "Cofnij",
+      "text": "Cofa ostatnią zmianę. Naciśnij ponownie, aby cofnąć się jeszcze dalej."
+    },
+    "redo": {
+      "name": "Ponów",
+      "text": "Przywraca zmianę, którą przed chwilą cofnięto."
+    },
+    "zoom-out": {
+      "name": "Oddal",
+      "text": "Zmniejsza oś czasu, żebyś widział więcej piosenek naraz."
+    },
+    "zoom-slider": {
+      "name": "Powiększenie",
+      "text": "Przeciągnij, aby powiększyć lub pomniejszyć oś czasu. Lewa strona pokazuje wszystko, prawa pokazuje najdrobniejsze szczegóły. Możesz też kręcić kółkiem myszy nad piosenkami."
+    },
+    "zoom-in": {
+      "name": "Przybliż",
+      "text": "Powiększa oś czasu, żebyś mógł dokładnie ustawiać cięcia i krawędzie."
+    },
+    "zoom-fit": {
+      "name": "Dopasuj do okna",
+      "text": "Dopasowuje wszystko, co dodałeś, dokładnie do rozmiaru okna."
+    },
+    "snap-off": {
+      "name": "Swobodnie",
+      "text": "Klipy przesuwają się płynnie i zostają dokładnie tam, gdzie je upuścisz."
+    },
+    "snap-beat": {
+      "name": "Uderzenie",
+      "text": "Klipy przeskakują do najbliższego uderzenia muzyki, dzięki czemu piosenki trzymają rytm."
+    },
+    "snap-bar": {
+      "name": "Takt",
+      "text": "Klipy przeskakują do początku najbliższego taktu (cztery uderzenia). Najłatwiejszy sposób na dopasowanie piosenek."
+    },
+    "clear": {
+      "name": "Wyczyść wszystko",
+      "text": "Usuwa wszystkie piosenki z edytora. Cofnij przywraca je z powrotem. Twoja biblioteka się nie zmienia."
+    },
+    "export": {
+      "name": "Eksportuj",
+      "text": "Zapisuje gotowy miks jako jedną nową piosenkę w Twojej Bibliotece."
+    },
+    "tab-songs": {
+      "name": "Piosenki",
+      "text": "Wybierz piosenki do dodania: z Twojej Biblioteki, z playlisty lub z wyszukiwarki internetowej."
+    },
+    "tab-edit": {
+      "name": "Edycja",
+      "text": "Zmień zaznaczoną piosenkę: prędkość, efekty, głośność, wyciszanie i łączenie."
+    },
+    "songs-library": {
+      "name": "Biblioteka",
+      "text": "Pokazuje wszystkie piosenki, które już masz w TON."
+    },
+    "songs-playlists": {
+      "name": "Playlisty",
+      "text": "Wybierz piosenki z jednej ze swoich playlist."
+    },
+    "songs-search": {
+      "name": "Szukaj",
+      "text": "Wyszukuje piosenki w internecie. Piosenka dodana stąd jest przechowywana tylko tymczasowo i nigdy nie trafia do Twojej Biblioteki."
+    },
+    "songs-filter": {
+      "name": "Filtr",
+      "text": "Wpisz fragment tytułu lub wykonawcę, aby zawęzić listę."
+    },
+    "lane-mute": {
+      "name": "Wycisz",
+      "text": "Wycisza tę piosenkę bez jej usuwania. Kliknij ponownie, aby ją usłyszeć."
+    },
+    "lane-solo": {
+      "name": "Solo",
+      "text": "Odtwarza tylko tę piosenkę, żebyś mógł jej posłuchać osobno. Kliknij ponownie, aby słyszeć wszystko."
+    },
+    "lane-remove": {
+      "name": "Usuń piosenkę",
+      "text": "Usuwa tę piosenkę z edytora. Kopia w Twojej Bibliotece pozostaje nietknięta."
+    },
+    "clip-split": {
+      "name": "Potnij tutaj",
+      "text": "Przecina zaznaczony klip na dwie części w miejscu zielonej linii, żebyś mógł usunąć lub przesunąć jedną z nich."
+    },
+    "clip-join": {
+      "name": "Połącz",
+      "text": "Dołącza wybrany kawałek z powrotem do reszty piosenki, żeby grała bez przerwy – odwrotność cięcia. Kawałek innej piosenki zostaje przesunięty tuż za klip przed nim."
+    },
+    "clip-duplicate": {
+      "name": "Kopiuj",
+      "text": "Tworzy drugą kopię zaznaczonego klipu tuż za nim."
+    },
+    "clip-delete": {
+      "name": "Usuń",
+      "text": "Usuwa zaznaczony klip z osi czasu."
+    },
+    "look-slowed": {
+      "name": "Zwolnione",
+      "text": "Odtwarza piosenkę wolniej, przez co brzmi też niżej, jak zwolniona płyta."
+    },
+    "look-slowed-reverb": {
+      "name": "Zwolnione + pogłos",
+      "text": "Zwalnia piosenkę i dodaje rozmarzone echo wielkiej sali. Popularne brzmienie „slowed and reverb”."
+    },
+    "look-sped-up": {
+      "name": "Przyspieszone",
+      "text": "Odtwarza piosenkę szybciej i wyżej, jak przewijaną płytę."
+    },
+    "look-bass-boost": {
+      "name": "Mocny bas",
+      "text": "Sprawia, że niskie, dudniące dźwięki są głośniejsze."
+    },
+    "look-muffled": {
+      "name": "Przytłumione",
+      "text": "Sprawia, że piosenka brzmi, jakby grała za ścianą, bo ucina wysokie dźwięki."
+    },
+    "look-reset": {
+      "name": "Zresetuj piosenkę",
+      "text": "Przywraca normalną prędkość, efekty i brzmienie tej piosenki. Twoje cięcia i wyciszenia zostają."
+    },
+    "speed": {
+      "name": "Prędkość",
+      "text": "Jak szybko gra klip. 1,00× to normalnie, mniej oznacza wolniej i niżej, więcej oznacza szybciej."
+    },
+    "pitch": {
+      "name": "Wysokość dźwięku",
+      "text": "Sprawia, że klip brzmi wyżej lub niżej, małymi krokami zwanymi półtonami. 12 kroków to jedna pełna oktawa."
+    },
+    "keep-pitch": {
+      "name": "Zachowaj wysokość",
+      "text": "Gdy zmieniasz prędkość, zachowuje ten sam głos i te same dźwięki zamiast robić je niższymi lub wyższymi."
+    },
+    "reverse": {
+      "name": "Odwróć",
+      "text": "Odtwarza zaznaczony klip od tyłu."
+    },
+    "match-tempo": {
+      "name": "Dopasuj tempo",
+      "text": "Zmienia prędkość tak, aby ta piosenka miała tyle samo uderzeń na minutę co pierwsza piosenka, co ułatwia miksowanie."
+    },
+    "clip-volume": {
+      "name": "Głośność klipu",
+      "text": "Ścisza lub podgłaśnia tylko zaznaczony klip."
+    },
+    "lane-volume": {
+      "name": "Głośność piosenki",
+      "text": "Głośność całej piosenki na tej ścieżce."
+    },
+    "balance": {
+      "name": "Lewo / prawo",
+      "text": "Przesuwa dźwięk między lewy a prawy głośnik."
+    },
+    "bass": {
+      "name": "Bas",
+      "text": "Podkręca lub zmniejsza niskie dźwięki."
+    },
+    "treble": {
+      "name": "Soprany",
+      "text": "Podkręca lub zmniejsza wysokie, jasne dźwięki."
+    },
+    "reverb": {
+      "name": "Pogłos",
+      "text": "Dodaje echo jak w wielkiej sali. Im więcej, tym piosenka brzmi bardziej odlegle i rozmarzenie."
+    },
+    "reverb-size": {
+      "name": "Wielkość sali",
+      "text": "Jak duże jest wyobrażone pomieszczenie. Większe sale dają dłuższe echo."
+    },
+    "reverb-dark": {
+      "name": "Miękki ogon",
+      "text": "Sprawia, że echo jest bardziej przytłumione i cieplejsze, zamiast jasnego i ostrego."
+    },
+    "echo": {
+      "name": "Echo",
+      "text": "Powtarza dźwięk chwilę później, jak wołanie w górach."
+    },
+    "echo-time": {
+      "name": "Opóźnienie echa",
+      "text": "Jak długo czekać przed każdym powtórzeniem."
+    },
+    "echo-repeats": {
+      "name": "Powtórzenia echa",
+      "text": "Ile razy echo się powtarza, zanim zaniknie."
+    },
+    "filter-off": {
+      "name": "Bez filtra",
+      "text": "Odtwarza piosenkę ze wszystkimi jej dźwiękami."
+    },
+    "filter-low": {
+      "name": "Utnij wysokie",
+      "text": "Usuwa wysokie dźwięki, przez co piosenka brzmi głucho i odlegle."
+    },
+    "filter-high": {
+      "name": "Utnij niskie",
+      "text": "Usuwa głębokie dźwięki, przez co piosenka brzmi cienko, jak z maleńkiego głośnika."
+    },
+    "filter-freq": {
+      "name": "Siła filtra",
+      "text": "Od jakiego miejsca zaczyna się ucinanie. Przesuwaj, aż piosenka zabrzmi tak, jak lubisz."
+    },
+    "fade-in": {
+      "name": "Wyciszanie początku",
+      "text": "Jak długo klip na początku narasta od ciszy do pełnej głośności."
+    },
+    "fade-out": {
+      "name": "Wyciszanie końca",
+      "text": "Jak długo klip na końcu cichnie od pełnej głośności do ciszy."
+    },
+    "transition-bars-2": {
+      "name": "2 takty",
+      "text": "Krótkie połączenie: dwie piosenki nakładają się na siebie przez 2 takty muzyki."
+    },
+    "transition-bars-4": {
+      "name": "4 takty",
+      "text": "Średnie połączenie: dwie piosenki nakładają się na siebie przez 4 takty muzyki."
+    },
+    "transition-bars-8": {
+      "name": "8 taktów",
+      "text": "Płynne, długie połączenie: dwie piosenki nakładają się na siebie przez 8 taktów. Najczęstsza długość u didżejów."
+    },
+    "transition-bars-16": {
+      "name": "16 taktów",
+      "text": "Bardzo powolne połączenie: dwie piosenki nakładają się na siebie przez 16 taktów."
+    },
+    "curve-smooth": {
+      "name": "Płynnie",
+      "text": "Piosenki zamieniają się miejscami tak, że głośność pozostaje równa. Najlepsze do większości miksów."
+    },
+    "curve-straight": {
+      "name": "Równo",
+      "text": "Jedna piosenka cichnie, a druga narasta, obie w tym samym, stałym tempie."
+    },
+    "curve-slow": {
+      "name": "Powolny start",
+      "text": "Nowa piosenka wkrada się cicho i robi się głośna dopiero pod koniec."
+    },
+    "transition-apply": {
+      "name": "Przenikanie",
+      "text": "Nakłada zaznaczony klip na sąsiednią piosenkę i łączy je, używając długości i stylu wybranych powyżej."
+    }
+  },
+  "sections": {
+    "clip": "Zaznaczony klip",
+    "looks": "Szybkie brzmienia",
+    "speed": "Prędkość i wysokość",
+    "sound": "Dźwięk",
+    "effects": "Efekty",
+    "fades": "Wyciszanie",
+    "transition": "Połącz dwie piosenki"
+  },
+  "editEmpty": "Kliknij piosenkę na osi czasu, aby ją edytować.",
+  "editLaneOnly": "Kliknij klip na tej ścieżce, aby zmienić jego prędkość i wyciszanie.",
+  "emptyText": "Twoje piosenki są w panelu po prawej. Kliknij piosenkę, aby wstawić ją tutaj. Potem możesz ją pociąć, zwolnić, dodać efekty i wyeksportować wynik.",
+  "addToStudio": "Dodaj",
+  "downloading": "Pobieranie… {{percent}}%",
+  "downloadFailed": "Pobieranie się nie udało. Spróbuj innego wyniku.",
+  "exportTitle": "Wyeksportuj swój miks",
+  "exportText": "Gotowy miks zostanie zapisany jako nowa piosenka w Twojej Bibliotece.",
+  "mixName": "Nazwa piosenki",
+  "defaultName": "Miks Studio",
+  "save": "Zapisz w Bibliotece",
+  "cancel": "Anuluj",
+  "clear": "Wyczyść wszystko",
+  "clearTitle": "Wyczyścić Studio?",
+  "clearText": "Wszystkie piosenki zostaną usunięte z edytora. Możesz je przywrócić przyciskiem Cofnij. Biblioteka i wyeksportowane miksy się nie zmienią.",
+  "exporting": "Zapisywanie miksu",
+  "saved": "Miks zapisany w Twojej Bibliotece",
+  "removeConfirmText": "Usunąć tę piosenkę z edytora? Twoja biblioteka się nie zmieni.",
+  "removeConfirmAction": "Usuń"
+}

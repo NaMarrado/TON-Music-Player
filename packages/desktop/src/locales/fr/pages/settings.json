@@ -117,7 +117,7 @@
   "cloudCleanupFailureLabel": "Ancienne erreur de synchronisation",
   "cloudCleanupUnknownTrack": "Titre inconnu",
   "cloudCleanupPlaylistRemoved": "{{removed}} supprimés · {{remaining}} restants",
-"cloudCleanupTitle": "Nettoyer définitivement R2",
+  "cloudCleanupTitle": "Nettoyer définitivement R2",
   "cloudCleanupSongs": "{{count}} morceaux seront définitivement supprimés de R2.",
   "cloudCleanupPlaylists": "{{count}} playlists seront mises à jour.",
   "cloudCleanupSpace": "{{size}} seront libérés.",
@@ -212,5 +212,17 @@
   "uiScaleTitle": "Échelle de l'interface",
   "uiScaleDescription": "Réduisez ou agrandissez toute l'interface de TON.",
   "uiScaleReset": "Réinitialiser à 100 %",
-  "newVersionAvailable": "Nouvelle version disponible"
+  "newVersionAvailable": "Nouvelle version disponible",
+  "profileExportSection": "Exporter / Importer le profil",
+  "profileExportDescription": "Enregistre tout votre profil dans un petit fichier : réglages, titres favoris, playlists et historique d'écoute. Les mots de passe et les clés (stockage cloud, Spotify) ne sont jamais inclus, ni les fichiers audio. Pour ceux-ci, utilisez l'export de la bibliothèque.",
+  "profileExportButton": "Exporter le profil",
+  "profileImportButton": "Importer le profil",
+  "profileExporting": "Enregistrement…",
+  "profileImporting": "Restauration…",
+  "profileExportSuccess": "Profil enregistré : {{starred}} titres favoris, {{playlists}} playlists, {{sessions}} sessions d'écoute.",
+  "profileExportSkipped": "{{count}} titres n'ont pas pu être inclus, car ils n'ont pas encore d'empreinte.",
+  "profileExportFailed": "Le profil n'a pas pu être enregistré.",
+  "profileImportSuccess": "Profil restauré : {{starred}} titres ajoutés aux favoris, {{playlists}} playlists ajoutées, {{sessions}} sessions d'écoute. L'application va maintenant se recharger.",
+  "profileImportMissing": "{{count}} éléments font référence à des titres qui ne figurent pas dans cette bibliothèque. Importez d'abord votre bibliothèque, puis importez à nouveau le profil.",
+  "profileImportInvalid": "Ce fichier n'est pas un profil TON valide."
 }

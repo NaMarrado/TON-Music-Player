@@ -117,7 +117,7 @@
   "cloudCleanupFailureLabel": "Stary błąd synchronizacji",
   "cloudCleanupUnknownTrack": "Nieznany utwór",
   "cloudCleanupPlaylistRemoved": "Usunięto {{removed}} · pozostało {{remaining}}",
-"cloudCleanupTitle": "Trwale wyczyść R2",
+  "cloudCleanupTitle": "Trwale wyczyść R2",
   "cloudCleanupSongs": "{{count}} utworów zostanie trwale usuniętych z R2.",
   "cloudCleanupPlaylists": "Zostanie zaktualizowanych {{count}} playlist.",
   "cloudCleanupSpace": "Zostanie zwolnione {{size}}.",
@@ -212,5 +212,17 @@
   "uiScaleTitle": "Skala interfejsu",
   "uiScaleDescription": "Zmniejsz lub powiększ cały interfejs TON.",
   "uiScaleReset": "Przywróć 100%",
-  "newVersionAvailable": "Dostępna jest nowa wersja"
+  "newVersionAvailable": "Dostępna jest nowa wersja",
+  "profileExportSection": "Eksport / import profilu",
+  "profileExportDescription": "Zapisuje cały Twój profil w jednym małym pliku: ustawienia, oznaczone gwiazdką utwory, playlisty i historię słuchania. Hasła i klucze (dysk w chmurze, Spotify) nigdy nie są uwzględniane, podobnie jak pliki audio. Do tego celu użyj eksportu biblioteki.",
+  "profileExportButton": "Eksportuj profil",
+  "profileImportButton": "Importuj profil",
+  "profileExporting": "Zapisywanie...",
+  "profileImporting": "Przywracanie...",
+  "profileExportSuccess": "Profil zapisany: {{starred}} utworów oznaczonych gwiazdką, {{playlists}} playlist, {{sessions}} sesji słuchania.",
+  "profileExportSkipped": "Nie udało się uwzględnić {{count}} utworów, ponieważ nie mają jeszcze odcisku cyfrowego.",
+  "profileExportFailed": "Nie udało się zapisać profilu.",
+  "profileImportSuccess": "Profil przywrócony: {{starred}} utworów oznaczonych gwiazdką, {{playlists}} dodanych playlist, {{sessions}} sesji słuchania. Aplikacja zaraz się przeładuje.",
+  "profileImportMissing": "Liczba wpisów odnoszących się do utworów, których nie ma w tej bibliotece: {{count}}. Najpierw zaimportuj swoją bibliotekę, a potem zaimportuj profil ponownie.",
+  "profileImportInvalid": "To nie jest prawidłowy plik profilu TON."
 }

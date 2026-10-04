@@ -51,3 +51,14 @@ export function ProfileIcon() {
     </svg>
   );
 }
+
+export function StudioIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+      <path d="M6 3v18M12 3v18M18 3v18" />
+      <rect x="3.5" y="14" width="5" height="3.5" rx="1" fill="currentColor" />
+      <rect x="9.5" y="6" width="5" height="3.5" rx="1" fill="currentColor" />
+      <rect x="15.5" y="11" width="5" height="3.5" rx="1" fill="currentColor" />
+    </svg>
+  );
+}

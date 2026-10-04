@@ -15,6 +15,7 @@ export type TabParamList = {
   SearchTab: NavigatorScreenParams<SearchStackParamList>;
   LibraryTab: NavigatorScreenParams<LibraryStackParamList>;
   DownloadsTab: NavigatorScreenParams<DownloadsStackParamList>;
+  StudioTab: NavigatorScreenParams<StudioStackParamList>;
   SettingsTab: NavigatorScreenParams<SettingsStackParamList>;
 };
 
@@ -40,6 +41,10 @@ export type LibraryStackParamList = {
 
 export type DownloadsStackParamList = {
   Downloads: undefined;
+};
+
+export type StudioStackParamList = {
+  Studio: undefined;
 };
 
 export type SettingsStackParamList = {

@@ -11,6 +11,7 @@ export function ExportImportCard({
   isImporting,
   onExport,
   onImport,
+  description,
 }: {
   title: string;
   exportLabel: string;
@@ -21,6 +22,8 @@ export function ExportImportCard({
   isImporting: boolean;
   onExport: () => void;
   onImport: () => void;
+  /** A plain sentence under the title saying what the buttons do. */
+  description?: string;
 }) {
   const isBusy = isExporting || isImporting;
 
@@ -28,9 +31,12 @@ export function ExportImportCard({
     <SettingsCard>
       <SectionHeader icon="folder" title={title} />
       <View className="ml-[38px] gap-3">
+        {description ? <Text className="text-text-secondary text-[12.5px] leading-[18px]">{description}</Text> : null}
         <View className="flex-row flex-wrap items-center gap-2">
           <Pressable
             onPress={onExport}
+            accessibilityRole="button"
+            accessibilityLabel={exportLabel}
             disabled={isBusy}
             className="border border-border"
             style={{
@@ -47,6 +53,8 @@ export function ExportImportCard({
 
           <Pressable
             onPress={onImport}
+            accessibilityRole="button"
+            accessibilityLabel={importLabel}
             disabled={isBusy}
             className="bg-white"
             style={{

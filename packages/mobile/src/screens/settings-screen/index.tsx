@@ -21,6 +21,7 @@ import { CommunityCard } from './community-card';
 import { DownloadQualityCard } from './download-quality-card';
 import { UpdateCard } from './update-card';
 import { useSettingsScreen } from './use-settings-screen';
+import { useProfileTransferActions } from './use-profile-transfer-actions';
 import { usePlaylistStore } from '../../stores/playlist-store';
 import { useScreenTopPadding } from '../../hooks/use-screen-top-padding';
 import { SettingsConnectionsGroup } from './settings-connections-group';
@@ -42,6 +43,7 @@ export function SettingsScreen() {
   const detectedLang = detectDeviceLanguage();
   const topPadding = useScreenTopPadding(16);
   const controller = useSettingsScreen();
+  const { exportProfile, importProfile, isExportingProfile, isImportingProfile } = useProfileTransferActions();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const isFocused = useIsFocused();
   const {
@@ -184,6 +186,18 @@ export function SettingsScreen() {
           isImporting={isImportingLibrary}
           onExport={() => void openExportPicker()}
           onImport={() => void importLibrary()}
+        />
+        <ExportImportCard
+          title={t('profileExportSection')}
+          description={t('profileExportDescription')}
+          exportLabel={t('profileExportButton')}
+          exportingLabel={t('profileExporting')}
+          importLabel={t('profileImportButton')}
+          importingLabel={t('profileImporting')}
+          isExporting={isExportingProfile}
+          isImporting={isImportingProfile}
+          onExport={() => void exportProfile()}
+          onImport={() => void importProfile()}
         />
       </SettingsGroup>
 
