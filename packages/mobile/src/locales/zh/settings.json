@@ -204,5 +204,7 @@
   "transferImported": "已导入 {{tracks}} 首歌曲、{{playlists}} 个播放列表",
   "transferProfileImported": "个人资料已导入",
   "transferFailed": "出了点问题",
-  "transferNothing": "没有可导出的内容"
+  "transferNothing": "没有可导出的内容",
+  "studioTabTitle": "工作室",
+  "studioTabText": "在底部显示工作室标签。"
 }

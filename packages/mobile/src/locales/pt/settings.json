@@ -204,5 +204,7 @@
   "transferImported": "Importadas {{tracks}} músicas, {{playlists}} playlists",
   "transferProfileImported": "Perfil importado",
   "transferFailed": "Algo deu errado",
-  "transferNothing": "Nada para exportar"
+  "transferNothing": "Nada para exportar",
+  "studioTabTitle": "Studio",
+  "studioTabText": "Mostrar a aba Studio embaixo."
 }

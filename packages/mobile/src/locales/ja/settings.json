@@ -204,5 +204,7 @@
   "transferImported": "{{tracks}} 曲、{{playlists}} プレイリストをインポートしました",
   "transferProfileImported": "プロフィールをインポートしました",
   "transferFailed": "問題が発生しました",
-  "transferNothing": "エクスポートするものがありません"
+  "transferNothing": "エクスポートするものがありません",
+  "studioTabTitle": "スタジオ",
+  "studioTabText": "下部にスタジオタブを表示します。"
 }

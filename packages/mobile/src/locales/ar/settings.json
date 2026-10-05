@@ -204,5 +204,7 @@
   "transferImported": "تم استيراد {{tracks}} أغنية و{{playlists}} قائمة",
   "transferProfileImported": "تم استيراد الملف الشخصي",
   "transferFailed": "حدث خطأ ما",
-  "transferNothing": "لا شيء للتصدير"
+  "transferNothing": "لا شيء للتصدير",
+  "studioTabTitle": "الاستوديو",
+  "studioTabText": "إظهار تبويب الاستوديو في الأسفل."
 }

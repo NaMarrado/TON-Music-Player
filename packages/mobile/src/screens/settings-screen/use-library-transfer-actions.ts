@@ -12,6 +12,7 @@ import {
 } from '../../services/library-transfer';
 import { getSetting } from '../../services/db-queries';
 import { restoreAudioSettings } from '../../services/audio-settings/restore';
+import { loadStudioTabSetting } from '../../stores/studio-tab-store';
 import { loadPlaylists } from '../../stores/playlist-store';
 import { reconcileLibraryTracks } from '../../stores/library-store';
 import { showToast } from '../../stores/toast-store';
@@ -177,6 +178,7 @@ export function useLibraryTransferActions() {
       if (result.profileApplied) {
         // Restored sound settings and language take effect at once, without restarting the app.
         await restoreAudioSettings();
+        await loadStudioTabSetting();
         const language = await getSetting('language');
         if (language && language !== i18n.language) await i18n.changeLanguage(language);
         showToast(t('transferProfileImported'), 'success', 5000);
