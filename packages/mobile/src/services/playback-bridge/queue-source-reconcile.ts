@@ -8,12 +8,15 @@ import {
   type Track,
   rebuildRollingQueueUpcoming,
 } from '@ton/core';
-import { useLibraryStore } from '../../stores/library-store';
+import { isTrackStarred, useLibraryStore } from '../../stores/library-store';
 import { usePlaybackStore } from '../../stores/playback-store';
 import { usePlaylistStore } from '../../stores/playlist-store';
 import { useQueueStore } from '../../stores/queue-store';
 import { syncUpcomingRntpQueue } from './queue-sync';
 import { hydrateMobileQueueItems } from './track-mapping';
+
+/** `source_id` of a Library queue started with the Starred filter on. */
+export const STARRED_LIBRARY_SOURCE_ID = 'starred';
 
 let reconcilePromise: Promise<void> | null = null;
 let reconcileRequested = false;
@@ -86,7 +89,7 @@ function getSourceTracks(descriptor: PlaybackQueueSourceDescriptor): Track[] | n
   switch (descriptor.kind) {
     case 'library':
       return getFilteredTracks(
-        libraryTracks,
+        descriptor.source_id === STARRED_LIBRARY_SOURCE_ID ? libraryTracks.filter(isTrackStarred) : libraryTracks,
         descriptor.filter_query ?? '',
         (descriptor.sort_by ?? 'added_at') as SortField,
         descriptor.sort_order ?? 'desc',

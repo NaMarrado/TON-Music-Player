@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { Track, SortField, SortOrder } from '@ton/core';
 import { getFilteredTracks } from '@ton/core';
-import { getAllTracks, getTracksByIds } from '../services/db-queries';
+import { getAllTracks, getTracksByIds, toggleTrackStarInDb } from '../services/db-queries';
 import {
   deleteTracksEverywhere as deleteTrackRowsEverywhere,
 } from '../services/track-removal';
@@ -12,6 +12,8 @@ interface LibraryState {
   sortBy: SortField;
   sortOrder: SortOrder;
   filterQuery: string;
+  /** Library shows and plays only starred songs. */
+  starredOnly: boolean;
   isLoading: boolean;
   hasLoaded: boolean;
   revision: number;
@@ -22,6 +24,7 @@ export const useLibraryStore = create<LibraryState>()(() => ({
   sortBy: 'added_at',
   sortOrder: 'desc',
   filterQuery: '',
+  starredOnly: false,
   isLoading: false,
   hasLoaded: false,
   revision: 0,
@@ -169,9 +172,35 @@ export function setFilterQuery(query: string): void {
   useLibraryStore.setState({ filterQuery: query });
 }
 
+export function setStarredOnly(starredOnly: boolean): void {
+  useLibraryStore.setState({ starredOnly });
+}
+
+export function isTrackStarred(track: Pick<Track, 'rating'>): boolean {
+  return (track.rating ?? 0) > 0;
+}
+
 export function getDisplayTracks(): Track[] {
-  const { tracks, filterQuery, sortBy, sortOrder } = useLibraryStore.getState();
-  return getFilteredTracks(tracks, filterQuery, sortBy, sortOrder);
+  const { tracks, filterQuery, sortBy, sortOrder, starredOnly } = useLibraryStore.getState();
+  return getFilteredTracks(starredOnly ? tracks.filter(isTrackStarred) : tracks, filterQuery, sortBy, sortOrder);
+}
+
+const starTogglePromises = new Map<number, Promise<void>>();
+
+/** Toggles one song's star; taps on the same song run in order so fast double taps end in the expected state. */
+export function toggleTrackStar(trackId: number): Promise<void> {
+  const previous = starTogglePromises.get(trackId) ?? Promise.resolve();
+  const pending = previous.catch(() => {}).then(async () => {
+    const rating = await toggleTrackStarInDb(trackId);
+    useLibraryStore.setState((state) => ({
+      tracks: state.tracks.map((track) => (track.id === trackId ? { ...track, rating } : track)),
+      revision: state.revision + 1,
+    }));
+  }).finally(() => {
+    if (starTogglePromises.get(trackId) === pending) starTogglePromises.delete(trackId);
+  });
+  starTogglePromises.set(trackId, pending);
+  return pending;
 }
 
 export function markTrackPlayed(trackId: number): void {

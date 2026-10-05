@@ -44,5 +44,11 @@
   "duplicatePlaylistAddAgain": "再次添加",
   "duplicatePlaylistSkip": "跳过",
   "duplicatePlaylistAddThis": "添加此歌曲",
-  "duplicatePlaylistAddAll": "添加所有重复项"
+  "duplicatePlaylistAddAll": "添加所有重复项",
+  "starred": "收藏",
+  "starTrack": "收藏歌曲",
+  "unstarTrack": "取消收藏",
+  "starFailed": "无法更新收藏",
+  "emptyStarred": "暂无收藏歌曲",
+  "emptyStarredHint": "点击歌曲的星标即可在此找到它。"
 }

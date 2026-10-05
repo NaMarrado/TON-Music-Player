@@ -44,5 +44,11 @@
   "duplicatePlaylistAddAgain": "もう一度追加",
   "duplicatePlaylistSkip": "スキップ",
   "duplicatePlaylistAddThis": "この曲を追加",
-  "duplicatePlaylistAddAll": "重複をすべて追加"
+  "duplicatePlaylistAddAll": "重複をすべて追加",
+  "starred": "お気に入り",
+  "starTrack": "お気に入りに追加",
+  "unstarTrack": "お気に入りから削除",
+  "starFailed": "お気に入りを更新できませんでした",
+  "emptyStarred": "お気に入りの曲はまだありません",
+  "emptyStarredHint": "曲に星を付けると、ここに表示されます。"
 }
