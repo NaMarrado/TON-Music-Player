@@ -42,5 +42,6 @@
   "sortDownloaded":"Scaricato",
   "sortDuration":"Durata",
   "filterPlaceholder":"Filtra brani...",
-  "noResults":"Nessun brano corrispondente"
+  "noResults":"Nessun brano corrispondente",
+  "editInStudio":"Modifica in Studio"
 }

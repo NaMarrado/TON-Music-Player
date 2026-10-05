@@ -51,5 +51,7 @@
   "duplicatePlaylistAddAgain": "Добавить ещё раз",
   "duplicatePlaylistSkip": "Пропустить",
   "duplicatePlaylistAddThis": "Добавить этот трек",
-  "duplicatePlaylistAddAll": "Добавить все дубликаты"
+  "duplicatePlaylistAddAll": "Добавить все дубликаты",
+  "editInStudio": "Изменить в Studio",
+  "editInStudioHint": "Открывает трек в Studio, чтобы обрезать или изменить его и сохранить на том же месте."
 }

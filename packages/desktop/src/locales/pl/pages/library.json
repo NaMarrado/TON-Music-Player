@@ -51,5 +51,7 @@
   "duplicatePlaylistAddAgain": "Dodaj ponownie",
   "duplicatePlaylistSkip": "Pomiń",
   "duplicatePlaylistAddThis": "Dodaj ten utwór",
-  "duplicatePlaylistAddAll": "Dodaj wszystkie duplikaty"
+  "duplicatePlaylistAddAll": "Dodaj wszystkie duplikaty",
+  "editInStudio": "Edytuj w Studio",
+  "editInStudioHint": "Otwiera utwór w Studio, aby go przyciąć lub zmienić i zapisać w tym samym miejscu."
 }

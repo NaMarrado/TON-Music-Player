@@ -18,6 +18,7 @@ import {
   useMobileFastScroll,
 } from '../../components/mobile-fast-scroller';
 import { PlaylistHero } from './playlist-hero';
+import { useOpenInStudio } from '../studio-screen/use-open-in-studio';
 import { PlaylistReorderControls, PlaylistTrackNumber } from './playlist-reorder-controls';
 import { PlaylistSelectionToolbar } from './playlist-selection-toolbar';
 import { usePlaylistScreen } from './use-playlist-screen';
@@ -29,6 +30,7 @@ export function PlaylistScreen({ route }: Props) {
   const { t } = useTranslation('playlist');
   const { t: tc } = useTranslation('common');
   const navigation = useNavigation();
+  const openInStudio = useOpenInStudio();
   const [showActionsMenu, setShowActionsMenu] = useState(false);
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [reorderMode, setReorderMode] = useState(false);
@@ -226,6 +228,12 @@ export function PlaylistScreen({ route }: Props) {
         <PlaylistSelectionToolbar
           selectedCountLabel={t('selectedCount', { count: selectedPlaylistTrackIds.length })}
           onPlaySelection={handlePlaySelection}
+          onEditSelectionInStudio={selectedPlaylistTrackIds.length === 1 ? () => {
+            const track = tracks.find((candidate) => candidate.playlist_track_id === selectedPlaylistTrackIds[0]);
+            clearSelection();
+            if (track) openInStudio(track);
+          } : undefined}
+          editInStudioLabel={t('editInStudio')}
           onRemoveSelection={() => { void handleRemoveSelection(); }}
           onClearSelection={clearSelection}
         />

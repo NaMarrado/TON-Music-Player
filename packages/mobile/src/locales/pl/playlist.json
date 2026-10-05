@@ -42,5 +42,6 @@
   "sortDownloaded": "Pobrano",
   "sortDuration": "Czas trwania",
   "filterPlaceholder": "Filtruj utwory...",
-  "noResults": "Brak pasujących utworów"
+  "noResults": "Brak pasujących utworów",
+  "editInStudio": "Edytuj w Studio"
 }

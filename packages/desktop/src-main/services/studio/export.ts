@@ -4,21 +4,24 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createInterface } from 'node:readline';
 import {
-  STUDIO_SAMPLE_RATE, buildRenderArgs, encodeWavFloat32, generateReverbImpulse, requiredImpulseKeys, reverbImpulseSpec, sanitizeFilename,
+  STUDIO_SAMPLE_RATE, buildRenderArgs, encodeWavFloat32, generateReverbImpulse, projectContentStartSec, projectDurationSec,
+  requiredImpulseKeys, reverbImpulseSpec, sanitizeFilename,
 } from '@ton/core';
 import type { StudioExportResult } from '../../../src/shared/studio-ipc';
 import { importAudioFilesIntoLibrary } from '../../handlers/library-handler/import-files';
 import { getFfmpegPathAsync } from '../binary-manager';
 import { ensureStudioTempDir } from './paths';
+import { replaceTrackAudio } from './replace-track';
 import { assertAssetsReadable, parseStudioProject } from './validate';
 
 export interface StudioExportInput {
   project: unknown;
   title: string;
   artist: string;
+  replaceTrackId?: number;
 }
 
-/** Renders the project with ffmpeg into a staging file and registers it as a Library track. */
+/** Renders the project with ffmpeg into a staging file and registers it as a Library track, or replaces the edited song's audio. */
 export async function exportStudioProject(
   request: StudioExportInput,
   signal: AbortSignal,
@@ -49,6 +52,10 @@ export async function exportStudioProject(
       impulsePaths,
       filterScriptPath: scriptPath,
       metadata: { title, artist },
+      // A quick edit that cut the intro starts at its first clip instead of keeping the empty lead-in.
+      ...(request.replaceTrackId !== undefined
+        ? { range: { startSec: projectContentStartSec(project), endSec: projectDurationSec(project) } }
+        : {}),
     });
     if (!plan) throw new Error('Nothing to export');
     await fs.promises.writeFile(scriptPath, plan.filterGraph, 'utf8');
@@ -57,9 +64,15 @@ export async function exportStudioProject(
     const stats = await fs.promises.stat(staged).catch(() => null);
     if (!stats || stats.size < 1000) throw new Error('The render produced no audio');
 
-    const { trackIds } = await importAudioFilesIntoLibrary([staged]);
-    const trackId = trackIds[0];
-    if (!trackId) throw new Error('The mix could not be added to the Library');
+    let trackId: number;
+    if (request.replaceTrackId !== undefined) {
+      await replaceTrackAudio(request.replaceTrackId, staged);
+      trackId = request.replaceTrackId;
+    } else {
+      const { trackIds } = await importAudioFilesIntoLibrary([staged]);
+      if (!trackIds[0]) throw new Error('The mix could not be added to the Library');
+      trackId = trackIds[0];
+    }
     onProgress(1);
     return { trackId, filePath: staged, durationSec: plan.durationSec };
   } finally {

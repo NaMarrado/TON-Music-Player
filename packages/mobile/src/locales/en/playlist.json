@@ -42,5 +42,6 @@
   "sortDownloaded": "Downloaded",
   "sortDuration": "Duration",
   "filterPlaceholder": "Filter tracks...",
-  "noResults": "No matching tracks"
+  "noResults": "No matching tracks",
+  "editInStudio": "Edit in Studio"
 }

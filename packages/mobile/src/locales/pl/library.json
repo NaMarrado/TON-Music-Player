@@ -50,5 +50,6 @@
   "unstarTrack": "Usuń z ulubionych",
   "starFailed": "Nie udało się zmienić ulubionego utworu",
   "emptyStarred": "Brak ulubionych utworów",
-  "emptyStarredHint": "Oznacz utwór gwiazdką, aby znaleźć go tutaj."
+  "emptyStarredHint": "Oznacz utwór gwiazdką, aby znaleźć go tutaj.",
+  "editInStudio": "Edytuj w Studio"
 }

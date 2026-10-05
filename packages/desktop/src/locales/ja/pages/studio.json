@@ -280,5 +280,9 @@
   "exporting": "ミックスを保存中",
   "saved": "ミックスをライブラリに保存しました",
   "removeConfirmText": "この曲をエディターから外しますか?ライブラリはそのままです。",
-  "removeConfirmAction": "外す"
+  "removeConfirmAction": "外す",
+  "replaceText": "使われているすべての場所で「{{title}}」を置き換えるか、編集を新しい曲として保存します。",
+  "replaceOriginal": "元の曲を置き換え",
+  "saveAsNew": "新しい曲として保存",
+  "replaced": "曲を更新しました"
 }

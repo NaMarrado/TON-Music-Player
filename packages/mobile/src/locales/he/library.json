@@ -50,5 +50,6 @@
   "unstarTrack": "הסרה מהמועדפים",
   "starFailed": "לא ניתן לעדכן את המועדפים",
   "emptyStarred": "עדיין אין שירים מועדפים",
-  "emptyStarredHint": "סמנו שיר בכוכב כדי למצוא אותו כאן."
+  "emptyStarredHint": "סמנו שיר בכוכב כדי למצוא אותו כאן.",
+  "editInStudio": "עריכה ב-Studio"
 }

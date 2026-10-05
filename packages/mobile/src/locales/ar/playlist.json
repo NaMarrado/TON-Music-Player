@@ -42,5 +42,6 @@
   "sortDownloaded": "تاريخ التنزيل",
   "sortDuration": "المدة",
   "filterPlaceholder": "تصفية المقاطع...",
-  "noResults": "لا توجد مقاطع مطابقة"
+  "noResults": "لا توجد مقاطع مطابقة",
+  "editInStudio": "تحرير في Studio"
 }

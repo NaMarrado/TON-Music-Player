@@ -36,7 +36,12 @@ export function registerStudioHandlers(): void {
     const controller = begin(id);
     try {
       return await exportStudioProject(
-        { project: request?.project, title: String(request?.title ?? ''), artist: String(request?.artist ?? '') },
+        {
+          project: request?.project,
+          title: String(request?.title ?? ''),
+          artist: String(request?.artist ?? ''),
+          ...(Number.isSafeInteger(request?.replaceTrackId) && (request.replaceTrackId ?? 0) > 0 ? { replaceTrackId: request.replaceTrackId } : {}),
+        },
         controller.signal,
         (progress) => {
           if (!event.sender.isDestroyed()) event.sender.send('studio:progress', { id, kind: 'export', progress } satisfies StudioProgressEvent);

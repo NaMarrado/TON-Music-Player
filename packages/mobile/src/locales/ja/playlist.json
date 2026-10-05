@@ -42,5 +42,6 @@
   "sortDownloaded": "ダウンロード日時",
   "sortDuration": "長さ",
   "filterPlaceholder": "曲を絞り込む...",
-  "noResults": "一致する曲がありません"
+  "noResults": "一致する曲がありません",
+  "editInStudio": "Studioで編集"
 }

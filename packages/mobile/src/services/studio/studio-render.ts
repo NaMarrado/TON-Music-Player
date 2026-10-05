@@ -11,6 +11,8 @@ import {
   type StudioProject,
 } from '@ton/core';
 import { insertTrack } from '../db-queries';
+import type { SQLiteDatabase } from 'expo-sqlite';
+import { runMobileCloudDbLane } from '../cloud-sync/db-lane';
 import { MUSIC_DIR, ensureMusicDir, nativeDownload } from '../downloader/filesystem';
 import { prepareDownloadSource } from '../downloader';
 import { scheduleTrackLoudnessAnalysis } from '../loudness-analysis';
@@ -102,6 +104,70 @@ export async function saveMixToLibrary(outputUri: string, title: string, artist:
   scheduleTrackLoudnessAnalysis(trackId);
   await clearStudioFiles(false);
   return trackId;
+}
+
+function toFileUri(path: string): string {
+  return /^[a-z]+:\/\//i.test(path) ? path : `file://${path.split('/').map(encodeURIComponent).join('/')}`;
+}
+
+/**
+ * Replaces the audio of an existing Library song with a rendered Studio edit (a quick edit such as a cut intro). The
+ * song keeps its id, so it stays in every playlist with its star, cover and play counts. The new file sits next to the
+ * original as `.m4a`; the original is removed and its cloud copy is excluded on this phone, like a deleted song, so
+ * sync does not bring the unedited version back. Any failure before the database is updated puts the original back.
+ */
+export async function replaceTrackAudio(trackId: number, outputUri: string, durationSec: number): Promise<void> {
+  // Sync reads and hashes song files in this lane; the swap must not happen while it does.
+  await runMobileCloudDbLane((db) => swapTrackAudio(db, trackId, outputUri, durationSec));
+  scheduleTrackLoudnessAnalysis(trackId);
+  await clearStudioFiles(false);
+}
+
+async function swapTrackAudio(db: SQLiteDatabase, trackId: number, outputUri: string, durationSec: number): Promise<void> {
+  const track = await db.getFirstAsync<{ id: number; file_path: string; content_hash_sha256: string | null }>(
+    'SELECT id, file_path, content_hash_sha256 FROM tracks WHERE id = ?', [trackId]);
+  if (!track) throw new Error('The song is no longer in the Library');
+  const original = toFileUri(track.file_path);
+  if (!(await FileSystem.getInfoAsync(original)).exists) throw new Error('The original song file is missing');
+
+  const base = original.replace(/\.[^./]*$/, '');
+  let target = `${base}.m4a`;
+  for (let attempt = 2; ; attempt += 1) {
+    const takenByTrack = await db.getFirstAsync('SELECT id FROM tracks WHERE file_path IN (?, ?) AND id != ?', [target, toFfmpegPath(target), trackId]);
+    const takenOnDisk = target !== original && (await FileSystem.getInfoAsync(target)).exists;
+    if (!takenByTrack && !takenOnDisk) break;
+    target = `${base} (${attempt}).m4a`;
+  }
+
+  const backup = `${original}.studio-original`;
+  await FileSystem.moveAsync({ from: original, to: backup });
+  try {
+    await FileSystem.moveAsync({ from: outputUri, to: target });
+    const info = await FileSystem.getInfoAsync(target, { size: true });
+    const size = info.exists && typeof info.size === 'number' ? info.size : 0;
+    await db.withTransactionAsync(async () => {
+      const oldHash = track.content_hash_sha256?.toLowerCase() ?? '';
+      if (oldHash) {
+        await db.runAsync(
+          `INSERT INTO cloud_sync_local_exclusions (scope_id, content_hash_sha256, deleted_at)
+           SELECT active_scope_id, ?, strftime('%s','now') FROM cloud_sync_control
+           WHERE id = 1 AND active_scope_id != ''
+             AND NOT EXISTS (SELECT 1 FROM tracks WHERE id != ? AND lower(content_hash_sha256) = ?)
+           ON CONFLICT(scope_id, content_hash_sha256) DO UPDATE SET deleted_at = excluded.deleted_at`,
+          [oldHash, trackId, oldHash]);
+      }
+      await db.runAsync(
+        `UPDATE tracks SET file_path = ?, file_hash = NULL, content_hash_sha256 = NULL, file_size = ?, file_mtime = NULL,
+           duration_ms = ?, bitrate = NULL, sample_rate = ?, format = 'm4a', loudness_lufs = NULL, loudness_gain = NULL
+         WHERE id = ?`,
+        [/^[a-z]+:\/\//i.test(track.file_path) ? target : toFfmpegPath(target), size, Math.round(durationSec * 1000), STUDIO_SAMPLE_RATE, trackId]);
+    });
+  } catch (error) {
+    await FileSystem.deleteAsync(target, { idempotent: true });
+    await FileSystem.moveAsync({ from: backup, to: original });
+    throw error;
+  }
+  await FileSystem.deleteAsync(backup, { idempotent: true });
 }
 
 /** Downloads an online result into the Studio cache. It is never added to the Library. */

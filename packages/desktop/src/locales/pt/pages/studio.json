@@ -280,5 +280,9 @@
   "exporting": "Salvando a mixagem",
   "saved": "Mixagem salva na sua Biblioteca",
   "removeConfirmText": "Remover esta música do editor? Sua biblioteca não muda.",
-  "removeConfirmAction": "Remover"
+  "removeConfirmAction": "Remover",
+  "replaceText": "Substituir “{{title}}” em todos os lugares onde é usada ou salvar a edição como uma nova música.",
+  "replaceOriginal": "Substituir original",
+  "saveAsNew": "Salvar como nova",
+  "replaced": "Música atualizada"
 }

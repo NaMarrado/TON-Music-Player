@@ -280,5 +280,9 @@
   "clearTitle": "Wyczyścić Studio?",
   "clearText": "Wszystkie piosenki zostaną usunięte z edytora. Możesz je przywrócić przyciskiem Cofnij. Biblioteka i wyeksportowane miksy się nie zmienią.",
   "exporting": "Zapisywanie miksu",
-  "saved": "Miks zapisany w Twojej Bibliotece"
+  "saved": "Miks zapisany w Twojej Bibliotece",
+  "replaceText": "Zastąp „{{title}}” wszędzie, gdzie jest używany, albo zapisz edycję jako nowy utwór.",
+  "replaceOriginal": "Zastąp oryginał",
+  "saveAsNew": "Zapisz jako nowy",
+  "replaced": "Utwór zaktualizowany"
 }

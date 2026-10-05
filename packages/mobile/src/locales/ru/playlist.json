@@ -42,5 +42,6 @@
   "sortDownloaded": "Загружено",
   "sortDuration": "Длительность",
   "filterPlaceholder": "Фильтр треков...",
-  "noResults": "Подходящих треков нет"
+  "noResults": "Подходящих треков нет",
+  "editInStudio": "Изменить в Studio"
 }

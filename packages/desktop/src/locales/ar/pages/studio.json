@@ -280,5 +280,9 @@
   "exporting": "جارٍ حفظ المزيج",
   "saved": "تم حفظ المزيج في مكتبتك",
   "removeConfirmText": "إزالة هذه الأغنية من المحرر؟ لن تتغير مكتبتك.",
-  "removeConfirmAction": "إزالة"
+  "removeConfirmAction": "إزالة",
+  "replaceText": "استبدل «{{title}}» في كل مكان تُستخدم فيه، أو احفظ التعديل كأغنية جديدة.",
+  "replaceOriginal": "استبدال الأصل",
+  "saveAsNew": "حفظ كأغنية جديدة",
+  "replaced": "تم تحديث الأغنية"
 }

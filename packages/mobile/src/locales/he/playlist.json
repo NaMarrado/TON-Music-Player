@@ -42,5 +42,6 @@
   "sortDownloaded": "הורד",
   "sortDuration": "משך",
   "filterPlaceholder": "סינון שירים...",
-  "noResults": "אין שירים תואמים"
+  "noResults": "אין שירים תואמים",
+  "editInStudio": "עריכה ב-Studio"
 }

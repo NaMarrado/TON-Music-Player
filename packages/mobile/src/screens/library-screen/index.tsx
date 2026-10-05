@@ -15,6 +15,7 @@ import { LibraryToolbar } from './library-toolbar';
 import { LibraryTransferProgressModal } from '../../components/library-transfer-progress-modal';
 import { useLibraryTransferActions } from '../settings-screen/use-library-transfer-actions';
 import { useLibraryScreen } from './use-library-screen';
+import { useOpenInStudio } from '../studio-screen/use-open-in-studio';
 import {
   MobileFastScroller,
   useMobileFastScroll,
@@ -24,6 +25,7 @@ export function LibraryScreen() {
   const { t } = useTranslation('library');
   const { t: ts } = useTranslation('settings');
   const transfer = useLibraryTransferActions();
+  const openInStudio = useOpenInStudio();
   const [pendingExportTrackIds, setPendingExportTrackIds] = useState<number[] | null>(null);
   const {
     clearSelection,
@@ -93,6 +95,12 @@ export function LibraryScreen() {
         onExportSelection={() => {
           setPendingExportTrackIds([...selectedTrackIds]);
         }}
+        onEditSelectionInStudio={selectedTrackIds.length === 1 ? () => {
+          const track = displayTracks.find((candidate) => candidate.id === selectedTrackIds[0]);
+          clearSelection();
+          if (track) openInStudio(track);
+        } : undefined}
+        editInStudioLabel={t('editInStudio')}
         onRemoveSelection={() => { void handleRemoveSelection(); }}
         onClearSelection={clearSelection}
         onOpenSortMenu={() => setShowSortMenu(true)}

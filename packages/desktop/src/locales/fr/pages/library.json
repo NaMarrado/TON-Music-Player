@@ -51,5 +51,7 @@
   "duplicatePlaylistAddAgain": "Ajouter à nouveau",
   "duplicatePlaylistSkip": "Ignorer",
   "duplicatePlaylistAddThis": "Ajouter ce morceau",
-  "duplicatePlaylistAddAll": "Ajouter tous les doublons"
+  "duplicatePlaylistAddAll": "Ajouter tous les doublons",
+  "editInStudio": "Modifier dans Studio",
+  "editInStudioHint": "Ouvre ce titre dans Studio pour le couper ou le modifier, puis l’enregistre au même endroit."
 }

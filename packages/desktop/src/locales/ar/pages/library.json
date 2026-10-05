@@ -51,5 +51,7 @@
   "duplicatePlaylistAddAgain": "إضافة مجددًا",
   "duplicatePlaylistSkip": "تخطي",
   "duplicatePlaylistAddThis": "إضافة هذه الأغنية",
-  "duplicatePlaylistAddAll": "إضافة كل التكرارات"
+  "duplicatePlaylistAddAll": "إضافة كل التكرارات",
+  "editInStudio": "تحرير في Studio",
+  "editInStudioHint": "يفتح هذه الأغنية في Studio لقصها أو تغييرها ثم حفظها في المكان نفسه."
 }

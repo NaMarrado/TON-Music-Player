@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { TrackContextMenu } from '../context-menu';
+import { editTrackInStudio } from '../../studio/studio-store';
 import { LibraryHeader } from '../library-header';
 import { TrackListView } from '../track-list-view';
 import { EmptyFilterState, EmptyLibraryState, EmptyStarredState } from './empty-states';
@@ -137,6 +138,13 @@ export function LibraryPage() {
           playlists={manualPlaylists}
           onAddToPlaylist={handleAddToPlaylist}
           onDelete={handleDeleteFromMenu}
+          onEditInStudio={() => {
+            const track = tracks.find((candidate) => candidate.id === contextMenu.trackId);
+            setContextMenu(null);
+            if (!track) return;
+            editTrackInStudio(track);
+            navigate('/studio');
+          }}
           t={t}
         />
       )}
