@@ -1,11 +1,11 @@
 import { create } from 'zustand';
 import type { Track, SortField, SortOrder } from '@ton/core';
-import { getFilteredTracks } from '@ton/core';
 import { getAllTracks, getTracksByIds, toggleTrackStarInDb } from '../services/db-queries';
 import {
   deleteTracksEverywhere as deleteTrackRowsEverywhere,
 } from '../services/track-removal';
 import { clearDeletedTracksFromPlayback } from '../services/playback-deletion-cleanup';
+import { usePlaylistStore } from './playlist-store-state';
 
 interface LibraryState {
   tracks: Track[];
@@ -180,11 +180,6 @@ export function isTrackStarred(track: Pick<Track, 'rating'>): boolean {
   return (track.rating ?? 0) > 0;
 }
 
-export function getDisplayTracks(): Track[] {
-  const { tracks, filterQuery, sortBy, sortOrder, starredOnly } = useLibraryStore.getState();
-  return getFilteredTracks(starredOnly ? tracks.filter(isTrackStarred) : tracks, filterQuery, sortBy, sortOrder);
-}
-
 const starTogglePromises = new Map<number, Promise<void>>();
 
 /** Toggles one song's star; taps on the same song run in order so fast double taps end in the expected state. */
@@ -196,6 +191,20 @@ export function toggleTrackStar(trackId: number): Promise<void> {
       tracks: state.tracks.map((track) => (track.id === trackId ? { ...track, rating } : track)),
       revision: state.revision + 1,
     }));
+    // Open playlists hold their own copies of the songs; keep their stars in step.
+    usePlaylistStore.setState((state) => {
+      const playlistDetails = { ...state.playlistDetails };
+      let changed = false;
+      for (const [id, detail] of Object.entries(state.playlistDetails)) {
+        if (!detail.tracks.some((track) => track.id === trackId)) continue;
+        changed = true;
+        playlistDetails[Number(id)] = {
+          ...detail,
+          tracks: detail.tracks.map((track) => (track.id === trackId ? { ...track, rating } : track)),
+        };
+      }
+      return changed ? { playlistDetails } : state;
+    });
   }).finally(() => {
     if (starTogglePromises.get(trackId) === pending) starTogglePromises.delete(trackId);
   });

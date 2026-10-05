@@ -3,7 +3,7 @@ import type { PlaybackQueueSourceDescriptor, Track } from '@ton/core';
 import { playTracks } from '../../services/playback-bridge';
 
 export function useLibraryPlaybackActions(
-  displayTracks: Track[],
+  playbackTracks: Track[],
   selectedTracks: Track[],
   clearSelection: () => void,
   queueSource: PlaybackQueueSourceDescriptor,
@@ -14,11 +14,11 @@ export function useLibraryPlaybackActions(
       return;
     }
 
-    const currentIndex = displayTracks.findIndex((currentTrack) => currentTrack.id === track.id);
+    const currentIndex = playbackTracks.findIndex((currentTrack) => currentTrack.id === track.id);
     if (currentIndex >= 0) {
-      playTracks(displayTracks, currentIndex, queueSource);
+      playTracks(playbackTracks, currentIndex, queueSource);
     }
-  }, [displayTracks, queueSource]);
+  }, [playbackTracks, queueSource]);
 
   const handleTrackLongPress = useCallback((track: Track, toggleSelection: (trackId: number) => void) => {
     toggleSelection(track.id);
@@ -33,19 +33,7 @@ export function useLibraryPlaybackActions(
     clearSelection();
   }, [clearSelection, selectedTracks]);
 
-  const handlePlay = useCallback((index: number) => {
-    playTracks(displayTracks, index, queueSource);
-  }, [displayTracks, queueSource]);
-
-  const handlePlayAll = useCallback(() => {
-    if (displayTracks.length > 0) {
-      playTracks(displayTracks, 0, queueSource);
-    }
-  }, [displayTracks, queueSource]);
-
   return {
-    handlePlay,
-    handlePlayAll,
     handlePlaySelection,
     handleTrackLongPress,
     handleTrackPress,
