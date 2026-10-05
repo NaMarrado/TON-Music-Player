@@ -50,5 +50,6 @@
   "unstarTrack": "Aus Favoriten entfernen",
   "starFailed": "Favorit konnte nicht geändert werden",
   "emptyStarred": "Noch keine Favoriten",
-  "emptyStarredHint": "Markiere einen Titel mit einem Stern, um ihn hier zu finden."
+  "emptyStarredHint": "Markiere einen Titel mit einem Stern, um ihn hier zu finden.",
+  "editInStudio": "Im Studio bearbeiten"
 }

@@ -55,7 +55,7 @@ If TON is useful to you, the easiest way to support the project is to star the r
 - ⬇️ **Local Downloads:** Save playable audio directly to your device and listen offline.
 - 🎵 **Library and Playlists:** Keep a separate main library, create playlists, reorder tracks, and preserve playlist order.
 - 📊 **Profile:** See how you listen: time listened, plays, and your favorite songs and artists over time.
-- 🎛️ **Studio:** Make your own versions of songs. Layer them, slow them down, add effects, and save the result to your library.
+- 🎛️ **Studio:** Make your own versions of songs. Layer them, slow them down, add effects, and save the result to your library, or quickly edit a song, like cutting its intro, and save it in place.
 - 💾 **Export & Import:** Move your whole profile, your library, chosen playlists, or chosen songs to another device in one file.
 - ☁️ **Cloud Library:** Connect your own Cloudflare R2 bucket and move your library and playlists between devices.
 - 🗂️ **Structured Cloud Storage:** Keep the main library and each playlist in clearly named folders with track order, metadata, and playlist covers preserved.

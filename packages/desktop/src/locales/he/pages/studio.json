@@ -280,5 +280,9 @@
   "exporting": "שומר את המיקס",
   "saved": "המיקס נשמר בספרייה שלך",
   "removeConfirmText": "להסיר את השיר הזה מהעורך? הספרייה שלך לא תשתנה.",
-  "removeConfirmAction": "הסרה"
+  "removeConfirmAction": "הסרה",
+  "replaceText": "להחליף את \"{{title}}\" בכל מקום שבו הוא משמש, או לשמור את העריכה כשיר חדש.",
+  "replaceOriginal": "החלפת המקור",
+  "saveAsNew": "שמירה כשיר חדש",
+  "replaced": "השיר עודכן"
 }

@@ -280,5 +280,9 @@
   "exporting": "Guardando la mezcla",
   "saved": "Mezcla guardada en tu Biblioteca",
   "removeConfirmText": "¿Quitar esta canción del editor? Tu biblioteca no cambia.",
-  "removeConfirmAction": "Quitar"
+  "removeConfirmAction": "Quitar",
+  "replaceText": "Reemplaza «{{title}}» en todos los lugares donde se usa o guarda la edición como una canción nueva.",
+  "replaceOriginal": "Reemplazar original",
+  "saveAsNew": "Guardar como nueva",
+  "replaced": "Canción actualizada"
 }

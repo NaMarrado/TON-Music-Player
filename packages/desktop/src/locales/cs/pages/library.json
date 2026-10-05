@@ -51,5 +51,7 @@
   "duplicatePlaylistAddAgain": "Přidat znovu",
   "duplicatePlaylistSkip": "Přeskočit",
   "duplicatePlaylistAddThis": "Přidat tuto skladbu",
-  "duplicatePlaylistAddAll": "Přidat všechny duplicity"
+  "duplicatePlaylistAddAll": "Přidat všechny duplicity",
+  "editInStudio": "Upravit ve Studiu",
+  "editInStudioHint": "Otevře skladbu ve Studiu, kde ji můžeš zkrátit nebo upravit a uložit zpět na stejné místo."
 }

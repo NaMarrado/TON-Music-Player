@@ -51,5 +51,7 @@
   "duplicatePlaylistAddAgain": "再次添加",
   "duplicatePlaylistSkip": "跳过",
   "duplicatePlaylistAddThis": "添加此歌曲",
-  "duplicatePlaylistAddAll": "添加所有重复项"
+  "duplicatePlaylistAddAll": "添加所有重复项",
+  "editInStudio": "在 Studio 中编辑",
+  "editInStudioHint": "在 Studio 中打开这首歌进行剪辑或修改，然后保存回原位置。"
 }

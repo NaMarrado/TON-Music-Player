@@ -50,5 +50,6 @@
   "unstarTrack": "Unstar track",
   "starFailed": "Could not update star",
   "emptyStarred": "No starred tracks yet",
-  "emptyStarredHint": "Star a track to find it here."
+  "emptyStarredHint": "Star a track to find it here.",
+  "editInStudio": "Edit in Studio"
 }

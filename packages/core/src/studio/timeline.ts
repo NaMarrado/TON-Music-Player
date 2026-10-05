@@ -27,6 +27,13 @@ export function projectDurationSec(project: StudioProject): number {
   return end;
 }
 
+/** Where the first clip begins; a quick edit that removed the intro is saved from here, without the empty lead-in. */
+export function projectContentStartSec(project: StudioProject): number {
+  let start = Number.POSITIVE_INFINITY;
+  for (const track of project.tracks) for (const clip of track.clips) start = Math.min(start, clip.startSec);
+  return Number.isFinite(start) ? start : 0;
+}
+
 /** Pitch factor a clip applies on top of the source: vinyl-style speed moves pitch, pitch lock does not. */
 export function clipPitchRatio(clip: StudioClip): number {
   return (clip.pitchLock ? 1 : clip.speed) * 2 ** (clip.semitones / 12);

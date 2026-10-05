@@ -280,5 +280,9 @@
   "clearTitle": "Clear the Studio?",
   "clearText": "All songs are removed from the editor. You can bring them back with Undo. Your Library and exported mixes are not touched.",
   "exporting": "Saving the mix",
-  "saved": "Mix saved to your Library"
+  "saved": "Mix saved to your Library",
+  "replaceText": "Replace “{{title}}” everywhere it is used, or save the edit as a new song.",
+  "replaceOriginal": "Replace original",
+  "saveAsNew": "Save as new",
+  "replaced": "Song updated"
 }

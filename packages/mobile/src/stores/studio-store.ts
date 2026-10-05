@@ -16,6 +16,7 @@ import {
   findClip,
   moveClip,
   placeTransition,
+  projectContentStartSec,
   projectDurationSec,
   STUDIO_NEW_CLIP_GAIN_DB,
   STUDIO_NEW_LANE_VOLUME,
@@ -32,8 +33,11 @@ import {
 } from '@ton/core';
 import { analyseSong } from '../services/studio/studio-analysis';
 import { clearStudioFiles } from '../services/studio/studio-files';
-import { downloadTemporarySong, saveMixToLibrary, startRender, type StudioRender } from '../services/studio/studio-render';
+import { downloadTemporarySong, replaceTrackAudio, saveMixToLibrary, startRender, type StudioRender } from '../services/studio/studio-render';
+import { pause as pauseMainPlayback } from '../services/playback-bridge';
 import { upsertTrackById, useLibraryStore } from './library-store';
+import { usePlaybackStore } from './playback-store';
+import { reloadLoadedPlaylistDetails } from './playlist-store';
 import { showToast } from './toast-store';
 
 const MAX_HISTORY = 40;
@@ -68,6 +72,8 @@ export interface StudioState {
   autoFit: boolean;
   /** Counts the times the user picked a clip, so the bottom panel can show Edit for it. */
   editRequest: number;
+  /** The Library song opened with Edit in Studio; saving can replace its audio in place. */
+  editTarget: { trackId: number; title: string } | null;
 }
 
 export const useStudioStore = create<StudioState>()(() => ({
@@ -89,6 +95,7 @@ export const useStudioStore = create<StudioState>()(() => ({
   viewWidthPx: 0,
   autoFit: true,
   editRequest: 0,
+  editTarget: null,
 }));
 
 const get = useStudioStore.getState;
@@ -197,12 +204,17 @@ export function seek(sec: number): void {
 
 // ---- adding songs -----------------------------------------------------------------------------------------------------
 
-function addLane(asset: StudioAsset): void {
+/** `fullLevel` keeps the song exactly as loud as the original (quick edits); mixes start quieter. */
+function addLane(asset: StudioAsset, fullLevel = false): void {
   const clipId = newStudioId('c');
   const trackId = newStudioId('t');
   editProject((project) => {
     const withAsset = project.assets[asset.id] ? project : addAsset(project, asset);
-    return addClipToTrack(addTrack(withAsset, createTrack(trackId, [], STUDIO_NEW_LANE_VOLUME)), trackId, { ...createClip(clipId, withAsset.assets[asset.id], get().playheadSec), gainDb: STUDIO_NEW_CLIP_GAIN_DB });
+    return addClipToTrack(
+      addTrack(withAsset, createTrack(trackId, [], fullLevel ? 1 : STUDIO_NEW_LANE_VOLUME)),
+      trackId,
+      { ...createClip(clipId, withAsset.assets[asset.id], get().playheadSec), gainDb: fullLevel ? 0 : STUDIO_NEW_CLIP_GAIN_DB },
+    );
   });
   set({ selectedClipId: clipId, selectedTrackId: trackId });
   if (get().autoFit) fitToWindow();
@@ -238,21 +250,21 @@ export function libraryAssetFor(track: Track): StudioAsset {
   };
 }
 
-export async function addLibraryTrackToStudio(track: Track): Promise<void> {
+export async function addLibraryTrackToStudio(track: Track, fullLevel = false): Promise<void> {
   const existing = get().project.assets[`lib-${track.id}`];
   if (existing) {
-    addLane(existing);
+    addLane(existing, fullLevel);
     return;
   }
   const draft = libraryAssetFor(track);
   // The lane appears at once; the waveform, length, tempo and key fill in when the analysis finishes.
-  if (draft.durationSec > 0) addLane(draft);
+  if (draft.durationSec > 0) addLane(draft, fullLevel);
   const analysed = await analyse(draft);
   if (!analysed) {
     showToast('Could not read this song.', 'error');
     return;
   }
-  if (draft.durationSec <= 0) addLane(analysed);
+  if (draft.durationSec <= 0) addLane(analysed, fullLevel);
 }
 
 export function resultKey(result: SearchResult): string {
@@ -490,13 +502,68 @@ export async function exportMix(title: string, artist: string): Promise<number |
 }
 
 /**
+ * Opens one Library song alone in Studio for a quick edit. Earlier work is still reachable with Undo; Replace original
+ * is only offered while the project actually contains the edited song (see `activeEditTarget`).
+ */
+export async function editTrackInStudio(track: Track): Promise<void> {
+  await stopPlayback(true);
+  editProject(() => createEmptyProject());
+  set({ selectedClipId: null, selectedTrackId: null, autoFit: true, editTarget: { trackId: track.id, title: track.title || 'Untitled' } });
+  await addLibraryTrackToStudio(track, true);
+}
+
+/** The song a save would replace, or null when Undo/Clear left a project that no longer uses it. */
+export function activeEditTarget(state: Pick<StudioState, 'editTarget' | 'project'>): StudioState['editTarget'] {
+  const target = state.editTarget;
+  if (!target) return null;
+  const assetId = `lib-${target.trackId}`;
+  return state.project.tracks.some((lane) => lane.clips.some((clip) => clip.assetId === assetId)) ? target : null;
+}
+
+/**
+ * Saves the edit over the original song: same Library entry, same playlists, new audio. Studio is emptied afterwards,
+ * because its undo history points at audio that no longer exists. Resolves with true when the song was replaced.
+ */
+export async function replaceEditedTrack(): Promise<boolean> {
+  const editTarget = activeEditTarget(get());
+  if (!editTarget || get().exporting) return false;
+  await stopPlayback(false);
+  if (usePlaybackStore.getState().currentTrack?.id === editTarget.trackId) await pauseMainPlayback().catch(() => undefined);
+  set({ exporting: { progress: 0 } });
+  try {
+    const original = libraryTrackById(editTarget.trackId);
+    const project = get().project;
+    const render = await startRender(project, {
+      name: 'export',
+      // A quick edit that cut the intro starts at its first clip instead of keeping the empty lead-in.
+      range: { startSec: projectContentStartSec(project), endSec: projectDurationSec(project) },
+      metadata: { title: original?.title || editTarget.title, artist: original?.artist || '' },
+      onProgress: (progress) => set({ exporting: { progress } }),
+    });
+    exportRender = render;
+    if (!render || !(await render.done)) return false;
+    await replaceTrackAudio(editTarget.trackId, render.outputUri, render.durationSec);
+    await Promise.all([upsertTrackById(editTarget.trackId), reloadLoadedPlaylistDetails()]);
+    delete peaksByAsset[`lib-${editTarget.trackId}`];
+    set({ project: createEmptyProject(), past: [], future: [], selectedClipId: null, selectedTrackId: null, playheadSec: 0, autoFit: true, editTarget: null, assetPhase: {} });
+    return true;
+  } catch {
+    showToast('Could not save the song.', 'error');
+    return false;
+  } finally {
+    exportRender = null;
+    set({ exporting: null });
+  }
+}
+
+/**
  * Clear all: empties the Studio as one undoable step, so a mistaken Clear can be taken back with Undo. Waveforms and
  * temporary downloads stay until the app starts again (cleaned up below), because Undo may need them.
  */
 export async function resetProject(): Promise<void> {
   await stopPlayback(true);
   editProject(() => createEmptyProject());
-  set({ selectedClipId: null, selectedTrackId: null, downloads: {}, autoFit: true });
+  set({ selectedClipId: null, selectedTrackId: null, downloads: {}, autoFit: true, editTarget: null });
 }
 
 // Nothing from an earlier session can be undone any more, so its work files and temporary songs are deleted at start.

@@ -280,5 +280,9 @@
   "clearTitle": "Svuotare lo Studio?",
   "clearText": "Tutti i brani vengono tolti dall’editor. Puoi recuperarli con Annulla. La tua libreria e i mix esportati non cambiano.",
   "exporting": "Salvataggio del mix",
-  "saved": "Mix salvato nella tua Libreria"
+  "saved": "Mix salvato nella tua Libreria",
+  "replaceText": "Sostituisci «{{title}}» ovunque venga usato oppure salva la modifica come nuovo brano.",
+  "replaceOriginal": "Sostituisci originale",
+  "saveAsNew": "Salva come nuovo",
+  "replaced": "Brano aggiornato"
 }

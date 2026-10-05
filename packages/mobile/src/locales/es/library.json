@@ -50,5 +50,6 @@
   "unstarTrack": "Quitar de favoritas",
   "starFailed": "No se pudo actualizar la favorita",
   "emptyStarred": "Aún no hay canciones favoritas",
-  "emptyStarredHint": "Marca una canción con una estrella para encontrarla aquí."
+  "emptyStarredHint": "Marca una canción con una estrella para encontrarla aquí.",
+  "editInStudio": "Editar en Studio"
 }

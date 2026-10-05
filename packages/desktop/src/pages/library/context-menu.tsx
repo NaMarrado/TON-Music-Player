@@ -7,6 +7,7 @@ interface TrackContextMenuProps {
   playlists: Playlist[];
   onAddToPlaylist: (playlistId: number) => void;
   onDelete: () => void;
+  onEditInStudio: () => void;
   t: (key: string) => string;
 }
 
@@ -16,11 +17,12 @@ export function TrackContextMenu({
   playlists,
   onAddToPlaylist,
   onDelete,
+  onEditInStudio,
   t,
 }: TrackContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const adjustedY = Math.min(y, window.innerHeight - 280);
+  const adjustedY = Math.min(y, window.innerHeight - 320);
   const adjustedX = Math.min(x, window.innerWidth - 200);
 
   return (
@@ -83,6 +85,34 @@ export function TrackContextMenu({
           </button>
         ))
       )}
+
+      {/* Separator */}
+      <div
+        style={{
+          height: '1px',
+          background: 'var(--border-subtle)',
+          margin: '4px 0',
+        }}
+      />
+
+      <button
+        className="w-full text-left cursor-pointer"
+        onClick={onEditInStudio}
+        title={t('editInStudioHint')}
+        style={{
+          display: 'block',
+          padding: '8px 12px',
+          borderRadius: '6px',
+          background: 'transparent',
+          border: 'none',
+          color: 'var(--text-primary)',
+          fontSize: '0.82rem',
+          fontFamily: 'inherit',
+          transition: 'background var(--transition)',
+        }}
+      >
+        {t('editInStudio')}
+      </button>
 
       {/* Separator */}
       <div

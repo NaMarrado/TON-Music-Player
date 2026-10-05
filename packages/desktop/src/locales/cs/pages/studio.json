@@ -280,5 +280,9 @@
   "exporting": "Ukládání mixu",
   "saved": "Mix byl uložen do vaší Knihovny",
   "removeConfirmText": "Odebrat tuto píseň z editoru? Knihovna zůstane beze změny.",
-  "removeConfirmAction": "Odebrat"
+  "removeConfirmAction": "Odebrat",
+  "replaceText": "Nahradit „{{title}}“ všude, kde se používá, nebo uložit úpravu jako novou skladbu.",
+  "replaceOriginal": "Nahradit původní",
+  "saveAsNew": "Uložit jako novou",
+  "replaced": "Skladba upravena"
 }

@@ -50,5 +50,6 @@
   "unstarTrack": "Odebrat z oblíbených",
   "starFailed": "Nepodařilo se změnit oblíbenou skladbu",
   "emptyStarred": "Zatím žádné oblíbené skladby",
-  "emptyStarredHint": "Označ skladbu hvězdičkou a najdeš ji zde."
+  "emptyStarredHint": "Označ skladbu hvězdičkou a najdeš ji zde.",
+  "editInStudio": "Upravit ve Studiu"
 }

@@ -42,5 +42,6 @@
   "sortDownloaded": "Transferido",
   "sortDuration": "Duração",
   "filterPlaceholder": "Filtrar faixas...",
-  "noResults": "Nenhuma faixa correspondente"
+  "noResults": "Nenhuma faixa correspondente",
+  "editInStudio": "Editar no Studio"
 }

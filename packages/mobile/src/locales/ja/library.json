@@ -50,5 +50,6 @@
   "unstarTrack": "お気に入りから削除",
   "starFailed": "お気に入りを更新できませんでした",
   "emptyStarred": "お気に入りの曲はまだありません",
-  "emptyStarredHint": "曲に星を付けると、ここに表示されます。"
+  "emptyStarredHint": "曲に星を付けると、ここに表示されます。",
+  "editInStudio": "Studioで編集"
 }

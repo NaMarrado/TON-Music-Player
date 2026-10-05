@@ -9,6 +9,8 @@ export function LibraryToolbar({
   onPlaySelection,
   onAddSelectionToPlaylist,
   onExportSelection,
+  onEditSelectionInStudio,
+  editInStudioLabel,
   onRemoveSelection,
   onClearSelection,
   onOpenSortMenu,
@@ -19,6 +21,9 @@ export function LibraryToolbar({
   onPlaySelection: () => void;
   onAddSelectionToPlaylist: () => void;
   onExportSelection: () => void;
+  /** Present only when exactly one song is selected. */
+  onEditSelectionInStudio?: () => void;
+  editInStudioLabel: string;
   onRemoveSelection: () => void;
   onClearSelection: () => void;
   onOpenSortMenu: () => void;
@@ -45,6 +50,11 @@ export function LibraryToolbar({
             <Pressable onPress={onExportSelection} hitSlop={8} className="ml-4">
               <Feather name="share" size={20} color="#e8e8e8" />
             </Pressable>
+            {onEditSelectionInStudio && (
+              <Pressable onPress={onEditSelectionInStudio} hitSlop={8} className="ml-4" accessibilityRole="button" accessibilityLabel={editInStudioLabel}>
+                <Feather name="scissors" size={20} color="#e8e8e8" />
+              </Pressable>
+            )}
             <Pressable onPress={onRemoveSelection} hitSlop={8} className="ml-4">
               <Feather name="trash-2" size={20} color="#ef4444" />
             </Pressable>

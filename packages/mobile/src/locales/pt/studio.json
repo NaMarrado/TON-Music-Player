@@ -280,5 +280,9 @@
   "clearTitle": "Limpar o Studio?",
   "clearText": "Todas as músicas são removidas do editor. Você pode trazê-las de volta com Desfazer. Sua biblioteca e as mixagens exportadas não mudam.",
   "exporting": "Salvando a mixagem",
-  "saved": "Mixagem salva na sua Biblioteca"
+  "saved": "Mixagem salva na sua Biblioteca",
+  "replaceText": "Substituir “{{title}}” em todos os lugares onde é usada ou salvar a edição como uma nova música.",
+  "replaceOriginal": "Substituir original",
+  "saveAsNew": "Salvar como nova",
+  "replaced": "Música atualizada"
 }

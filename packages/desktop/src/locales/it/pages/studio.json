@@ -280,5 +280,9 @@
   "exporting": "Salvataggio del mix",
   "saved": "Mix salvato nella tua Libreria",
   "removeConfirmText": "Togliere questo brano dall’editor? La tua libreria non cambia.",
-  "removeConfirmAction": "Togli"
+  "removeConfirmAction": "Togli",
+  "replaceText": "Sostituisci «{{title}}» ovunque venga usato oppure salva la modifica come nuovo brano.",
+  "replaceOriginal": "Sostituisci originale",
+  "saveAsNew": "Salva come nuovo",
+  "replaced": "Brano aggiornato"
 }

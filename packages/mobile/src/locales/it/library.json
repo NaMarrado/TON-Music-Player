@@ -50,5 +50,6 @@
   "unstarTrack":"Rimuovi dai preferiti",
   "starFailed":"Impossibile aggiornare il preferito",
   "emptyStarred":"Nessun brano preferito",
-  "emptyStarredHint":"Segna un brano con una stella per trovarlo qui."
+  "emptyStarredHint":"Segna un brano con una stella per trovarlo qui.",
+  "editInStudio":"Modifica in Studio"
 }

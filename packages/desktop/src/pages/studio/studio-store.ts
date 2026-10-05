@@ -30,6 +30,8 @@ import {
 import { pause as pauseMainPlayback } from '../../audio/playback-service';
 import { showToast } from '../../stores/toast-store';
 import { loadTracks, useLibraryStore } from '../../stores/library-store';
+import { usePlaybackStore } from '../../stores/playback-store';
+import { loadPlaylists, reloadPlaylistViews } from '../../stores/playlist-store';
 import { studioEngine } from './studio-engine';
 
 const MAX_HISTORY = 60;
@@ -63,6 +65,8 @@ export interface StudioState {
   autoFit: boolean;
   /** Counts the times the user picked a clip, so the side panel can show Edit for it. */
   editRequest: number;
+  /** The Library song opened with Edit in Studio; saving can replace its audio in place. */
+  editTarget: { trackId: number; title: string } | null;
 }
 
 export const useStudioStore = create<StudioState>()(() => ({
@@ -84,6 +88,7 @@ export const useStudioStore = create<StudioState>()(() => ({
   viewWidthPx: 0,
   autoFit: true,
   editRequest: 0,
+  editTarget: null,
 }));
 
 const get = useStudioStore.getState;
@@ -196,13 +201,18 @@ export function setTransitionCurve(transitionCurve: StudioFadeCurve): void {
 
 // ---- adding songs ----------------------------------------------------------------------------------------------------
 
-function addLane(asset: StudioAsset): void {
+/** `fullLevel` keeps the song exactly as loud as the original (quick edits); mixes start quieter. */
+function addLane(asset: StudioAsset, fullLevel = false): void {
   const clipId = newStudioId('c');
   const trackId = newStudioId('t');
   editProject((project) => {
     const withAsset = project.assets[asset.id] ? project : addAsset(project, asset);
     const stored = withAsset.assets[asset.id];
-    return addClipToTrack(addTrack(withAsset, createTrack(trackId, [], STUDIO_NEW_LANE_VOLUME)), trackId, { ...createClip(clipId, stored, get().playheadSec), gainDb: STUDIO_NEW_CLIP_GAIN_DB });
+    return addClipToTrack(
+      addTrack(withAsset, createTrack(trackId, [], fullLevel ? 1 : STUDIO_NEW_LANE_VOLUME)),
+      trackId,
+      { ...createClip(clipId, stored, get().playheadSec), gainDb: fullLevel ? 0 : STUDIO_NEW_CLIP_GAIN_DB },
+    );
   });
   set({ selectedClipId: clipId, selectedTrackId: trackId });
   if (get().autoFit) fitToWindow();
@@ -233,17 +243,17 @@ export function libraryAssetFor(track: Track): StudioAsset {
   };
 }
 
-export function addLibraryTrackToStudio(track: Track): void {
+export function addLibraryTrackToStudio(track: Track, fullLevel = false): void {
   const asset = get().project.assets[`lib-${track.id}`] ?? libraryAssetFor(track);
   if ((track.duration_ms ?? 0) > 0) {
-    addLane(asset);
+    addLane(asset, fullLevel);
     if (!get().project.assets[asset.id]?.bpm) analyse(asset);
     return;
   }
   // Without a stored duration the clip length is only known once the file is decoded.
   set((state) => ({ assetPhase: { ...state.assetPhase, [asset.id]: 'loading' } }));
   studioEngine.loadAsset(asset).then((analysis) => {
-    addLane({ ...asset, durationSec: analysis.durationSec, bpm: analysis.bpm, key: analysis.key });
+    addLane({ ...asset, durationSec: analysis.durationSec, bpm: analysis.bpm, key: analysis.key }, fullLevel);
     set((state) => ({ assetPhase: { ...state.assetPhase, [asset.id]: 'ready' } }));
   }).catch(() => showToast('Could not read this song.', 'error'));
 }
@@ -480,6 +490,56 @@ export async function exportMix(title: string, artist: string): Promise<number |
   }
 }
 
+/**
+ * Opens one Library song alone in Studio for a quick edit. Earlier work is still reachable with Undo; Replace original
+ * is only offered while the project actually contains the edited song (see `activeEditTarget`).
+ */
+export function editTrackInStudio(track: Track): void {
+  stopPlayback();
+  editProject(() => createEmptyProject());
+  set({ selectedClipId: null, selectedTrackId: null, playheadSec: 0, autoFit: true, editTarget: { trackId: track.id, title: track.title || 'Untitled' } });
+  addLibraryTrackToStudio(track, true);
+}
+
+/** The song a save would replace, or null when Undo/Clear left a project that no longer uses it. */
+export function activeEditTarget(state: Pick<StudioState, 'editTarget' | 'project'>): StudioState['editTarget'] {
+  const target = state.editTarget;
+  if (!target) return null;
+  const assetId = `lib-${target.trackId}`;
+  return state.project.tracks.some((lane) => lane.clips.some((clip) => clip.assetId === assetId)) ? target : null;
+}
+
+/**
+ * Saves the edit over the original song: same Library entry, same playlists, new audio. Studio is emptied afterwards,
+ * because its undo history points at audio that no longer exists. Resolves with true when the song was replaced.
+ */
+export async function replaceEditedTrack(): Promise<boolean> {
+  const { project, exporting } = get();
+  const editTarget = activeEditTarget(get());
+  if (!editTarget || exporting || projectDurationSec(project) <= 0) return false;
+  pausePlayback();
+  if (usePlaybackStore.getState().currentTrack?.id === editTarget.trackId) pauseMainPlayback();
+  set({ exporting: { progress: 0 } });
+  try {
+    const original = libraryTrackById(editTarget.trackId);
+    await window.api.invoke('studio:export', EXPORT_JOB, {
+      project,
+      title: original?.title || editTarget.title,
+      artist: original?.artist || '',
+      replaceTrackId: editTarget.trackId,
+    });
+    await Promise.all([loadTracks({ force: true }), loadPlaylists({ force: true }), reloadPlaylistViews()]);
+    studioEngine.forget([]);
+    set({ project: createEmptyProject(), past: [], future: [], selectedClipId: null, selectedTrackId: null, playheadSec: 0, autoFit: true, editTarget: null, assetPhase: {} });
+    return true;
+  } catch (error) {
+    if (!(error instanceof Error && /cancel/i.test(error.message))) showToast(error instanceof Error ? error.message : 'Saving failed.', 'error');
+    return false;
+  } finally {
+    set({ exporting: null });
+  }
+}
+
 export function cancelExport(): void {
   void window.api.invoke('studio:cancel', EXPORT_JOB);
 }
@@ -491,7 +551,7 @@ export function cancelExport(): void {
 export function resetProject(): void {
   stopPlayback();
   editProject(() => createEmptyProject());
-  set({ selectedClipId: null, selectedTrackId: null, downloads: {}, playheadSec: 0, autoFit: true });
+  set({ selectedClipId: null, selectedTrackId: null, downloads: {}, playheadSec: 0, autoFit: true, editTarget: null });
 }
 
 export function librarySnapshot(): Track[] {

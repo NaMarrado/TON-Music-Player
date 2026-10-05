@@ -280,5 +280,9 @@
   "clearTitle": "Studio leeren?",
   "clearText": "Alle Songs werden aus dem Editor entfernt. Mit Rückgängig holst du sie zurück. Deine Bibliothek und exportierte Mixe bleiben unverändert.",
   "exporting": "Mix wird gespeichert",
-  "saved": "Mix in deiner Mediathek gespeichert"
+  "saved": "Mix in deiner Mediathek gespeichert",
+  "replaceText": "„{{title}}“ überall ersetzen, wo er verwendet wird, oder die Bearbeitung als neuen Titel speichern.",
+  "replaceOriginal": "Original ersetzen",
+  "saveAsNew": "Als neu speichern",
+  "replaced": "Titel aktualisiert"
 }

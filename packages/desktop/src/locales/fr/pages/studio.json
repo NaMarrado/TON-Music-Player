@@ -280,5 +280,9 @@
   "exporting": "Enregistrement du mix",
   "saved": "Mix enregistré dans votre Bibliothèque",
   "removeConfirmText": "Retirer ce morceau de l’éditeur ? Votre bibliothèque reste intacte.",
-  "removeConfirmAction": "Retirer"
+  "removeConfirmAction": "Retirer",
+  "replaceText": "Remplacer « {{title}} » partout où il est utilisé, ou enregistrer la modification comme nouveau titre.",
+  "replaceOriginal": "Remplacer l’original",
+  "saveAsNew": "Enregistrer comme nouveau",
+  "replaced": "Titre mis à jour"
 }

@@ -50,5 +50,6 @@
   "unstarTrack": "取消收藏",
   "starFailed": "无法更新收藏",
   "emptyStarred": "暂无收藏歌曲",
-  "emptyStarredHint": "点击歌曲的星标即可在此找到它。"
+  "emptyStarredHint": "点击歌曲的星标即可在此找到它。",
+  "editInStudio": "在 Studio 中编辑"
 }

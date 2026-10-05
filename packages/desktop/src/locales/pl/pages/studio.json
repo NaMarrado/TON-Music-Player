@@ -280,5 +280,9 @@
   "exporting": "Zapisywanie miksu",
   "saved": "Miks zapisany w Twojej Bibliotece",
   "removeConfirmText": "Usunąć tę piosenkę z edytora? Twoja biblioteka się nie zmieni.",
-  "removeConfirmAction": "Usuń"
+  "removeConfirmAction": "Usuń",
+  "replaceText": "Zastąp „{{title}}” wszędzie, gdzie jest używany, albo zapisz edycję jako nowy utwór.",
+  "replaceOriginal": "Zastąp oryginał",
+  "saveAsNew": "Zapisz jako nowy",
+  "replaced": "Utwór zaktualizowany"
 }

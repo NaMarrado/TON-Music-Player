@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Modal, Pressable, Text, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { projectDurationSec, type StudioProject } from '@ton/core';
+import { projectContentStartSec, projectDurationSec, type StudioProject } from '@ton/core';
 import { showToast } from '../../stores/toast-store';
-import { cancelExport, exportMix, resetProject, useStudioStore } from '../../stores/studio-store';
+import { activeEditTarget, cancelExport, exportMix, replaceEditedTrack, resetProject, useStudioStore } from '../../stores/studio-store';
 import { STUDIO_COLORS } from './studio-ui';
 
 function clock(seconds: number): string {
@@ -45,6 +45,7 @@ function ExportForm({ onClose }: { onClose: () => void }) {
   const project = useStudioStore((state) => state.project);
   const exporting = useStudioStore((state) => state.exporting);
   const [title, setTitle] = useState(() => suggestName(useStudioStore.getState().project, t('defaultName')));
+  const editTarget = useStudioStore(activeEditTarget);
 
   const save = async () => {
     const trackId = await exportMix(title.trim() || t('defaultName'), 'Studio');
@@ -54,10 +55,17 @@ function ExportForm({ onClose }: { onClose: () => void }) {
     }
   };
 
+  const replace = async () => {
+    if (await replaceEditedTrack()) {
+      showToast(t('replaced'), 'success');
+      onClose();
+    }
+  };
+
   return (
     <>
       <Text style={{ color: STUDIO_COLORS.text, fontSize: 16, fontWeight: '600' }}>{t('exportTitle')}</Text>
-      <Text style={{ color: STUDIO_COLORS.dim, fontSize: 13, lineHeight: 19 }}>{t('exportText')}</Text>
+      <Text style={{ color: STUDIO_COLORS.dim, fontSize: 13, lineHeight: 19 }}>{editTarget ? t('replaceText', { title: editTarget.title }) : t('exportText')}</Text>
       <TextInput
         value={title}
         onChangeText={setTitle}
@@ -68,15 +76,16 @@ function ExportForm({ onClose }: { onClose: () => void }) {
         placeholderTextColor={STUDIO_COLORS.dim}
         style={{ height: 44, paddingHorizontal: 14, borderRadius: 10, backgroundColor: STUDIO_COLORS.raised, color: STUDIO_COLORS.text, fontSize: 15 }}
       />
-      <Text style={{ color: STUDIO_COLORS.dim, fontSize: 13, fontVariant: ['tabular-nums'] }}>{clock(projectDurationSec(project))}</Text>
+      <Text style={{ color: STUDIO_COLORS.dim, fontSize: 13, fontVariant: ['tabular-nums'] }}>{clock(projectDurationSec(project) - (editTarget ? projectContentStartSec(project) : 0))}</Text>
       {exporting && (
         <View accessibilityRole="progressbar" accessibilityLabel={t('exporting')} accessibilityValue={{ min: 0, max: 100, now: Math.round(exporting.progress * 100) }} style={{ height: 4, borderRadius: 2, backgroundColor: STUDIO_COLORS.raised, overflow: 'hidden' }}>
           <View style={{ width: `${Math.round(exporting.progress * 100)}%`, height: '100%', backgroundColor: STUDIO_COLORS.text }} />
         </View>
       )}
-      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8 }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', flexWrap: 'wrap', gap: 8 }}>
         <Action label={t('cancel')} onPress={exporting ? () => { void cancelExport(); } : onClose} />
-        <Action label={t('save')} primary disabled={exporting !== null || title.trim() === ''} onPress={() => { void save(); }} />
+        <Action label={t(editTarget ? 'saveAsNew' : 'save')} primary={!editTarget} disabled={exporting !== null || title.trim() === ''} onPress={() => { void save(); }} />
+        {editTarget && <Action label={t('replaceOriginal')} primary disabled={exporting !== null} onPress={() => { void replace(); }} />}
       </View>
     </>
   );

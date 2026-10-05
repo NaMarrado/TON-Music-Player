@@ -50,5 +50,6 @@
   "unstarTrack": "Retirer des favoris",
   "starFailed": "Impossible de modifier le favori",
   "emptyStarred": "Aucun titre favori pour le moment",
-  "emptyStarredHint": "Marquez un titre avec une étoile pour le retrouver ici."
+  "emptyStarredHint": "Marquez un titre avec une étoile pour le retrouver ici.",
+  "editInStudio": "Modifier dans Studio"
 }

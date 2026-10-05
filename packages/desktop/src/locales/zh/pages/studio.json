@@ -280,5 +280,9 @@
   "exporting": "正在保存混音",
   "saved": "混音已保存到你的音乐库",
   "removeConfirmText": "要把这首歌从编辑器中移除吗?你的音乐库不会改变。",
-  "removeConfirmAction": "移除"
+  "removeConfirmAction": "移除",
+  "replaceText": "在所有使用“{{title}}”的地方替换它，或将编辑另存为新歌曲。",
+  "replaceOriginal": "替换原曲",
+  "saveAsNew": "另存为新歌曲",
+  "replaced": "歌曲已更新"
 }
