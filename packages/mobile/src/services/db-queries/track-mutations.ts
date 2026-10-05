@@ -136,3 +136,13 @@ export async function incrementTrackPlayCount(id: number): Promise<void> {
     [Math.floor(Date.now() / 1000), id],
   );
 }
+
+/** Stars an unstarred song or unstars a starred one; returns the new rating. The cloud outbox trigger picks it up. */
+export async function toggleTrackStarInDb(id: number): Promise<number | null> {
+  const row = await getDb().getFirstAsync<{ rating: number | null }>(
+    'UPDATE tracks SET rating = CASE WHEN COALESCE(rating, 0) > 0 THEN NULL ELSE 1 END WHERE id = ? RETURNING rating',
+    [id],
+  );
+  if (!row) throw new Error('track-not-found');
+  return row.rating;
+}

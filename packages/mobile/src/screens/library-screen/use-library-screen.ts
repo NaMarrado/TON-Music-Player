@@ -3,6 +3,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { getFilteredTracks } from '@ton/core';
 import { useTranslation } from 'react-i18next';
 import {
+  isTrackStarred,
   setFilterQuery,
   setSortBy,
   useLibraryStore,
@@ -10,6 +11,7 @@ import {
 } from '../../stores/library-store';
 import { createPlaylist, loadPlaylists, usePlaylistStore } from '../../stores/playlist-store';
 import { playTracks } from '../../services/playback-bridge';
+import { STARRED_LIBRARY_SOURCE_ID } from '../../services/playback-bridge/queue-source-reconcile';
 import { showToast } from '../../stores/toast-store';
 import type { ActionSheetOption } from '../../components/action-sheet';
 import { SORT_KEYS } from './constants';
@@ -21,6 +23,7 @@ export function useLibraryScreen() {
   const sortBy = useLibraryStore((state) => state.sortBy);
   const sortOrder = useLibraryStore((state) => state.sortOrder);
   const filterQuery = useLibraryStore((state) => state.filterQuery);
+  const starredOnly = useLibraryStore((state) => state.starredOnly);
   const isLoading = useLibraryStore((state) => state.isLoading);
   const playlists = usePlaylistStore((state) => state.playlists);
   const hasPlaylistsLoaded = usePlaylistStore((state) => state.hasLoaded);
@@ -43,15 +46,16 @@ export function useLibraryScreen() {
   }, [hasPlaylistsLoaded, isPlaylistLoading]);
 
   const displayTracks = useMemo(
-    () => getFilteredTracks(tracks, filterQuery, sortBy, sortOrder),
-    [tracks, filterQuery, sortBy, sortOrder],
+    () => getFilteredTracks(starredOnly ? tracks.filter(isTrackStarred) : tracks, filterQuery, sortBy, sortOrder),
+    [tracks, filterQuery, sortBy, sortOrder, starredOnly],
   );
   const queueSource = useMemo(() => ({
     kind: 'library' as const,
+    ...(starredOnly ? { source_id: STARRED_LIBRARY_SOURCE_ID } : {}),
     filter_query: filterQuery || undefined,
     sort_by: sortBy,
     sort_order: sortOrder,
-  }), [filterQuery, sortBy, sortOrder]);
+  }), [filterQuery, sortBy, sortOrder, starredOnly]);
   const selection = useLibrarySelection(displayTracks, queueSource);
 
   const handlePlay = useCallback((index: number) => {
@@ -104,6 +108,7 @@ export function useLibraryScreen() {
     handleRefresh,
     isLoading,
     isRefreshing,
+    starredOnly,
     playlists,
     setShowCreatePlaylist,
     setShowSortMenu,

@@ -44,5 +44,11 @@
   "duplicatePlaylistAddAgain": "Aggiungi di nuovo",
   "duplicatePlaylistSkip": "Salta",
   "duplicatePlaylistAddThis": "Aggiungi questo brano",
-  "duplicatePlaylistAddAll": "Aggiungi tutti i duplicati"
+  "duplicatePlaylistAddAll": "Aggiungi tutti i duplicati",
+  "starred":"Preferiti",
+  "starTrack":"Aggiungi ai preferiti",
+  "unstarTrack":"Rimuovi dai preferiti",
+  "starFailed":"Impossibile aggiornare il preferito",
+  "emptyStarred":"Nessun brano preferito",
+  "emptyStarredHint":"Segna un brano con una stella per trovarlo qui."
 }

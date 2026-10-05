@@ -44,5 +44,11 @@
   "duplicatePlaylistAddAgain": "Добавить ещё раз",
   "duplicatePlaylistSkip": "Пропустить",
   "duplicatePlaylistAddThis": "Добавить этот трек",
-  "duplicatePlaylistAddAll": "Добавить все дубликаты"
+  "duplicatePlaylistAddAll": "Добавить все дубликаты",
+  "starred": "Избранное",
+  "starTrack": "Добавить в избранное",
+  "unstarTrack": "Убрать из избранного",
+  "starFailed": "Не удалось изменить избранное",
+  "emptyStarred": "Пока нет избранных треков",
+  "emptyStarredHint": "Отметьте трек звёздочкой, чтобы найти его здесь."
 }

@@ -15,6 +15,7 @@ export {
   incrementTrackPlayCount,
   insertTrack,
   searchTracksFts,
+  toggleTrackStarInDb,
   updateTrackLoudness,
   updateTracksInLibrary,
   updateTrack,

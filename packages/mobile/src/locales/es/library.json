@@ -44,5 +44,11 @@
   "duplicatePlaylistAddAgain": "Añadir otra vez",
   "duplicatePlaylistSkip": "Omitir",
   "duplicatePlaylistAddThis": "Añadir esta canción",
-  "duplicatePlaylistAddAll": "Añadir todos los duplicados"
+  "duplicatePlaylistAddAll": "Añadir todos los duplicados",
+  "starred": "Favoritas",
+  "starTrack": "Marcar como favorita",
+  "unstarTrack": "Quitar de favoritas",
+  "starFailed": "No se pudo actualizar la favorita",
+  "emptyStarred": "Aún no hay canciones favoritas",
+  "emptyStarredHint": "Marca una canción con una estrella para encontrarla aquí."
 }

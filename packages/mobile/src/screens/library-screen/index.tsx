@@ -4,6 +4,8 @@ import { FlashList, type ListRenderItemInfo } from '@shopify/flash-list';
 import type { Track } from '@ton/core';
 import { useTranslation } from 'react-i18next';
 import { TrackRow } from '../../components/track-row';
+import { StarButton } from '../../components/star-button';
+import { isTrackStarred } from '../../stores/library-store';
 import { EmptyState } from '../../components/empty-state';
 import { ActionSheet } from '../../components/action-sheet';
 import { PlaylistPicker } from '../../components/playlist-picker';
@@ -38,6 +40,7 @@ export function LibraryScreen() {
     handleTrackPress,
     isLoading,
     isRefreshing,
+    starredOnly,
     playlists,
     playlistPickerTrackIds,
     removePromptDescription,
@@ -61,11 +64,12 @@ export function LibraryScreen() {
     <LibraryListHeader
       playlists={playlists}
       filterQuery={filterQuery}
+      starredOnly={starredOnly}
       tracks={displayTracks}
       onCreatePlaylist={() => setShowCreatePlaylist(true)}
       onPlayAll={handlePlayAll}
     />
-  ), [filterQuery, handlePlayAll, playlists, setShowCreatePlaylist, displayTracks]);
+  ), [filterQuery, handlePlayAll, playlists, setShowCreatePlaylist, displayTracks, starredOnly]);
 
   const renderTrack = useCallback(({ item }: ListRenderItemInfo<Track>) => (
     <TrackRow
@@ -74,6 +78,7 @@ export function LibraryScreen() {
       selectionMode={selectionActive}
       onPress={() => handleTrackPress(item)}
       onLongPress={() => handleTrackLongPress(item)}
+      rightAccessory={selectionActive ? undefined : <StarButton trackId={item.id} starred={isTrackStarred(item)} />}
     />
   ), [handleTrackLongPress, handleTrackPress, selectedTrackIdSet, selectionActive]);
 
@@ -117,7 +122,11 @@ export function LibraryScreen() {
           ListHeaderComponent={listHeader}
           renderItem={renderTrack}
           ListEmptyComponent={
-            isLoading ? null : <EmptyState message={filterQuery ? t('noResults') : t('emptyLibrary')} />
+            isLoading ? null : (
+              <EmptyState
+                message={filterQuery ? t('noResults') : starredOnly ? t('emptyStarred') : t('emptyLibrary')}
+              />
+            )
           }
         />
         <MobileFastScroller
