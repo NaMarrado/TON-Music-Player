@@ -11,6 +11,8 @@ import settingsEn from './en/pages/settings.json';
 import artistsEn from './en/pages/artists.json';
 import playlistEn from './en/pages/playlist.json';
 import artistEn from './en/pages/artist.json';
+import profileEn from './en/pages/profile.json';
+import studioEn from './en/pages/studio.json';
 import sidebarCs from './cs/components/layout/sidebar.json';
 import nowPlayingBarCs from './cs/components/layout/now-playing-bar.json';
 import playbackControlsCs from './cs/components/player/playback-controls.json';
@@ -24,6 +26,8 @@ import settingsCs from './cs/pages/settings.json';
 import artistsCs from './cs/pages/artists.json';
 import playlistCs from './cs/pages/playlist.json';
 import artistCs from './cs/pages/artist.json';
+import profileCs from './cs/pages/profile.json';
+import studioCs from './cs/pages/studio.json';
 import sidebarEs from './es/components/layout/sidebar.json';
 import nowPlayingBarEs from './es/components/layout/now-playing-bar.json';
 import playbackControlsEs from './es/components/player/playback-controls.json';
@@ -37,6 +41,8 @@ import settingsEs from './es/pages/settings.json';
 import artistsEs from './es/pages/artists.json';
 import playlistEs from './es/pages/playlist.json';
 import artistEs from './es/pages/artist.json';
+import profileEs from './es/pages/profile.json';
+import studioEs from './es/pages/studio.json';
 import sidebarDe from './de/components/layout/sidebar.json';
 import nowPlayingBarDe from './de/components/layout/now-playing-bar.json';
 import playbackControlsDe from './de/components/player/playback-controls.json';
@@ -50,12 +56,14 @@ import settingsDe from './de/pages/settings.json';
 import artistsDe from './de/pages/artists.json';
 import playlistDe from './de/pages/playlist.json';
 import artistDe from './de/pages/artist.json';
+import profileDe from './de/pages/profile.json';
+import studioDe from './de/pages/studio.json';
 import { buildDesktopNamespaces as namespaces } from './resource-builder';
 import type { DesktopResourceGroup } from './resource-types';
 
 export const westernDesktopResources = {
-  en: namespaces(sidebarEn, nowPlayingBarEn, playbackControlsEn, volumeSliderEn, queuePanelEn, homeEn, searchEn, libraryEn, downloadsEn, settingsEn, artistsEn, playlistEn, artistEn),
-  cs: namespaces(sidebarCs, nowPlayingBarCs, playbackControlsCs, volumeSliderCs, queuePanelCs, homeCs, searchCs, libraryCs, downloadsCs, settingsCs, artistsCs, playlistCs, artistCs),
-  es: namespaces(sidebarEs, nowPlayingBarEs, playbackControlsEs, volumeSliderEs, queuePanelEs, homeEs, searchEs, libraryEs, downloadsEs, settingsEs, artistsEs, playlistEs, artistEs),
-  de: namespaces(sidebarDe, nowPlayingBarDe, playbackControlsDe, volumeSliderDe, queuePanelDe, homeDe, searchDe, libraryDe, downloadsDe, settingsDe, artistsDe, playlistDe, artistDe),
+  en: namespaces(sidebarEn, nowPlayingBarEn, playbackControlsEn, volumeSliderEn, queuePanelEn, homeEn, searchEn, libraryEn, downloadsEn, settingsEn, artistsEn, playlistEn, artistEn, profileEn, studioEn),
+  cs: namespaces(sidebarCs, nowPlayingBarCs, playbackControlsCs, volumeSliderCs, queuePanelCs, homeCs, searchCs, libraryCs, downloadsCs, settingsCs, artistsCs, playlistCs, artistCs, profileCs, studioCs),
+  es: namespaces(sidebarEs, nowPlayingBarEs, playbackControlsEs, volumeSliderEs, queuePanelEs, homeEs, searchEs, libraryEs, downloadsEs, settingsEs, artistsEs, playlistEs, artistEs, profileEs, studioEs),
+  de: namespaces(sidebarDe, nowPlayingBarDe, playbackControlsDe, volumeSliderDe, queuePanelDe, homeDe, searchDe, libraryDe, downloadsDe, settingsDe, artistsDe, playlistDe, artistDe, profileDe, studioDe),
 } satisfies DesktopResourceGroup;

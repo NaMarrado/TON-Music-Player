@@ -38,6 +38,12 @@ async function pickAudioFilePaths(): Promise<string[]> {
 export async function handleLibraryImportFiles(): Promise<LibraryImportFilesResult> {
   const filePaths = await pickAudioFilePaths();
   if (filePaths.length === 0) return { imported: 0 };
+  const { imported } = await importAudioFilesIntoLibrary(filePaths);
+  return { imported };
+}
+
+/** Copies the files into the Library directory when needed and registers them as Library tracks. */
+export async function importAudioFilesIntoLibrary(filePaths: string[]): Promise<{ imported: number; trackIds: number[] }> {
 
   const db = getDb();
   const libraryDir = getLibraryDir();
@@ -75,5 +81,5 @@ export async function handleLibraryImportFiles(): Promise<LibraryImportFilesResu
   }
 
   scheduleLibraryLoudnessAnalysis(insertedIds);
-  return { imported };
+  return { imported, trackIds: insertedIds };
 }

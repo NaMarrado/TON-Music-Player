@@ -1,4 +1,10 @@
 {
+  "starred": "المفضلة",
+  "starTrack": "إضافة إلى المفضلة",
+  "unstarTrack": "إزالة من المفضلة",
+  "starFailed": "تعذر تحديث المفضلة",
+  "emptyStarred": "لا توجد أغانٍ مفضلة بعد",
+  "emptyStarredHint": "ضع نجمة على أغنية لتجدها هنا.",
   "title": "المكتبة",
   "filterPlaceholder": "مكتبة التصفية...",
   "recentlyAdded": "أضيفت مؤخرا",

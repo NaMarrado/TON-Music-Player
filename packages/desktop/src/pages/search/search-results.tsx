@@ -11,6 +11,8 @@ type SearchResultsProps = {
   onDownload: (result: SearchResult) => void;
   onLoadMore: () => void;
   onPlayLocal: (result: SearchResult) => void;
+  /** Tighter paddings for a narrow panel (the Studio). */
+  compact?: boolean;
 };
 
 function NoResults({ t }: { t: (key: string) => string }) {
@@ -68,17 +70,18 @@ export function SearchResults({
   onDownload,
   onLoadMore,
   onPlayLocal,
+  compact = false,
 }: SearchResultsProps) {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       {query && !isSearching && visibleResults.length === 0 && (
-        <div style={{ padding: '20px 32px 120px' }}>
+        <div style={{ padding: compact ? '8px 12px' : '20px 32px 120px' }}>
           <NoResults t={t} />
         </div>
       )}
 
       {isSearching && visibleResults.length === 0 && (
-        <div style={{ padding: '20px 32px 120px' }}>
+        <div style={{ padding: compact ? '8px 12px' : '20px 32px 120px' }}>
           <LoadingState t={t} />
         </div>
       )}
@@ -93,7 +96,7 @@ export function SearchResults({
               ? `${result.source}-${result.id}-${index}`
               : `${result.source}-${result.id}`
           }
-          contentStyle={{ padding: '20px 32px 120px' }}
+          contentStyle={{ padding: compact ? '4px 8px 24px' : '20px 32px 120px' }}
           footer={
             !isSearching && canLoadMore ? (
               <div className="flex justify-center" style={{ paddingTop: '20px', paddingBottom: '8px' }}>

@@ -1,0 +1,284 @@
+{
+  "tabLabel": "Studio",
+  "rendering": "Preparing the preview",
+  "controls": {
+    "play": {
+      "name": "Play",
+      "text": "Plays all songs together from the green line, exactly as the final mix will sound."
+    },
+    "pause": {
+      "name": "Pause",
+      "text": "Stops the sound where it is. Press Play to continue from the same spot."
+    },
+    "stop": {
+      "name": "Stop",
+      "text": "Stops playing and jumps back to the very beginning."
+    },
+    "undo": {
+      "name": "Undo",
+      "text": "Takes back your last change. Press it again to go back further."
+    },
+    "redo": {
+      "name": "Redo",
+      "text": "Brings back a change you have just undone."
+    },
+    "zoom-out": {
+      "name": "Zoom out",
+      "text": "Shrinks the timeline so you can see more of the songs at once."
+    },
+    "zoom-slider": {
+      "name": "Zoom",
+      "text": "Drag to make the timeline bigger or smaller. Left shows everything, right shows the finest detail."
+    },
+    "zoom-in": {
+      "name": "Zoom in",
+      "text": "Enlarges the timeline so you can place cuts and edges precisely."
+    },
+    "zoom-fit": {
+      "name": "Fit to window",
+      "text": "Makes everything you have added fit exactly into the window."
+    },
+    "snap-off": {
+      "name": "Free",
+      "text": "Clips move smoothly and stay exactly where you drop them."
+    },
+    "snap-beat": {
+      "name": "Beat",
+      "text": "Clips jump to the nearest beat of the music, so songs stay in rhythm."
+    },
+    "snap-bar": {
+      "name": "Bar",
+      "text": "Clips jump to the start of the nearest bar (four beats). The easiest way to line songs up."
+    },
+    "clear": {
+      "name": "Clear all",
+      "text": "Removes every song from the editor. Undo brings them back. Your Library is not touched."
+    },
+    "export": {
+      "name": "Export",
+      "text": "Saves the finished mix as one new song in your Library."
+    },
+    "tab-songs": {
+      "name": "Songs",
+      "text": "Choose songs to add: from your Library, from a playlist or from an online search."
+    },
+    "tab-edit": {
+      "name": "Edit",
+      "text": "Change the selected song: speed, effects, volume, fades and blending."
+    },
+    "songs-library": {
+      "name": "Library",
+      "text": "Shows all the songs you already have in TON."
+    },
+    "songs-playlists": {
+      "name": "Playlists",
+      "text": "Pick songs from one of your playlists."
+    },
+    "songs-search": {
+      "name": "Search",
+      "text": "Finds songs online. A song added from here is only kept temporarily and never lands in your Library."
+    },
+    "songs-filter": {
+      "name": "Filter",
+      "text": "Type part of a title or an artist to narrow down the list."
+    },
+    "lane-mute": {
+      "name": "Mute",
+      "text": "Silences this song without removing it. Click again to hear it."
+    },
+    "lane-solo": {
+      "name": "Solo",
+      "text": "Plays only this song so you can hear it alone. Click again to hear everything."
+    },
+    "lane-remove": {
+      "name": "Remove song",
+      "text": "Takes this song out of the editor. The copy in your Library stays untouched."
+    },
+    "clip-split": {
+      "name": "Cut here",
+      "text": "Cuts the selected clip in two at the green line, so you can delete or move one part."
+    },
+    "clip-join": {
+      "name": "Connect",
+      "text": "Joins the selected piece back to the rest of its song so it plays without a gap, the opposite of cutting. A piece of another song is moved right after the clip before it."
+    },
+    "clip-duplicate": {
+      "name": "Copy",
+      "text": "Makes a second copy of the selected clip right behind it."
+    },
+    "clip-delete": {
+      "name": "Delete",
+      "text": "Removes the selected clip from the timeline."
+    },
+    "look-slowed": {
+      "name": "Slowed",
+      "text": "Plays the song slower, which also makes it deeper, like a slowed-down record."
+    },
+    "look-slowed-reverb": {
+      "name": "Slowed + reverb",
+      "text": "Slows the song down and adds a dreamy echo of a big room. The popular 'slowed and reverb' sound."
+    },
+    "look-sped-up": {
+      "name": "Sped up",
+      "text": "Plays the song faster and higher, like a fast-forwarded record."
+    },
+    "look-bass-boost": {
+      "name": "Bass boost",
+      "text": "Makes the low, thumping sounds louder."
+    },
+    "look-muffled": {
+      "name": "Muffled",
+      "text": "Makes the song sound as if it were playing behind a wall, by cutting the high sounds."
+    },
+    "look-reset": {
+      "name": "Reset song",
+      "text": "Puts speed, effects and tone of this song back to normal. Your cuts and fades stay."
+    },
+    "speed": {
+      "name": "Speed",
+      "text": "How fast the clip plays. 1.00× is normal, lower is slower and deeper, higher is faster."
+    },
+    "pitch": {
+      "name": "Pitch",
+      "text": "Makes the clip higher or lower in small steps called semitones. 12 steps is one full octave."
+    },
+    "keep-pitch": {
+      "name": "Keep pitch",
+      "text": "When you change the speed, keeps the voice and the notes the same instead of making them deeper or higher."
+    },
+    "reverse": {
+      "name": "Reverse",
+      "text": "Plays the selected clip backwards."
+    },
+    "match-tempo": {
+      "name": "Match tempo",
+      "text": "Changes the speed so this song has the same beats per minute as the first song, which makes mixing easier."
+    },
+    "clip-volume": {
+      "name": "Clip volume",
+      "text": "Makes just the selected clip quieter or louder."
+    },
+    "lane-volume": {
+      "name": "Song volume",
+      "text": "The volume of the whole song on this line."
+    },
+    "balance": {
+      "name": "Left / right",
+      "text": "Moves the sound between your left and your right speaker."
+    },
+    "bass": {
+      "name": "Bass",
+      "text": "Turns the low sounds up or down."
+    },
+    "treble": {
+      "name": "Treble",
+      "text": "Turns the high, bright sounds up or down."
+    },
+    "reverb": {
+      "name": "Reverb",
+      "text": "Adds an echo like in a big hall. More of it makes the song sound far away and dreamy."
+    },
+    "reverb-size": {
+      "name": "Room size",
+      "text": "How big the imaginary room is. Bigger rooms echo for longer."
+    },
+    "reverb-dark": {
+      "name": "Soft tail",
+      "text": "Makes the echo duller and warmer instead of bright and sharp."
+    },
+    "echo": {
+      "name": "Echo",
+      "text": "Repeats the sound a moment later, like shouting in the mountains."
+    },
+    "echo-time": {
+      "name": "Echo delay",
+      "text": "How long to wait before each repeat."
+    },
+    "echo-repeats": {
+      "name": "Echo repeats",
+      "text": "How many times the echo repeats before it fades away."
+    },
+    "filter-off": {
+      "name": "No filter",
+      "text": "Plays the song with all of its sounds."
+    },
+    "filter-low": {
+      "name": "Cut highs",
+      "text": "Removes the high sounds, so the song sounds muffled and far away."
+    },
+    "filter-high": {
+      "name": "Cut lows",
+      "text": "Removes the deep sounds, so the song sounds thin, like from a tiny speaker."
+    },
+    "filter-freq": {
+      "name": "Filter strength",
+      "text": "Where the cut starts. Move it until the song sounds the way you like."
+    },
+    "fade-in": {
+      "name": "Fade in",
+      "text": "How long the clip takes to go from silent to full volume at its start."
+    },
+    "fade-out": {
+      "name": "Fade out",
+      "text": "How long the clip takes to go from full volume to silent at its end."
+    },
+    "transition-bars-2": {
+      "name": "2 bars",
+      "text": "A short blend: the two songs overlap for 2 bars of music."
+    },
+    "transition-bars-4": {
+      "name": "4 bars",
+      "text": "A medium blend: the two songs overlap for 4 bars of music."
+    },
+    "transition-bars-8": {
+      "name": "8 bars",
+      "text": "A smooth, long blend: the two songs overlap for 8 bars. The most common length for DJs."
+    },
+    "transition-bars-16": {
+      "name": "16 bars",
+      "text": "A very slow blend: the two songs overlap for 16 bars."
+    },
+    "curve-smooth": {
+      "name": "Smooth",
+      "text": "The songs swap places so the loudness stays even. Best for most mixes."
+    },
+    "curve-straight": {
+      "name": "Straight",
+      "text": "One song fades out while the other fades in, both at the same steady speed."
+    },
+    "curve-slow": {
+      "name": "Slow start",
+      "text": "The new song creeps in quietly and gets loud near the end."
+    },
+    "transition-apply": {
+      "name": "Crossfade",
+      "text": "Overlaps the selected clip with the song next to it and blends them using the length and style chosen above."
+    }
+  },
+  "sections": {
+    "clip": "Selected clip",
+    "looks": "Quick looks",
+    "speed": "Speed and pitch",
+    "sound": "Sound",
+    "effects": "Effects",
+    "fades": "Fades",
+    "transition": "Blend two songs"
+  },
+  "editEmpty": "Click a song on the timeline to edit it.",
+  "editLaneOnly": "Click a clip on this line to change its speed and fades.",
+  "emptyText": "Your songs are in the panel below. Tap a song there to put it here. Then you can cut it, slow it down, add effects and export the result.",
+  "addToStudio": "Add",
+  "downloading": "Downloading… {{percent}}%",
+  "downloadFailed": "A download failed. Try another result.",
+  "exportTitle": "Export your mix",
+  "exportText": "The finished mix is saved as a new song in your Library.",
+  "mixName": "Song name",
+  "defaultName": "Studio mix",
+  "save": "Save to Library",
+  "cancel": "Cancel",
+  "clear": "Clear all",
+  "clearTitle": "Clear the Studio?",
+  "clearText": "All songs are removed from the editor. You can bring them back with Undo. Your Library and exported mixes are not touched.",
+  "exporting": "Saving the mix",
+  "saved": "Mix saved to your Library"
+}

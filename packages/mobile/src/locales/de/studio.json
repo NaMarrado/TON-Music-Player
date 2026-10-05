@@ -1,0 +1,284 @@
+{
+  "tabLabel": "Studio",
+  "rendering": "Vorschau wird vorbereitet",
+  "controls": {
+    "play": {
+      "name": "Abspielen",
+      "text": "Spielt alle Songs zusammen ab der grünen Linie ab, genau so, wie der fertige Mix später klingen wird."
+    },
+    "pause": {
+      "name": "Pause",
+      "text": "Hält den Ton an der aktuellen Stelle an. Drücke Abspielen, um an derselben Stelle weiterzumachen."
+    },
+    "stop": {
+      "name": "Stopp",
+      "text": "Beendet die Wiedergabe und springt ganz an den Anfang zurück."
+    },
+    "undo": {
+      "name": "Rückgängig",
+      "text": "Nimmt deine letzte Änderung zurück. Drücke erneut, um noch weiter zurückzugehen."
+    },
+    "redo": {
+      "name": "Wiederholen",
+      "text": "Holt eine Änderung zurück, die du gerade rückgängig gemacht hast."
+    },
+    "zoom-out": {
+      "name": "Verkleinern",
+      "text": "Macht die Zeitleiste kleiner, damit du mehr von den Songs auf einmal siehst."
+    },
+    "zoom-slider": {
+      "name": "Zoom",
+      "text": "Ziehen, um die Zeitleiste größer oder kleiner zu machen. Links siehst du alles, rechts die feinsten Details."
+    },
+    "zoom-in": {
+      "name": "Vergrößern",
+      "text": "Macht die Zeitleiste größer, damit du Schnitte und Kanten genau setzen kannst."
+    },
+    "zoom-fit": {
+      "name": "An Fenster anpassen",
+      "text": "Passt alles, was du hinzugefügt hast, genau in das Fenster ein."
+    },
+    "snap-off": {
+      "name": "Frei",
+      "text": "Clips lassen sich ganz weich bewegen und bleiben genau dort, wo du sie loslässt."
+    },
+    "snap-beat": {
+      "name": "Beat",
+      "text": "Clips springen zum nächsten Beat der Musik, damit die Songs im Rhythmus bleiben."
+    },
+    "snap-bar": {
+      "name": "Takt",
+      "text": "Clips springen zum Anfang des nächsten Takts (vier Schläge). So richtest du Songs am einfachsten aus."
+    },
+    "clear": {
+      "name": "Alles löschen",
+      "text": "Entfernt alle Songs aus dem Editor. Rückgängig holt sie zurück. Deine Bibliothek bleibt unverändert."
+    },
+    "export": {
+      "name": "Exportieren",
+      "text": "Speichert den fertigen Mix als neuen Song in deiner Mediathek."
+    },
+    "tab-songs": {
+      "name": "Songs",
+      "text": "Wähle Songs zum Hinzufügen aus: aus deiner Mediathek, aus einer Playlist oder aus einer Online-Suche."
+    },
+    "tab-edit": {
+      "name": "Bearbeiten",
+      "text": "Verändere den ausgewählten Song: Tempo, Effekte, Lautstärke, Ein- und Ausblenden und Überblenden."
+    },
+    "songs-library": {
+      "name": "Mediathek",
+      "text": "Zeigt alle Songs, die du schon in TON hast."
+    },
+    "songs-playlists": {
+      "name": "Playlists",
+      "text": "Wähle Songs aus einer deiner Playlists aus."
+    },
+    "songs-search": {
+      "name": "Suche",
+      "text": "Findet Songs online. Ein Song, der von hier hinzugefügt wird, wird nur vorübergehend behalten und landet nie in deiner Mediathek."
+    },
+    "songs-filter": {
+      "name": "Filter",
+      "text": "Gib einen Teil eines Titels oder eines Künstlers ein, um die Liste einzugrenzen."
+    },
+    "lane-mute": {
+      "name": "Stumm",
+      "text": "Schaltet diesen Song stumm, ohne ihn zu entfernen. Klicke erneut, um ihn wieder zu hören."
+    },
+    "lane-solo": {
+      "name": "Solo",
+      "text": "Spielt nur diesen Song ab, damit du ihn allein hören kannst. Klicke erneut, um wieder alles zu hören."
+    },
+    "lane-remove": {
+      "name": "Song entfernen",
+      "text": "Nimmt diesen Song aus dem Editor. Die Kopie in deiner Mediathek bleibt unberührt."
+    },
+    "clip-split": {
+      "name": "Hier schneiden",
+      "text": "Schneidet den ausgewählten Clip an der grünen Linie in zwei Teile, damit du einen Teil löschen oder verschieben kannst."
+    },
+    "clip-join": {
+      "name": "Verbinden",
+      "text": "Fügt das ausgewählte Stück wieder an den Rest seines Songs an, sodass er ohne Lücke spielt – das Gegenteil von Schneiden. Ein Stück eines anderen Songs wird direkt hinter den Clip davor gesetzt."
+    },
+    "clip-duplicate": {
+      "name": "Kopieren",
+      "text": "Macht direkt hinter dem ausgewählten Clip eine zweite Kopie davon."
+    },
+    "clip-delete": {
+      "name": "Löschen",
+      "text": "Entfernt den ausgewählten Clip aus der Zeitleiste."
+    },
+    "look-slowed": {
+      "name": "Verlangsamt",
+      "text": "Spielt den Song langsamer ab, wodurch er auch tiefer klingt, wie eine langsamer laufende Schallplatte."
+    },
+    "look-slowed-reverb": {
+      "name": "Langsam + Hall",
+      "text": "Bremst den Song ab und fügt ein verträumtes Echo wie in einem großen Raum hinzu. Der beliebte „Slowed and Reverb“-Sound."
+    },
+    "look-sped-up": {
+      "name": "Beschleunigt",
+      "text": "Spielt den Song schneller und höher ab, wie eine vorgespulte Schallplatte."
+    },
+    "look-bass-boost": {
+      "name": "Bass-Boost",
+      "text": "Macht die tiefen, wummernden Töne lauter."
+    },
+    "look-muffled": {
+      "name": "Gedämpft",
+      "text": "Lässt den Song klingen, als würde er hinter einer Wand laufen, indem die hohen Töne abgeschnitten werden."
+    },
+    "look-reset": {
+      "name": "Song zurücksetzen",
+      "text": "Setzt Tempo, Effekte und Klang dieses Songs wieder auf normal. Deine Schnitte und Überblendungen bleiben erhalten."
+    },
+    "speed": {
+      "name": "Tempo",
+      "text": "Wie schnell der Clip abgespielt wird. 1,00× ist normal, niedriger ist langsamer und tiefer, höher ist schneller."
+    },
+    "pitch": {
+      "name": "Tonhöhe",
+      "text": "Macht den Clip in kleinen Schritten, den sogenannten Halbtönen, höher oder tiefer. 12 Schritte sind eine ganze Oktave."
+    },
+    "keep-pitch": {
+      "name": "Tonhöhe beibehalten",
+      "text": "Wenn du das Tempo änderst, bleiben Stimme und Töne gleich, statt tiefer oder höher zu werden."
+    },
+    "reverse": {
+      "name": "Rückwärts",
+      "text": "Spielt den ausgewählten Clip rückwärts ab."
+    },
+    "match-tempo": {
+      "name": "Tempo angleichen",
+      "text": "Ändert das Tempo so, dass dieser Song dieselben Schläge pro Minute hat wie der erste Song. So lässt er sich leichter mischen."
+    },
+    "clip-volume": {
+      "name": "Clip-Lautstärke",
+      "text": "Macht nur den ausgewählten Clip leiser oder lauter."
+    },
+    "lane-volume": {
+      "name": "Song-Lautstärke",
+      "text": "Die Lautstärke des ganzen Songs auf dieser Spur."
+    },
+    "balance": {
+      "name": "Links / Rechts",
+      "text": "Verschiebt den Klang zwischen deinem linken und deinem rechten Lautsprecher."
+    },
+    "bass": {
+      "name": "Bass",
+      "text": "Dreht die tiefen Töne lauter oder leiser."
+    },
+    "treble": {
+      "name": "Höhen",
+      "text": "Dreht die hohen, hellen Töne lauter oder leiser."
+    },
+    "reverb": {
+      "name": "Hall",
+      "text": "Fügt ein Echo wie in einer großen Halle hinzu. Mehr davon lässt den Song weit entfernt und verträumt klingen."
+    },
+    "reverb-size": {
+      "name": "Raumgröße",
+      "text": "Wie groß der gedachte Raum ist. In größeren Räumen hallt es länger nach."
+    },
+    "reverb-dark": {
+      "name": "Weiches Ausklingen",
+      "text": "Macht das Echo dumpfer und wärmer statt hell und scharf."
+    },
+    "echo": {
+      "name": "Echo",
+      "text": "Wiederholt den Klang einen Moment später, wie beim Rufen in den Bergen."
+    },
+    "echo-time": {
+      "name": "Echo-Abstand",
+      "text": "Wie lange vor jeder Wiederholung gewartet wird."
+    },
+    "echo-repeats": {
+      "name": "Echo-Wiederholungen",
+      "text": "Wie oft sich das Echo wiederholt, bevor es verklingt."
+    },
+    "filter-off": {
+      "name": "Kein Filter",
+      "text": "Spielt den Song mit all seinen Klängen ab."
+    },
+    "filter-low": {
+      "name": "Höhen kappen",
+      "text": "Entfernt die hohen Töne, sodass der Song gedämpft und weit entfernt klingt."
+    },
+    "filter-high": {
+      "name": "Tiefen kappen",
+      "text": "Entfernt die tiefen Töne, sodass der Song dünn klingt, wie aus einem winzigen Lautsprecher."
+    },
+    "filter-freq": {
+      "name": "Filterstärke",
+      "text": "Wo der Schnitt beginnt. Verschiebe ihn, bis der Song so klingt, wie es dir gefällt."
+    },
+    "fade-in": {
+      "name": "Einblenden",
+      "text": "Wie lange der Clip an seinem Anfang braucht, um von still auf volle Lautstärke zu kommen."
+    },
+    "fade-out": {
+      "name": "Ausblenden",
+      "text": "Wie lange der Clip an seinem Ende braucht, um von voller Lautstärke auf still zu gehen."
+    },
+    "transition-bars-2": {
+      "name": "2 Takte",
+      "text": "Eine kurze Überblendung: Die beiden Songs überlappen sich über 2 Takte Musik."
+    },
+    "transition-bars-4": {
+      "name": "4 Takte",
+      "text": "Eine mittlere Überblendung: Die beiden Songs überlappen sich über 4 Takte Musik."
+    },
+    "transition-bars-8": {
+      "name": "8 Takte",
+      "text": "Eine sanfte, lange Überblendung: Die beiden Songs überlappen sich über 8 Takte. Die häufigste Länge bei DJs."
+    },
+    "transition-bars-16": {
+      "name": "16 Takte",
+      "text": "Eine sehr langsame Überblendung: Die beiden Songs überlappen sich über 16 Takte."
+    },
+    "curve-smooth": {
+      "name": "Sanft",
+      "text": "Die Songs tauschen die Plätze, sodass die Lautstärke gleichmäßig bleibt. Am besten für die meisten Mixe."
+    },
+    "curve-straight": {
+      "name": "Gleichmäßig",
+      "text": "Ein Song wird ausgeblendet, während der andere eingeblendet wird, beide im gleichen gleichmäßigen Tempo."
+    },
+    "curve-slow": {
+      "name": "Langsamer Start",
+      "text": "Der neue Song schleicht sich leise herein und wird erst gegen Ende laut."
+    },
+    "transition-apply": {
+      "name": "Überblenden",
+      "text": "Lässt den ausgewählten Clip mit dem Song daneben überlappen und blendet sie mit der oben gewählten Länge und Art ineinander über."
+    }
+  },
+  "sections": {
+    "clip": "Ausgewählter Clip",
+    "looks": "Schnell-Looks",
+    "speed": "Tempo und Tonhöhe",
+    "sound": "Klang",
+    "effects": "Effekte",
+    "fades": "Ein- und Ausblenden",
+    "transition": "Zwei Songs überblenden"
+  },
+  "editEmpty": "Klicke in der Zeitleiste auf einen Song, um ihn zu bearbeiten.",
+  "editLaneOnly": "Klicke auf einen Clip in dieser Spur, um sein Tempo und seine Ein- und Ausblendungen zu ändern.",
+  "emptyText": "Deine Songs sind im Bereich unten. Tippe dort auf einen Song, um ihn hier einzufügen. Danach kannst du ihn schneiden, verlangsamen, Effekte hinzufügen und das Ergebnis exportieren.",
+  "addToStudio": "Hinzufügen",
+  "downloading": "Wird heruntergeladen… {{percent}}%",
+  "downloadFailed": "Ein Download ist fehlgeschlagen. Probiere ein anderes Ergebnis.",
+  "exportTitle": "Deinen Mix exportieren",
+  "exportText": "Der fertige Mix wird als neuer Song in deiner Mediathek gespeichert.",
+  "mixName": "Songname",
+  "defaultName": "Studio-Mix",
+  "save": "In Mediathek speichern",
+  "cancel": "Abbrechen",
+  "clear": "Alles löschen",
+  "clearTitle": "Studio leeren?",
+  "clearText": "Alle Songs werden aus dem Editor entfernt. Mit Rückgängig holst du sie zurück. Deine Bibliothek und exportierte Mixe bleiben unverändert.",
+  "exporting": "Mix wird gespeichert",
+  "saved": "Mix in deiner Mediathek gespeichert"
+}

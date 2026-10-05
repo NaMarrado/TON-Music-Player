@@ -25,6 +25,7 @@ export type AndroidLibraryExportRequest = {
 
 type AndroidLibraryTransferModule = {
   copyExportFile(sourceUri: string, destinationUri: string): Promise<void>;
+  hashFileSha256(path: string): Promise<string>;
   pickExportDestination(fileName: string): Promise<string | null>;
   startImport(request: AndroidLibraryImportRequest): Promise<string>;
   startExport(request: AndroidLibraryExportRequest): Promise<string>;
@@ -187,4 +188,9 @@ export async function startAndroidLibraryExport<Result>(
     pendingTasks.delete(request.jobId);
     throw error;
   }
+}
+
+/** SHA-256 of a local file computed natively on Android; null where the native module is not available. */
+export function hashFileSha256Native(path: string): Promise<string> | null {
+  return getModule()?.hashFileSha256(path) ?? null;
 }

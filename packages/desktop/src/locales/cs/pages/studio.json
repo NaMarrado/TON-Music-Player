@@ -1,0 +1,284 @@
+{
+  "controls": {
+    "play": {
+      "name": "Přehrát",
+      "text": "Přehraje všechny písně společně od zelené čáry, přesně tak, jak bude znít výsledný mix."
+    },
+    "pause": {
+      "name": "Pauza",
+      "text": "Zastaví zvuk na místě. Stisknutím Přehrát budete pokračovat od stejného místa."
+    },
+    "stop": {
+      "name": "Zastavit",
+      "text": "Zastaví přehrávání a vrátí se úplně na začátek."
+    },
+    "undo": {
+      "name": "Zpět",
+      "text": "Vezme zpět vaši poslední změnu. Dalším stisknutím se vrátíte ještě dál."
+    },
+    "redo": {
+      "name": "Znovu",
+      "text": "Vrátí změnu, kterou jste právě vzali zpět."
+    },
+    "zoom-out": {
+      "name": "Oddálit",
+      "text": "Zmenší časovou osu, takže uvidíte více písní najednou."
+    },
+    "zoom-slider": {
+      "name": "Přiblížení",
+      "text": "Tažením zvětšíte nebo zmenšíte časovou osu. Vlevo uvidíte vše, vpravo nejjemnější detaily. Můžete také otáčet kolečkem myši nad písněmi."
+    },
+    "zoom-in": {
+      "name": "Přiblížit",
+      "text": "Zvětší časovou osu, abyste mohli přesně umístit střihy a okraje."
+    },
+    "zoom-fit": {
+      "name": "Přizpůsobit oknu",
+      "text": "Zobrazí vše, co jste přidali, přesně na velikost okna."
+    },
+    "snap-off": {
+      "name": "Volně",
+      "text": "Klipy se pohybují plynule a zůstanou přesně tam, kam je pustíte."
+    },
+    "snap-beat": {
+      "name": "Doba",
+      "text": "Klipy skočí na nejbližší dobu hudby, takže písně zůstanou v rytmu."
+    },
+    "snap-bar": {
+      "name": "Takt",
+      "text": "Klipy skočí na začátek nejbližšího taktu (čtyři doby). Nejjednodušší způsob, jak písně srovnat."
+    },
+    "clear": {
+      "name": "Smazat vše",
+      "text": "Odebere z editoru všechny písně. Zpět je vrátí. Knihovna zůstane beze změny."
+    },
+    "export": {
+      "name": "Exportovat",
+      "text": "Uloží hotový mix jako jednu novou píseň do vaší Knihovny."
+    },
+    "tab-songs": {
+      "name": "Písně",
+      "text": "Vyberte písně k přidání: z Knihovny, z playlistu nebo z online vyhledávání."
+    },
+    "tab-edit": {
+      "name": "Úpravy",
+      "text": "Změňte vybranou píseň: rychlost, efekty, hlasitost, prolínání a míchání."
+    },
+    "songs-library": {
+      "name": "Knihovna",
+      "text": "Zobrazí všechny písně, které už v TON máte."
+    },
+    "songs-playlists": {
+      "name": "Playlisty",
+      "text": "Vyberte písně z jednoho z vašich playlistů."
+    },
+    "songs-search": {
+      "name": "Hledat",
+      "text": "Najde písně online. Píseň přidaná odsud se uchová jen dočasně a nikdy se neobjeví ve vaší Knihovně."
+    },
+    "songs-filter": {
+      "name": "Filtr",
+      "text": "Napište část názvu nebo jméno interpreta a seznam se zúží."
+    },
+    "lane-mute": {
+      "name": "Ztlumit",
+      "text": "Umlčí tuto píseň, aniž by ji odstranila. Dalším kliknutím ji zase uslyšíte."
+    },
+    "lane-solo": {
+      "name": "Sólo",
+      "text": "Přehraje jen tuto píseň, abyste ji slyšeli samotnou. Dalším kliknutím uslyšíte zase všechno."
+    },
+    "lane-remove": {
+      "name": "Odebrat píseň",
+      "text": "Odstraní tuto píseň z editoru. Kopie ve vaší Knihovně zůstane nedotčená."
+    },
+    "clip-split": {
+      "name": "Střih zde",
+      "text": "Rozstřihne vybraný klip na dvě části u zelené čáry, takže můžete jednu část smazat nebo posunout."
+    },
+    "clip-join": {
+      "name": "Spojit",
+      "text": "Připojí vybraný kus zpět ke zbytku jeho písně, takže hraje bez mezery – opak stříhání. Kus jiné písně se posune hned za klip před ním."
+    },
+    "clip-duplicate": {
+      "name": "Kopírovat",
+      "text": "Vytvoří druhou kopii vybraného klipu hned za ním."
+    },
+    "clip-delete": {
+      "name": "Smazat",
+      "text": "Odstraní vybraný klip z časové osy."
+    },
+    "look-slowed": {
+      "name": "Zpomaleno",
+      "text": "Přehraje píseň pomaleji, a tím i hlouběji, jako zpomalená gramofonová deska."
+    },
+    "look-slowed-reverb": {
+      "name": "Zpomaleno + reverb",
+      "text": "Zpomalí píseň a přidá snový ozvěnový efekt velkého sálu. Oblíbený zvuk „slowed and reverb“."
+    },
+    "look-sped-up": {
+      "name": "Zrychleno",
+      "text": "Přehraje píseň rychleji a výš, jako převinutá deska."
+    },
+    "look-bass-boost": {
+      "name": "Zesílení basů",
+      "text": "Zesílí hluboké, dunivé zvuky."
+    },
+    "look-muffled": {
+      "name": "Tlumený zvuk",
+      "text": "Píseň zní, jako by hrála za zdí, protože se potlačí vysoké zvuky."
+    },
+    "look-reset": {
+      "name": "Obnovit píseň",
+      "text": "Vrátí rychlost, efekty a barvu zvuku této písně do původního stavu. Vaše střihy a prolínání zůstanou."
+    },
+    "speed": {
+      "name": "Rychlost",
+      "text": "Jak rychle klip hraje. 1,00× je normální, nižší je pomalejší a hlubší, vyšší je rychlejší."
+    },
+    "pitch": {
+      "name": "Výška tónu",
+      "text": "Posune klip výš nebo níž v malých krocích zvaných půltóny. 12 kroků je jedna celá oktáva."
+    },
+    "keep-pitch": {
+      "name": "Zachovat tón",
+      "text": "Při změně rychlosti zachová hlas a noty stejné, místo aby zněly hlouběji nebo výš."
+    },
+    "reverse": {
+      "name": "Obrátit",
+      "text": "Přehraje vybraný klip pozpátku."
+    },
+    "match-tempo": {
+      "name": "Srovnat tempo",
+      "text": "Upraví rychlost tak, aby měla tato píseň stejný počet úderů za minutu jako první píseň, takže se mixuje snadněji."
+    },
+    "clip-volume": {
+      "name": "Hlasitost klipu",
+      "text": "Zeslabí nebo zesílí jen vybraný klip."
+    },
+    "lane-volume": {
+      "name": "Hlasitost písně",
+      "text": "Hlasitost celé písně na této stopě."
+    },
+    "balance": {
+      "name": "Vlevo / vpravo",
+      "text": "Přesouvá zvuk mezi levý a pravý reproduktor."
+    },
+    "bass": {
+      "name": "Basy",
+      "text": "Zesílí nebo zeslabí hluboké zvuky."
+    },
+    "treble": {
+      "name": "Výšky",
+      "text": "Zesílí nebo zeslabí vysoké, jasné zvuky."
+    },
+    "reverb": {
+      "name": "Reverb",
+      "text": "Přidá ozvěnu jako ve velkém sále. Čím víc ho je, tím víc píseň zní jako z dálky a jako ve snu."
+    },
+    "reverb-size": {
+      "name": "Velikost sálu",
+      "text": "Jak velká je pomyslná místnost. Větší místnosti mají delší ozvěnu."
+    },
+    "reverb-dark": {
+      "name": "Měkký dozvuk",
+      "text": "Ozvěna zní tlumeněji a teplejí, místo aby byla jasná a ostrá."
+    },
+    "echo": {
+      "name": "Echo",
+      "text": "Zopakuje zvuk o chvilku později, jako když zavoláte v horách."
+    },
+    "echo-time": {
+      "name": "Zpoždění echa",
+      "text": "Jak dlouho se čeká před každým opakováním."
+    },
+    "echo-repeats": {
+      "name": "Počet ech",
+      "text": "Kolikrát se echo zopakuje, než odezní."
+    },
+    "filter-off": {
+      "name": "Bez filtru",
+      "text": "Přehraje píseň se všemi jejími zvuky."
+    },
+    "filter-low": {
+      "name": "Ubrat výšky",
+      "text": "Odstraní vysoké zvuky, takže píseň zní tlumeně a jako z dálky."
+    },
+    "filter-high": {
+      "name": "Ubrat hloubky",
+      "text": "Odstraní hluboké zvuky, takže píseň zní tence, jako z malého reproduktoru."
+    },
+    "filter-freq": {
+      "name": "Síla filtru",
+      "text": "Kde střih začíná. Posouvejte, dokud píseň nezní tak, jak se vám líbí."
+    },
+    "fade-in": {
+      "name": "Postupné zesílení",
+      "text": "Jak dlouho klip na začátku přechází z ticha na plnou hlasitost."
+    },
+    "fade-out": {
+      "name": "Postupné zeslabení",
+      "text": "Jak dlouho klip na konci přechází z plné hlasitosti do ticha."
+    },
+    "transition-bars-2": {
+      "name": "2 takty",
+      "text": "Krátké prolnutí: obě písně se překrývají po dobu 2 taktů hudby."
+    },
+    "transition-bars-4": {
+      "name": "4 takty",
+      "text": "Střední prolnutí: obě písně se překrývají po dobu 4 taktů hudby."
+    },
+    "transition-bars-8": {
+      "name": "8 taktů",
+      "text": "Plynulé, dlouhé prolnutí: obě písně se překrývají po dobu 8 taktů. Nejběžnější délka u DJů."
+    },
+    "transition-bars-16": {
+      "name": "16 taktů",
+      "text": "Velmi pomalé prolnutí: obě písně se překrývají po dobu 16 taktů."
+    },
+    "curve-smooth": {
+      "name": "Plynule",
+      "text": "Písně si vymění místo tak, aby hlasitost zůstala vyrovnaná. Nejlepší pro většinu mixů."
+    },
+    "curve-straight": {
+      "name": "Rovně",
+      "text": "Jedna píseň se zeslabuje, zatímco druhá zesiluje, obě stejně rovnoměrným tempem."
+    },
+    "curve-slow": {
+      "name": "Pomalý začátek",
+      "text": "Nová píseň se tiše vkrádá a zesílí až ke konci."
+    },
+    "transition-apply": {
+      "name": "Prolnout",
+      "text": "Překryje vybraný klip se sousední písní a prolne je podle délky a stylu zvolených výše."
+    }
+  },
+  "sections": {
+    "clip": "Vybraný klip",
+    "looks": "Rychlé styly",
+    "speed": "Rychlost a výška tónu",
+    "sound": "Zvuk",
+    "effects": "Efekty",
+    "fades": "Prolínání",
+    "transition": "Prolnutí dvou písní"
+  },
+  "editEmpty": "Kliknutím na píseň na časové ose ji upravíte.",
+  "editLaneOnly": "Kliknutím na klip na této stopě změníte jeho rychlost a prolínání.",
+  "emptyText": "Vaše písně jsou v panelu vpravo. Klikněte na píseň a vloží se sem. Pak ji můžete stříhat, zpomalit, přidat efekty a výsledek exportovat.",
+  "addToStudio": "Přidat",
+  "downloading": "Stahování… {{percent}} %",
+  "downloadFailed": "Stahování se nezdařilo. Zkuste jiný výsledek.",
+  "exportTitle": "Exportovat váš mix",
+  "exportText": "Hotový mix se uloží jako nová píseň do vaší Knihovny.",
+  "mixName": "Název písně",
+  "defaultName": "Studio mix",
+  "save": "Uložit do Knihovny",
+  "cancel": "Zrušit",
+  "clear": "Smazat vše",
+  "clearTitle": "Vyčistit Studio?",
+  "clearText": "Z editoru se odeberou všechny písně. Tlačítkem Zpět je můžete vrátit. Knihovna a exportované mixy zůstanou beze změny.",
+  "exporting": "Ukládání mixu",
+  "saved": "Mix byl uložen do vaší Knihovny",
+  "removeConfirmText": "Odebrat tuto píseň z editoru? Knihovna zůstane beze změny.",
+  "removeConfirmAction": "Odebrat"
+}

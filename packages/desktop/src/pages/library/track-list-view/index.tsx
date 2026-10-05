@@ -6,6 +6,7 @@ import type { LibraryLayout } from '../library-page/use-library-layout';
 import type { SortField } from './types';
 import { TrackListHeader } from './track-list-header';
 import { TrackRow } from './track-row';
+import './table.css';
 
 interface TrackListViewProps {
   layout: LibraryLayout;
@@ -36,14 +37,10 @@ export function TrackListView({
   const allSelected = tracks.length > 0 && tracks.every((track) => selectedIds.has(track.id));
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+    <div className="library-track-table flex h-full min-h-0 flex-col overflow-hidden">
       <TrackListHeader
         allSelected={allSelected}
-        dense={layout.dense}
         onSelectAll={onSelectAll}
-        showArtist={layout.showArtistColumn}
-        showDownloaded={layout.showDownloadedColumn}
-        showPlaylist={layout.showPlaylistColumn}
         sortBy={sortBy}
         sortOrder={sortOrder}
         t={t}
@@ -60,10 +57,6 @@ export function TrackListView({
         renderItem={(track, index) => (
           <div style={{ paddingBottom: index === tracks.length - 1 ? 0 : 'var(--track-list-row-gap)' }}>
             <TrackRow
-              dense={layout.dense}
-              showArtist={layout.showArtistColumn}
-              showDownloaded={layout.showDownloadedColumn}
-              showPlaylist={layout.showPlaylistColumn}
               locale={locale}
               track={track}
               isPlaying={track.id === currentTrackId}

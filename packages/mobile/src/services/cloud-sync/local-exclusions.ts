@@ -39,6 +39,8 @@ export async function previewMobileCloudLocalDeletions(
   const config = await getMobileCloudConfig();
   if (!config) throw new Error('cloud_storage_not_configured');
   const scopeId = await ensureMobileCloudScope(config);
+  const exclusions = await getMobileCloudLocalExclusionHashes(scopeId);
+  if (exclusions.size === 0) return { deletedTracks: 0, reclaimableBytes: 0 };
   const read = await new MobileR2Client(config).getJsonConditional<CloudLibraryManifestV2>(
     buildCloudV2ManifestObjectKey(config.prefix),
     undefined,
@@ -47,6 +49,5 @@ export async function previewMobileCloudLocalDeletions(
   if (read.status !== 'ok') return { deletedTracks: 0, reclaimableBytes: 0 };
   const manifest = parseCloudLibraryManifestV2(read.value);
   if (!manifest) throw new Error('cloud_sync_invalid_v2_manifest');
-  const exclusions = await getMobileCloudLocalExclusionHashes(scopeId);
   return buildCloudLocalDeletionPreview(manifest.tracks, exclusions);
 }

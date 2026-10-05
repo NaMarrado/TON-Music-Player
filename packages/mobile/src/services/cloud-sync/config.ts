@@ -1,11 +1,17 @@
 import * as SecureStore from 'expo-secure-store';
 import type {
   CloudStorageConfig,
-  CloudStorageJurisdiction,
   CloudStoragePublicConfig,
 } from '@ton/core';
 import { normalizeCloudPrefix, sha256Hex } from '@ton/core';
 import { getSetting, setSetting } from '../db-queries';
+import {
+  loadMobileCloudConfig,
+  loadMobileCloudPublicConfig,
+  normalizeMobileCloudJurisdiction,
+  saveMobileCloudConfigToStorage,
+  type MobileCloudConfigStorage,
+} from './config-repository';
 
 const CONFIG_KEY = 'cloud_r2_config';
 const SECRET_KEY = 'cloud_r2_secret_access_key';
@@ -13,10 +19,37 @@ const DEVICE_ID_KEY = 'cloud_r2_device_id';
 const LAST_REVISION_KEY = 'cloud_r2_last_revision';
 const AUTO_SYNC_ENABLED_KEY = 'cloud_auto_sync_enabled';
 const AUDIO_OVER_CELLULAR_KEY = 'sync_audio_over_cellular';
+let secretCache: string | null | undefined;
+let secretReadPromise: Promise<string | null> | null = null;
 
-function normalizeJurisdiction(value: unknown): CloudStorageJurisdiction {
-  return value === 'eu' || value === 'fedramp' ? value : 'default';
+async function readSecret(): Promise<string | null> {
+  if (secretCache !== undefined) return secretCache;
+  if (!secretReadPromise) {
+    secretReadPromise = SecureStore.getItemAsync(SECRET_KEY)
+      .then((value) => {
+        secretCache = value;
+        return value;
+      })
+      .finally(() => {
+        secretReadPromise = null;
+      });
+  }
+  return secretReadPromise;
 }
+
+const configStorage: MobileCloudConfigStorage = {
+  readPublicConfig: () => getSetting(CONFIG_KEY),
+  readSecret,
+  writePublicConfig: (value) => setSetting(CONFIG_KEY, value),
+  writeSecret: async (value) => {
+    try {
+      await SecureStore.setItemAsync(SECRET_KEY, value);
+    } catch {
+      throw new Error('cloudStorageErrorSecureStorageUnavailable');
+    }
+    secretCache = value;
+  },
+};
 
 export async function getMobileCloudDeviceId(): Promise<string> {
   const existing = await getSetting(DEVICE_ID_KEY);
@@ -58,93 +91,24 @@ export function buildMobileCloudScopeId(config: Pick<
 >): string {
   return sha256Hex(JSON.stringify([
     config.accountId.trim().toLowerCase(),
-    normalizeJurisdiction(config.jurisdiction),
+    normalizeMobileCloudJurisdiction(config.jurisdiction),
     config.bucket.trim(),
     normalizeCloudPrefix(config.prefix),
   ]));
 }
 
 export async function getMobileCloudConfig(): Promise<CloudStorageConfig | null> {
-  const rawConfig = await getSetting(CONFIG_KEY);
-  if (!rawConfig) {
-    return null;
-  }
   try {
-    const parsed = JSON.parse(rawConfig) as Partial<CloudStorageConfig>;
-    const secretAccessKey = await SecureStore.getItemAsync(SECRET_KEY) ?? '';
-    if (!parsed.accountId || !parsed.bucket || !parsed.accessKeyId || !secretAccessKey) {
-      return null;
-    }
-    return {
-      accountId: parsed.accountId,
-      bucket: parsed.bucket,
-      prefix: normalizeCloudPrefix(parsed.prefix),
-      accessKeyId: parsed.accessKeyId,
-      secretAccessKey,
-      jurisdiction: normalizeJurisdiction(parsed.jurisdiction),
-    };
+    return await loadMobileCloudConfig(configStorage);
   } catch {
     return null;
   }
 }
 
 export async function getMobileCloudPublicConfig(): Promise<CloudStoragePublicConfig | null> {
-  const rawConfig = await getSetting(CONFIG_KEY);
-  if (!rawConfig) {
-    return null;
-  }
-  try {
-    const parsed = JSON.parse(rawConfig) as Partial<CloudStorageConfig>;
-    const secret = await SecureStore.getItemAsync(SECRET_KEY);
-    if (!parsed.accountId || !parsed.bucket || !parsed.accessKeyId) {
-      return null;
-    }
-    return {
-      accountId: parsed.accountId,
-      bucket: parsed.bucket,
-      prefix: normalizeCloudPrefix(parsed.prefix),
-      accessKeyId: parsed.accessKeyId,
-      jurisdiction: normalizeJurisdiction(parsed.jurisdiction),
-      hasSecretAccessKey: Boolean(secret),
-    };
-  } catch {
-    return null;
-  }
+  return loadMobileCloudPublicConfig(configStorage);
 }
 
 export async function saveMobileCloudConfig(config: CloudStorageConfig): Promise<CloudStoragePublicConfig> {
-  const existingSecret = await SecureStore.getItemAsync(SECRET_KEY) ?? '';
-  const normalized: CloudStorageConfig = {
-    accountId: config.accountId.trim(),
-    bucket: config.bucket.trim(),
-    prefix: normalizeCloudPrefix(config.prefix),
-    accessKeyId: config.accessKeyId.trim(),
-    secretAccessKey: config.secretAccessKey.trim() || existingSecret.trim(),
-    jurisdiction: normalizeJurisdiction(config.jurisdiction),
-  };
-  if (!normalized.secretAccessKey) {
-    throw new Error('R2 secret access key is required');
-  }
-  await setSetting(CONFIG_KEY, JSON.stringify({
-    accountId: normalized.accountId,
-    bucket: normalized.bucket,
-    prefix: normalized.prefix,
-    accessKeyId: normalized.accessKeyId,
-    jurisdiction: normalized.jurisdiction,
-  }));
-  if (config.secretAccessKey.trim() || !existingSecret) {
-    try {
-      await SecureStore.setItemAsync(SECRET_KEY, normalized.secretAccessKey);
-    } catch {
-      throw new Error('cloudStorageErrorSecureStorageUnavailable');
-    }
-  }
-  return {
-    accountId: normalized.accountId,
-    bucket: normalized.bucket,
-    prefix: normalized.prefix,
-    accessKeyId: normalized.accessKeyId,
-    jurisdiction: normalized.jurisdiction,
-    hasSecretAccessKey: true,
-  };
+  return saveMobileCloudConfigToStorage(configStorage, config);
 }

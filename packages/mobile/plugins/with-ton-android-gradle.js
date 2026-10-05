@@ -12,6 +12,11 @@ const FFMPEG_KIT_PACKAGE_LINE =
   "        ffmpegKitPackage = findProperty('ffmpegKitPackage') ?: 'audio'\n";
 const FFMPEG_KIT_LOCAL_REPO_LINE =
   "        maven { url(new File(rootDir, '.gradle/ffmpeg-kit-repo')) }\n";
+const EXPO_ENTRY_ARGS_BLOCK = `    extraPackagerArgs = [
+        "--entry-file",
+        "./" + ["node", "--print", "require('@expo/config/paths').convertEntryPointToRelative(process.argv[1], process.argv[2])", projectRoot, entryFile.get().asFile.absolutePath].execute(null, rootDir).text.trim()
+    ]
+`;
 
 function insertAfter(contents, anchor, addition, label) {
   if (contents.includes(addition.trim())) return contents;
@@ -37,6 +42,16 @@ function upsertHermesFlags(contents) {
     '    hermesCommand = new File(["node", "--print", "require.resolve(\'react-native/package.json\')"].execute(null, rootDir).text.trim()).getParentFile().getAbsolutePath() + "/sdks/hermesc/%OS-BIN%/hermesc"\n',
     HERMES_FLAGS_LINE,
     'hermesCommand',
+  );
+}
+
+function upsertExpoEntryArgs(contents) {
+  // RN's Windows CLI entry is project-relative; Expo resolves it from the workspace.
+  return insertAfter(
+    contents,
+    '    bundleCommand = "export:embed"\n',
+    EXPO_ENTRY_ARGS_BLOCK,
+    'bundleCommand',
   );
 }
 
@@ -90,6 +105,7 @@ module.exports = {
   ANDROIDX_MEDIA_DEPENDENCY_LINE,
   COROUTINES_DEPENDENCY_LINE,
   upsertDependency,
+  upsertExpoEntryArgs,
   upsertFfmpegKitBootstrap,
   upsertFfmpegKitLocalRepo,
   upsertFfmpegKitPackage,

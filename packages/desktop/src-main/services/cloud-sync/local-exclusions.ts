@@ -112,6 +112,8 @@ export async function previewDesktopCloudLocalDeletions(
   const config = getDesktopCloudConfig();
   if (!config) throw new Error('cloud_storage_not_configured');
   const scopeId = activateDesktopCloudScope(config);
+  const exclusions = getDesktopCloudLocalExclusionHashes(scopeId);
+  if (exclusions.size === 0) return { deletedTracks: 0, reclaimableBytes: 0 };
   const read = await new DesktopR2Client(config).getJsonConditional<CloudLibraryManifestV2>(
     buildCloudV2ManifestObjectKey(config.prefix),
     { signal },
@@ -119,6 +121,5 @@ export async function previewDesktopCloudLocalDeletions(
   if (read.status !== 'ok') return { deletedTracks: 0, reclaimableBytes: 0 };
   const manifest = parseCloudLibraryManifestV2(read.value);
   if (!manifest) throw new Error('cloud_sync_invalid_v2_manifest');
-  const exclusions = getDesktopCloudLocalExclusionHashes(scopeId);
   return buildCloudLocalDeletionPreview(manifest.tracks, exclusions);
 }

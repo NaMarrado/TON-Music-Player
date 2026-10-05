@@ -1,6 +1,6 @@
 import { SpotifyApi } from '@spotify/web-api-ts-sdk';
 import type { SearchResult, SpotifyPlaylistTrack } from '@ton/core';
-import { SEARCH_PAGE_LIMITS, executeSpotifySearchPage } from '@ton/core';
+import { SEARCH_PAGE_LIMITS, executeSpotifySearchPage, normalizeTrackDurationMs } from '@ton/core';
 import { getSetting } from './db-queries';
 
 let client: SpotifyApi | null = null;
@@ -40,7 +40,7 @@ export async function getSpotifyTrackById(
     title: track.name,
     artist: track.artists.map((artist) => artist.name).join(', '),
     album: track.album.name,
-    duration_ms: track.duration_ms,
+    duration_ms: normalizeTrackDurationMs(track.duration_ms, 'milliseconds'),
     thumbnail_url: track.album.images[0]?.url ?? null,
     url: track.external_urls.spotify,
     is_downloaded: false,

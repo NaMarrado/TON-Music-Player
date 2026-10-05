@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PlaylistTrackEntry } from '@ton/core';
 import type { SortColumn, SortDir } from '../../sortable-track-row';
-import { filterTracks } from './filter-tracks';
-import { sortTracks } from './sort-tracks';
+import { getPlaylistTrackSources } from './track-sources';
 import {
   loadPlaylistSortPreference,
   savePlaylistSortPreference,
@@ -21,16 +20,14 @@ export function usePlaylistViewState(playlistId: number, tracks: PlaylistTrackEn
     setSortDir(preference.sortDir);
   }, [playlistId]);
 
-  const filteredTracks = useMemo(
-    () => filterTracks(tracks, filterQuery),
-    [tracks, filterQuery],
-  );
-  const displayTracks = useMemo(
-    () => sortTracks(filteredTracks, sortBy, sortDir),
-    [filteredTracks, sortBy, sortDir],
+  const { playbackTracks, displayTracks } = useMemo(
+    () => getPlaylistTrackSources(tracks, filterQuery, sortBy, sortDir),
+    [tracks, filterQuery, sortBy, sortDir],
   );
   const displayTracksRef = useRef(displayTracks);
   displayTracksRef.current = displayTracks;
+  const playbackTracksRef = useRef(playbackTracks);
+  playbackTracksRef.current = playbackTracks;
 
   const {
     allSelected,
@@ -78,13 +75,13 @@ export function usePlaylistViewState(playlistId: number, tracks: PlaylistTrackEn
     allSelected,
     clearSelection,
     displayTracks,
-    displayTracksRef,
     filterQuery,
     handleSelectAll,
     handleSort,
     handleToggleSelect,
     isFiltered: filterQuery.length > 0,
     isSorted: sortBy !== null,
+    playbackTracksRef,
     selectedIds,
     setFilterQuery,
     sortBy,

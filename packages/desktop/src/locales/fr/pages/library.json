@@ -1,4 +1,10 @@
 {
+  "starred": "Favoris",
+  "starTrack": "Ajouter aux favoris",
+  "unstarTrack": "Retirer des favoris",
+  "starFailed": "Impossible de modifier le favori",
+  "emptyStarred": "Aucun titre favori pour le moment",
+  "emptyStarredHint": "Marquez un titre avec une étoile pour le retrouver ici.",
   "title": "Bibliothèque",
   "filterPlaceholder": "Filtrer la bibliothèque...",
   "recentlyAdded": "Ajouts récents",

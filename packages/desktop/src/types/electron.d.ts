@@ -1,5 +1,8 @@
 import type { AllowedInvokeChannel, AllowedOnChannel } from '../shared/ipc-channels';
 import type { DiscordPresencePayload } from '../shared/discord-presence';
+import type { ExportRequest, ExportResult, ImportInspectResult, ImportRequest, ImportResult } from '../shared/transfer-ipc';
+import type { StudioExportRequest, StudioExportResult, StudioProgressEvent, StudioTempDownloadRequest, StudioTempDownloadResult } from '../shared/studio-ipc';
+import type { ListeningProfileSummary, ListeningSessionSnapshot, PlaybackObservation, ProfileDevice, ProfileQuery } from '@ton/core';
 
 interface TransactionStatement {
   sql: string;
@@ -99,6 +102,17 @@ interface ElectronAPI {
     url: string,
   ): Promise<{ name: string; tracks: import('@ton/core').SpotifyPlaylistTrack[]; total: number }>;
   invoke(channel: 'library:import-files'): Promise<{ imported: number }>;
+  invoke(channel: 'library:toggle-star', trackId: number): Promise<{ rating: number | null }>;
+  invoke(channel: 'profile:get-summary', query?: ProfileQuery): Promise<ListeningProfileSummary>;
+  invoke(channel: 'profile:get-device'): Promise<ProfileDevice>;
+  invoke(channel: 'profile:get-session', trackId: number): Promise<ListeningSessionSnapshot | null>;
+  invoke(channel: 'profile:record-listening', snapshot: ListeningSessionSnapshot): Promise<void>;
+  invoke(channel: 'profile:record-events', events: PlaybackObservation[]): Promise<void>;
+  invoke(channel: 'studio:download-temp', id: string, request: StudioTempDownloadRequest): Promise<StudioTempDownloadResult>;
+  invoke(channel: 'studio:export', id: string, request: StudioExportRequest): Promise<StudioExportResult>;
+  invoke(channel: 'studio:cancel', id: string): Promise<void>;
+  invoke(channel: 'studio:cleanup-temp', keep: string[]): Promise<number>;
+  invoke(channel: 'profile:flush-complete', requestId: string): Promise<void>;
   invoke(channel: 'library:scan', dirPath?: string): Promise<{ imported: number; skipped: number }>;
   invoke(
     channel: 'library:analyze-loudness',
@@ -177,18 +191,16 @@ interface ElectronAPI {
     channel: 'playlist:smart-query',
     config: import('@ton/core').SmartPlaylistConfig,
   ): Promise<import('@ton/core').Track[]>;
-  invoke(
-    channel: 'export:start',
-    options?: { destinationPath?: string; bundleFormat?: 'archive' | 'folder' },
-  ): Promise<{ trackCount: number; playlistCount: number; sizeBytes: number }>;
+  invoke(channel: 'export:start', options?: ExportRequest): Promise<ExportResult>;
   invoke(
     channel: 'export:summary',
   ): Promise<{ exportableTrackCount: number; exportablePlaylistCount: number }>;
-  invoke(
-    channel: 'import:start',
-    options?: { bundlePath?: string },
-  ): Promise<{ importedTracks: number; skippedTracks: number; importedPlaylists: number }>;
+  invoke(channel: 'import:inspect', options?: { bundlePath?: string }): Promise<ImportInspectResult>;
+  invoke(channel: 'import:discard', token: string): Promise<void>;
+  invoke(channel: 'import:start', options?: ImportRequest): Promise<ImportResult>;
   on(channel: AllowedOnChannel, callback: (...args: unknown[]) => void): void;
+  on(channel: 'profile:flush-listening', callback: (requestId: string) => void): void;
+  on(channel: 'studio:progress', callback: (event: StudioProgressEvent) => void): void;
   on(
     channel:
       | 'download:progress'

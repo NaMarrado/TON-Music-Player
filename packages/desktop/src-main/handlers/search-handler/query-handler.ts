@@ -2,7 +2,7 @@ import {
   canonicalizeSearchQuery,
   createSearchPageRequest,
   getDirectTrackOEmbedUrl,
-  mapDirectTrackOEmbedResult,
+  resolveDirectTrackWithFallback,
   parseDirectTrackUrl,
   type DirectTrackUrl,
   type SearchQuery,
@@ -18,7 +18,12 @@ import {
   getSoundCloudTrackByUrl,
   searchSoundCloudPage,
 } from '../../services/soundcloud-search';
-import { getYouTubeTrackById, searchYouTubePage } from '../../services/youtube-search';
+import {
+  getYouTubeTrackById,
+  getYouTubeTrackFromSearch,
+  searchYouTubePage,
+} from '../../services/youtube-search';
+import { getYouTubeTrackWithYtDlp } from '../../services/youtube-search-fallback';
 import { measurePerfAsync } from '../../services/perf';
 import {
   enrichWithDownloadStatus,
@@ -27,6 +32,7 @@ import {
   type SearchPageResult,
 } from './library-search';
 import {
+  runWithDeadline,
   searchWithRelaxedRetry,
   settleSearchProviderTasks,
   type SearchProviderTask,
@@ -192,7 +198,29 @@ async function getDirectTrackPage(
   switch (directTrack.source) {
     case 'youtube':
       return {
-        results: [await resolveYouTubeTrackUrl(directTrack, signal)],
+        results: [await resolveDirectTrackWithFallback(
+          directTrack,
+          () => getYouTubeTrackById(directTrack.id, signal),
+          () => runWithDeadline(
+            async (fallbackSignal) => {
+              try {
+                const candidate = await getYouTubeTrackFromSearch(directTrack.id, fallbackSignal);
+                if (candidate?.duration_ms != null) return candidate;
+              } catch (error) {
+                if (fallbackSignal.aborted) throw error;
+              }
+              return getYouTubeTrackWithYtDlp(directTrack.id, fallbackSignal);
+            },
+            signal,
+            5_000,
+          ),
+          async () => {
+            const response = await fetch(getDirectTrackOEmbedUrl(directTrack), { signal });
+            if (!response.ok) throw new Error('YouTube track metadata is unavailable');
+            return response.json();
+          },
+          signal,
+        )],
         hasMore: false,
       };
     case 'spotify':
@@ -208,16 +236,3 @@ async function getDirectTrackPage(
   }
 }
 
-async function resolveYouTubeTrackUrl(
-  directTrack: DirectTrackUrl,
-  signal: AbortSignal,
-) {
-  try {
-    return await getYouTubeTrackById(directTrack.id, signal);
-  } catch (primaryError) {
-    if (signal.aborted) throw primaryError;
-    const response = await fetch(getDirectTrackOEmbedUrl(directTrack), { signal });
-    if (!response.ok) throw primaryError;
-    return mapDirectTrackOEmbedResult(directTrack, await response.json());
-  }
-}

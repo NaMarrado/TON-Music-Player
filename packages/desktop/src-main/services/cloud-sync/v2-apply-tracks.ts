@@ -42,10 +42,16 @@ export async function applyCloudTracksV2(
   trackMirror: Map<string, string>,
 ): Promise<AppliedTrackState> {
   const db = getDb();
+  const existingRows = db.prepare(`
+    SELECT id, content_hash_sha256 FROM tracks
+    WHERE content_hash_sha256 IS NOT NULL AND content_hash_sha256 != ''
+  `).all() as Array<{ id: number; content_hash_sha256: string }>;
+  const trackIdByHash = new Map(existingRows.map((row) => [row.content_hash_sha256, row.id]));
   const changedRecords = manifest.tracks.filter((record) => (
     options.force || trackMirror.get(record.content_hash_sha256) !== JSON.stringify(record)
+      || (!record.deleted && !trackIdByHash.has(record.content_hash_sha256))
   ));
-  let protection = readCloudApplyProtection(scopeId, capturedGeneration);
+  let protection = readCloudApplyProtection(scopeId, capturedGeneration, options.mode === 'fetch');
   const isProtected = (hash: string) => protection.protectAll || protection.trackHashes.has(hash);
   const recordsToApply = changedRecords.filter((record) => !isProtected(record.content_hash_sha256));
   const appliedRecords: CloudTrackRecordV2[] = [];
@@ -53,11 +59,6 @@ export async function applyCloudTracksV2(
   const deferredFailures = prepareDesktopCloudDownloadFailures(
     scopeId, manifest.revision, Boolean(options.force),
   );
-  const existingRows = db.prepare(`
-    SELECT id, content_hash_sha256 FROM tracks
-    WHERE content_hash_sha256 IS NOT NULL AND content_hash_sha256 != ''
-  `).all() as Array<{ id: number; content_hash_sha256: string }>;
-  const trackIdByHash = new Map(existingRows.map((row) => [row.content_hash_sha256, row.id]));
   const playlistRows = db.prepare(`
     SELECT id, cloud_id FROM playlists WHERE cloud_id IS NOT NULL AND cloud_id != ''
   `).all() as Array<{ id: number; cloud_id: string }>;
@@ -218,7 +219,7 @@ export async function applyCloudTracksV2(
     }
     const downloadedAt = normalizeDownloadedAt(entry.downloaded_at);
     throwIfV2Cancelled(options);
-    protection = readCloudApplyProtection(scopeId, capturedGeneration);
+    protection = readCloudApplyProtection(scopeId, capturedGeneration, options.mode === 'fetch');
     if (isProtected(entry.content_hash_sha256)) {
       if (downloadedAudio) await fs.promises.rm(destinationPath, { force: true }).catch(() => undefined);
       continue;
@@ -270,7 +271,7 @@ export async function applyCloudTracksV2(
     trackIdByHash.set(entry.content_hash_sha256, trackId);
     const membershipTargets = membershipsByHash.get(entry.content_hash_sha256) ?? [];
     if (membershipTargets.length > 0) {
-      protection = readCloudApplyProtection(scopeId, capturedGeneration);
+      protection = readCloudApplyProtection(scopeId, capturedGeneration, options.mode === 'fetch');
       setDesktopCloudOutboxSuppressed(() => {
         db.transaction(() => {
           for (const target of membershipTargets) {

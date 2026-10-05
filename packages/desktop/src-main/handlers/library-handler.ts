@@ -17,6 +17,7 @@ import {
   getLibraryLoudnessStats,
 } from './library-handler/loudness';
 import { handleLibraryScan } from './library-handler/scan-directory';
+import { handleLibraryToggleStar } from './library-handler/toggle-star';
 
 export function registerLibraryHandlers(): void {
   ipcMain.handle('library:import-files', async () => handleLibraryImportFiles());
@@ -40,6 +41,8 @@ export function registerLibraryHandlers(): void {
   ipcMain.handle('library:home-summary', async () => handleLibraryHomeSummary());
   ipcMain.handle('library:get-track-snapshot', async (_event, trackId: number) =>
     handleLibraryGetTrackSnapshot(trackId));
+  ipcMain.handle('library:toggle-star', async (_event, trackId: number) =>
+    handleLibraryToggleStar(trackId));
   ipcMain.handle(
     'library:delete-tracks',
     async (_event, trackIds: number[], mode?: 'library-only' | 'everywhere') => {

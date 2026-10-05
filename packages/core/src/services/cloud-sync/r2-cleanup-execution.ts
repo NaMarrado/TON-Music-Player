@@ -60,7 +60,7 @@ export async function executeCloudR2CleanupPlan<
       await adapter.deleteObject(key, options.signal);
       deletedObjects += 1;
       freedBytes += plan.objectSizeByKey.get(key) ?? 0;
-    } catch (error) {
+    } catch {
       throwIfAborted(options.signal);
       failedObjects += 1;
     }

@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 import java.io.File
 import java.io.FileInputStream
+import java.security.MessageDigest
 
 class AndroidLibraryTransferModule(
   reactContext: ReactApplicationContext,
@@ -62,6 +63,28 @@ class AndroidLibraryTransferModule(
       startJob(jobId, TransferSpec.Export(AndroidLibraryTransferRequestParser.parseExport(request)), promise)
     } catch (error: Exception) {
       promise.reject("android_library_transfer_export_request_failed", error)
+    }
+  }
+
+  /** SHA-256 of a local file as lowercase hex, computed natively (the JavaScript version is far slower on phones). */
+  @ReactMethod
+  fun hashFileSha256(path: String, promise: Promise) {
+    scope.launch {
+      try {
+        val file = File(if (path.startsWith("file://")) requireNotNull(Uri.parse(path).path) else path)
+        val digest = MessageDigest.getInstance("SHA-256")
+        FileInputStream(file).use { input ->
+          val buffer = ByteArray(1024 * 1024)
+          while (true) {
+            val read = input.read(buffer)
+            if (read < 0) break
+            digest.update(buffer, 0, read)
+          }
+        }
+        promise.resolve(digest.digest().joinToString("") { "%02x".format(it) })
+      } catch (error: Exception) {
+        promise.reject("android_library_hash_failed", error)
+      }
     }
   }
 

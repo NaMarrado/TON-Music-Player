@@ -2,14 +2,14 @@ import type { ExportPlaylistEntry, ExportTrackEntry } from '@ton/core';
 
 export type ExportBundleFormat = 'archive' | 'folder';
 
-export type ExportStartOptions = {
-  destinationPath?: string;
-  bundleFormat?: ExportBundleFormat;
-  includeLibrary?: boolean;
-  playlistIds?: number[];
-};
-
-export type ImportStartOptions = { bundlePath?: string };
+export type {
+  ExportKind,
+  ExportRequest as ExportStartOptions,
+  ExportResult,
+  ImportInspectResult,
+  ImportRequest as ImportStartOptions,
+  ImportResult,
+} from '../../../src/shared/transfer-ipc';
 
 export type ExportDestination = {
   destinationPath: string;
@@ -22,21 +22,9 @@ export type ProgressPayload = {
   total: number;
 };
 
-export type ExportResult = {
-  trackCount: number;
-  playlistCount: number;
-  sizeBytes: number;
-};
-
 export type ExportSummaryResult = {
   exportableTrackCount: number;
   exportablePlaylistCount: number;
-};
-
-export type ImportResult = {
-  importedTracks: number;
-  skippedTracks: number;
-  importedPlaylists: number;
 };
 
 export type ExportTrackRow = {

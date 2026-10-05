@@ -54,6 +54,9 @@ If TON is useful to you, the easiest way to support the project is to star the r
 - 🎮 **Discord Rich Presence on Desktop:** Share the current track, artist, artwork, and live playback progress on your Discord profile, with pause and resume reflected automatically.
 - ⬇️ **Local Downloads:** Save playable audio directly to your device and listen offline.
 - 🎵 **Library and Playlists:** Keep a separate main library, create playlists, reorder tracks, and preserve playlist order.
+- 📊 **Profile:** See how you listen: time listened, plays, and your favorite songs and artists over time.
+- 🎛️ **Studio:** Make your own versions of songs. Layer them, slow them down, add effects, and save the result to your library.
+- 💾 **Export & Import:** Move your whole profile, your library, chosen playlists, or chosen songs to another device in one file.
 - ☁️ **Cloud Library:** Connect your own Cloudflare R2 bucket and move your library and playlists between devices.
 - 🗂️ **Structured Cloud Storage:** Keep the main library and each playlist in clearly named folders with track order, metadata, and playlist covers preserved.
 - 🎚️ **Advanced Audio Tools:** Loudness normalization, equalizer support, frequency tuning, repeat, and shuffle.
@@ -137,10 +140,10 @@ TON is available under the [MIT License](LICENSE). You can use, modify, and dist
 
 <img src="screenshots/desktop/home.png" alt="" width="900">
 <img src="screenshots/desktop/search.png" alt="" width="900">
-<img src="screenshots/desktop/equalizer.png" alt="" width="900">
+<img src="screenshots/desktop/library.png" alt="" width="900">
+<img src="screenshots/desktop/downloads.png" alt="" width="900">
+<img src="screenshots/desktop/profile.png" alt="" width="900">
+<img src="screenshots/desktop/studio.png" alt="" width="900">
+<img src="screenshots/desktop/settings.png" alt="" width="900">
+<img src="screenshots/desktop/export-import.png" alt="" width="900">
 <img src="screenshots/desktop/playlist.png" alt="" width="900">
-
-<img src="screenshots/iphone/home.png" alt="" width="280">
-<img src="screenshots/iphone/search.png" alt="" width="280">
-<img src="screenshots/iphone/equalizer.png" alt="" width="280">
-<img src="screenshots/iphone/playlist.png" alt="" width="280">

@@ -98,6 +98,6 @@ export async function prepareMissingLocalUpload(
   const outbox = [...rows.values()];
   return {
     outbox,
-    prepared: await prepareIncrementalManifest(config, deviceId, outbox, signal),
+    prepared: await prepareIncrementalManifest(config, deviceId, outbox, signal, remote),
   };
 }

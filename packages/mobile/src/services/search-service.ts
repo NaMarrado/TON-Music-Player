@@ -4,7 +4,7 @@ import {
   canonicalizeSearchQuery,
   createSearchPageRequest,
   getDirectTrackOEmbedUrl,
-  mapDirectTrackOEmbedResult,
+  resolveDirectTrackWithFallback,
   parseDirectTrackUrl,
   relaxSearchQuery,
   type DirectTrackUrl,
@@ -12,7 +12,7 @@ import {
   type SearchSource,
   type SearchSourceStatus,
 } from '@ton/core';
-import { getYouTubeTrackById, searchYouTubePage } from './youtube-search';
+import { getYouTubeTrackById, getYouTubeTrackFromSearch, searchYouTubePage } from './youtube-search';
 import { getSpotifyTrackById, searchSpotifyPage } from './spotify-client';
 import { getTrackIdsBySourceIdentity, searchTracksFts } from './db-queries';
 import { getDb } from './database';
@@ -192,7 +192,21 @@ async function getDirectTrackPage(
   switch (directTrack.source) {
     case 'youtube':
       return {
-        results: [await resolveYouTubeTrackUrl(directTrack, signal)],
+        results: [await resolveDirectTrackWithFallback(
+          directTrack,
+          () => getYouTubeTrackById(directTrack.id, signal),
+          () => withProviderDeadline(
+            signal,
+            (fallbackSignal) => getYouTubeTrackFromSearch(directTrack.id, fallbackSignal),
+            5_000,
+          ),
+          async () => {
+            const response = await fetch(getDirectTrackOEmbedUrl(directTrack), { signal });
+            if (!response.ok) throw new Error('YouTube track metadata is unavailable');
+            return response.json();
+          },
+          signal,
+        )],
         hasMore: false,
       };
     case 'spotify':
@@ -202,20 +216,6 @@ async function getDirectTrackPage(
       };
     case 'soundcloud':
       throw new Error('SoundCloud is available on desktop only');
-  }
-}
-
-async function resolveYouTubeTrackUrl(
-  directTrack: DirectTrackUrl,
-  signal?: AbortSignal,
-): Promise<SearchResult> {
-  try {
-    return await getYouTubeTrackById(directTrack.id, signal);
-  } catch (primaryError) {
-    if (signal?.aborted) throw primaryError;
-    const response = await fetch(getDirectTrackOEmbedUrl(directTrack), { signal });
-    if (!response.ok) throw primaryError;
-    return mapDirectTrackOEmbedResult(directTrack, await response.json());
   }
 }
 
@@ -334,6 +334,7 @@ async function searchPlaylists(
 function withProviderDeadline<T>(
   parentSignal: AbortSignal | undefined,
   run: (signal: AbortSignal) => Promise<T>,
+  deadlineMs = PROVIDER_DEADLINE_MS,
 ): Promise<T> {
   const controller = new AbortController();
   const onParentAbort = () => controller.abort();
@@ -351,7 +352,7 @@ function withProviderDeadline<T>(
     const timer = setTimeout(() => {
       controller.abort();
       finish(() => reject(new Error('Search provider timed out')));
-    }, PROVIDER_DEADLINE_MS);
+    }, deadlineMs);
 
     if (parentSignal?.aborted) controller.abort();
     run(controller.signal).then(

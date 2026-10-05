@@ -1,14 +1,12 @@
 import { SortArrow } from './sort-arrow';
-import { PlaylistTrackGridShell, getPlaylistTrackGridStyle } from './grid-shell';
+import { PlaylistTrackGridShell } from './grid-shell';
+import { getPlaylistTrackGridStyle } from './layout';
 import type { SortColumn, SortDir } from './types';
 
 type TrackListHeaderProps = {
   allSelected: boolean;
-  dense: boolean;
   onSelectAll: () => void;
   onSort: (col: SortColumn) => void;
-  showArtist: boolean;
-  showDownloaded: boolean;
   showDrag: boolean;
   sortBy: SortColumn;
   sortDir: SortDir;
@@ -17,11 +15,8 @@ type TrackListHeaderProps = {
 
 export function TrackListHeader({
   allSelected,
-  dense,
   onSelectAll,
   onSort,
-  showArtist,
-  showDownloaded,
   showDrag,
   sortBy,
   sortDir,
@@ -37,8 +32,9 @@ export function TrackListHeader({
 
   return (
     <div
+      className="playlist-track-grid"
       style={{
-        ...getPlaylistTrackGridStyle({ dense, showArtist, showDownloaded, showDrag }),
+        ...getPlaylistTrackGridStyle(showDrag),
         paddingBottom: 'var(--track-list-header-padding-bottom)',
         marginBottom: 'var(--track-list-row-gap)',
         fontSize: '0.7rem',
@@ -50,8 +46,6 @@ export function TrackListHeader({
       }}
     >
       <PlaylistTrackGridShell
-        showArtist={showArtist}
-        showDownloaded={showDownloaded}
         showDrag={showDrag}
         dragSlot={null}
         indexSlot={
@@ -75,7 +69,7 @@ export function TrackListHeader({
             </span>
           </div>
         }
-        artistSlot={showArtist ? (
+        artistSlot={
           <div style={textHeaderCellStyle}>
             <span
               onClick={() => onSort('artist')}
@@ -86,8 +80,8 @@ export function TrackListHeader({
               <SortArrow dir={sortBy === 'artist' ? sortDir : null} />
             </span>
           </div>
-        ) : undefined}
-        downloadedSlot={showDownloaded ? (
+        }
+        downloadedSlot={
           <div style={textHeaderCellStyle}>
             <span
               onClick={() => onSort('downloaded_at')}
@@ -98,7 +92,7 @@ export function TrackListHeader({
               <SortArrow dir={sortBy === 'downloaded_at' ? sortDir : null} />
             </span>
           </div>
-        ) : undefined}
+        }
         timeSlot={
           <span
             onClick={() => onSort('time')}

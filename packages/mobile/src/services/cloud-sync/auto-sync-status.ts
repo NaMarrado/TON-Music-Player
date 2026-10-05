@@ -11,6 +11,7 @@ import {
   getMobileCloudPersistedState,
   updateMobileCloudPersistedState,
 } from './local-state';
+import { getMobileProfilePendingCount } from '../listening-profile/store';
 import { mobileAutoSyncRuntime as runtime } from './auto-sync-state';
 
 export function isOnline(state: NetInfoState): boolean {
@@ -99,11 +100,14 @@ export async function refreshPendingStatus(config?: CloudStorageConfig): Promise
     return { pendingChanges, pendingDownloads: 0 };
   }
   const scopeId = await ensureMobileCloudScope(config);
-  const [pendingChanges, state] = await Promise.all([
-    getMobileCloudPendingCount(scopeId), getMobileCloudPersistedState(scopeId),
+  const [outboxChanges, profileChanges, state] = await Promise.all([
+    getMobileCloudPendingCount(scopeId), getMobileProfilePendingCount(scopeId),
+    getMobileCloudPersistedState(scopeId),
   ]);
-  runtime.coordinator?.setPendingCounts(pendingChanges, state.pending_downloads);
-  return { pendingChanges, pendingDownloads: state.pending_downloads };
+  const pendingChanges = outboxChanges + profileChanges;
+  const pendingDownloads = state.pending_downloads + state.pending_assets;
+  runtime.coordinator?.setPendingCounts(pendingChanges, pendingDownloads);
+  return { pendingChanges, pendingDownloads };
 }
 
 export async function persistRuntimeStatus(

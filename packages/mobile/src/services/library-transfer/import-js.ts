@@ -14,6 +14,8 @@ import { loadArchiveBundleAsync } from './import-archive';
 import { insertImportedLibraryAsync, prepareImportPlaylistCovers, prepareImportTracks } from './import-helpers';
 import { cleanupImportedSourceUriAsync } from './import-source-cleanup';
 import { throwIfLibraryTransferCancelled } from './cancellation';
+import { applyChosenProfile, chooseImport } from './import-choice';
+import type { LibraryImportOptions } from './types';
 import { enqueueMissingImportLoudness } from './import-loudness';
 import * as FileSystem from 'expo-file-system';
 
@@ -25,6 +27,7 @@ export async function importMobileLibraryJs(
   source: LibraryImportSource,
   onProgress?: (progress: LibraryTransferProgress) => void,
   shouldCancel?: (() => boolean) | null,
+  options?: LibraryImportOptions,
 ): Promise<LibraryImportResult | null> {
   let stageDirectoryUri: string | null = null;
   let createdTrackUris: string[] = [];
@@ -46,8 +49,10 @@ export async function importMobileLibraryJs(
 
     const loadedArchive = await loadArchiveBundleAsync(archiveUri);
     throwIfLibraryTransferCancelled(shouldCancel);
-    const manifest = loadedArchive.manifest;
-    const bundleType = resolveImportBundleType(manifest);
+    const chosen = await chooseImport(loadedArchive.manifest, options);
+    if (!chosen) return null;
+    const { manifest } = chosen;
+    const bundleType = resolveImportBundleType(loadedArchive.manifest);
     await ensureMusicDir();
     const existingTrackIdsByHash = await getTrackIdsByTransferEntries(manifest.tracks);
     const {
@@ -84,6 +89,7 @@ export async function importMobileLibraryJs(
       shouldCancel,
     );
     enqueueMissingImportLoudness(preparedTracks, trackIdsByHash);
+    const profileApplied = await applyChosenProfile(chosen);
     createdTrackUris = [];
     createdCoverUris = [];
     onProgress?.({ phase: 'done', current: 1, total: 1 });
@@ -94,6 +100,7 @@ export async function importMobileLibraryJs(
       skippedTracks,
       importedPlaylists: playlistIds.length,
       playlistIds,
+      profileApplied,
     };
   } catch (error) {
     await Promise.all(createdTrackUris.map(deleteFileAsync));

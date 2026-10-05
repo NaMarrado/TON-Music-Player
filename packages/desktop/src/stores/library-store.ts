@@ -1,6 +1,10 @@
 import { create } from 'zustand';
 import type { Track } from '@ton/core';
 import type { SortField } from '@ton/core';
+import {
+  applyPlaylistTrackRating,
+  invalidatePlaylistTrackRatings,
+} from './playlist-store/loaders';
 
 export type LibraryTrack = Track & { playlist_names: string | null };
 export type LibraryDeleteMode = 'library-only' | 'everywhere';
@@ -15,6 +19,7 @@ interface LibraryState {
   sortBy: SortField;
   sortOrder: 'asc' | 'desc';
   filterQuery: string;
+  starredOnly: boolean;
   viewMode: ViewMode;
   isLoading: boolean;
   hasLoaded: boolean;
@@ -26,6 +31,7 @@ export const useLibraryStore = create<LibraryState>()(() => ({
   sortBy: 'added_at',
   sortOrder: 'desc',
   filterQuery: '',
+  starredOnly: false,
   viewMode: 'list',
   isLoading: false,
   hasLoaded: false,
@@ -204,7 +210,12 @@ export async function reconcileLibraryTracks(
 export async function mergeLibraryTrackSummaries(trackIds: number[]): Promise<void> {
   const uniqueIds = [...new Set(trackIds)];
   if (uniqueIds.length === 0) return;
-  const incoming = await window.api.invoke('library:list-summary-by-ids', uniqueIds) as LibraryTrack[];
+  let incoming: LibraryTrack[];
+  while (true) {
+    const revision = libraryRevision;
+    incoming = await window.api.invoke('library:list-summary-by-ids', uniqueIds) as LibraryTrack[];
+    if (revision === libraryRevision) break;
+  }
   if (incoming.length === 0) return;
   useLibraryStore.setState((state) => {
     const byId = new Map(state.tracks.map((track) => [track.id, track]));
@@ -231,6 +242,30 @@ export function markTrackPlayed(trackId: number): void {
       : t,
   );
   useLibraryStore.setState({ tracks: updated });
+}
+
+const starTogglePromises = new Map<number, Promise<void>>();
+
+/** Serialize same-track clicks and always toggle the persisted value, not a stale row. */
+export function toggleTrackStar(trackId: number): Promise<void> {
+  const previous = starTogglePromises.get(trackId) ?? Promise.resolve();
+  const pending = previous.catch(() => {}).then(async () => {
+    invalidateTracks();
+    invalidatePlaylistTrackRatings();
+    try {
+      const { rating } = await window.api.invoke('library:toggle-star', trackId);
+      invalidateTracks();
+      invalidatePlaylistTrackRatings();
+      useLibraryStore.setState((state) => ({
+        tracks: state.tracks.map((track) => track.id === trackId ? { ...track, rating } : track),
+      }));
+      await applyPlaylistTrackRating(trackId, rating);
+    } finally {
+      if (starTogglePromises.get(trackId) === pending) starTogglePromises.delete(trackId);
+    }
+  });
+  starTogglePromises.set(trackId, pending);
+  return pending;
 }
 
 /** Delete tracks from library using desktop parity semantics. */

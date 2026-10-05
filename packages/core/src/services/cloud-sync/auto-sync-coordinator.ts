@@ -143,7 +143,9 @@ export class CloudAutoSyncCoordinator {
     if (online === this.state.isOnline) return;
     this.state.setOnline(online);
     if (!online) {
-      this.timers.clear('poll');
+      this.timers.clearAll();
+      this.firstDirtyAt = null;
+      this.runQueue.dropAutomatic(new Error('cloudAutoSyncOffline'));
       this.clearRetryTimer();
       if (this.runQueue.activeOrigin !== 'manual') this.cancelActiveCallback?.();
       this.state.update({
@@ -252,6 +254,10 @@ export class CloudAutoSyncCoordinator {
       return;
     }
     this.clearRetryTimer();
+    // A change arriving during the failed run may have queued a debounce.
+    // It must not bypass the retry delay or leave status stuck backing-off.
+    this.timers.clear('debounce');
+    this.firstDirtyAt = null;
     const delay = this.retryPolicy.nextDelay();
     const nextRetryAt = this.now() + delay;
     this.state.update({ state: 'backing-off', nextRetryAt });

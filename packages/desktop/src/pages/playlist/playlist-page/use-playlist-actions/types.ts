@@ -11,7 +11,7 @@ export type PlaylistLibraryCounts = {
 
 export type UsePlaylistActionsArgs = {
   clearSelection: () => void;
-  displayTracksRef: MutableRefObject<PlaylistTrackEntry[]>;
+  playbackTracksRef: MutableRefObject<PlaylistTrackEntry[]>;
   navigate: NavigateFunction;
   playlist: Playlist | null;
   selectedIds: Set<number>;

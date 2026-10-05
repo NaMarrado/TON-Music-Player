@@ -1,0 +1,284 @@
+{
+  "tabLabel": "Studio",
+  "rendering": "Preparando a pré-visualização",
+  "controls": {
+    "play": {
+      "name": "Tocar",
+      "text": "Toca todas as músicas juntas a partir da linha verde, exatamente como a mixagem final vai soar."
+    },
+    "pause": {
+      "name": "Pausar",
+      "text": "Para o som onde ele está. Toque em Tocar para continuar do mesmo ponto."
+    },
+    "stop": {
+      "name": "Parar",
+      "text": "Para a reprodução e volta para o início."
+    },
+    "undo": {
+      "name": "Desfazer",
+      "text": "Desfaz a sua última alteração. Toque de novo para voltar ainda mais."
+    },
+    "redo": {
+      "name": "Refazer",
+      "text": "Traz de volta uma alteração que você acabou de desfazer."
+    },
+    "zoom-out": {
+      "name": "Reduzir zoom",
+      "text": "Encolhe a linha do tempo para você ver mais das músicas ao mesmo tempo."
+    },
+    "zoom-slider": {
+      "name": "Zoom",
+      "text": "Arraste para deixar a linha do tempo maior ou menor. Para a esquerda mostra tudo, para a direita mostra os mínimos detalhes."
+    },
+    "zoom-in": {
+      "name": "Aumentar zoom",
+      "text": "Amplia a linha do tempo para você posicionar cortes e bordas com precisão."
+    },
+    "zoom-fit": {
+      "name": "Ajustar à janela",
+      "text": "Faz tudo o que você adicionou caber certinho na janela."
+    },
+    "snap-off": {
+      "name": "Livre",
+      "text": "Os trechos se movem com suavidade e ficam exatamente onde você os solta."
+    },
+    "snap-beat": {
+      "name": "Batida",
+      "text": "Os trechos pulam para a batida mais próxima da música, assim as músicas ficam no ritmo."
+    },
+    "snap-bar": {
+      "name": "Compasso",
+      "text": "Os trechos pulam para o início do compasso mais próximo (quatro batidas). A forma mais fácil de alinhar músicas."
+    },
+    "clear": {
+      "name": "Limpar tudo",
+      "text": "Remove todas as músicas do editor. Desfazer as traz de volta. Sua biblioteca não muda."
+    },
+    "export": {
+      "name": "Exportar",
+      "text": "Salva a mixagem pronta como uma nova música na sua Biblioteca."
+    },
+    "tab-songs": {
+      "name": "Músicas",
+      "text": "Escolha músicas para adicionar: da sua Biblioteca, de uma playlist ou de uma busca online."
+    },
+    "tab-edit": {
+      "name": "Editar",
+      "text": "Altere a música selecionada: velocidade, efeitos, volume, fades e transições."
+    },
+    "songs-library": {
+      "name": "Biblioteca",
+      "text": "Mostra todas as músicas que você já tem no TON."
+    },
+    "songs-playlists": {
+      "name": "Playlists",
+      "text": "Escolha músicas de uma das suas playlists."
+    },
+    "songs-search": {
+      "name": "Buscar",
+      "text": "Encontra músicas online. Uma música adicionada por aqui fica guardada só temporariamente e nunca vai parar na sua Biblioteca."
+    },
+    "songs-filter": {
+      "name": "Filtrar",
+      "text": "Digite parte de um título ou de um artista para reduzir a lista."
+    },
+    "lane-mute": {
+      "name": "Silenciar",
+      "text": "Deixa esta música muda sem removê-la. Toque de novo para ouvi-la."
+    },
+    "lane-solo": {
+      "name": "Solo",
+      "text": "Toca só esta música para você ouvi-la sozinha. Toque de novo para ouvir tudo."
+    },
+    "lane-remove": {
+      "name": "Remover música",
+      "text": "Tira esta música do editor. A cópia na sua Biblioteca continua intacta."
+    },
+    "clip-split": {
+      "name": "Cortar aqui",
+      "text": "Corta o trecho selecionado em dois na linha verde, para você apagar ou mover uma das partes."
+    },
+    "clip-join": {
+      "name": "Unir",
+      "text": "Junta o trecho escolhido de volta ao resto da música para tocar sem intervalo, o contrário de cortar. Um trecho de outra música é colocado logo depois do clipe anterior."
+    },
+    "clip-duplicate": {
+      "name": "Copiar",
+      "text": "Faz uma segunda cópia do trecho selecionado logo depois dele."
+    },
+    "clip-delete": {
+      "name": "Apagar",
+      "text": "Remove o trecho selecionado da linha do tempo."
+    },
+    "look-slowed": {
+      "name": "Lenta",
+      "text": "Toca a música mais devagar, o que também deixa o som mais grave, como um disco desacelerado."
+    },
+    "look-slowed-reverb": {
+      "name": "Lenta + reverb",
+      "text": "Desacelera a música e adiciona um eco sonhador de um salão enorme. O famoso som de 'slowed and reverb'."
+    },
+    "look-sped-up": {
+      "name": "Acelerada",
+      "text": "Toca a música mais rápido e mais agudo, como um disco em avanço rápido."
+    },
+    "look-bass-boost": {
+      "name": "Mais graves",
+      "text": "Deixa os sons graves e pulsantes mais fortes."
+    },
+    "look-muffled": {
+      "name": "Abafada",
+      "text": "Faz a música soar como se estivesse tocando atrás de uma parede, cortando os sons agudos."
+    },
+    "look-reset": {
+      "name": "Restaurar música",
+      "text": "Volta a velocidade, os efeitos e o tom desta música ao normal. Seus cortes e fades continuam."
+    },
+    "speed": {
+      "name": "Velocidade",
+      "text": "A rapidez com que o trecho toca. 1,00× é o normal, menos é mais lento e grave, mais é mais rápido."
+    },
+    "pitch": {
+      "name": "Tom",
+      "text": "Deixa o trecho mais agudo ou mais grave em pequenos passos chamados semitons. 12 passos formam uma oitava inteira."
+    },
+    "keep-pitch": {
+      "name": "Manter tom",
+      "text": "Quando você muda a velocidade, mantém a voz e as notas iguais em vez de deixá-las mais graves ou mais agudas."
+    },
+    "reverse": {
+      "name": "Reverter",
+      "text": "Toca o trecho selecionado de trás para frente."
+    },
+    "match-tempo": {
+      "name": "Igualar ritmo",
+      "text": "Muda a velocidade para esta música ter as mesmas batidas por minuto da primeira música, o que facilita a mixagem."
+    },
+    "clip-volume": {
+      "name": "Volume do trecho",
+      "text": "Deixa só o trecho selecionado mais baixo ou mais alto."
+    },
+    "lane-volume": {
+      "name": "Volume da música",
+      "text": "O volume da música inteira nesta linha."
+    },
+    "balance": {
+      "name": "Esquerda / direita",
+      "text": "Move o som entre o seu alto-falante esquerdo e o direito."
+    },
+    "bass": {
+      "name": "Graves",
+      "text": "Aumenta ou diminui os sons graves."
+    },
+    "treble": {
+      "name": "Agudos",
+      "text": "Aumenta ou diminui os sons agudos e brilhantes."
+    },
+    "reverb": {
+      "name": "Reverb",
+      "text": "Adiciona um eco como o de um grande salão. Quanto mais, mais a música soa distante e sonhadora."
+    },
+    "reverb-size": {
+      "name": "Tamanho da sala",
+      "text": "O tamanho da sala imaginária. Salas maiores ecoam por mais tempo."
+    },
+    "reverb-dark": {
+      "name": "Cauda suave",
+      "text": "Deixa o eco mais abafado e quente, em vez de brilhante e cortante."
+    },
+    "echo": {
+      "name": "Eco",
+      "text": "Repete o som um instante depois, como gritar nas montanhas."
+    },
+    "echo-time": {
+      "name": "Atraso do eco",
+      "text": "Quanto tempo esperar antes de cada repetição."
+    },
+    "echo-repeats": {
+      "name": "Repetições do eco",
+      "text": "Quantas vezes o eco se repete antes de desaparecer."
+    },
+    "filter-off": {
+      "name": "Sem filtro",
+      "text": "Toca a música com todos os seus sons."
+    },
+    "filter-low": {
+      "name": "Cortar agudos",
+      "text": "Remove os sons agudos, e a música soa abafada e distante."
+    },
+    "filter-high": {
+      "name": "Cortar graves",
+      "text": "Remove os sons profundos, e a música soa fina, como num alto-falante minúsculo."
+    },
+    "filter-freq": {
+      "name": "Força do filtro",
+      "text": "Onde o corte começa. Mexa até a música soar do jeito que você gosta."
+    },
+    "fade-in": {
+      "name": "Fade in",
+      "text": "Quanto tempo o trecho leva para ir do silêncio ao volume total no começo."
+    },
+    "fade-out": {
+      "name": "Fade out",
+      "text": "Quanto tempo o trecho leva para ir do volume total ao silêncio no final."
+    },
+    "transition-bars-2": {
+      "name": "2 compassos",
+      "text": "Uma mistura curta: as duas músicas se sobrepõem por 2 compassos."
+    },
+    "transition-bars-4": {
+      "name": "4 compassos",
+      "text": "Uma mistura média: as duas músicas se sobrepõem por 4 compassos."
+    },
+    "transition-bars-8": {
+      "name": "8 compassos",
+      "text": "Uma mistura suave e longa: as duas músicas se sobrepõem por 8 compassos. A duração mais comum entre DJs."
+    },
+    "transition-bars-16": {
+      "name": "16 compassos",
+      "text": "Uma mistura bem lenta: as duas músicas se sobrepõem por 16 compassos."
+    },
+    "curve-smooth": {
+      "name": "Suave",
+      "text": "As músicas trocam de lugar de modo que o volume fica uniforme. A melhor opção para a maioria das mixagens."
+    },
+    "curve-straight": {
+      "name": "Linear",
+      "text": "Uma música some enquanto a outra aparece, as duas na mesma velocidade constante."
+    },
+    "curve-slow": {
+      "name": "Início lento",
+      "text": "A música nova entra de mansinho, baixinho, e fica alta perto do final."
+    },
+    "transition-apply": {
+      "name": "Crossfade",
+      "text": "Sobrepõe o trecho selecionado à música ao lado e mistura as duas usando a duração e o estilo escolhidos acima."
+    }
+  },
+  "sections": {
+    "clip": "Trecho selecionado",
+    "looks": "Estilos rápidos",
+    "speed": "Velocidade e tom",
+    "sound": "Som",
+    "effects": "Efeitos",
+    "fades": "Fades",
+    "transition": "Misturar duas músicas"
+  },
+  "editEmpty": "Clique em uma música na linha do tempo para editá-la.",
+  "editLaneOnly": "Clique em um trecho desta linha para mudar a velocidade e os fades.",
+  "emptyText": "Suas músicas estão no painel abaixo. Toque em uma música para colocá-la aqui. Depois você pode cortá-la, deixá-la mais lenta, adicionar efeitos e exportar o resultado.",
+  "addToStudio": "Adicionar",
+  "downloading": "Baixando… {{percent}}%",
+  "downloadFailed": "Um download falhou. Tente outro resultado.",
+  "exportTitle": "Exportar a sua mixagem",
+  "exportText": "A mixagem pronta é salva como uma nova música na sua Biblioteca.",
+  "mixName": "Nome da música",
+  "defaultName": "Mixagem Studio",
+  "save": "Salvar na Biblioteca",
+  "cancel": "Cancelar",
+  "clear": "Limpar tudo",
+  "clearTitle": "Limpar o Studio?",
+  "clearText": "Todas as músicas são removidas do editor. Você pode trazê-las de volta com Desfazer. Sua biblioteca e as mixagens exportadas não mudam.",
+  "exporting": "Salvando a mixagem",
+  "saved": "Mixagem salva na sua Biblioteca"
+}

@@ -14,6 +14,7 @@ import {
 import { runMobileCloudDbLane } from './db-lane';
 import { shouldDeferCloudTrackDownload } from './download-failure-policy';
 import { getMobileCloudProtectedEntities, withMobileCloudOutboxSuppressed } from './local-state';
+import { hashCloudArtworkCached } from './hash';
 import { getFileExtension } from './media';
 import { MobileR2Client } from './r2-client';
 import {
@@ -95,7 +96,8 @@ async function resolveTrackArtwork(input: {
     track.artwork_file_name || `${track.artwork_hash_sha256}.jpg`,
     track.artwork_hash_sha256,
   );
-  if (await fileExists(existingPath)) {
+  if (await fileExists(existingPath) && existingPath
+      && await hashCloudArtworkCached(existingPath) === track.artwork_hash_sha256) {
     return { coverPath: existingPath, failed: false };
   }
   try {
@@ -270,6 +272,7 @@ export async function fetchV1Tracks(input: {
     const track = orderedTracks[index];
     const existing = existingByHash.get(track.content_hash_sha256);
     const hasLocalAudio = existing ? await fileExists(existing.file_path) : false;
+    let assetFailed = false;
     try {
       if (shouldDeferCloudTrackDownload({
         retryFailed: failureContext?.retryFailed ?? true,
@@ -290,6 +293,7 @@ export async function fetchV1Tracks(input: {
         if (updated.restored && updated.applied) result.downloaded += 1;
         else result.skipped += 1;
         if (updated.assetFailed) result.failed += 1;
+        assetFailed = updated.assetFailed;
       } else {
         const inserted = await insertMissingTrack({
           client, track, shouldCancel, abortSignal, applyProtection,
@@ -314,9 +318,17 @@ export async function fetchV1Tracks(input: {
         result.importedTracks += 1;
         await onTrackImported?.(track.content_hash_sha256, inserted.id);
         if (inserted.assetFailed) result.failed += 1;
+        assetFailed = inserted.assetFailed;
       }
       if (failureContext) {
-        await clearMobileCloudDownloadFailure(failureContext, track.content_hash_sha256);
+        if (assetFailed) {
+          await recordMobileCloudDownloadFailure(
+            failureContext, track.content_hash_sha256,
+            new Error('cloud_sync_artwork_download_failed'),
+          );
+        } else {
+          await clearMobileCloudDownloadFailure(failureContext, track.content_hash_sha256);
+        }
       }
     } catch (error) {
       throwIfFetchCancelled(shouldCancel, abortSignal);

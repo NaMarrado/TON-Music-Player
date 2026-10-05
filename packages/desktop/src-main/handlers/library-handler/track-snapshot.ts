@@ -29,7 +29,7 @@ const TRACK_SNAPSHOT_SELECT = `
   NULL AS source_url,
   t.play_count AS play_count,
   t.last_played_at AS last_played_at,
-  NULL AS rating,
+  t.rating AS rating,
   t.in_library AS in_library,
   t.added_at AS added_at,
   t.downloaded_at AS downloaded_at,

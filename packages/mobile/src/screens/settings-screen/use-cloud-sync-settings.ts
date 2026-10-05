@@ -104,10 +104,11 @@ export function useCloudSyncSettings() {
     }
   }, []);
 
-  useEffect(() => subscribeMobileCloudAutoSyncStatus(setCloudAutoSyncStatus), []);
   useEffect(() => {
-    void getMobileCloudAudioOverCellularEnabled().then(setCloudAudioOverCellular);
-  }, []);
+    const unsubscribe = subscribeMobileCloudAutoSyncStatus(setCloudAutoSyncStatus);
+    void refreshCloudLocalState().catch(() => {});
+    return unsubscribe;
+  }, [refreshCloudLocalState]);
 
   const refreshCloudCleanupPreview = useCallback(async () => {
     setCloudCleanupChecking(true);
@@ -143,9 +144,6 @@ export function useCloudSyncSettings() {
     if (cloudLoaded) {
       return;
     }
-    // Open the editor before reading SecureStore. A damaged or temporarily
-    // unavailable keychain entry must not leave the whole R2 card untappable.
-    setCloudLoaded(true);
     setCloudError(null);
     try {
       const config = await getMobileCloudSyncConfig();
@@ -162,6 +160,8 @@ export function useCloudSyncSettings() {
       }
     } catch (error) {
       setCloudError(formatCloudError(error, t));
+    } finally {
+      setCloudLoaded(true);
     }
   }, [cloudLoaded, t]);
 

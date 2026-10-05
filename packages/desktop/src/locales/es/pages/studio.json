@@ -1,0 +1,284 @@
+{
+  "controls": {
+    "play": {
+      "name": "Reproducir",
+      "text": "Reproduce todas las canciones juntas desde la línea verde, tal como sonará la mezcla final."
+    },
+    "pause": {
+      "name": "Pausa",
+      "text": "Detiene el sonido donde está. Pulsa Reproducir para continuar desde el mismo punto."
+    },
+    "stop": {
+      "name": "Detener",
+      "text": "Detiene la reproducción y vuelve justo al principio."
+    },
+    "undo": {
+      "name": "Deshacer",
+      "text": "Anula tu último cambio. Púlsalo otra vez para retroceder más."
+    },
+    "redo": {
+      "name": "Rehacer",
+      "text": "Recupera un cambio que acabas de deshacer."
+    },
+    "zoom-out": {
+      "name": "Alejar",
+      "text": "Reduce la línea de tiempo para que veas más partes de las canciones a la vez."
+    },
+    "zoom-slider": {
+      "name": "Zoom",
+      "text": "Arrastra para hacer la línea de tiempo más grande o más pequeña. A la izquierda se ve todo, a la derecha se ve el mínimo detalle. También puedes girar la rueda del ratón sobre las canciones."
+    },
+    "zoom-in": {
+      "name": "Acercar",
+      "text": "Agranda la línea de tiempo para que puedas colocar cortes y bordes con precisión."
+    },
+    "zoom-fit": {
+      "name": "Ajustar a ventana",
+      "text": "Hace que todo lo que has añadido quepa exactamente en la ventana."
+    },
+    "snap-off": {
+      "name": "Libre",
+      "text": "Los clips se mueven con suavidad y se quedan exactamente donde los sueltas."
+    },
+    "snap-beat": {
+      "name": "Pulso",
+      "text": "Los clips saltan al pulso más cercano de la música, así las canciones mantienen el ritmo."
+    },
+    "snap-bar": {
+      "name": "Compás",
+      "text": "Los clips saltan al inicio del compás más cercano (cuatro pulsos). La forma más fácil de alinear canciones."
+    },
+    "clear": {
+      "name": "Borrar todo",
+      "text": "Quita todas las canciones del editor. Deshacer las recupera. Tu biblioteca no cambia."
+    },
+    "export": {
+      "name": "Exportar",
+      "text": "Guarda la mezcla terminada como una canción nueva en tu Biblioteca."
+    },
+    "tab-songs": {
+      "name": "Canciones",
+      "text": "Elige canciones para añadir: de tu Biblioteca, de una lista de reproducción o de una búsqueda en línea."
+    },
+    "tab-edit": {
+      "name": "Editar",
+      "text": "Cambia la canción seleccionada: velocidad, efectos, volumen, fundidos y mezcla."
+    },
+    "songs-library": {
+      "name": "Biblioteca",
+      "text": "Muestra todas las canciones que ya tienes en TON."
+    },
+    "songs-playlists": {
+      "name": "Listas",
+      "text": "Elige canciones de una de tus listas de reproducción."
+    },
+    "songs-search": {
+      "name": "Buscar",
+      "text": "Busca canciones en línea. Una canción añadida desde aquí solo se guarda temporalmente y nunca llega a tu Biblioteca."
+    },
+    "songs-filter": {
+      "name": "Filtrar",
+      "text": "Escribe parte de un título o de un artista para reducir la lista."
+    },
+    "lane-mute": {
+      "name": "Silenciar",
+      "text": "Silencia esta canción sin quitarla. Haz clic otra vez para oírla."
+    },
+    "lane-solo": {
+      "name": "Solo",
+      "text": "Reproduce solo esta canción para que la oigas sola. Haz clic otra vez para oír todo."
+    },
+    "lane-remove": {
+      "name": "Quitar canción",
+      "text": "Saca esta canción del editor. La copia de tu Biblioteca no se toca."
+    },
+    "clip-split": {
+      "name": "Cortar aquí",
+      "text": "Corta el clip seleccionado en dos en la línea verde, para que puedas borrar o mover una parte."
+    },
+    "clip-join": {
+      "name": "Unir",
+      "text": "Vuelve a unir el trozo elegido con el resto de su canción para que suene sin hueco, lo contrario de cortar. Un trozo de otra canción se coloca justo después del clip anterior."
+    },
+    "clip-duplicate": {
+      "name": "Copiar",
+      "text": "Hace una segunda copia del clip seleccionado justo a continuación."
+    },
+    "clip-delete": {
+      "name": "Borrar",
+      "text": "Quita el clip seleccionado de la línea de tiempo."
+    },
+    "look-slowed": {
+      "name": "Lenta",
+      "text": "Reproduce la canción más despacio, lo que también la hace más grave, como un disco frenado."
+    },
+    "look-slowed-reverb": {
+      "name": "Lenta + reverb",
+      "text": "Ralentiza la canción y añade un eco de ensueño, como en una sala enorme. El popular sonido 'slowed and reverb'."
+    },
+    "look-sped-up": {
+      "name": "Acelerada",
+      "text": "Reproduce la canción más rápido y más agudo, como un disco acelerado."
+    },
+    "look-bass-boost": {
+      "name": "Más graves",
+      "text": "Hace que los sonidos graves y potentes suenen más fuertes."
+    },
+    "look-muffled": {
+      "name": "Apagada",
+      "text": "Hace que la canción suene como si estuviera sonando detrás de una pared, recortando los sonidos agudos."
+    },
+    "look-reset": {
+      "name": "Restablecer canción",
+      "text": "Devuelve a la normalidad la velocidad, los efectos y el tono de esta canción. Tus cortes y fundidos se quedan."
+    },
+    "speed": {
+      "name": "Velocidad",
+      "text": "Lo rápido que suena el clip. 1.00× es normal, menos es más lento y grave, más es más rápido."
+    },
+    "pitch": {
+      "name": "Tono",
+      "text": "Hace el clip más agudo o más grave en pasos pequeños llamados semitonos. 12 pasos son una octava completa."
+    },
+    "keep-pitch": {
+      "name": "Mantener tono",
+      "text": "Cuando cambias la velocidad, mantiene la voz y las notas iguales en vez de hacerlas más graves o más agudas."
+    },
+    "reverse": {
+      "name": "Invertir",
+      "text": "Reproduce el clip seleccionado hacia atrás."
+    },
+    "match-tempo": {
+      "name": "Igualar tempo",
+      "text": "Cambia la velocidad para que esta canción tenga los mismos pulsos por minuto que la primera canción, lo que facilita la mezcla."
+    },
+    "clip-volume": {
+      "name": "Volumen del clip",
+      "text": "Hace más bajo o más alto solo el clip seleccionado."
+    },
+    "lane-volume": {
+      "name": "Volumen canción",
+      "text": "El volumen de toda la canción de esta línea."
+    },
+    "balance": {
+      "name": "Izquierda / derecha",
+      "text": "Mueve el sonido entre tu altavoz izquierdo y el derecho."
+    },
+    "bass": {
+      "name": "Graves",
+      "text": "Sube o baja los sonidos graves."
+    },
+    "treble": {
+      "name": "Agudos",
+      "text": "Sube o baja los sonidos agudos y brillantes."
+    },
+    "reverb": {
+      "name": "Reverb",
+      "text": "Añade un eco como en un gran salón. Cuanto más pones, más lejana y soñadora suena la canción."
+    },
+    "reverb-size": {
+      "name": "Tamaño sala",
+      "text": "Lo grande que es la sala imaginaria. Las salas más grandes hacen eco durante más tiempo."
+    },
+    "reverb-dark": {
+      "name": "Cola suave",
+      "text": "Hace el eco más apagado y cálido en vez de brillante y agudo."
+    },
+    "echo": {
+      "name": "Eco",
+      "text": "Repite el sonido un momento después, como cuando gritas en las montañas."
+    },
+    "echo-time": {
+      "name": "Retardo eco",
+      "text": "Cuánto se espera antes de cada repetición."
+    },
+    "echo-repeats": {
+      "name": "Repeticiones eco",
+      "text": "Cuántas veces se repite el eco antes de desvanecerse."
+    },
+    "filter-off": {
+      "name": "Sin filtro",
+      "text": "Reproduce la canción con todos sus sonidos."
+    },
+    "filter-low": {
+      "name": "Cortar agudos",
+      "text": "Quita los sonidos agudos, así la canción suena apagada y lejana."
+    },
+    "filter-high": {
+      "name": "Cortar graves",
+      "text": "Quita los sonidos profundos, así la canción suena fina, como si saliera de un altavoz diminuto."
+    },
+    "filter-freq": {
+      "name": "Fuerza del filtro",
+      "text": "Dónde empieza el corte. Muévelo hasta que la canción suene como te guste."
+    },
+    "fade-in": {
+      "name": "Fundido de entrada",
+      "text": "Cuánto tarda el clip en pasar de silencio a volumen completo al empezar."
+    },
+    "fade-out": {
+      "name": "Fundido de salida",
+      "text": "Cuánto tarda el clip en pasar de volumen completo a silencio al terminar."
+    },
+    "transition-bars-2": {
+      "name": "2 compases",
+      "text": "Una mezcla corta: las dos canciones se superponen durante 2 compases de música."
+    },
+    "transition-bars-4": {
+      "name": "4 compases",
+      "text": "Una mezcla media: las dos canciones se superponen durante 4 compases de música."
+    },
+    "transition-bars-8": {
+      "name": "8 compases",
+      "text": "Una mezcla larga y suave: las dos canciones se superponen durante 8 compases. La duración más habitual entre los DJ."
+    },
+    "transition-bars-16": {
+      "name": "16 compases",
+      "text": "Una mezcla muy lenta: las dos canciones se superponen durante 16 compases."
+    },
+    "curve-smooth": {
+      "name": "Suave",
+      "text": "Las canciones se relevan de modo que el volumen se mantiene parejo. Lo mejor para la mayoría de las mezclas."
+    },
+    "curve-straight": {
+      "name": "Recta",
+      "text": "Una canción se desvanece mientras la otra aparece, ambas a la misma velocidad constante."
+    },
+    "curve-slow": {
+      "name": "Entrada lenta",
+      "text": "La canción nueva entra muy bajito y sube de volumen cerca del final."
+    },
+    "transition-apply": {
+      "name": "Fundido cruzado",
+      "text": "Superpone el clip seleccionado con la canción de al lado y las mezcla usando la duración y el estilo elegidos arriba."
+    }
+  },
+  "sections": {
+    "clip": "Clip seleccionado",
+    "looks": "Estilos rápidos",
+    "speed": "Velocidad y tono",
+    "sound": "Sonido",
+    "effects": "Efectos",
+    "fades": "Fundidos",
+    "transition": "Mezclar dos canciones"
+  },
+  "editEmpty": "Haz clic en una canción de la línea de tiempo para editarla.",
+  "editLaneOnly": "Haz clic en un clip de esta línea para cambiar su velocidad y sus fundidos.",
+  "emptyText": "Tus canciones están en el panel de la derecha. Haz clic en una canción para ponerla aquí. Después podrás cortarla, ralentizarla, añadir efectos y exportar el resultado.",
+  "addToStudio": "Añadir",
+  "downloading": "Descargando… {{percent}}%",
+  "downloadFailed": "Falló una descarga. Prueba con otro resultado.",
+  "exportTitle": "Exporta tu mezcla",
+  "exportText": "La mezcla terminada se guarda como una canción nueva en tu Biblioteca.",
+  "mixName": "Nombre de la canción",
+  "defaultName": "Mezcla Studio",
+  "save": "Guardar en Biblioteca",
+  "cancel": "Cancelar",
+  "clear": "Borrar todo",
+  "clearTitle": "¿Borrar el Studio?",
+  "clearText": "Se quitan todas las canciones del editor. Puedes recuperarlas con Deshacer. Tu biblioteca y las mezclas exportadas no cambian.",
+  "exporting": "Guardando la mezcla",
+  "saved": "Mezcla guardada en tu Biblioteca",
+  "removeConfirmText": "¿Quitar esta canción del editor? Tu biblioteca no cambia.",
+  "removeConfirmAction": "Quitar"
+}

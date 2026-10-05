@@ -65,7 +65,11 @@ export async function queueBlobGcTransitions(
   const liveKeys = liveManifestObjectKeys(published);
   const eligibleAt = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
   await runMobileCloudDbLane((connection) => connection.withExclusiveTransactionAsync(async (db) => {
-    for (const key of liveKeys) {
+    const queued = await db.getAllAsync<{ object_key: string }>(
+      'SELECT object_key FROM cloud_sync_blob_gc WHERE scope_id = ?', [scopeId],
+    );
+    for (const { object_key: key } of queued) {
+      if (!liveKeys.has(key)) continue;
       await db.runAsync(
         'DELETE FROM cloud_sync_blob_gc WHERE scope_id = ? AND object_key = ?', [scopeId, key],
       );

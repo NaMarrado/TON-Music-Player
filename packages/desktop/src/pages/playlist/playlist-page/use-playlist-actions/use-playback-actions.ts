@@ -2,20 +2,23 @@ import { useCallback } from 'react';
 import type { PlaylistTrackEntry } from '@ton/core';
 import type { MutableRefObject } from 'react';
 import { playTracks } from '../../../../audio/playback-service';
+import { getPlaylistPlaybackIndex } from '../use-playlist-view-state/track-sources';
 
-export function usePlaybackActions(displayTracksRef: MutableRefObject<PlaylistTrackEntry[]>) {
+export function usePlaybackActions(playbackTracksRef: MutableRefObject<PlaylistTrackEntry[]>) {
   const handlePlayAll = useCallback(() => {
-    const tracks = displayTracksRef.current;
+    const tracks = playbackTracksRef.current;
     if (tracks.length > 0) {
       playTracks(tracks, 0);
     }
-  }, [displayTracksRef]);
+  }, [playbackTracksRef]);
 
   const handlePlayTrack = useCallback(
-    (index: number) => {
-      playTracks(displayTracksRef.current, index);
+    (playlistTrackId: number) => {
+      const tracks = playbackTracksRef.current;
+      const index = getPlaylistPlaybackIndex(tracks, playlistTrackId);
+      if (index >= 0) playTracks(tracks, index);
     },
-    [displayTracksRef],
+    [playbackTracksRef],
   );
 
   return {

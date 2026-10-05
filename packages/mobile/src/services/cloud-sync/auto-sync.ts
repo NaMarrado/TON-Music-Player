@@ -71,7 +71,7 @@ export async function startMobileCloudAutoSync(): Promise<void> {
       ]);
       initialStatus = {
         pendingChanges,
-        pendingDownloads: persisted.pending_downloads,
+        pendingDownloads: persisted.pending_downloads + persisted.pending_assets,
         lastSuccessAt: persisted.last_success_at == null ? null : persisted.last_success_at * 1000,
         lastErrorKey: persisted.last_error,
         nextRetryAt: persisted.next_retry_at == null ? null : persisted.next_retry_at * 1000,

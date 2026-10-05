@@ -8,6 +8,8 @@ import { PlaylistPage } from './pages/playlist';
 import { ArtistPage } from './pages/artist';
 import { DownloadsPage } from './pages/downloads';
 import { SettingsPage } from './pages/settings';
+import { ProfilePage } from './pages/profile';
+import { StudioPage } from './pages/studio';
 
 export const router = createHashRouter([
   {
@@ -20,6 +22,8 @@ export const router = createHashRouter([
       { path: 'playlist/:id', element: <PlaylistPage /> },
       { path: 'artist/:id', element: <ArtistPage /> },
       { path: 'downloads', element: <DownloadsPage /> },
+      { path: 'profile', element: <ProfilePage /> },
+      { path: 'studio', element: <StudioPage /> },
       { path: 'settings', element: <SettingsPage /> },
     ],
   },

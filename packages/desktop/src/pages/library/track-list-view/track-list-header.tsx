@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
-import { LibraryTrackGridShell, getLibraryTrackGridStyle } from './grid-shell';
+import { LibraryTrackGridShell } from './grid-shell';
+import { libraryTrackGridStyle } from './layout';
 import { useLibraryStore } from '../../../stores/library-store';
 import { SelectionCheckbox } from './selection-checkbox';
 import { SortArrow } from './sort-arrow';
@@ -7,11 +8,7 @@ import type { SortField } from './types';
 
 type TrackListHeaderProps = {
   allSelected: boolean;
-  dense: boolean;
   onSelectAll: () => void;
-  showArtist: boolean;
-  showDownloaded: boolean;
-  showPlaylist: boolean;
   sortBy: SortField;
   sortOrder: 'asc' | 'desc';
   t: (key: string) => string;
@@ -19,11 +16,7 @@ type TrackListHeaderProps = {
 
 export function TrackListHeader({
   allSelected,
-  dense,
   onSelectAll,
-  showArtist,
-  showDownloaded,
-  showPlaylist,
   sortBy,
   sortOrder,
   t,
@@ -45,8 +38,9 @@ export function TrackListHeader({
 
   return (
     <div
+      className="library-track-grid"
       style={{
-        ...getLibraryTrackGridStyle({ dense, showArtist, showDownloaded, showPlaylist }),
+        ...libraryTrackGridStyle,
         paddingRight: 'calc(var(--track-grid-inline-padding) + var(--desktop-scrollbar-width))',
         paddingBottom: 'var(--track-list-header-padding-bottom)',
         marginBottom: 'var(--track-list-row-gap)',
@@ -59,9 +53,6 @@ export function TrackListHeader({
       }}
     >
       <LibraryTrackGridShell
-        showArtist={showArtist}
-        showDownloaded={showDownloaded}
-        showPlaylist={showPlaylist}
         coverSlot={null}
         titleSlot={
           <div style={textHeaderCellStyle}>
@@ -71,23 +62,23 @@ export function TrackListHeader({
             </span>
           </div>
         }
-        artistSlot={showArtist ? (
+        artistSlot={
           <div style={textHeaderCellStyle}>
             <span className="inline-flex items-center cursor-pointer" onClick={() => handleSort('artist')}>
               {t('colArtist')}
               <SortArrow active={sortBy === 'artist'} ascending={sortOrder === 'asc'} />
             </span>
           </div>
-        ) : undefined}
-        playlistSlot={showPlaylist ? (
+        }
+        playlistSlot={
           <div style={textHeaderCellStyle}>
             <span className="inline-flex items-center cursor-pointer" onClick={() => handleSort('playlist')}>
               {t('colPlaylist')}
               <SortArrow active={sortBy === 'playlist'} ascending={sortOrder === 'asc'} />
             </span>
           </div>
-        ) : undefined}
-        downloadedSlot={showDownloaded ? (
+        }
+        downloadedSlot={
           <div style={textHeaderCellStyle}>
             <span
               className="inline-flex items-center cursor-pointer"
@@ -97,7 +88,7 @@ export function TrackListHeader({
               <SortArrow active={sortBy === 'downloaded_at'} ascending={sortOrder === 'asc'} />
             </span>
           </div>
-        ) : undefined}
+        }
         timeSlot={
           <span className="cursor-pointer" onClick={() => handleSort('duration_ms')}>
             {t('colDuration')}

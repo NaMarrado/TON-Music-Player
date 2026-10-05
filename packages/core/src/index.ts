@@ -106,10 +106,45 @@ export type { DirectTrackSource, DirectTrackUrl } from './services/detect-track-
 export {
   getDirectTrackOEmbedUrl,
   mapDirectTrackOEmbedResult,
+  normalizeTrackDurationMs,
+  resolveDirectTrackWithFallback,
 } from './services/direct-track-oembed';
 export type { DirectTrackOEmbedPayload } from './services/direct-track-oembed';
 export {
+  PROFILE_SCHEMA_SQL,
+  createProfileRecord,
+  mergeProfileRecord,
+  profileRecordDay,
+  profileTrackIdentity,
+  updateProfileRecord,
+  validProfileId,
+  validateProfileObservation,
+  validateProfileRecord,
+} from './services/listening-profile/records';
+export type { ProfileSessionRecord } from './services/listening-profile/records';
+export { buildProfileAnalytics, profileDateKey, profileQueryBounds } from './services/listening-profile/analytics';
+export {
+  parseProfileChunk,
+  parseProfileHead,
+  parseProfileIndex,
+  profileChunkVersion,
+  profileSyncKeys,
+  syncProfileData,
+} from './services/listening-profile/transport';
+export type {
+  ProfileChunk,
+  ProfileHead,
+  ProfileIndex,
+  ProfileIndexEntry,
+  ProfileObjectStore,
+  ProfileSyncLocal,
+  ProfileSyncResult,
+} from './services/listening-profile/transport';
+export { ProfilePlaybackTracker } from './services/listening-profile/tracker';
+export type { ProfilePlaybackSettings } from './services/listening-profile/tracker';
+export {
   PLAYBACK_SESSION_SETTING_KEY,
+  ListeningTimeAccumulator,
   parsePlaybackSessionSnapshot,
 } from './services/playback-session';
 export {
@@ -272,3 +307,7 @@ export type {
   LocaleResources,
   LocaleResourceValue,
 } from './i18n/types';
+
+export * from './studio';
+export * from './profile-bundle';
+export { narrowManifestToPlaylists } from './library-transfer/selection';

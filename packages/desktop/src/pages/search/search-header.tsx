@@ -8,6 +8,8 @@ type SearchHeaderProps = {
   isSearching: boolean;
   query: string;
   sortMode: SearchSortMode;
+  /** Tighter paddings for a narrow panel (the Studio). */
+  compact?: boolean;
   t: (key: string) => string;
   onSetActiveSource: (source: SearchSource | 'all') => void;
   onSetSearchQuery: (query: string) => void;
@@ -20,6 +22,7 @@ export function SearchHeader({
   isSearching,
   query,
   sortMode,
+  compact = false,
   t,
   onSetActiveSource,
   onSetSearchQuery,
@@ -40,14 +43,14 @@ export function SearchHeader({
     <div
       className="flex flex-col items-center shrink-0 sticky top-0 z-10"
       style={{
-        padding: 'var(--desktop-page-top) 32px 16px',
+        padding: compact ? '8px 12px 10px' : 'var(--desktop-page-top) 32px 16px',
         background: 'linear-gradient(var(--bg-deep) 60%, transparent)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
       }}
     >
       <div className="flex w-full gap-2" style={{ maxWidth: '620px' }}>
-        <div className="relative flex-1">
+        <div className="relative flex-1 min-w-0">
         <svg
           className="absolute pointer-events-none"
           style={{
@@ -87,7 +90,7 @@ export function SearchHeader({
         />
         </div>
         {showYouTubeSort && (
-          <div ref={sortRef} className="relative">
+          <div ref={sortRef} className="relative flex-none">
             <button
               type="button"
               aria-label={t('sortResults')}
@@ -130,7 +133,10 @@ export function SearchHeader({
       </div>
 
       {query && (
-        <div className="flex items-center gap-1.5" style={{ marginTop: '16px' }}>
+        <div
+          className={compact ? 'flex flex-wrap items-center gap-1 w-full' : 'flex items-center gap-1.5'}
+          style={{ marginTop: compact ? '10px' : '16px' }}
+        >
           {SOURCE_TABS.map((tab) => {
             const isActive = activeSource === tab.key;
             const count = counts[tab.key];
@@ -140,12 +146,12 @@ export function SearchHeader({
                 className="search-tab cursor-pointer"
                 onClick={() => onSetActiveSource(tab.key)}
                 style={{
-                  padding: '6px 14px',
+                  padding: compact ? '5px 10px' : '6px 14px',
                   borderRadius: '20px',
                   background: isActive ? 'var(--white)' : 'transparent',
                   border: 'none',
                   color: isActive ? 'var(--bg-deep)' : 'var(--text-secondary)',
-                  fontSize: '0.82rem',
+                  fontSize: compact ? '0.78rem' : '0.82rem',
                   fontWeight: isActive ? 600 : 400,
                   fontFamily: 'inherit',
                   transition: 'all var(--transition)',

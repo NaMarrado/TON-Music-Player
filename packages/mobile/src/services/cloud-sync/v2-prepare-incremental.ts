@@ -1,5 +1,11 @@
 import * as FileSystem from 'expo-file-system';
-import type { CloudPlaylistEntry, CloudStorageConfig, CloudTrackEntry, Track } from '@ton/core';
+import type {
+  CloudLibraryManifestV2,
+  CloudPlaylistEntry,
+  CloudStorageConfig,
+  CloudTrackEntry,
+  Track,
+} from '@ton/core';
 import {
   buildCloudContentArtworkObjectKey,
   buildCloudContentAudioObjectKey,
@@ -24,7 +30,9 @@ async function serializeIncrementalTrack(
   track: Track,
   uploads: PreparedLocalManifest['uploads'],
 ): Promise<CloudTrackEntry | null> {
-  if (!(await pathExists(track.file_path))) return null;
+  // A cached identity can publish metadata even when its local audio is
+  // temporarily missing; upload will require the file only for a new blob.
+  if (!track.content_hash_sha256 && !(await pathExists(track.file_path))) return null;
   let contentHash = track.content_hash_sha256;
   if (!contentHash) {
     contentHash = await hashFileSha256(track.file_path);
@@ -87,12 +95,16 @@ export async function prepareIncrementalManifest(
   deviceId: string,
   outbox: readonly MobileCloudOutboxRow[],
   signal?: AbortSignal,
+  remote?: CloudLibraryManifestV2 | null,
 ): Promise<PreparedLocalManifest> {
   const uploads: PreparedLocalManifest['uploads'] = new Map();
   const trackEntryByLocalId = new Map<number, CloudTrackEntry>();
   const playlistEntryByLocalId = new Map<number, CloudPlaylistEntry>();
   const trackIds = new Set<number>();
   const playlistIds = new Set<number>();
+  const remoteHashes = new Set(
+    remote?.tracks.map((record) => record.content_hash_sha256.toLowerCase()) ?? [],
+  );
   for (const row of outbox) {
     if (row.operation !== 'upsert' || row.local_id == null) continue;
     (row.entity_type === 'track' ? trackIds : playlistIds).add(row.local_id);
@@ -102,14 +114,22 @@ export async function prepareIncrementalManifest(
     throwIfAborted(signal);
     const tracks = await getPlaylistTracks(playlistId);
     playlistTracksById.set(playlistId, tracks);
-    tracks.forEach((track) => trackIds.add(track.id));
+    // Membership edits need identities, not revalidation of every member's
+    // audio/artwork. Serialize only members that are not already published.
+    tracks.forEach((track) => {
+      if (!track.content_hash_sha256
+          || !remoteHashes.has(track.content_hash_sha256.toLowerCase())) {
+        trackIds.add(track.id);
+      }
+    });
   }
   for (const trackId of trackIds) {
     throwIfAborted(signal);
     const track = await getTrackById(trackId);
     if (!track) continue;
     const entry = await serializeIncrementalTrack(config, track, uploads);
-    if (entry) trackEntryByLocalId.set(trackId, entry);
+    if (!entry) throw new Error('cloud_sync_local_file_missing');
+    trackEntryByLocalId.set(trackId, entry);
   }
   for (const playlistId of playlistIds) {
     throwIfAborted(signal);

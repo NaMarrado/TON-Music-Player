@@ -18,6 +18,7 @@ import { useQueueStore } from '../stores/queue-store';
 import { setupPlayer } from './audio-player';
 import { playCarMediaId } from './car-playback';
 import { Platform } from 'react-native';
+import { startMobileListeningCapture } from './listening-profile/capture';
 
 let listenersRegistered = false;
 let failedQueueGeneration = -1;
@@ -34,6 +35,7 @@ export async function PlaybackService(): Promise<void> {
 
   listenersRegistered = true;
   console.log('[RNTP Remote] service ready');
+  startMobileListeningCapture();
 
   addPlaybackRuntimeEventListener(PlaybackEvent.RemotePlay, async () => {
     logRemote('play');

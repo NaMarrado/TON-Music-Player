@@ -2,47 +2,40 @@ import { memo } from 'react';
 import { formatDownloadedDate, formatTime } from '@ton/core';
 import type { PlaylistTrackEntry } from '@ton/core';
 import { CoverArt } from './cover-art';
-import { PlaylistTrackGridShell, getPlaylistTrackGridStyle } from './grid-shell';
+import { PlaylistTrackGridShell } from './grid-shell';
+import { getPlaylistTrackGridStyle } from './layout';
 import { RowCheckbox } from './row-checkbox';
 import { HoverMarqueeText } from '../../../components/ui/hover-marquee-text';
+import { StarButton } from '../../library/track-list-view/star-button';
 
 export const StaticTrackRow = memo(function StaticTrackRow({
-  dense = false,
   index,
   isPlaying,
   isSelected,
   locale,
   onClick,
-  showArtist,
-  showDownloaded,
   onToggleSelect,
   showDragSpacer,
   track,
+  overlay = false,
 }: {
   track: PlaylistTrackEntry;
-  dense?: boolean;
   index: number;
   isPlaying: boolean;
   isSelected: boolean;
   locale: string;
   showDragSpacer?: boolean;
-  showArtist: boolean;
-  showDownloaded: boolean;
   onClick: () => void;
   onToggleSelect: (shiftKey: boolean) => void;
+  overlay?: boolean;
 }) {
   return (
     <div
-      className="track-row cursor-pointer"
+      className="playlist-track-grid track-row cursor-pointer"
       onClick={onClick}
       style={{
         paddingBlock: 'var(--track-row-block-padding)',
-        ...getPlaylistTrackGridStyle({
-          dense,
-          showArtist,
-          showDownloaded,
-          showDrag: Boolean(showDragSpacer),
-        }),
+        ...getPlaylistTrackGridStyle(Boolean(showDragSpacer)),
         borderRadius: '6px',
         transition: 'background var(--transition)',
         background: isSelected ? 'var(--glow-strong)' : isPlaying ? 'var(--glow-strong)' : undefined,
@@ -50,8 +43,6 @@ export const StaticTrackRow = memo(function StaticTrackRow({
       }}
     >
       <PlaylistTrackGridShell
-        showArtist={showArtist}
-        showDownloaded={showDownloaded}
         showDrag={Boolean(showDragSpacer)}
         dragSlot={null}
         indexSlot={
@@ -77,24 +68,24 @@ export const StaticTrackRow = memo(function StaticTrackRow({
               }}
             />
             <HoverMarqueeText
-              className="lg:hidden"
+              className="track-inline-artist"
               text={track.artist || 'Unknown'}
               style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '1px' }}
             />
           </>
         }
-        artistSlot={showArtist ? (
+        artistSlot={
           <HoverMarqueeText
             text={track.artist || 'Unknown'}
             style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}
           />
-        ) : undefined}
-        downloadedSlot={showDownloaded ? (
+        }
+        downloadedSlot={
           <HoverMarqueeText
             text={formatDownloadedDate(track.downloaded_at, locale)}
             style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}
           />
-        ) : undefined}
+        }
         timeSlot={
           <HoverMarqueeText
             text={formatTime(track.duration_ms)}
@@ -102,17 +93,16 @@ export const StaticTrackRow = memo(function StaticTrackRow({
           />
         }
         checkboxSlot={<RowCheckbox isSelected={isSelected} onToggle={onToggleSelect} />}
+        starSlot={<StarButton trackId={track.id} rating={track.rating} disabled={overlay} />}
       />
     </div>
   );
 }, (prev, next) =>
   prev.track === next.track &&
-  prev.dense === next.dense &&
   prev.index === next.index &&
   prev.isPlaying === next.isPlaying &&
   prev.isSelected === next.isSelected &&
   prev.locale === next.locale &&
-  prev.showArtist === next.showArtist &&
-  prev.showDownloaded === next.showDownloaded &&
-  prev.showDragSpacer === next.showDragSpacer,
+  prev.showDragSpacer === next.showDragSpacer &&
+  prev.overlay === next.overlay,
 );

@@ -50,6 +50,7 @@ import {
   logVolumePreview,
 } from './volume-debug';
 import { initializeDesktopPlaybackSession } from './session';
+import { initializeListeningTracking, prepareListeningSeek } from './listening';
 
 export {
   setEqBand,
@@ -96,6 +97,7 @@ export async function initPlayback(): Promise<void> {
   playbackInitializationPromise = (async () => {
     await initAudioEngine();
     initMediaPool();
+    initializeListeningTracking();
     setupAudioEvents({
       preloadNextTrack,
       loadQueueIndex,
@@ -205,6 +207,7 @@ export function seek(seconds: number): void {
     return;
   }
 
+  prepareListeningSeek();
   element.currentTime = Math.max(0, Math.min(seconds, duration));
   usePlaybackStore.setState({ position: element.currentTime });
   emitCurrentPosition();
