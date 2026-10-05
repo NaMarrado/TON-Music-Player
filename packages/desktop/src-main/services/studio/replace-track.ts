@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type Database from 'better-sqlite3';
+import { CLOUD_REPLACED_TRACK_KEY_PREFIX as REPLACED_TRACK_KEY_PREFIX } from '@ton/core';
 import { getDb } from '../database';
 import { getFileStatsAsync } from '../file-scanner';
 import { readTrackMetadataOffthread } from '../metadata-reader';
@@ -55,14 +56,28 @@ export async function replaceTrackAudio(trackId: number, renderedPath: string): 
 
     db.transaction(() => {
       const oldHash = track.content_hash_sha256?.toLowerCase() ?? '';
-      if (oldHash) {
+      const shared = oldHash !== '' && db.prepare('SELECT 1 FROM tracks WHERE id != ? AND lower(content_hash_sha256) = ?').get(track.id, oldHash);
+      if (oldHash && !shared) {
         db.prepare(`
           INSERT INTO cloud_sync_local_exclusions (scope_id, content_hash_sha256, deleted_at)
           SELECT active_scope_id, ?, strftime('%s','now') FROM cloud_sync_control
           WHERE id = 1 AND active_scope_id != ''
-            AND NOT EXISTS (SELECT 1 FROM tracks WHERE id != ? AND lower(content_hash_sha256) = ?)
           ON CONFLICT(scope_id, content_hash_sha256) DO UPDATE SET deleted_at = excluded.deleted_at
-        `).run(oldHash, track.id, oldHash);
+        `).run(oldHash);
+        // Other devices replace the song too: a tombstone for the old audio removes it there, and the edited version
+        // arrives with the same playlists (their upsert follows from the hash change).
+        db.prepare(`
+          UPDATE cloud_sync_control SET generation = generation + 1
+          WHERE id = 1 AND suppress_outbox = 0 AND active_scope_id != ''
+        `).run();
+        db.prepare(`
+          INSERT INTO cloud_sync_outbox (scope_id, entity_type, entity_key, local_id, operation, payload_json, generation)
+          SELECT active_scope_id, 'track', ?, NULL, 'delete', json_object('content_hash_sha256', ?), generation
+          FROM cloud_sync_control WHERE id = 1 AND suppress_outbox = 0 AND active_scope_id != ''
+          ON CONFLICT(scope_id, entity_type, entity_key) DO UPDATE SET
+            operation = 'delete', payload_json = excluded.payload_json, generation = excluded.generation,
+            updated_at = strftime('%s','now')
+        `).run(`${REPLACED_TRACK_KEY_PREFIX}${oldHash}`, oldHash);
       }
       db.prepare(`
         UPDATE tracks SET

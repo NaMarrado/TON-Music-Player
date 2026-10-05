@@ -6,7 +6,9 @@ import type {
   CloudTrackRecordV2,
 } from '@ton/core';
 import {
+  CLOUD_REPLACED_TRACK_KEY_PREFIX,
   createCloudDeletedPlaylistRecordV2,
+  createCloudDeletedTrackRecordV2,
   createCloudLivePlaylistRecordV2,
   createCloudLiveTrackRecordV2,
   createEmptyCloudLibraryManifestV2,
@@ -118,6 +120,12 @@ export function buildLocalMutationManifest(
             entry, remoteTracks.get(entry.content_hash_sha256),
           );
           tracks.set(entry.content_hash_sha256, createCloudLiveTrackRecordV2(reconciled, version));
+        }
+      } else if (row.operation === 'delete' && row.entity_key.startsWith(CLOUD_REPLACED_TRACK_KEY_PREFIX)) {
+        // Audio replaced by a Studio quick edit: every device drops the old version, unless it is live here again.
+        const hash = row.entity_key.slice(CLOUD_REPLACED_TRACK_KEY_PREFIX.length);
+        if (hash && !tracks.has(hash)) {
+          tracks.set(hash, createCloudDeletedTrackRecordV2(hash, version, row.created_at * 1000));
         }
       }
     } else if (row.operation === 'delete') {

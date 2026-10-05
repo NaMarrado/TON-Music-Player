@@ -1,5 +1,6 @@
 import * as FileSystem from 'expo-file-system';
 import {
+  CLOUD_REPLACED_TRACK_KEY_PREFIX,
   STUDIO_SAMPLE_RATE,
   buildRenderArgs,
   encodeWavFloat32,
@@ -147,14 +148,27 @@ async function swapTrackAudio(db: SQLiteDatabase, trackId: number, outputUri: st
     const size = info.exists && typeof info.size === 'number' ? info.size : 0;
     await db.withTransactionAsync(async () => {
       const oldHash = track.content_hash_sha256?.toLowerCase() ?? '';
-      if (oldHash) {
+      const shared = oldHash !== '' && await db.getFirstAsync(
+        'SELECT 1 FROM tracks WHERE id != ? AND lower(content_hash_sha256) = ?', [trackId, oldHash]);
+      if (oldHash && !shared) {
         await db.runAsync(
           `INSERT INTO cloud_sync_local_exclusions (scope_id, content_hash_sha256, deleted_at)
            SELECT active_scope_id, ?, strftime('%s','now') FROM cloud_sync_control
            WHERE id = 1 AND active_scope_id != ''
-             AND NOT EXISTS (SELECT 1 FROM tracks WHERE id != ? AND lower(content_hash_sha256) = ?)
            ON CONFLICT(scope_id, content_hash_sha256) DO UPDATE SET deleted_at = excluded.deleted_at`,
-          [oldHash, trackId, oldHash]);
+          [oldHash]);
+        // Other devices replace the song too: the tombstone removes the old audio there and the edited version
+        // arrives with the same playlists (their upsert follows from the hash change).
+        await db.runAsync(
+          `UPDATE cloud_sync_control SET generation = generation + 1
+           WHERE id = 1 AND suppress_outbox = 0 AND active_scope_id != ''`);
+        await db.runAsync(
+          `INSERT INTO cloud_sync_outbox (scope_id, entity_type, entity_key, local_id, operation, payload_json, generation)
+           SELECT active_scope_id, 'track', ?, NULL, 'delete', json_object('content_hash_sha256', ?), generation
+           FROM cloud_sync_control WHERE id = 1 AND suppress_outbox = 0 AND active_scope_id != ''
+           ON CONFLICT(scope_id, entity_type, entity_key) DO UPDATE SET
+             operation = 'delete', payload_json = excluded.payload_json, generation = excluded.generation`,
+          [`${CLOUD_REPLACED_TRACK_KEY_PREFIX}${oldHash}`, oldHash]);
       }
       await db.runAsync(
         `UPDATE tracks SET file_path = ?, file_hash = NULL, content_hash_sha256 = NULL, file_size = ?, file_mtime = NULL,
