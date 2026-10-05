@@ -7,6 +7,8 @@ import { useTranslation } from 'react-i18next';
 import type { PlaylistParams } from '../../types/navigation';
 import { ActionSheet, type ActionSheetOption } from '../../components/action-sheet';
 import { TrackRow } from '../../components/track-row';
+import { StarButton } from '../../components/star-button';
+import { isTrackStarred } from '../../stores/library-store';
 import { EmptyState } from '../../components/empty-state';
 import { EditPlaylistModal } from '../../components/edit-playlist-modal';
 import { LibraryTransferProgressModal } from '../../components/library-transfer-progress-modal';
@@ -185,7 +187,7 @@ export function PlaylistScreen({ route }: Props) {
           onMoveDown={() => { void handleMoveTrack(item.playlist_track_id, 1); }}
           onMoveUp={() => { void handleMoveTrack(item.playlist_track_id, -1); }}
         />
-      ) : undefined}
+      ) : selectionActive ? undefined : <StarButton trackId={item.id} starred={isTrackStarred(item)} />}
       onPress={() => {
         if (!reorderMode) handleTrackPress(item, index);
       }}

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { getFilteredTracks } from '@ton/core';
+import { getFilteredTracks, matchesTrackFilter } from '@ton/core';
 import { useTranslation } from 'react-i18next';
 import {
   isTrackStarred,
@@ -45,28 +45,28 @@ export function useLibraryScreen() {
     }
   }, [hasPlaylistsLoaded, isPlaylistLoading]);
 
+  // Search only narrows what is shown; playback and the queue follow the whole (optionally starred) Library, like the desktop.
+  const playbackTracks = useMemo(
+    () => getFilteredTracks(starredOnly ? tracks.filter(isTrackStarred) : tracks, '', sortBy, sortOrder),
+    [tracks, sortBy, sortOrder, starredOnly],
+  );
   const displayTracks = useMemo(
-    () => getFilteredTracks(starredOnly ? tracks.filter(isTrackStarred) : tracks, filterQuery, sortBy, sortOrder),
-    [tracks, filterQuery, sortBy, sortOrder, starredOnly],
+    () => (filterQuery ? playbackTracks.filter((track) => matchesTrackFilter(track, filterQuery)) : playbackTracks),
+    [playbackTracks, filterQuery],
   );
   const queueSource = useMemo(() => ({
     kind: 'library' as const,
     ...(starredOnly ? { source_id: STARRED_LIBRARY_SOURCE_ID } : {}),
-    filter_query: filterQuery || undefined,
     sort_by: sortBy,
     sort_order: sortOrder,
-  }), [filterQuery, sortBy, sortOrder, starredOnly]);
-  const selection = useLibrarySelection(displayTracks, queueSource);
-
-  const handlePlay = useCallback((index: number) => {
-    playTracks(displayTracks, index, queueSource);
-  }, [displayTracks, queueSource]);
+  }), [sortBy, sortOrder, starredOnly]);
+  const selection = useLibrarySelection(displayTracks, playbackTracks, queueSource);
 
   const handlePlayAll = useCallback(() => {
-    if (displayTracks.length > 0) {
-      playTracks(displayTracks, 0, queueSource);
+    if (playbackTracks.length > 0) {
+      playTracks(playbackTracks, 0, queueSource);
     }
-  }, [displayTracks, queueSource]);
+  }, [playbackTracks, queueSource]);
 
   const handleCreatePlaylist = useCallback(async (name: string) => {
     const trimmedName = name.trim();
@@ -103,7 +103,6 @@ export function useLibraryScreen() {
     filterQuery,
     ...selection,
     handleCreatePlaylist,
-    handlePlay,
     handlePlayAll,
     handleRefresh,
     isLoading,

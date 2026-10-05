@@ -24,6 +24,7 @@ export type HomeStackParamList = {
   Playlist: PlaylistParams;
   Album: AlbumParams;
   Artist: ArtistParams;
+  Profile: undefined;
 };
 
 export type SearchStackParamList = {
