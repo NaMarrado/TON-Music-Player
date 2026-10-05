@@ -4,6 +4,7 @@ import type { LibraryExportSelection, LibraryTransferBundleType } from './types'
 export function resolveExportBundleType(
   selection: LibraryExportSelection,
 ): LibraryTransferBundleType {
+  if (selection.kind) return selection.kind;
   return selection.includeLibrary || (selection.trackIds?.length ?? 0) > 0
     ? 'library'
     : 'playlist';
@@ -12,7 +13,7 @@ export function resolveExportBundleType(
 export function resolveImportBundleType(
   manifest: ExportManifest,
 ): LibraryTransferBundleType {
-  if (manifest.bundle_type === 'library' || manifest.bundle_type === 'playlist') {
+  if (manifest.bundle_type) {
     return manifest.bundle_type;
   }
 

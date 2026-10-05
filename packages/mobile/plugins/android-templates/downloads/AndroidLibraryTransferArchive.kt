@@ -16,6 +16,7 @@ import java.io.OutputStream
 import java.nio.charset.StandardCharsets
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
+import java.util.zip.Deflater
 import java.util.zip.ZipOutputStream
 
 internal class AndroidLibraryTransferArchive(
@@ -30,6 +31,8 @@ internal class AndroidLibraryTransferArchive(
     openOutputStream(request.outputUri).use { outputStream ->
       ZipOutputStream(BufferedOutputStream(outputStream)).use { zipOutputStream ->
         writeZipEntry(zipOutputStream, "manifest.json", request.manifestJson.byteInputStream())
+        // Audio and artwork are already compressed: squeezing them again costs a lot of time and saves almost nothing.
+        zipOutputStream.setLevel(Deflater.NO_COMPRESSION)
         request.trackFiles.forEachIndexed { index, fileSpec ->
           currentCoroutineContext().ensureActive()
           openInputStream(fileSpec.filePath).use { input ->

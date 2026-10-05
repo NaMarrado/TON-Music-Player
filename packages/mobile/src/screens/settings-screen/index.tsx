@@ -10,8 +10,8 @@ import { usePlaybackStore } from '../../stores/playback-store';
 import { detectDeviceLanguage } from './constants';
 import { AboutCard } from './about-card';
 import { EqualizerCard } from './equalizer-card';
-import { ExportImportCard } from './export-import-card';
-import { ExportSelectionModal } from './export-selection-modal';
+import { PickModal } from './pick-modal';
+import { TransferCard, type TransferRow } from './transfer-card';
 import { FrequencyCard } from './frequency-card';
 import { LanguageCard } from './language-card';
 import { LibraryTransferProgressModal } from '../../components/library-transfer-progress-modal';
@@ -21,11 +21,10 @@ import { CommunityCard } from './community-card';
 import { DownloadQualityCard } from './download-quality-card';
 import { UpdateCard } from './update-card';
 import { useSettingsScreen } from './use-settings-screen';
-import { useProfileTransferActions } from './use-profile-transfer-actions';
 import { usePlaylistStore } from '../../stores/playlist-store';
 import { useScreenTopPadding } from '../../hooks/use-screen-top-padding';
 import { SettingsConnectionsGroup } from './settings-connections-group';
-import { reconcileLibraryTracks } from '../../stores/library-store';
+import { reconcileLibraryTracks, useLibraryStore } from '../../stores/library-store';
 import { loadPlaylists } from '../../stores/playlist-store';
 import { useIsFocused } from '@react-navigation/native';
 import { markMobileUpdateSeen } from '../../stores/update-store';
@@ -43,7 +42,7 @@ export function SettingsScreen() {
   const detectedLang = detectDeviceLanguage();
   const topPadding = useScreenTopPadding(16);
   const controller = useSettingsScreen();
-  const { exportProfile, importProfile, isExportingProfile, isImportingProfile } = useProfileTransferActions();
+  const tracks = useLibraryStore((state) => state.tracks);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const isFocused = useIsFocused();
   const {
@@ -64,8 +63,8 @@ export function SettingsScreen() {
     language,
     openExportPicker,
     openAvailableUpdate,
-    setShowExportPicker,
-    showExportPicker,
+    picker,
+    setPicker,
     progress,
     stats,
     transferProgress,
@@ -176,28 +175,14 @@ export function SettingsScreen() {
       </SettingsGroup>
 
       <SettingsGroup label={t('libraryGroup')}>
-        <ExportImportCard
-          title={t('exportImportSection')}
-          exportLabel={t('exportButton')}
-          exportingLabel={t('exportingButton')}
-          importLabel={t('importButton')}
-          importingLabel={t('importingButton')}
-          isExporting={isExportingLibrary}
-          isImporting={isImportingLibrary}
-          onExport={() => void openExportPicker()}
-          onImport={() => void importLibrary()}
-        />
-        <ExportImportCard
-          title={t('profileExportSection')}
-          description={t('profileExportDescription')}
-          exportLabel={t('profileExportButton')}
-          exportingLabel={t('profileExporting')}
-          importLabel={t('profileImportButton')}
-          importingLabel={t('profileImporting')}
-          isExporting={isExportingProfile}
-          isImporting={isImportingProfile}
-          onExport={() => void exportProfile()}
-          onImport={() => void importProfile()}
+        <TransferCard
+          busy={isExportingLibrary || isImportingLibrary}
+          onExport={(row: TransferRow) => {
+            if (row === 'profile') void exportLibrary({ kind: 'profile', includeLibrary: true, playlistIds: [] });
+            else if (row === 'library') void exportLibrary({ kind: 'library', includeLibrary: true, playlistIds: [] });
+            else void openExportPicker(row === 'playlists' ? 'export-playlists' : 'export-songs');
+          }}
+          onImport={(row: TransferRow) => { void importLibrary(row === 'playlists'); }}
         />
       </SettingsGroup>
 
@@ -278,20 +263,33 @@ export function SettingsScreen() {
         </Pressable>
       </View>
 
-      <ExportSelectionModal
-        visible={showExportPicker}
-        playlists={playlists}
-        busy={isExportingLibrary}
-        onClose={() => setShowExportPicker(false)}
-        onConfirm={(selection) => {
-          setShowExportPicker(false);
-          void exportLibrary(selection);
+      <PickModal
+        visible={picker !== null}
+        title={t(picker?.mode === 'export-songs' ? 'transferPickSongs' : 'transferPickPlaylists')}
+        items={picker?.mode === 'import-playlists'
+          ? picker.items.map((item) => ({ id: item.index, label: item.name, detail: String(item.trackCount) }))
+          : picker?.mode === 'export-songs'
+            ? tracks.map((track) => ({ id: track.id, label: track.title || '—', detail: track.artist || undefined }))
+            : playlists.map((playlist) => ({ id: playlist.id, label: playlist.name }))}
+        searchPlaceholder={picker?.mode === 'export-songs' ? t('transferSearch') : undefined}
+        confirmLabel={t(picker?.mode === 'import-playlists' ? 'transferImport' : 'transferExport')}
+        cancelLabel={t('transferCancel')}
+        onClose={() => {
+          if (picker?.mode === 'import-playlists') picker.resolve(null);
+          setPicker(null);
+        }}
+        onConfirm={(ids) => {
+          const current = picker;
+          setPicker(null);
+          if (current?.mode === 'import-playlists') current.resolve(ids);
+          else if (current?.mode === 'export-playlists') void exportLibrary({ kind: 'playlist', includeLibrary: false, playlistIds: ids });
+          else if (current?.mode === 'export-songs') void exportLibrary({ kind: 'songs', includeLibrary: false, playlistIds: [], trackIds: ids });
         }}
       />
 
       <LibraryTransferProgressModal
         visible={transferProgress != null}
-        title={transferProgress?.title ?? t('exportImportSection')}
+        title={transferProgress?.title ?? t('transferSection')}
         message={transferProgress?.message ?? t('transferPreparing')}
         progress={transferProgress && transferProgress.total > 0
           ? Math.min(100, Math.round((transferProgress.current / transferProgress.total) * 100))

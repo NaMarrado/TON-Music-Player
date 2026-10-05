@@ -1,4 +1,5 @@
 import type { MouseEvent, ReactNode } from 'react';
+import { sliderPositionOf, sliderValueAt } from '@ton/core';
 import { useControlText } from './use-control-text';
 
 interface ButtonProps {
@@ -50,10 +51,16 @@ interface SliderProps {
   bare?: boolean;
   /** The value a double click puts back (the neutral setting). */
   resetTo?: number;
+  /**
+   * The value in the middle of the slider. When set, the slider is finer near it and coarser towards the ends, so a wide
+   * range stays easy to set precisely.
+   */
+  neutral?: number;
 }
 
-export function StudioSlider({ control, value, min, max, step, format, onChange, disabled = false, bare = false, resetTo }: SliderProps) {
+export function StudioSlider({ control, value, min, max, step, format, onChange, disabled = false, bare = false, resetTo, neutral }: SliderProps) {
   const { name, text } = useControlText(control);
+  const soft = neutral !== undefined;
   const input = (
     <input
       type="range"
@@ -61,13 +68,18 @@ export function StudioSlider({ control, value, min, max, step, format, onChange,
       data-hint={name}
       data-hint-text={text}
       aria-label={name}
+      aria-valuetext={format(value)}
       aria-disabled={disabled || undefined}
       tabIndex={disabled ? -1 : undefined}
-      min={min}
-      max={max}
-      step={step}
-      value={value}
-      onChange={(event) => { if (!disabled) onChange(Number(event.target.value)); }}
+      min={soft ? -1 : min}
+      max={soft ? 1 : max}
+      step={soft ? 0.001 : step}
+      value={soft ? sliderPositionOf(value, min, max, neutral) : value}
+      onChange={(event) => {
+        if (disabled) return;
+        const raw = Number(event.target.value);
+        onChange(soft ? sliderValueAt(raw, min, max, neutral, step) : raw);
+      }}
       onDoubleClick={disabled || resetTo === undefined ? undefined : () => onChange(resetTo)}
     />
   );

@@ -64,8 +64,24 @@ export function createClip(id: string, asset: StudioAsset, startSec: number): St
   }, asset);
 }
 
-/** Songs put into the Studio start at half volume: at full volume a single song is already louder than the player. */
+/** Songs put into the Studio start quiet: at full volume a single song is already much louder than the player. */
 export const STUDIO_NEW_LANE_VOLUME = 0.5;
+/** New clips start at half volume too (about -6 dB), so a freshly added song is a quarter of its full level. */
+export const STUDIO_NEW_CLIP_GAIN_DB = 20 * Math.log10(0.5);
+/** Song and clip volume both go up to 500 %. */
+export const STUDIO_MAX_VOLUME = 5;
+/** Bass and treble go up to the strongest boost or cut the audio filters allow. */
+export const STUDIO_MAX_TONE_DB = 40;
+
+/** A clip's gain as a linear factor (1 = 100 %), the way the volume slider shows it. */
+export function clipGainToLinear(gainDb: number): number {
+  return gainDb <= -60 ? 0 : 10 ** (gainDb / 20);
+}
+
+/** The gain for a linear factor from the volume slider; 0 % becomes the quietest allowed gain (-60 dB). */
+export function linearToClipGain(linear: number): number {
+  return linear <= 0.001 ? -60 : 20 * Math.log10(linear);
+}
 
 export function createTrack(id: string, clips: StudioClip[] = [], volume = 1): StudioTrack {
   return { id, clips, volume, muted: false, solo: false, effects: defaultEffects() };
@@ -108,7 +124,7 @@ export function updateTrack(project: StudioProject, trackId: string, patch: Part
   return mapTrack(project, trackId, (track) => ({
     ...track,
     ...patch,
-    volume: patch.volume === undefined ? track.volume : Math.min(2, Math.max(0, finiteOr(patch.volume, 1))),
+    volume: patch.volume === undefined ? track.volume : Math.min(STUDIO_MAX_VOLUME, Math.max(0, finiteOr(patch.volume, 1))),
   }));
 }
 
@@ -119,8 +135,8 @@ export function updateTrackEffects(project: StudioProject, trackId: string, patc
       ...track,
       effects: {
         ...effects,
-        bassDb: Math.min(18, Math.max(-18, finiteOr(effects.bassDb, 0))),
-        trebleDb: Math.min(18, Math.max(-18, finiteOr(effects.trebleDb, 0))),
+        bassDb: Math.min(STUDIO_MAX_TONE_DB, Math.max(-STUDIO_MAX_TONE_DB, finiteOr(effects.bassDb, 0))),
+        trebleDb: Math.min(STUDIO_MAX_TONE_DB, Math.max(-STUDIO_MAX_TONE_DB, finiteOr(effects.trebleDb, 0))),
         pan: Math.min(1, Math.max(-1, finiteOr(effects.pan, 0))),
       },
     };

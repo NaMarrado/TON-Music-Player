@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { SUPPORTED_AUDIO_EXTENSIONS, type StudioClip, type StudioEffects, type StudioFade, type StudioProject, type StudioTrack } from '@ton/core';
+import { STUDIO_MAX_TONE_DB, STUDIO_MAX_VOLUME, SUPPORTED_AUDIO_EXTENSIONS, type StudioClip, type StudioEffects, type StudioFade, type StudioProject, type StudioTrack } from '@ton/core';
 
 const MAX_TRACKS = 512;
 const MAX_CLIPS = 4096;
@@ -25,8 +25,8 @@ function effects(value: unknown): StudioEffects {
   const raw = value as Partial<StudioEffects> | null;
   if (!raw || typeof raw !== 'object') return fail('effects missing');
   const result: StudioEffects = {
-    bassDb: number(raw.bassDb, 'bassDb', -18, 18),
-    trebleDb: number(raw.trebleDb, 'trebleDb', -18, 18),
+    bassDb: number(raw.bassDb, 'bassDb', -STUDIO_MAX_TONE_DB, STUDIO_MAX_TONE_DB),
+    trebleDb: number(raw.trebleDb, 'trebleDb', -STUDIO_MAX_TONE_DB, STUDIO_MAX_TONE_DB),
     pan: number(raw.pan, 'pan', -1, 1),
     reverb: null,
     echo: null,
@@ -77,7 +77,7 @@ export function parseStudioProject(value: unknown): StudioProject {
     return {
       id: text(source.id, 'track.id'),
       clips: source.clips.map(clip),
-      volume: number(source.volume, 'volume', 0, 2),
+      volume: number(source.volume, 'volume', 0, STUDIO_MAX_VOLUME),
       muted: source.muted === true,
       solo: source.solo === true,
       effects: effects(source.effects),

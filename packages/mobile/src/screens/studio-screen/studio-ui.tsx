@@ -3,6 +3,7 @@ import Slider from '@react-native-community/slider';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { create } from 'zustand';
+import { sliderPositionOf, sliderValueAt } from '@ton/core';
 
 export const STUDIO_COLORS = {
   background: '#0a0a0a',
@@ -125,11 +126,14 @@ interface SliderProps {
   format: (value: number) => string;
   onChange: (value: number) => void;
   disabled?: boolean;
+  /** The value in the middle of the slider; finer near it and coarser towards the ends (same as the desktop). */
+  neutral?: number;
 }
 
 /** A labelled slider: the name on the left (a long press explains it), the value on the right. */
-export function StudioSlider({ control, value, min, max, step, format, onChange, disabled = false }: SliderProps) {
+export function StudioSlider({ control, value, min, max, step, format, onChange, disabled = false, neutral }: SliderProps) {
   const { name, text } = useControlText(control);
+  const soft = neutral !== undefined;
   return (
     <View accessible accessibilityLabel={name} style={{ flexDirection: 'row', alignItems: 'center', height: 40, opacity: disabled ? 0.4 : 1 }}>
       <Pressable onLongPress={() => showHint(name, text, 'bottom')} delayLongPress={400} hitSlop={6} style={{ width: 96 }}>
@@ -137,12 +141,12 @@ export function StudioSlider({ control, value, min, max, step, format, onChange,
       </Pressable>
       <Slider
         style={{ flex: 1, height: 40 }}
-        minimumValue={min}
-        maximumValue={max}
-        step={step}
-        value={value}
+        minimumValue={soft ? -1 : min}
+        maximumValue={soft ? 1 : max}
+        step={soft ? 0 : step}
+        value={soft ? sliderPositionOf(value, min, max, neutral) : value}
         disabled={disabled}
-        onValueChange={onChange}
+        onValueChange={(raw) => onChange(soft ? sliderValueAt(raw, min, max, neutral, step) : raw)}
         minimumTrackTintColor={STUDIO_COLORS.text}
         maximumTrackTintColor="rgba(255,255,255,0.18)"
         thumbTintColor={STUDIO_COLORS.text}

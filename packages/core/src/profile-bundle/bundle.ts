@@ -1,5 +1,5 @@
-import type { ExportPlaylistEntry } from '../types/export';
 import { validateProfileRecord, type ProfileSessionRecord } from '../services/listening-profile/records';
+import type { CloudStorageConfig, CloudStorageJurisdiction } from '../types/cloud-sync';
 import { PROFILE_SETTING_VALIDATORS } from './settings';
 import {
   PROFILE_BUNDLE_FORMAT,
@@ -11,10 +11,9 @@ import {
 } from './types';
 
 const MAX_STARRED = 500_000;
-const MAX_PLAYLISTS = 5_000;
 const MAX_LISTENING = 1_000_000;
-const MAX_PLAYLIST_TRACKS = 100_000;
 const PLATFORMS: readonly string[] = ['desktop', 'android', 'ios'];
+const JURISDICTIONS: Record<CloudStorageJurisdiction, true> = { default: true, eu: true, fedramp: true };
 
 /** How a song is recognised on every device: its content hash, or failing that its file hash. Null when it has neither. */
 export function starIdentity(track: { content_hash_sha256?: string | null; file_hash?: string | null }): string | null {
@@ -34,7 +33,7 @@ function portableSettings(raw: Record<string, string | null | undefined>): { kep
   return { kept, ignored };
 }
 
-/** Builds the file content. Settings that are not on the allowlist (every secret, path and device id) never get in. */
+/** Builds the profile part of a Profile export. Settings that belong to this device only never get in. */
 export function buildProfileBundle(input: ProfileBundleInput, now: number = Date.now()): ProfileBundle {
   const { kept } = portableSettings(input.settings);
   return {
@@ -44,38 +43,30 @@ export function buildProfileBundle(input: ProfileBundleInput, now: number = Date
     device_name: input.deviceName.slice(0, 256),
     platform: input.platform,
     settings: Object.fromEntries(Object.entries(kept).sort(([a], [b]) => a.localeCompare(b))),
+    cloud: input.cloud ? { ...input.cloud } : null,
     starred: [...new Set(input.starred)].sort(),
-    playlists: input.playlists.map(normalisePlaylist),
     listening: input.listening,
   };
 }
 
-function normalisePlaylist(playlist: ExportPlaylistEntry): ExportPlaylistEntry {
-  return {
-    name: playlist.name,
-    description: playlist.description,
-    is_smart: playlist.is_smart,
-    smart_rules: playlist.smart_rules,
-    track_hashes: [...playlist.track_hashes],
-  };
-}
-
 const isObject = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
-const isTextOrNull = (value: unknown, max: number): value is string | null => value === null || (typeof value === 'string' && value.length <= max);
+const isShortText = (value: unknown): value is string => typeof value === 'string' && value.length <= 1024;
 
-function parsePlaylist(value: unknown): ExportPlaylistEntry {
-  if (!isObject(value) || typeof value.name !== 'string' || value.name.trim() === '' || value.name.length > 512
-    || !isTextOrNull(value.description ?? null, 8192) || typeof value.is_smart !== 'boolean' || !isTextOrNull(value.smart_rules ?? null, 100_000)
-    || !Array.isArray(value.track_hashes) || value.track_hashes.length > MAX_PLAYLIST_TRACKS
-    || !value.track_hashes.every((hash) => typeof hash === 'string' && hash.length > 0 && hash.length <= 256)) {
-    throw new Error('The profile file contains a damaged playlist');
+function parseCloud(value: unknown): CloudStorageConfig | null {
+  if (value === null || value === undefined) return null;
+  if (!isObject(value) || !isShortText(value.accountId) || !isShortText(value.bucket) || !isShortText(value.prefix)
+    || !isShortText(value.accessKeyId) || !isShortText(value.secretAccessKey)
+    || typeof value.jurisdiction !== 'string' || !Object.hasOwn(JURISDICTIONS, value.jurisdiction)) {
+    throw new Error('The profile cloud connection is damaged');
   }
   return {
-    name: value.name,
-    description: typeof value.description === 'string' ? value.description : null,
-    is_smart: value.is_smart,
-    smart_rules: typeof value.smart_rules === 'string' ? value.smart_rules : null,
-    track_hashes: value.track_hashes.filter((hash): hash is string => typeof hash === 'string'),
+    accountId: value.accountId,
+    bucket: value.bucket,
+    prefix: value.prefix,
+    accessKeyId: value.accessKeyId,
+    secretAccessKey: value.secretAccessKey,
+    // Checked against the table above.
+    jurisdiction: value.jurisdiction as CloudStorageJurisdiction,
   };
 }
 
@@ -85,35 +76,27 @@ function parseRecord(value: unknown): ProfileSessionRecord {
   try {
     validateProfileRecord(record, record.device.device_id);
   } catch {
-    throw new Error('The profile file contains a damaged listening record');
+    throw new Error('The profile contains a damaged listening record');
   }
   return record;
 }
 
-/** Reads a profile file. Throws for anything that is not a valid TON profile; settings that must not be applied are reported. */
-export function parseProfileBundle(text: string): ParsedProfileBundle {
-  let value: unknown;
-  try {
-    value = JSON.parse(text);
-  } catch {
-    throw new Error('This is not a TON profile file');
-  }
-  if (!isObject(value) || value.format !== PROFILE_BUNDLE_FORMAT) throw new Error('This is not a TON profile file');
-  if (value.version !== PROFILE_BUNDLE_VERSION) throw new Error('This profile file was made by a newer version of TON');
+/** Reads the profile part of a manifest. Throws for anything that is not a valid TON profile; refused settings are reported. */
+export function parseProfileBundle(value: unknown): ParsedProfileBundle {
+  if (!isObject(value) || value.format !== PROFILE_BUNDLE_FORMAT) throw new Error('This is not a TON profile');
+  if (value.version !== PROFILE_BUNDLE_VERSION) throw new Error('This profile was made by another version of TON');
   if (!Number.isSafeInteger(value.created_at) || typeof value.device_name !== 'string' || typeof value.platform !== 'string' || !PLATFORMS.includes(value.platform)) {
-    throw new Error('The profile file header is damaged');
+    throw new Error('The profile header is damaged');
   }
-  if (!isObject(value.settings)) throw new Error('The profile file settings are damaged');
+  if (!isObject(value.settings)) throw new Error('The profile settings are damaged');
   if (!Array.isArray(value.starred) || value.starred.length > MAX_STARRED || !value.starred.every((id) => typeof id === 'string' && id.length > 0 && id.length <= 256)) {
-    throw new Error('The profile file starred songs are damaged');
+    throw new Error('The profile starred songs are damaged');
   }
-  if (!Array.isArray(value.playlists) || value.playlists.length > MAX_PLAYLISTS) throw new Error('The profile file playlists are damaged');
-  if (!Array.isArray(value.listening) || value.listening.length > MAX_LISTENING) throw new Error('The profile file listening history is damaged');
+  if (!Array.isArray(value.listening) || value.listening.length > MAX_LISTENING) throw new Error('The profile listening history is damaged');
 
   const stringSettings: Record<string, string | null> = {};
   for (const [key, setting] of Object.entries(value.settings)) stringSettings[key] = typeof setting === 'string' ? setting : null;
   const { kept, ignored } = portableSettings(stringSettings);
-  const platform = value.platform as ProfileBundlePlatform;
 
   return {
     bundle: {
@@ -121,10 +104,10 @@ export function parseProfileBundle(text: string): ParsedProfileBundle {
       version: PROFILE_BUNDLE_VERSION,
       created_at: Number(value.created_at),
       device_name: value.device_name.slice(0, 256),
-      platform,
+      platform: value.platform as ProfileBundlePlatform,
       settings: kept,
+      cloud: parseCloud(value.cloud),
       starred: value.starred.filter((id): id is string => typeof id === 'string'),
-      playlists: value.playlists.map(parsePlaylist),
       listening: value.listening.map(parseRecord),
     },
     ignoredSettings: ignored,

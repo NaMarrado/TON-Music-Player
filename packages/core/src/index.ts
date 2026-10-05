@@ -310,3 +310,4 @@ export type {
 
 export * from './studio';
 export * from './profile-bundle';
+export { narrowManifestToPlaylists } from './library-transfer/selection';

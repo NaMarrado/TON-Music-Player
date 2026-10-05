@@ -14,6 +14,8 @@ import { buildImportFileName, getBaseName, getFileExtension } from './naming';
 import { audioFormatFromExtension } from './media';
 import { enqueueMissingImportLoudness } from './import-loudness';
 import type { NativeImportResult, StagedImportResult } from './import-types';
+import { applyChosenProfile, chooseImport } from './import-choice';
+import type { LibraryImportOptions } from './types';
 
 function getParentDirectoryUri(fileUri: string): string {
   const normalized = fileUri.endsWith('/') ? fileUri.slice(0, -1) : fileUri;
@@ -35,14 +37,21 @@ export async function finalizeAndroidImportResult(
   nativeResult: NativeImportResult,
   existingTrackIdsByHash: Record<string, number>,
   onProgress?: (progress: LibraryTransferProgress) => void,
+  options?: LibraryImportOptions,
 ): Promise<LibraryImportResult | null> {
   const stagedResult = await readJsonFileAsync<StagedImportResult>(nativeResult.resultFileUri);
-  const manifest = await readJsonFileAsync<ExportManifest>(stagedResult.manifestFilePath);
+  const chosen = await chooseImport(await readJsonFileAsync<ExportManifest>(stagedResult.manifestFilePath), options);
+  if (!chosen) {
+    await cleanupStageDirectoryAsync(getParentDirectoryUri(nativeResult.resultFileUri));
+    return null;
+  }
+  const { manifest } = chosen;
   const manifestTracksByHash = new Map(
     manifest.tracks.map((track) => [track.file_hash, track] as const),
   );
   const existingTracksToReconcileById = new Map<number, ExistingImportTrackReconciliation>();
   for (const hash of stagedResult.trackHashesToMarkInLibrary) {
+    if (!manifestTracksByHash.has(hash)) continue;
     const identity = stagedResult.existingTrackAliases?.[hash] ?? hash;
     const trackId = existingTrackIdsByHash[identity];
     if (trackId == null) continue;
@@ -89,7 +98,8 @@ export async function finalizeAndroidImportResult(
       const track = stagedResult.preparedTracks[index];
       const manifestTrack = manifestTracksByHash.get(track.fileHash);
       if (!manifestTrack) {
-        skippedTracks += 1;
+        // Not in the bundle, or not used by the chosen playlists: the staged copy is removed with the stage folder.
+        if (!options?.choosePlaylists) skippedTracks += 1;
         completedFinalizingSteps += 1;
         reportProgress();
         continue;
@@ -144,6 +154,7 @@ export async function finalizeAndroidImportResult(
       playlistCoverPaths,
     );
     enqueueMissingImportLoudness(preparedTracks, trackIdsByHash);
+    const profileApplied = await applyChosenProfile(chosen);
     completedFinalizingSteps += 1;
     reportProgress();
     onProgress?.({ phase: 'done', current: 1, total: 1 });
@@ -155,6 +166,7 @@ export async function finalizeAndroidImportResult(
       skippedTracks,
       importedPlaylists: playlistIds.length,
       playlistIds,
+      profileApplied,
     };
   } catch (error) {
     await Promise.all(createdTrackUris.map(deleteFileAsync));
