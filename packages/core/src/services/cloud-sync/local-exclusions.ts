@@ -4,6 +4,12 @@ import type {
   CloudTrackRecordV2,
 } from '../../types/cloud-sync';
 
+/**
+ * Outbox key of a pending tombstone for audio a Studio quick edit replaced (`replaced:<old hash>`). Unlike removing a
+ * song from one device, a replacement is published so every device swaps the old version for the edited one.
+ */
+export const CLOUD_REPLACED_TRACK_KEY_PREFIX = 'replaced:';
+
 export type CloudLocalExclusionPartition = {
   manifest: CloudLibraryManifestV2;
   excludedRecords: CloudTrackRecordV2[];

@@ -261,6 +261,7 @@ export {
   parseCloudLibraryManifestV2,
   parseCloudStorageServiceErrorCode,
   partitionCloudManifestForLocalExclusions,
+  CLOUD_REPLACED_TRACK_KEY_PREFIX,
   sha256Hex,
   signR2Request,
 } from './services/cloud-sync';
