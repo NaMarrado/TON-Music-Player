@@ -140,10 +140,10 @@ TON is available under the [MIT License](LICENSE). You can use, modify, and dist
 
 <img src="screenshots/desktop/home.png" alt="" width="900">
 <img src="screenshots/desktop/search.png" alt="" width="900">
-<img src="screenshots/desktop/equalizer.png" alt="" width="900">
+<img src="screenshots/desktop/library.png" alt="" width="900">
+<img src="screenshots/desktop/downloads.png" alt="" width="900">
+<img src="screenshots/desktop/profile.png" alt="" width="900">
+<img src="screenshots/desktop/studio.png" alt="" width="900">
+<img src="screenshots/desktop/settings.png" alt="" width="900">
+<img src="screenshots/desktop/export-import.png" alt="" width="900">
 <img src="screenshots/desktop/playlist.png" alt="" width="900">
-
-<img src="screenshots/iphone/home.png" alt="" width="280">
-<img src="screenshots/iphone/search.png" alt="" width="280">
-<img src="screenshots/iphone/equalizer.png" alt="" width="280">
-<img src="screenshots/iphone/playlist.png" alt="" width="280">
