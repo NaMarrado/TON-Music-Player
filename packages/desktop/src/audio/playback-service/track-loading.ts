@@ -3,7 +3,6 @@ import {
   compactAndRefillRollingQueue,
   type Track,
 } from '@ton/core';
-import { markTrackPlayed } from '../../stores/library-store';
 import { usePlaybackStore } from '../../stores/playback-store';
 import { useQueueStore } from '../../stores/queue-store';
 import {
@@ -28,6 +27,7 @@ import {
 } from './position';
 import { safePlayElement } from './safe-play';
 import { getPlaybackRuntimeState } from './state';
+import { beginListeningSession, restoreListeningSession } from './listening';
 
 async function playActiveElement(): Promise<boolean> {
   await resumeContext();
@@ -56,11 +56,12 @@ function applyTrackLoudness(track: Track): void {
   }
 }
 
-export async function startTrack(track: Track): Promise<boolean> {
+export async function startTrack(track: Track, completedPrevious = false): Promise<boolean> {
   const runtimeState = getPlaybackRuntimeState();
   runtimeState.crossfadeTriggered = false;
   runtimeState.preloadedIndex = -1;
 
+  beginListeningSession(track.id, completedPrevious);
   muteHead();
   getActiveElement().pause();
   applyTrackLoudness(track);
@@ -78,14 +79,6 @@ export async function startTrack(track: Track): Promise<boolean> {
 
   if (!started) return false;
 
-  window.api
-    .invoke(
-      'db:execute',
-      'UPDATE tracks SET play_count = play_count + 1, last_played_at = ? WHERE id = ?',
-      [Date.now(), track.id],
-    )
-    .catch(() => {});
-  markTrackPlayed(track.id);
   return true;
 }
 
@@ -123,9 +116,10 @@ export async function restorePausedTrack(track: Track, position: number): Promis
   });
   emitCurrentPosition();
   updateMediaSessionPosition();
+  await restoreListeningSession(track.id);
 }
 
-export async function loadQueueIndex(index: number): Promise<boolean> {
+export async function loadQueueIndex(index: number, completedPrevious = false): Promise<boolean> {
   const { items } = useQueueStore.getState();
   const item = items[index];
   if (!item) {
@@ -143,6 +137,7 @@ export async function loadQueueIndex(index: number): Promise<boolean> {
   const preloadElement = getPreloadElement();
   const expectedUrl = `ton-media://${encodeURIComponent(track.file_path)}`;
   if (preloadElement.src === expectedUrl && preloadElement.readyState >= 2) {
+    beginListeningSession(track.id, completedPrevious);
     muteHead();
     getActiveElement().pause();
     swapElements();
@@ -162,7 +157,7 @@ export async function loadQueueIndex(index: number): Promise<boolean> {
     return true;
   }
 
-  const started = await startTrack(track);
+  const started = await startTrack(track, completedPrevious);
   if (!started) return false;
   await compactQueueAfterNavigation(index);
   return true;

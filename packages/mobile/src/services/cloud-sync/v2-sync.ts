@@ -1,9 +1,12 @@
 import {
   buildCloudV2ManifestObjectKey,
+  parseCloudLibraryManifestV2,
+  type CloudLibraryManifestV2,
   type CloudSyncProgress,
   type CloudSyncResult,
 } from '@ton/core';
 import { scheduleMobileJob } from '../job-scheduler';
+import { syncMobileProfile } from '../listening-profile/store';
 import { getMobileCloudDeviceId } from './config';
 import {
   acknowledgeMobileCloudOutbox,
@@ -31,7 +34,43 @@ import { prepareMissingLocalUpload } from './v2-prepare-upload';
 
 export type { MobileCloudSyncMode, MobileCloudV2SyncOptions } from './v2-common';
 
+/**
+ * Music manifest cycle plus the independent private statistics cycle. Statistics
+ * also run when the manifest is unchanged (304) and a music failure does not
+ * hide them; the music error still wins when both fail.
+ */
 export async function runMobileCloudV2Sync(
+  options: MobileCloudV2SyncOptions,
+): Promise<CloudSyncResult> {
+  let result: CloudSyncResult | null = null;
+  let failure: unknown = null;
+  try {
+    result = await runMobileMusicV2Sync(options);
+  } catch (error) {
+    failure = error;
+  }
+  const cancelled = options.signal?.aborted
+    || (failure instanceof Error && failure.message === 'cloud_sync_cancelled');
+  if (!cancelled) {
+    try {
+      const scopeId = await ensureMobileCloudScope(options.config);
+      await scheduleMobileJob({
+        kind: 'cloud-sync',
+        lane: 'network',
+        priority: options.origin === 'manual' ? 'user-visible' : 'background',
+        run: () => syncMobileProfile(options.config, scopeId, {
+          publish: options.mode !== 'fetch', fetch: options.mode !== 'upload', signal: options.signal,
+        }),
+      });
+    } catch (error) {
+      failure ??= error;
+    }
+  }
+  if (failure) throw failure;
+  return result as CloudSyncResult;
+}
+
+async function runMobileMusicV2Sync(
   options: MobileCloudV2SyncOptions,
 ): Promise<CloudSyncResult> {
   return scheduleMobileJob({
@@ -59,7 +98,8 @@ export async function runMobileCloudV2Sync(
       const state = await getMobileCloudPersistedState(scopeId);
       const durableOutbox = await getMobileCloudOutbox(scopeId);
       const outbox = mode === 'fetch' ? [] : durableOutbox;
-      const maxGeneration = durableOutbox.reduce(
+      // A fetch publishes nothing: all queued local edits remain protected.
+      const maxGeneration = mode === 'fetch' ? 0 : durableOutbox.reduce(
         (max, row) => Math.max(max, row.generation), 0,
       );
       const deviceId = await getMobileCloudDeviceId();
@@ -67,37 +107,42 @@ export async function runMobileCloudV2Sync(
       // Full object verification is intentionally reserved for the explicit
       // "Upload missing local" action. A normal manual sync must stay incremental.
       const manualRecovery = shouldDiscoverMissingLocalEntities(options.origin, mode);
-      if (mode === 'fetch'
-          && !options.restoreLocallyDeleted
-          && state.etag
-          && state.pending_downloads === 0
-          && state.pending_assets === 0
-          && await getMobileCloudMissingMirroredEntityCount(scopeId) === 0) {
-        emitProgress(onProgress, { phase: 'reading-manifest', current: 0, total: 1 });
-        const unchanged = await client.getJsonConditional(
-          buildCloudV2ManifestObjectKey(config.prefix), state.etag, signal,
-        );
-        if (unchanged.status === 'not-modified') {
-          await updateMobileCloudPersistedState(scopeId, {
-            last_success_at: Math.floor(Date.now() / 1000),
-            last_error: null,
-            next_retry_at: null,
-          });
-          emitProgress(onProgress, {
-            phase: 'done', current: 1, total: 1,
-          });
-          return { ...EMPTY_RESULT, revision: state.revision };
-        }
+      const canPollConditionally = mode !== 'upload'
+        && !options.restoreLocallyDeleted
+        && outbox.length === 0
+        && (mode === 'fetch' || state.needs_full_reconcile === 0)
+        && state.activation_marker_confirmed === 1
+        && state.pending_downloads === 0
+        && state.pending_assets === 0
+        && await getMobileCloudMissingMirroredEntityCount(scopeId) === 0;
+      emitProgress(onProgress, { phase: 'reading-manifest', current: 0, total: 1 });
+      const initialRead = await client.getJsonConditional<CloudLibraryManifestV2>(
+        buildCloudV2ManifestObjectKey(config.prefix),
+        canPollConditionally ? state.etag ?? undefined : undefined,
+        signal,
+      );
+      throwIfAborted(signal);
+      if (initialRead.status === 'not-modified') {
+        await updateMobileCloudPersistedState(scopeId, {
+          last_success_at: Math.floor(Date.now() / 1000),
+          last_error: null,
+          next_retry_at: null,
+        });
+        emitProgress(onProgress, { phase: 'done', current: 1, total: 1 });
+        return { ...EMPTY_RESULT, revision: state.revision };
       }
       const needsLocal = mode !== 'fetch'
         && (manualRecovery || outbox.length > 0 || state.needs_full_reconcile === 1);
       const discoverMissingLocal = needsLocal
         && (state.needs_full_reconcile === 1 || manualRecovery);
       const prepared = needsLocal && !discoverMissingLocal
-        ? await prepareIncrementalManifest(config, deviceId, outbox, signal)
+        ? await prepareIncrementalManifest(
+          config, deviceId, outbox, signal,
+          initialRead.status === 'ok' ? parseCloudLibraryManifestV2(initialRead.value) : null,
+        )
         : null;
       const publication = await publishMobileV2Head({
-        client, options: trackedOptions, scopeId, state, outbox, deviceId,
+        client, options: trackedOptions, scopeId, state, outbox, deviceId, initialRead,
         prepared,
         prepareForRemote: discoverMissingLocal
           ? (remote) => prepareMissingLocalUpload(
@@ -126,7 +171,11 @@ export async function runMobileCloudV2Sync(
       });
       result.restoredLocallyDeleted = localPublication.restored;
       throwIfAborted(signal);
-      await storeEntityMirror(scopeId, publication.published, maxGeneration, signal);
+      // Upload-only has not applied foreign changes. Do not mark the full
+      // publication mirrored or let its ETag hide them on the next sync.
+      if (mode !== 'upload') {
+        await storeEntityMirror(scopeId, publication.published, maxGeneration, signal);
+      }
       // Fetch is cloud-authoritative, but it must not discard pending local
       // upserts. Only a run that actually publishes them may acknowledge them.
       if (mode !== 'fetch' && maxGeneration > 0) {
@@ -135,7 +184,7 @@ export async function runMobileCloudV2Sync(
       throwIfAborted(signal);
       await updateMobileCloudPersistedState(scopeId, {
         revision: publication.published.revision,
-        etag: publication.publishedEtag,
+        etag: mode === 'upload' ? null : publication.publishedEtag,
         lamport_counter: publication.published.max_counter,
         last_success_at: Math.floor(Date.now() / 1000),
         last_error: null,

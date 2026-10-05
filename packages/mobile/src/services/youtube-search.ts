@@ -6,6 +6,7 @@ export {
 export {
   getYouTubePlaylistTracks,
   getYouTubeTrackById,
+  getYouTubeTrackFromSearch,
   searchYouTube,
   searchYouTubePage,
 } from './youtube-search/search';

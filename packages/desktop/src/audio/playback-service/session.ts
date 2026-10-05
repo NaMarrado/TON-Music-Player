@@ -72,16 +72,23 @@ async function restoreDesktopPlaybackSession(): Promise<boolean> {
   return true;
 }
 
+export function flushDesktopPlaybackSession(): Promise<void> {
+  const serialized = serializeCurrentSession();
+  writeChain = writeChain.catch(() => {}).then(async () => {
+    if (serialized === lastSerializedSession) return;
+    await window.api.invoke('settings:set', PLAYBACK_SESSION_SETTING_KEY, serialized);
+    lastSerializedSession = serialized;
+  });
+  return writeChain;
+}
+
 function startDesktopPlaybackSessionPersistence(): void {
   let writeTimer: number | null = null;
 
   const flush = () => {
-    writeChain = writeChain.then(async () => {
-      const serialized = serializeCurrentSession();
-      if (serialized === lastSerializedSession) return;
-      await window.api.invoke('settings:set', PLAYBACK_SESSION_SETTING_KEY, serialized);
-      lastSerializedSession = serialized;
-    }).catch(() => {});
+    void flushDesktopPlaybackSession().catch((error) => {
+      console.warn('[Playback] Could not persist the current queue.', error);
+    });
   };
 
   const schedule = () => {

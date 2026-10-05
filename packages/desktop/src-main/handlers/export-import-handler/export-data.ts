@@ -13,6 +13,8 @@ import type {
 export type ExportSelection = {
   includeLibrary?: boolean;
   playlistIds?: number[];
+  /** Song export: exactly these library songs. */
+  trackIds?: number[];
 };
 
 type ExportableTrackRow = ExportTrackRow & {
@@ -88,6 +90,9 @@ function loadSelectedExportRows(selection?: ExportSelection): SelectedExportRows
     for (const track of allTracks) {
       selectedTrackIds.add(track.id);
     }
+  }
+  for (const trackId of selection?.trackIds ?? []) {
+    selectedTrackIds.add(trackId);
   }
 
   const loadMemberships = db.prepare(`

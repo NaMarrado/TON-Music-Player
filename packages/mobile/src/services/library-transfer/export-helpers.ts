@@ -1,7 +1,7 @@
 import * as FileSystem from 'expo-file-system';
 import type { ExportTrackEntry, Track, ExportManifest } from '@ton/core';
 import type { Playlist } from '@ton/core';
-import { updateTrack } from '../db-queries';
+import { runMobileCloudDbLane } from '../cloud-sync/db-lane';
 import { hashFileSha256 } from '../cloud-sync/hash';
 import {
   buildExportTrackFileName,
@@ -96,6 +96,15 @@ function earliestDownloadedAt(
   return Math.min(normalizedCurrent, incoming);
 }
 
+async function saveTrackHashes(hashes: Array<{ id: number; fileHash: string; contentHash: string }>): Promise<void> {
+  await runMobileCloudDbLane((db) => db.withTransactionAsync(async () => {
+    for (const { id, fileHash, contentHash } of hashes) {
+      await db.runAsync('UPDATE tracks SET file_hash = ?, content_hash_sha256 = ? WHERE id = ?', [fileHash, contentHash, id]);
+    }
+  }));
+
+}
+
 export async function prepareTrackExports(
   tracks: Track[],
   onProgress?: (progress: LibraryTransferProgress) => void,
@@ -108,6 +117,7 @@ export async function prepareTrackExports(
   const preparedByHash = new Map<string, PreparedTrackExport>();
 
   onProgress?.({ phase: 'tracks', current: 0, total: tracks.length });
+  const newHashes: Array<{ id: number; fileHash: string; contentHash: string }> = [];
 
   for (let index = 0; index < tracks.length; index += 1) {
     throwIfLibraryTransferCancelled(shouldCancel);
@@ -120,10 +130,7 @@ export async function prepareTrackExports(
     const contentHash = track.content_hash_sha256 || await hashFileSha256(track.file_path);
     const fileHash = track.file_hash || contentHash;
     if (track.file_hash !== fileHash || track.content_hash_sha256 !== contentHash) {
-      await updateTrack(track.id, {
-        file_hash: fileHash,
-        content_hash_sha256: contentHash,
-      });
+      newHashes.push({ id: track.id, fileHash, contentHash });
     }
 
     let prepared = preparedByHash.get(fileHash);
@@ -167,6 +174,12 @@ export async function prepareTrackExports(
       await yieldToUiAsync();
       throwIfLibraryTransferCancelled(shouldCancel);
     }
+  }
+
+  // The hashes only save work next time. They are stored together at the end, so a busy database (a sync writing) costs
+  // one wait instead of one per song, and never stops the export.
+  if (newHashes.length > 0) {
+    await saveTrackHashes(newHashes).catch((error: unknown) => console.warn('[library-transfer] Could not store song hashes', error));
   }
 
   return { preparedByTrackId, preparedByHash };

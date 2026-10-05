@@ -1,4 +1,10 @@
 {
+  "starred": "מועדפים",
+  "starTrack": "הוספה למועדפים",
+  "unstarTrack": "הסרה מהמועדפים",
+  "starFailed": "לא ניתן לעדכן את המועדפים",
+  "emptyStarred": "עדיין אין שירים מועדפים",
+  "emptyStarredHint": "סמנו שיר בכוכב כדי למצוא אותו כאן.",
   "title": "ספרייה",
   "filterPlaceholder": "ספריית סינון...",
   "recentlyAdded": "נוספו לאחרונה",

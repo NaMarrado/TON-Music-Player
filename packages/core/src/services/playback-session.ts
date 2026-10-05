@@ -11,16 +11,20 @@ import {
 
 export const PLAYBACK_SESSION_SETTING_KEY = 'playback_session';
 
-const QUEUE_SOURCES = new Set<QueueSource>(['user', 'auto', 'smart-playlist']);
-const SOURCE_KINDS = new Set([
-  'album',
-  'artist',
-  'custom',
-  'library',
-  'playlist',
-  'selection',
-  'single',
-]);
+const QUEUE_SOURCES: Record<QueueSource, true> = {
+  user: true,
+  auto: true,
+  'smart-playlist': true,
+};
+const SOURCE_KINDS: Record<PlaybackQueueSourceDescriptor['kind'], true> = {
+  album: true,
+  artist: true,
+  custom: true,
+  library: true,
+  playlist: true,
+  selection: true,
+  single: true,
+};
 
 export function parsePlaybackSessionSnapshot(value: unknown): PlaybackSessionSnapshot | null {
   let parsed = value;
@@ -146,13 +150,14 @@ function parseQueue(value: unknown): QueueItem[] {
 }
 
 function parseQueueSource(value: unknown): QueueSource | null {
-  return typeof value === 'string' && QUEUE_SOURCES.has(value as QueueSource)
+  return typeof value === 'string' && QUEUE_SOURCES[value as QueueSource] === true
     ? value as QueueSource
     : null;
 }
 
 function parseSourceDescriptor(value: unknown): PlaybackQueueSourceDescriptor | null {
-  if (!isRecord(value) || typeof value.kind !== 'string' || !SOURCE_KINDS.has(value.kind)) {
+  if (!isRecord(value) || typeof value.kind !== 'string'
+    || SOURCE_KINDS[value.kind as PlaybackQueueSourceDescriptor['kind']] !== true) {
     return null;
   }
 
@@ -179,4 +184,56 @@ function toFiniteNumber(value: unknown): number | null {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value != null && typeof value === 'object' && !Array.isArray(value);
+}
+
+/**
+ * Measures advancing audio against a monotonic clock, never track duration.
+ * Media progress caps elapsed time so a stalled/buffering element cannot accrue
+ * listening time. Discontinuities (including unannounced seeks) reset the baseline.
+ */
+export class ListeningTimeAccumulator {
+  private previous: {
+    now: number;
+    position: number;
+    playing: boolean;
+    rate: number;
+  } | null = null;
+  private elapsed: number;
+
+  constructor(listenedMs = 0) {
+    this.elapsed = Number.isFinite(listenedMs) ? Math.max(0, listenedMs) : 0;
+  }
+
+  get listenedMs(): number {
+    return Math.round(this.elapsed);
+  }
+
+  sample(
+    nowMs: number,
+    positionSeconds: number,
+    playing: boolean,
+    playbackRate = 1,
+  ): number {
+    if (!Number.isFinite(nowMs) || !Number.isFinite(positionSeconds)) {
+      this.previous = null;
+      return this.listenedMs;
+    }
+    const rate = Number.isFinite(playbackRate) && playbackRate > 0 ? playbackRate : 1;
+    const previous = this.previous;
+    if (previous?.playing && nowMs >= previous.now) {
+      const elapsed = nowMs - previous.now;
+      const advance = (positionSeconds - previous.position) * 1_000;
+      // Allow ordinary media-clock jitter, but never credit a seek jump.
+      if (advance > 0 && advance <= elapsed * previous.rate + 250) {
+        this.elapsed += Math.min(elapsed, advance / previous.rate);
+      }
+    }
+    this.previous = { now: nowMs, position: positionSeconds, playing, rate };
+    return this.listenedMs;
+  }
+
+  /** Call before a seek, source replacement, or other discontinuity. */
+  resetBaseline(): void {
+    this.previous = null;
+  }
 }

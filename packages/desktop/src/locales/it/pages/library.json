@@ -1,4 +1,10 @@
 {
+  "starred": "Preferiti",
+  "starTrack": "Aggiungi ai preferiti",
+  "unstarTrack": "Rimuovi dai preferiti",
+  "starFailed": "Impossibile aggiornare il preferito",
+  "emptyStarred": "Nessun brano preferito",
+  "emptyStarredHint": "Segna un brano con una stella per trovarlo qui.",
   "title": "Libreria",
   "filterPlaceholder": "Filtra la libreria...",
   "recentlyAdded": "Aggiunti di recente",

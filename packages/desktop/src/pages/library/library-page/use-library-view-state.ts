@@ -1,24 +1,27 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { formatTrackFileSizeSummary, summarizeTrackFileSizes } from '@ton/core';
 import {
-  getFilteredTracks,
   reconcileLibraryTracks,
 } from '../../../stores/library-store';
 import type { LibraryTrack, SortField } from '../../../stores/library-store';
 import type { ContextMenuState } from './types';
+import { getLibraryTrackSources } from './track-sources';
 
 export function useLibraryViewState(
   tracks: LibraryTrack[],
   filterQuery: string,
   sortBy: SortField,
   sortOrder: 'asc' | 'desc',
+  starredOnly: boolean,
 ) {
-  const filteredTracks = useMemo(
-    () => getFilteredTracks(tracks, filterQuery, sortBy, sortOrder),
-    [tracks, filterQuery, sortBy, sortOrder],
+  const { playbackTracks, filteredTracks } = useMemo(
+    () => getLibraryTrackSources(tracks, filterQuery, sortBy, sortOrder, starredOnly),
+    [tracks, filterQuery, sortBy, sortOrder, starredOnly],
   );
   const filteredTracksRef = useRef(filteredTracks);
   filteredTracksRef.current = filteredTracks;
+  const playbackTracksRef = useRef(playbackTracks);
+  playbackTracksRef.current = playbackTracks;
 
   const totalDuration = useMemo(
     () => filteredTracks.reduce((sum, track) => sum + (track.duration_ms || 0), 0),
@@ -119,9 +122,10 @@ export function useLibraryViewState(
     contextMenu,
     deleteConfirm,
     filteredTracks,
-    filteredTracksRef,
     handleSelectAll,
     handleToggleSelect,
+    playbackTracks,
+    playbackTracksRef,
     playlistPickerPos,
     selectedIds,
     setContextMenu,

@@ -5,10 +5,12 @@ import type { LibraryImportSource, LibraryImportResult, LibraryTransferProgress,
 import { createLibraryTransferJobId, startNativeLibraryImportTask } from './runtime';
 import { finalizeAndroidImportResult } from './import-android-finalize';
 import type { NativeImportResult } from './import-types';
+import type { LibraryImportOptions } from './types';
 
 export async function startAndroidImportTask(
   source: LibraryImportSource,
   onProgress?: (progress: LibraryTransferProgress) => void,
+  options?: LibraryImportOptions,
 ): Promise<LibraryTransferTask<LibraryImportResult>> {
   const jobId = createLibraryTransferJobId('library-import');
   const lease = acquireMobileJob({
@@ -57,7 +59,7 @@ export async function startAndroidImportTask(
         if (cancelRequested) await nativeTask.cancel();
         const nativeResult = await nativeTask.result;
         return nativeResult
-          ? finalizeAndroidImportResult(source.name, nativeResult, existingTrackIdsByHash, onProgress)
+          ? finalizeAndroidImportResult(source.name, nativeResult, existingTrackIdsByHash, onProgress, options)
           : null;
       } finally {
         releaseLease();

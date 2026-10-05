@@ -4,6 +4,7 @@ import { PlaylistTrackList } from './playlist-track-list';
 import type { PlaylistLayout } from './use-playlist-layout';
 import type { SortColumn, SortDir } from '../sortable-track-row';
 import type { DragEndEvent, SensorDescriptor, SensorOptions } from '@dnd-kit/core';
+import '../../library/track-list-view/table.css';
 
 type PlaylistTrackListSectionProps = {
   layout: PlaylistLayout;
@@ -20,7 +21,7 @@ type PlaylistTrackListSectionProps = {
   sortDir: SortDir;
   onSort: (column: SortColumn) => void;
   onSelectAll: () => void;
-  onPlayTrack: (index: number) => void;
+  onPlayTrack: (playlistTrackId: number) => void;
   onToggleSelect: (playlistTrackId: number, shiftKey?: boolean) => void;
   playingPtId: number | null;
   sensors: SensorDescriptor<SensorOptions>[];
@@ -29,5 +30,9 @@ type PlaylistTrackListSectionProps = {
 };
 
 export function PlaylistTrackListSection(props: PlaylistTrackListSectionProps) {
-  return <PlaylistTrackList {...props} />;
+  return (
+    <div className="playlist-track-table flex flex-1 min-h-0 min-w-0 flex-col overflow-hidden">
+      <PlaylistTrackList {...props} />
+    </div>
+  );
 }

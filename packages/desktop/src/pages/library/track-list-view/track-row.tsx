@@ -1,46 +1,40 @@
 import { memo } from 'react';
 import { formatDownloadedDate, formatTime } from '@ton/core';
 import type { LibraryTrack } from '../../../stores/library-store';
-import { LibraryTrackGridShell, getLibraryTrackGridStyle } from './grid-shell';
+import { LibraryTrackGridShell } from './grid-shell';
+import { libraryTrackGridStyle } from './layout';
 import { SelectionCheckbox } from './selection-checkbox';
 import { TrackRowCoverArt } from './track-row-cover-art';
 import { HoverMarqueeText } from '../../../components/ui/hover-marquee-text';
+import { StarButton } from './star-button';
 
 type TrackRowProps = {
-  dense: boolean;
   isPlaying: boolean;
   isSelected: boolean;
   locale: string;
   onClick: () => void;
   onContextMenu: (event: React.MouseEvent) => void;
-  showArtist: boolean;
-  showDownloaded: boolean;
-  showPlaylist: boolean;
   onToggleSelect: (shiftKey: boolean) => void;
   track: LibraryTrack;
 };
 
 export const TrackRow = memo(function TrackRow({
-  dense,
   isPlaying,
   isSelected,
   locale,
   onClick,
   onContextMenu,
-  showArtist,
-  showDownloaded,
-  showPlaylist,
   onToggleSelect,
   track,
 }: TrackRowProps) {
   return (
     <div
-      className="track-row group cursor-pointer"
+      className="library-track-grid track-row group cursor-pointer"
       onClick={onClick}
       onContextMenu={onContextMenu}
       style={{
         paddingBlock: 'var(--track-row-block-padding)',
-        ...getLibraryTrackGridStyle({ dense, showArtist, showDownloaded, showPlaylist }),
+        ...libraryTrackGridStyle,
         borderRadius: '6px',
         transition: 'background var(--transition)',
         userSelect: 'none',
@@ -52,9 +46,6 @@ export const TrackRow = memo(function TrackRow({
       }}
     >
       <LibraryTrackGridShell
-        showArtist={showArtist}
-        showDownloaded={showDownloaded}
-        showPlaylist={showPlaylist}
         coverSlot={<TrackRowCoverArt track={track} isPlaying={isPlaying} />}
         titleSlot={
           <>
@@ -67,7 +58,7 @@ export const TrackRow = memo(function TrackRow({
               }}
             />
             <HoverMarqueeText
-              className="lg:hidden"
+              className="track-inline-artist"
               text={track.artist || 'Unknown'}
               style={{
                 fontSize: '0.78rem',
@@ -77,24 +68,24 @@ export const TrackRow = memo(function TrackRow({
             />
           </>
         }
-        artistSlot={showArtist ? (
+        artistSlot={
           <HoverMarqueeText
             text={track.artist || 'Unknown'}
             style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}
           />
-        ) : undefined}
-        playlistSlot={showPlaylist ? (
+        }
+        playlistSlot={
           <HoverMarqueeText
             text={track.playlist_names || '—'}
             style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}
           />
-        ) : undefined}
-        downloadedSlot={showDownloaded ? (
+        }
+        downloadedSlot={
           <HoverMarqueeText
             text={formatDownloadedDate(track.downloaded_at, locale)}
             style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}
           />
-        ) : undefined}
+        }
         timeSlot={
           <HoverMarqueeText
             text={formatTime(track.duration_ms)}
@@ -110,16 +101,13 @@ export const TrackRow = memo(function TrackRow({
             }}
           />
         }
+        starSlot={<StarButton trackId={track.id} rating={track.rating} />}
       />
     </div>
   );
 }, (prev, next) =>
-  prev.dense === next.dense &&
   prev.track === next.track &&
   prev.isPlaying === next.isPlaying &&
   prev.isSelected === next.isSelected &&
-  prev.locale === next.locale &&
-  prev.showArtist === next.showArtist &&
-  prev.showDownloaded === next.showDownloaded &&
-  prev.showPlaylist === next.showPlaylist,
+  prev.locale === next.locale,
 );

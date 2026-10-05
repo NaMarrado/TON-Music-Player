@@ -49,9 +49,6 @@ export function StaticPlaylistTrackList({
       contentStyle={{ padding: `8px ${layout.contentPaddingX}px 120px` }}
       header={
         <TrackListHeader
-          dense={layout.dense}
-          showArtist={layout.showArtistColumn}
-          showDownloaded={layout.showDownloadedColumn}
           t={t}
           showDrag={!isSmart}
           allSelected={allSelected}
@@ -65,16 +62,13 @@ export function StaticPlaylistTrackList({
       renderItem={(track, index) => (
         <div style={{ paddingBottom: index === displayTracks.length - 1 ? 0 : 'var(--track-list-row-gap)' }}>
           <StaticTrackRow
-            dense={layout.dense}
             locale={locale}
-            showArtist={layout.showArtistColumn}
-            showDownloaded={layout.showDownloadedColumn}
             track={track}
             index={index}
             isPlaying={track.playlist_track_id === playingPtId}
             isSelected={selectedIds.has(track.playlist_track_id)}
             showDragSpacer={!isSmart}
-            onClick={() => onPlayTrack(index)}
+            onClick={() => onPlayTrack(track.playlist_track_id)}
             onToggleSelect={(shiftKey: boolean) =>
               onToggleSelect(track.playlist_track_id, shiftKey)
             }

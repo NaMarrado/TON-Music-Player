@@ -14,7 +14,11 @@ import {
   type MobileCloudOutboxRow,
   type MobileCloudPersistedState,
 } from './local-state';
-import { MobileR2Client, MobileR2PreconditionFailedError } from './r2-client';
+import {
+  MobileR2Client,
+  MobileR2PreconditionFailedError,
+  type ConditionalJsonResult,
+} from './r2-client';
 import {
   emitProgress,
   ensureV2ActivationMarker,
@@ -35,6 +39,7 @@ export async function publishMobileV2Head(input: {
   outbox: MobileCloudOutboxRow[];
   deviceId: string;
   prepared: PreparedLocalManifest | null;
+  initialRead?: Exclude<ConditionalJsonResult<CloudLibraryManifestV2>, { status: 'not-modified' }>;
   prepareForRemote?: (remote: CloudLibraryManifestV2) => Promise<{
     prepared: PreparedLocalManifest;
     outbox: MobileCloudOutboxRow[];
@@ -60,9 +65,11 @@ export async function publishMobileV2Head(input: {
   for (let attempt = 0; attempt < 5; attempt += 1) {
     throwIfAborted(signal);
     emitProgress(options.onProgress, { phase: 'reading-manifest', current: attempt, total: 5 });
-    const remoteRead = await client.getJsonConditional<CloudLibraryManifestV2>(
-      buildCloudV2ManifestObjectKey(config.prefix), undefined, signal,
-    );
+    const remoteRead = attempt === 0 && input.initialRead
+      ? input.initialRead
+      : await client.getJsonConditional<CloudLibraryManifestV2>(
+        buildCloudV2ManifestObjectKey(config.prefix), undefined, signal,
+      );
     let remote = remoteRead.status === 'ok' ? parseCloudLibraryManifestV2(remoteRead.value) : null;
     let remoteSource: 'v2' | 'v1' | 'empty' = remote ? 'v2' : 'empty';
     const currentEtag = remoteRead.status === 'ok' ? remoteRead.etag : null;

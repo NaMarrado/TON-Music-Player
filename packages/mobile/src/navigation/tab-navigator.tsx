@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -9,7 +10,9 @@ import { SearchStack } from './search-stack';
 import { LibraryStack } from './library-stack';
 import { DownloadsStack } from './downloads-stack';
 import { SettingsStack } from './settings-stack';
+import { StudioStack } from './studio-stack';
 import { MiniPlayer } from '../components/mini-player';
+import { loadStudioTabSetting, useStudioTabStore } from '../stores/studio-tab-store';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { getTabPerformanceOptions } from './tab-performance';
 import { hasUnreadMobileUpdate, useUpdateStore } from '../stores/update-store';
@@ -21,6 +24,7 @@ const TAB_ICONS: Record<string, keyof typeof Feather.glyphMap> = {
   SearchTab: 'search',
   LibraryTab: 'music',
   DownloadsTab: 'download',
+  StudioTab: 'sliders',
   SettingsTab: 'settings',
 };
 
@@ -129,6 +133,8 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 
 export function TabNavigator() {
   const { t } = useTranslation();
+  const studioEnabled = useStudioTabStore((state) => state.enabled);
+  useEffect(() => { void loadStudioTabSetting(); }, []);
   return (
     <Tab.Navigator
       tabBar={(props) => <CustomTabBar {...props} />}
@@ -138,6 +144,7 @@ export function TabNavigator() {
       <Tab.Screen name="SearchTab" component={SearchStack} options={{ title: t('search:tabLabel') }} />
       <Tab.Screen name="LibraryTab" component={LibraryStack} options={{ title: t('library:tabLabel') }} />
       <Tab.Screen name="DownloadsTab" component={DownloadsStack} options={{ title: t('downloads:tabLabel') }} />
+      {studioEnabled && <Tab.Screen name="StudioTab" component={StudioStack} options={{ title: t('studio:tabLabel') }} />}
       <Tab.Screen name="SettingsTab" component={SettingsStack} options={{ title: t('settings:tabLabel') }} />
     </Tab.Navigator>
   );

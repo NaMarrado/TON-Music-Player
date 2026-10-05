@@ -1,4 +1,10 @@
 {
+  "starred": "Starred",
+  "starTrack": "Star track",
+  "unstarTrack": "Unstar track",
+  "starFailed": "Could not update star",
+  "emptyStarred": "No starred tracks yet",
+  "emptyStarredHint": "Star a track to find it here.",
   "title": "Library",
   "filterPlaceholder": "Filter library...",
   "recentlyAdded": "Recently Added",

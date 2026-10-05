@@ -19,7 +19,7 @@ export type PlaylistTrackListProps = {
   sortDir: SortDir;
   onSort: (column: SortColumn) => void;
   onSelectAll: () => void;
-  onPlayTrack: (index: number) => void;
+  onPlayTrack: (playlistTrackId: number) => void;
   onToggleSelect: (playlistTrackId: number, shiftKey?: boolean) => void;
   playingPtId: number | null;
   sensors: SensorDescriptor<SensorOptions>[];

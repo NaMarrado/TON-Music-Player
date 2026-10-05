@@ -1,7 +1,6 @@
 import type { CSSProperties } from 'react';
 
 export const libraryTrackTimeCellStyle: CSSProperties = {
-  display: 'block',
   fontVariantNumeric: 'tabular-nums',
   textAlign: 'right',
   width: '100%',

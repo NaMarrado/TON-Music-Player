@@ -1,6 +1,7 @@
+import type { ProfileBundle } from '../profile-bundle/types';
 export interface ExportManifest {
   version: number;
-  bundle_type?: 'library' | 'playlist';
+  bundle_type?: 'library' | 'playlist' | 'songs' | 'profile';
   created_at: number;
   device_name: string;
   track_count: number;
@@ -9,6 +10,8 @@ export interface ExportManifest {
   library_track_hashes?: string[];
   tracks: ExportTrackEntry[];
   playlists: ExportPlaylistEntry[];
+  /** Only in a Profile export: settings with keys, the R2 connection, stars and listening history. */
+  profile?: ProfileBundle;
 }
 
 export interface ExportTrackEntry {

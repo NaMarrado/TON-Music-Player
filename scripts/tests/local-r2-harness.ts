@@ -24,6 +24,9 @@ const options = parseOptions(process.argv.slice(2));
 const objects = new Map<string, StoredObject>();
 const failingAudioKeys = new Set<string>();
 const requestCounts = new Map<string, number>();
+const responseCounts = new Map<string, number>();
+let manifestFailures = 0;
+let manifestConflicts = 0;
 const recentRequests: Array<{ method: string; path: string }> = [];
 seedHarness(options.tracks, options.failAudioEvery, options.specialNames);
 
@@ -52,10 +55,17 @@ server.listen(options.port, '127.0.0.1', () => {
 
 async function handleRequest(request: IncomingMessage, response: ServerResponse): Promise<void> {
   const url = new URL(request.url ?? '/', `http://${request.headers.host ?? 'localhost'}`);
+  if (!url.pathname.startsWith('/__harness/')) {
+    response.once('finish', () => {
+      const key = `${request.method ?? 'UNKNOWN'} ${response.statusCode}`;
+      responseCounts.set(key, (responseCounts.get(key) ?? 0) + 1);
+    });
+  }
   if (request.method === 'GET' && url.pathname === '/__harness/stats') {
     response.setHeader('content-type', 'application/json');
     response.end(JSON.stringify({
       counts: Object.fromEntries(requestCounts),
+      responses: Object.fromEntries(responseCounts),
       recentRequests,
     }));
     return;
@@ -63,12 +73,51 @@ async function handleRequest(request: IncomingMessage, response: ServerResponse)
   if (request.method === 'POST' && url.pathname === '/__harness/reset-stats') {
     requestCounts.clear();
     recentRequests.length = 0;
+    responseCounts.clear();
     response.statusCode = 204;
     response.end();
     return;
   }
   if (request.method === 'POST' && url.pathname === '/__harness/restore-audio') {
     failingAudioKeys.clear();
+    response.statusCode = 204;
+    response.end();
+    return;
+  }
+  if (request.method === 'POST' && url.pathname === '/__harness/fail-manifest') {
+    const body = JSON.parse((await readBody(request)).toString('utf8') || '{}');
+    manifestFailures = Math.max(0, Math.trunc(Number(body.count) || 0));
+    response.statusCode = 204;
+    response.end();
+    return;
+  }
+  if (request.method === 'POST' && url.pathname === '/__harness/conflict-manifest') {
+    const body = JSON.parse((await readBody(request)).toString('utf8') || '{}');
+    manifestConflicts = Math.max(0, Math.trunc(Number(body.count) || 0));
+    response.statusCode = 204;
+    response.end();
+    return;
+  }
+  if (request.method === 'POST' && url.pathname === '/__harness/star-track') {
+    const body = JSON.parse((await readBody(request)).toString('utf8') || '{}');
+    const key = buildCloudV2ManifestObjectKey('ton');
+    const current = objects.get(key);
+    const manifest = current ? JSON.parse(current.body.toString('utf8')) as CloudLibraryManifestV2 : null;
+    const record = manifest?.tracks.find((track) => (
+      body.hash ? track.content_hash_sha256 === body.hash
+        : !track.deleted && track.entry.metadata.title === body.title
+    ));
+    if (!manifest || !record || record.deleted || typeof body.starred !== 'boolean') {
+      response.statusCode = 400;
+      response.end('specify an existing title/hash and boolean starred');
+      return;
+    }
+    manifest.max_counter += 1;
+    record.version = { counter: manifest.max_counter, device_id: 'local-r2-harness' };
+    record.entry.metadata.rating = body.starred ? 1 : null;
+    manifest.updated_at = Date.now();
+    manifest.revision = `local-star-${manifest.max_counter}`;
+    storeObject(key, Buffer.from(`${JSON.stringify(manifest)}\n`), 'application/json');
     response.statusCode = 204;
     response.end();
     return;
@@ -92,6 +141,19 @@ async function handleRequest(request: IncomingMessage, response: ServerResponse)
 
   const stored = objects.get(key);
   recordRequest(request.method ?? 'UNKNOWN', key);
+  if (key === buildCloudV2ManifestObjectKey('ton') && manifestFailures > 0) {
+    manifestFailures -= 1;
+    response.statusCode = 503;
+    response.end('fixture-manifest-failure');
+    return;
+  }
+  if (request.method === 'PUT' && key === buildCloudV2ManifestObjectKey('ton')
+      && manifestConflicts > 0) {
+    manifestConflicts -= 1;
+    response.statusCode = 412;
+    response.end('fixture-manifest-conflict');
+    return;
+  }
   if (request.method === 'HEAD') {
     if (!stored) {
       response.statusCode = 404;
@@ -213,7 +275,7 @@ function seedHarness(trackCount: number, failAudioEvery: number, specialNames: b
         album_artist: null,
         track_number: index + 1,
         disc_number: 1,
-        duration_ms: 350,
+        duration_ms: options.durationSeconds * 1_000,
         genre: 'Fixture',
         year: 2026,
         bitrate: 96_000,
@@ -274,16 +336,18 @@ function createPlaylists(entries: CloudTrackEntry[]): CloudPlaylistEntry[] {
 
 function createBaseAudio(): Buffer {
   const directory = join(tmpdir(), 'ton-local-r2-harness');
-  const filePath = join(directory, 'fixture.m4a');
+  const filePath = join(directory, `fixture-${options.durationSeconds}s.m4a`);
   if (!existsSync(filePath)) {
     mkdirSync(directory, { recursive: true });
-    const ffmpeg = existsSync(join(process.cwd(), 'packages/desktop/build-resources/bin/ffmpeg'))
-      ? join(process.cwd(), 'packages/desktop/build-resources/bin/ffmpeg')
-      : join(process.env.HOME ?? '', 'Library/Application Support/TON/bin/ffmpeg');
+    const executable = process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg';
+    const bundled = join(process.cwd(), 'packages/desktop/build-resources/bin', executable);
+    const isolated = join(process.cwd(), '.ton-dev/bin', executable);
+    const ffmpeg = process.env.TON_TEST_FFMPEG
+      || (existsSync(bundled) ? bundled : existsSync(isolated) ? isolated : executable);
     execFileSync(ffmpeg, [
       '-hide_banner', '-loglevel', 'error', '-y',
       '-f', 'lavfi', '-i', 'sine=frequency=440:sample_rate=44100',
-      '-t', '0.35', '-c:a', 'aac', '-b:a', '96k', filePath,
+      '-t', String(options.durationSeconds), '-c:a', 'aac', '-b:a', '96k', filePath,
     ]);
   }
   return readFileSync(filePath);
@@ -348,6 +412,7 @@ function parseOptions(args: string[]): {
   audioDelayMs: number;
   bucket: string;
   failAudioEvery: number;
+  durationSeconds: number;
   port: number;
   specialNames: boolean;
   tracks: number;
@@ -361,6 +426,7 @@ function parseOptions(args: string[]): {
     audioDelayMs: readNumber('audio-delay-ms', 0),
     bucket: args.find((argument) => argument.startsWith('--bucket='))?.split('=')[1]
       || 'local-test-bucket',
+    durationSeconds: Math.max(1, readNumber('duration-seconds', 12)),
     failAudioEvery: readNumber('fail-audio-every', 0),
     port: readNumber('port', 9462),
     specialNames: args.includes('--special-names'),

@@ -88,9 +88,6 @@ export function SortablePlaylistTrackList({
             contentStyle={{ padding: `8px ${layout.contentPaddingX}px 120px` }}
             header={(
               <TrackListHeader
-                dense={layout.dense}
-                showArtist={layout.showArtistColumn}
-                showDownloaded={layout.showDownloadedColumn}
                 t={t}
                 showDrag
                 allSelected={allSelected}
@@ -103,17 +100,14 @@ export function SortablePlaylistTrackList({
             renderItem={(track, index) => (
               <div style={{ paddingBottom: index === tracks.length - 1 ? 0 : 'var(--track-list-row-gap)' }}>
                 <SortableTrackRow
-                  dense={layout.dense}
                   locale={locale}
-                  showArtist={layout.showArtistColumn}
-                  showDownloaded={layout.showDownloadedColumn}
                   key={track.playlist_track_id}
                   track={track}
                   index={index}
                   sortId={String(track.playlist_track_id)}
                   isPlaying={track.playlist_track_id === playingPtId}
                   isSelected={selectedIds.has(track.playlist_track_id)}
-                  onClick={() => onPlayTrack(index)}
+                  onClick={() => onPlayTrack(track.playlist_track_id)}
                   onToggleSelect={(shiftKey: boolean) =>
                     onToggleSelect(track.playlist_track_id, shiftKey)
                   }
@@ -125,15 +119,13 @@ export function SortablePlaylistTrackList({
         <DragOverlay>
           {activeTrack ? (
             <StaticTrackRow
-              dense={layout.dense}
               locale={locale}
-              showArtist={layout.showArtistColumn}
-              showDownloaded={layout.showDownloadedColumn}
               track={activeTrack}
               index={activeIndex}
               isPlaying={activeTrack.playlist_track_id === playingPtId}
               isSelected={selectedIds.has(activeTrack.playlist_track_id)}
               showDragSpacer
+              overlay
               onClick={() => {}}
               onToggleSelect={() => {}}
             />

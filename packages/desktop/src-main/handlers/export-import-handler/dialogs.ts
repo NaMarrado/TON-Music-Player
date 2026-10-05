@@ -1,10 +1,12 @@
 import { app, dialog, type BrowserWindow } from 'electron';
 import path from 'path';
-import type { ExportBundleFormat, ExportDestination } from './types';
+import type { ExportBundleFormat, ExportDestination, ExportKind } from './types';
 
-function buildExportFolderName(now = new Date()): string {
+const KIND_NAMES: Record<ExportKind, string> = { library: 'Library', playlist: 'Playlists', songs: 'Songs', profile: 'Profile' };
+
+function buildExportFolderName(kind: ExportKind, now = new Date()): string {
   const pad = (value: number) => String(value).padStart(2, '0');
-  return `Library - TON - ${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+  return `${KIND_NAMES[kind]} - TON - ${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
 }
 
 function inferExportBundleFormat(destinationPath: string): ExportBundleFormat {
@@ -15,7 +17,9 @@ export async function pickExportDestination(
   win: BrowserWindow | null,
   destinationPath?: string,
   bundleFormat?: ExportBundleFormat,
+  kind: ExportKind = 'library',
 ): Promise<ExportDestination | null> {
+  const title = `Export ${KIND_NAMES[kind]}`;
   if (destinationPath) {
     return {
       destinationPath,
@@ -29,9 +33,8 @@ export async function pickExportDestination(
 
   const formatChoice = await dialog.showMessageBox(win, {
     type: 'question',
-    title: 'Export Library',
-    message: 'Choose export format',
-    detail: 'Both formats contain the same cross-platform TON bundle.',
+    title,
+    message: title,
     buttons: ['Archive (.ton)', 'Folder bundle', 'Cancel'],
     defaultId: 0,
     cancelId: 2,
@@ -43,8 +46,8 @@ export async function pickExportDestination(
 
   if (formatChoice.response === 0) {
     const archiveResult = await dialog.showSaveDialog(win, {
-      title: 'Export Library',
-      defaultPath: path.join(app.getPath('downloads'), `${buildExportFolderName()}.ton`),
+      title,
+      defaultPath: path.join(app.getPath('downloads'), `${buildExportFolderName(kind)}.ton`),
       filters: [{ name: 'TON Library', extensions: ['ton'] }],
     });
 
@@ -69,7 +72,7 @@ export async function pickExportDestination(
   }
 
   return {
-    destinationPath: path.join(folderResult.filePaths[0], buildExportFolderName()),
+    destinationPath: path.join(folderResult.filePaths[0], buildExportFolderName(kind)),
     bundleFormat: 'folder',
   };
 }
@@ -87,7 +90,7 @@ export async function pickImportBundlePath(
   }
 
   const result = await dialog.showOpenDialog(win, {
-    title: 'Import Library',
+    title: 'Import',
     defaultPath: app.getPath('downloads'),
     filters: [{ name: 'TON Library', extensions: ['ton', 'zip'] }],
     properties: ['openFile', 'openDirectory'],

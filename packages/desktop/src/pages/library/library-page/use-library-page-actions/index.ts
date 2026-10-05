@@ -6,7 +6,7 @@ import type { LibraryPageActionsArgs } from './types';
 
 export function useLibraryPageActions({
   contextMenu,
-  filteredTracksRef,
+  playbackTracksRef,
   refreshExportSummary,
   selectedIds,
   setContextMenu,
@@ -15,7 +15,7 @@ export function useLibraryPageActions({
   setSelectedIds,
   t,
 }: LibraryPageActionsArgs) {
-  const playbackActions = useLibraryPlaybackActions({ filteredTracksRef });
+  const playbackActions = useLibraryPlaybackActions({ playbackTracksRef });
   const transferActions = useLibraryTransferActions({ refreshExportSummary, t });
   const playlistActions = useLibraryPlaylistActions({
     contextMenu,

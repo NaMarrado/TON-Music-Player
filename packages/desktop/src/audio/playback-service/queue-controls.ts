@@ -8,6 +8,7 @@ import { getActiveElement } from '../media-element-pool';
 import { updateMediaSessionPosition } from './position';
 import { loadQueueIndex } from './track-loading';
 import { hydrateQueueItems } from './queue-helpers';
+import { prepareListeningSeek } from './listening';
 
 export async function nextTrack(auto = false): Promise<void> {
   const initialQueue = useQueueStore.getState();
@@ -66,6 +67,7 @@ async function prepareNextQueueIndex(): Promise<number | null> {
 export async function prevTrack(): Promise<void> {
   const element = getActiveElement();
   if (element.currentTime > 3) {
+    prepareListeningSeek();
     element.currentTime = 0;
     usePlaybackStore.setState({ position: 0 });
     updateMediaSessionPosition();
@@ -82,6 +84,7 @@ export async function prevTrack(): Promise<void> {
     return;
   }
 
+  prepareListeningSeek();
   getActiveElement().currentTime = 0;
   usePlaybackStore.setState({ position: 0 });
   updateMediaSessionPosition();

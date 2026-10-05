@@ -6,6 +6,7 @@
 import { Innertube, Parser, YTNodes } from 'youtubei.js';
 import type { SearchResult, YouTubePlaylistTrack } from '@ton/core';
 import {
+  normalizeTrackDurationMs,
   parseYouTubePlaylistItem,
   parseYouTubeViewCount,
   SEARCH_PAGE_LIMITS,
@@ -63,12 +64,30 @@ export async function getYouTubeTrackById(
     title: metadata.title,
     artist: metadata.author ?? metadata.channel?.name ?? '',
     album: null,
-    duration_ms: metadata.duration == null ? null : Math.round(metadata.duration * 1000),
+    duration_ms: metadata.is_live || metadata.is_upcoming
+      ? null
+      : normalizeTrackDurationMs(metadata.duration, 'seconds'),
     thumbnail_url: thumbnail,
     url: `https://www.youtube.com/watch?v=${videoId}`,
     is_downloaded: false,
     view_count: parseYouTubeViewCount(metadata.view_count),
   };
+}
+
+/** The search endpoint can expose duration even when the player endpoint is blocked. */
+export async function getYouTubeTrackFromSearch(
+  videoId: string,
+  signal?: AbortSignal,
+): Promise<SearchResult | null> {
+  throwIfSearchAborted(signal);
+  const yt = await getClient();
+  const page = await raceSearchAbort(yt.search(
+    `https://www.youtube.com/watch?v=${videoId}`,
+    { type: 'video' },
+  ), signal);
+  const results: SearchResult[] = [];
+  extractVideos(page.results, results, page.results.length);
+  return results.find((result) => result.id === videoId) ?? null;
 }
 
 export async function searchYouTubePage(
@@ -186,6 +205,8 @@ function extractVideos(
 
     const video = item as unknown as {
       id: string;
+      is_live?: boolean;
+      is_upcoming?: boolean;
       title?: { text?: string };
       author?: { name?: string };
       duration?: { seconds?: number };
@@ -203,7 +224,9 @@ function extractVideos(
       title: video.title?.text || '',
       artist: video.author?.name || '',
       album: null,
-      duration_ms: (video.duration?.seconds || 0) * 1000,
+      duration_ms: video.is_live || video.is_upcoming
+        ? null
+        : normalizeTrackDurationMs(video.duration?.seconds, 'seconds'),
       thumbnail_url: video.thumbnails?.[0]?.url || null,
       url: `https://www.youtube.com/watch?v=${video.id}`,
       is_downloaded: false,

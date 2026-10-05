@@ -1,10 +1,13 @@
 import * as FileSystem from 'expo-file-system';
 import { base64ToBytes, createSha256Hasher } from '@ton/core';
+import { hashFileSha256Native } from '../native-library-transfer';
 import { runMobileCloudDbLane } from './db-lane';
 
 const HASH_CHUNK_BYTES = 1024 * 1024;
 
 export async function hashFileSha256(fileUri: string): Promise<string> {
+  const native = hashFileSha256Native(fileUri);
+  if (native) return native;
   const info = await FileSystem.getInfoAsync(fileUri, { size: true });
   if (!info.exists || typeof info.size !== 'number') {
     throw new Error(`Cannot hash missing file: ${fileUri}`);

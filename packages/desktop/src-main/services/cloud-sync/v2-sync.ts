@@ -27,6 +27,7 @@ import {
 } from './local-exclusions';
 import { createV2MutationBuilder } from './v2-mutations';
 import { createV2ObjectUploader } from './v2-object-upload';
+import { syncDesktopProfile } from './profile-sync';
 import { publishV2Manifest } from './v2-publish';
 import {
   shouldAcknowledgeDesktopCloudOutbox,
@@ -35,10 +36,42 @@ import {
 } from './v2-types';
 
 /**
+ * Music manifest cycle plus the independent private statistics cycle. Statistics
+ * run even when the manifest is unchanged (304 fast path) and a music failure
+ * does not hide them; the music error still wins when both fail.
+ */
+export async function syncCloudLibraryV2ForDesktop(
+  options: V2SyncOptions = {},
+): Promise<CloudSyncResult> {
+  let result: CloudSyncResult | null = null;
+  let musicError: unknown = null;
+  try {
+    result = await syncCloudMusicV2ForDesktop(options);
+  } catch (error) {
+    musicError = error;
+  }
+  const cancelled = options.signal?.aborted
+    || (musicError instanceof Error && musicError.message === 'cloud_sync_cancelled');
+  if (!cancelled) {
+    const config = requireConfig();
+    const mode = options.mode ?? 'sync';
+    try {
+      await syncDesktopProfile(config, activateDesktopCloudScope(config), {
+        publish: mode !== 'fetch', fetch: mode !== 'upload', signal: options.signal,
+      });
+    } catch (error) {
+      musicError ??= error;
+    }
+  }
+  if (musicError) throw musicError;
+  return result as CloudSyncResult;
+}
+
+/**
  * Incremental V2 cycle. A clean conditional poll exits on 304 before touching
  * the library or hashing a file. Full scans happen only for bootstrap/reconcile.
  */
-export async function syncCloudLibraryV2ForDesktop(
+async function syncCloudMusicV2ForDesktop(
   options: V2SyncOptions = {},
 ): Promise<CloudSyncResult> {
   const config = requireConfig();
@@ -52,11 +85,13 @@ export async function syncCloudLibraryV2ForDesktop(
   const shouldUpload = mode !== 'fetch';
   const shouldApply = mode !== 'upload';
   const outbox = shouldUpload ? durableOutbox : [];
+  // Entity mutations are protected independently from administrative reconcile
+  // work. A pre-existing reconcile is not a reason to block first-time imports.
   const capturedGeneration = durableOutbox.reduce(
     (max, item) => Math.max(max, item.generation), 0,
   );
   const fullReconcile = shouldUpload && Boolean(
-    options.force || state.needs_full_reconcile
+    (options.force && mode === 'upload') || state.needs_full_reconcile
     || outbox.some((item) => item.operation === 'reconcile'),
   );
   const v2Key = buildCloudV2ManifestObjectKey(config.prefix);
@@ -65,7 +100,7 @@ export async function syncCloudLibraryV2ForDesktop(
 
   const initialRead = await client.getJsonConditional<CloudLibraryManifestV2>(v2Key, {
     ifNoneMatch: conditionalManifestEtag(
-      Boolean(options.force)
+      Boolean(options.force) || Boolean(options.restoreLocallyDeleted)
         || (shouldApply && (state.pending_downloads > 0 || state.pending_remote_revision != null)),
       fullReconcile,
       shouldApply ? durableOutbox.length : outbox.length,

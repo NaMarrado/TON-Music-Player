@@ -12,7 +12,7 @@ export function usePlaylistPageModel() {
   const viewState = usePlaylistViewState(pageData.playlistId, pageData.tracks);
   const actions = usePlaylistActions({
     clearSelection: viewState.clearSelection,
-    displayTracksRef: viewState.displayTracksRef,
+    playbackTracksRef: viewState.playbackTracksRef,
     navigate,
     playlist: pageData.playlist,
     selectedIds: viewState.selectedIds,

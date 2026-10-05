@@ -12,6 +12,7 @@ const args = process.argv.slice(2);
 
 const env = { ...process.env };
 delete env.ELECTRON_RUN_AS_NODE;
+env.TON_DEV_PROFILE_DIR ||= resolve(packageDir, '../../.ton-dev');
 
 const child = spawn(process.execPath, [electronViteCli, ...args], {
   cwd: packageDir,

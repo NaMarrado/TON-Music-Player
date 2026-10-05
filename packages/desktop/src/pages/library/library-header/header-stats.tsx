@@ -2,7 +2,7 @@ import { formatDuration } from '@ton/core';
 
 type HeaderStatsProps = {
   compact: boolean;
-  filterQuery: string;
+  hasActiveFilter: boolean;
   filteredCount: number;
   totalDuration: number;
   totalSizeLabel: string;
@@ -12,7 +12,7 @@ type HeaderStatsProps = {
 
 export function HeaderStats({
   compact,
-  filterQuery,
+  hasActiveFilter,
   filteredCount,
   totalDuration,
   totalSizeLabel,
@@ -60,7 +60,7 @@ export function HeaderStats({
               fontVariantNumeric: 'tabular-nums',
             }}
           >
-            {filterQuery ? filteredCount : totalTrackCount}
+            {hasActiveFilter ? filteredCount : totalTrackCount}
           </span>
           <span style={{ color: 'var(--text-secondary)' }}>·</span>
           <span

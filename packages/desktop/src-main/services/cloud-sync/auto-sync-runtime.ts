@@ -8,6 +8,7 @@ import {
   type CloudSyncResult,
 } from '@ton/core';
 import { scheduleMainProcessJob } from '../job-scheduler';
+import { subscribeDesktopProfileChanges } from '../listening-profile/store';
 import {
   getActiveDesktopCloudScope,
   getDesktopCloudGeneration,
@@ -36,6 +37,10 @@ class DesktopCloudAutoSyncRuntime {
   private generationTimer: ReturnType<typeof setInterval> | null = null;
 
   private networkTimer: ReturnType<typeof setInterval> | null = null;
+
+  private unsubscribeProfile: (() => void) | null = null;
+
+  private profileTimer: ReturnType<typeof setTimeout> | null = null;
 
   private lastObservedGeneration = 0;
 
@@ -93,9 +98,9 @@ class DesktopCloudAutoSyncRuntime {
           const missingMirroredEntities = scopeId
             ? getDesktopCloudMissingMirroredEntityCount(scopeId)
             : 0;
-          // Automatic sync mirrors R2 to this device. Local uploads remain an
-          // explicit `Upload missing local` action.
-          const mode = origin === 'manual' ? this.requestedManualMode : 'fetch';
+          // Publish durable local upserts as well as receiving remote changes.
+          // A fetch-only automatic cycle leaves stars and edits queued forever.
+          const mode = origin === 'manual' ? this.requestedManualMode : 'sync';
           const result = await scheduleMainProcessJob({
             kind: 'cloud-sync',
             lane: 'network',
@@ -170,6 +175,15 @@ class DesktopCloudAutoSyncRuntime {
       this.coordinator.markLocalChange(getDesktopCloudPendingCount());
     }, 500);
     this.networkTimer = setInterval(() => this.coordinator.setOnline(net.online), 5_000);
+    // Playback checkpoints arrive every few seconds; coalesce them so statistics
+    // publish about once a minute while playing instead of on every checkpoint.
+    this.unsubscribeProfile = subscribeDesktopProfileChanges(() => {
+      if (this.profileTimer) return;
+      this.profileTimer = setTimeout(() => {
+        this.profileTimer = null;
+        this.coordinator.markLocalChange(getDesktopCloudPendingCount());
+      }, 60_000);
+    });
   }
 
   private stopWatchers(): void {
@@ -177,6 +191,10 @@ class DesktopCloudAutoSyncRuntime {
     if (this.networkTimer) clearInterval(this.networkTimer);
     this.generationTimer = null;
     this.networkTimer = null;
+    this.unsubscribeProfile?.();
+    this.unsubscribeProfile = null;
+    clearTimeout(this.profileTimer ?? undefined);
+    this.profileTimer = null;
   }
 
   stop(): void {

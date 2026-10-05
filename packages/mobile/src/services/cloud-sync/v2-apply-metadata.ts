@@ -21,12 +21,14 @@ async function collectMissingAssets(
   livePlaylists: Array<Extract<CloudPlaylistRecordV2, { deleted: false }>>,
   existingByHash: Map<string, ExistingTrack>,
   signal?: AbortSignal,
-): Promise<number> {
+): Promise<{ count: number; trackHashes: Set<string>; playlistCloudIds: Set<string> }> {
   const rows = await runMobileCloudDbLane((db) => db.getAllAsync<{
     entity_type: 'track' | 'playlist'; entity_key: string; record_json: string;
   }>('SELECT entity_type, entity_key, record_json FROM cloud_sync_entities WHERE scope_id = ?', [scopeId]));
   const previous = new Map(rows.map((row) => [`${row.entity_type}:${row.entity_key}`, row.record_json]));
   const missing = new Set<string>();
+  const trackHashes = new Set<string>();
+  const playlistCloudIds = new Set<string>();
   for (const record of liveTracks) {
     const hash = record.entry.artwork_hash_sha256;
     const local = existingByHash.get(record.content_hash_sha256);
@@ -37,7 +39,10 @@ async function collectMissingAssets(
       const parsed = raw ? JSON.parse(raw) as CloudTrackRecordV2 : null;
       previousHash = parsed && !parsed.deleted ? parsed.entry.artwork_hash_sha256 : null;
     } catch { previousHash = null; }
-    if (previousHash !== hash || !(await fileExists(local.cover_art_path))) missing.add(hash);
+    if (previousHash !== hash || !(await fileExists(local.cover_art_path))) {
+      missing.add(hash);
+      trackHashes.add(record.content_hash_sha256);
+    }
     throwIfAborted(signal);
   }
   const playlistRows = await runMobileCloudDbLane((db) => db.getAllAsync<{ cloud_id: string; cover_path: string | null }>(
@@ -55,10 +60,11 @@ async function collectMissingAssets(
     } catch { previousHash = null; }
     if (previousHash !== hash || !(await fileExists(playlistsById.get(record.cloud_id)?.cover_path))) {
       missing.add(hash);
+      playlistCloudIds.add(record.cloud_id);
     }
     throwIfAborted(signal);
   }
-  return missing.size;
+  return { count: missing.size, trackHashes, playlistCloudIds };
 }
 
 export async function applyManifestWithoutAudio(
@@ -84,7 +90,7 @@ export async function applyManifestWithoutAudio(
   const pendingDownloads = liveTracks.reduce(
     (count, record) => count + (existingByHash.has(record.content_hash_sha256) ? 0 : 1), 0,
   );
-  const pendingAssets = await collectMissingAssets(
+  const missingAssets = await collectMissingAssets(
     scopeId, liveTracks, livePlaylists, existingByHash, signal,
   );
 
@@ -116,7 +122,9 @@ export async function applyManifestWithoutAudio(
           entry.metadata.bitrate, entry.metadata.sample_rate, entry.file_size, entry.format,
           entry.metadata.loudness_lufs, entry.metadata.loudness_gain, entry.youtube_id,
           entry.spotify_id, entry.soundcloud_id, entry.source_url, entry.metadata.rating,
-          entry.added_at, downloadedAt, entry.artwork_hash_sha256 == null ? 1 : 0, row.id,
+          entry.added_at, downloadedAt,
+          entry.artwork_hash_sha256 == null || missingAssets.trackHashes.has(record.content_hash_sha256) ? 1 : 0,
+          row.id,
         ],
       );
     }
@@ -136,7 +144,7 @@ export async function applyManifestWithoutAudio(
         [
           entry.cloud_id, entry.name, entry.description, entry.is_smart ? 1 : 0,
           entry.smart_rules, entry.sort_order, entry.created_at, entry.updated_at,
-          entry.cover_hash_sha256 == null ? 1 : 0,
+          entry.cover_hash_sha256 == null || missingAssets.playlistCloudIds.has(record.cloud_id) ? 1 : 0,
         ],
       );
       const playlist = await db.getFirstAsync<{ id: number }>(
@@ -161,5 +169,5 @@ export async function applyManifestWithoutAudio(
   ]);
   await reloadLoadedPlaylistDetails();
   throwIfAborted(signal);
-  return { pendingDownloads, pendingAssets };
+  return { pendingDownloads, pendingAssets: missingAssets.count };
 }

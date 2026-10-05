@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   createFollowingRollingQueueWindow,
   createRollingQueueWindow,
+  ListeningTimeAccumulator,
   parsePlaybackSessionSnapshot,
   type QueueItem,
 } from '../../packages/core/src/index.ts';
@@ -152,4 +153,61 @@ test('persisted rolling history keeps only the latest 100 tracks', () => {
   assert.equal(retainedHistory.length, 100);
   assert.equal(retainedHistory[0]?.track_id, 41);
   assert.equal(retainedHistory.at(-1)?.track_id, 140);
+});
+
+test('listening clock counts advancing audio and excludes paused and buffering intervals', () => {
+  const clock = new ListeningTimeAccumulator();
+  clock.sample(0, 0, true);
+  clock.sample(1_000, 1, true);
+  clock.sample(1_500, 1.5, false);
+  clock.sample(61_500, 1.5, false);
+  clock.sample(62_000, 1.5, true);
+  clock.sample(63_000, 2.5, true);
+  assert.equal(clock.listenedMs, 2_500);
+
+  clock.sample(63_500, 3, false);
+  clock.sample(73_500, 3, false);
+  clock.sample(74_000, 3, true);
+  clock.sample(75_000, 4, true);
+  assert.equal(clock.listenedMs, 4_000);
+});
+
+test('listening clock caps stalled playback by real media progress', () => {
+  const clock = new ListeningTimeAccumulator();
+  clock.sample(0, 0, true);
+  clock.sample(30_000, 2, true);
+  clock.sample(60_000, 2, true);
+  assert.equal(clock.listenedMs, 2_000);
+});
+
+test('forward and backward seeks never become listening time', () => {
+  const clock = new ListeningTimeAccumulator();
+  clock.sample(0, 0, true);
+  clock.sample(1_000, 1, true);
+  clock.sample(1_250, 180, true);
+  clock.sample(2_250, 181, true);
+  clock.sample(2_500, 10, true);
+  assert.equal(clock.listenedMs, 2_000);
+
+  clock.resetBaseline();
+  clock.sample(2_750, 20, true);
+  clock.sample(3_750, 21, true);
+  assert.equal(clock.listenedMs, 3_000);
+});
+
+test('restored listening clocks neither count downtime nor duplicate a terminal sample', () => {
+  const clock = new ListeningTimeAccumulator(7_500);
+  clock.sample(0, 50, false);
+  clock.sample(3_600_000, 50, true);
+  clock.sample(3_601_000, 51, false);
+  clock.sample(3_601_000, 51, false);
+  assert.equal(clock.listenedMs, 8_500);
+});
+
+test('playback-rate changes measure elapsed listening rather than source duration', () => {
+  const clock = new ListeningTimeAccumulator();
+  clock.sample(0, 0, true, 2);
+  clock.sample(1_000, 2, true, 0.5);
+  clock.sample(2_000, 2.5, false, 0.5);
+  assert.equal(clock.listenedMs, 2_000);
 });

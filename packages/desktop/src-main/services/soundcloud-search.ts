@@ -5,6 +5,7 @@
 
 import { execFile } from 'child_process';
 import type { SearchResult } from '@ton/core';
+import { normalizeTrackDurationMs } from '@ton/core';
 import { getYtDlpPathAsync } from './binary-manager';
 
 interface ScEntry {
@@ -60,7 +61,7 @@ export async function getSoundCloudTrackByUrl(
     title: result.title || '',
     artist: result.uploader || result.creator || '',
     album: null,
-    duration_ms: result.duration == null ? null : Math.round(result.duration * 1000),
+    duration_ms: normalizeTrackDurationMs(result.duration, 'seconds'),
     thumbnail_url: pickThumbnail(result),
     url: canonicalUrl,
     is_downloaded: false,
@@ -92,7 +93,7 @@ export async function searchSoundCloudPage(
     title: entry.title || '',
     artist: entry.uploader || entry.creator || '',
     album: null,
-    duration_ms: entry.duration ? Math.round(entry.duration * 1000) : null,
+    duration_ms: normalizeTrackDurationMs(entry.duration, 'seconds'),
     thumbnail_url: pickThumbnail(entry),
     url: entry.webpage_url || entry.url || '',
     is_downloaded: false,

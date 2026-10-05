@@ -1,22 +1,14 @@
 import { useLibraryStore } from '../../../stores/library-store';
 
 export function FilterInput({
-  compact,
   filterQuery,
   placeholder,
 }: {
-  compact: boolean;
   filterQuery: string;
   placeholder: string;
 }) {
   return (
-    <div
-      className="relative shrink-0"
-      style={{
-        width: compact ? '100%' : '220px',
-        maxWidth: compact ? 'none' : '100%',
-      }}
-    >
+    <div className="relative" style={{ width: '100%' }}>
       <svg
         className="absolute pointer-events-none"
         style={{
@@ -46,7 +38,8 @@ export function FilterInput({
           background: 'var(--bg-surface)',
           border: '1px solid var(--border)',
           borderRadius: '20px',
-          padding: '9px 36px 9px 38px',
+          height: '36px',
+          padding: '0 36px 0 38px',
           color: 'var(--text-primary)',
           fontFamily: 'inherit',
           fontSize: '0.85rem',

@@ -7,6 +7,8 @@ export { isLibraryTransferValidationError } from './validation';
 export { usesShareSheetLibraryExportOutput } from './export-output';
 export type {
   LibraryExportSelection,
+  LibraryImportOptions,
+  LibraryImportPlaylistChoice,
   LibraryImportSource,
   LibraryTransferBundleType,
   LibraryTransferProgress,

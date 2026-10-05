@@ -81,8 +81,23 @@ export function insertImportedLibrary(
       );
     }
 
+    // Every playlist in the file is created as it is; other playlists are never touched. Only an identical one (same name,
+    // same songs in the same order) is not created twice, so importing the same file again changes nothing.
+    const sameName = db.prepare('SELECT id FROM playlists WHERE lower(trim(name)) = lower(trim(?))');
+    const membersOf = db.prepare('SELECT track_id FROM playlist_tracks WHERE playlist_id = ? ORDER BY position, id');
     for (let index = 0; index < manifest.playlists.length; index += 1) {
       const playlist = manifest.playlists[index];
+      const trackIds: number[] = [];
+      for (const hash of playlist.track_hashes) {
+        const entry = trackEntryByHash.get(hash);
+        const contentHash = entry?.content_hash_sha256 ?? null;
+        const trackRow = lookupTrackByHash.get(hash, contentHash, contentHash, hash) as { id: number } | undefined;
+        if (trackRow) trackIds.push(trackRow.id);
+      }
+      const wanted = trackIds.join(',');
+      const identical = (sameName.all(playlist.name) as Array<{ id: number }>)
+        .some((row) => (membersOf.all(row.id) as Array<{ track_id: number }>).map((member) => member.track_id).join(',') === wanted);
+      if (identical) continue;
       const coverPath = playlist.cover_relative_path
         ? (playlistCoverPaths[playlist.cover_relative_path] ?? null)
         : null;
@@ -95,22 +110,7 @@ export function insertImportedLibrary(
       );
       const playlistId = Number(playlistResult.lastInsertRowid);
       playlistIds.push(playlistId);
-
-      let position = 0;
-      for (const hash of playlist.track_hashes) {
-        const entry = trackEntryByHash.get(hash);
-        const contentHash = entry?.content_hash_sha256 ?? null;
-        const trackRow = lookupTrackByHash.get(
-          hash,
-          contentHash,
-          contentHash,
-          hash,
-        ) as { id: number } | undefined;
-        if (trackRow) {
-          insertPlaylistTrack.run(playlistId, trackRow.id, position);
-          position += 1;
-        }
-      }
+      trackIds.forEach((trackId, position) => insertPlaylistTrack.run(playlistId, trackId, position));
 
       importedPlaylists += 1;
       sendProgress({ phase: 'playlists', current: index + 1, total: manifest.playlists.length });

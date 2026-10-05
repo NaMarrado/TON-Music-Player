@@ -173,7 +173,14 @@ export function CloudCard({
               disabled={isBusy || !canRun}
               label={labels.syncNow}
               onPress={() => {
-                void onPrepareSync().then((preview) => setSyncPreview(preview));
+                void onPrepareSync().then((preview) => {
+                  if (preview?.deletedTracks === 0) {
+                    setSyncPreview(null);
+                    onSync(false);
+                  } else {
+                    setSyncPreview(preview);
+                  }
+                });
               }}
             />
             <CloudPill gridItem disabled={!isBusy} label={labels.cancel} onPress={onCancel} />

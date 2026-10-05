@@ -8,7 +8,6 @@ export const playlistTrackIndexCellStyle: CSSProperties = {
 };
 
 export const playlistTrackTimeCellStyle: CSSProperties = {
-  display: 'block',
   fontVariantNumeric: 'tabular-nums',
   textAlign: 'right',
   width: '100%',

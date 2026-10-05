@@ -1,6 +1,7 @@
 import { BrowserWindow } from 'electron';
 import { normalizeCloudStorageErrorKey } from '@ton/core';
 import { getActiveDesktopCloudScope, readDesktopCloudOutbox } from './auto-sync-store';
+import { getPendingDesktopProfileCount } from '../listening-profile/store';
 
 export function broadcastCloudEvent(
   channel: 'cloud:state' | 'cloud:applied' | 'cloud:progress',
@@ -13,7 +14,7 @@ export function broadcastCloudEvent(
 
 export function getDesktopCloudPendingCount(): number {
   const scopeId = getActiveDesktopCloudScope();
-  return scopeId ? readDesktopCloudOutbox(scopeId).length : 0;
+  return scopeId ? readDesktopCloudOutbox(scopeId).length + getPendingDesktopProfileCount(scopeId) : 0;
 }
 
 export function classifyDesktopCloudError(

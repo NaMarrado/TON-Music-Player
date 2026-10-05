@@ -5,6 +5,7 @@ import {
   getMobileCloudJournalGeneration,
   getMobileCloudOutbox,
 } from './local-state';
+import { getMobileProfilePendingCount } from '../listening-profile/store';
 import { runTrackedCycle } from './auto-sync-cycle';
 import { mobileAutoSyncRuntime as runtime } from './auto-sync-state';
 import {
@@ -53,9 +54,24 @@ export function createCoordinator(
   });
 }
 
+const PROFILE_OBSERVE_INTERVAL_MS = 60_000;
+let lastProfileObservation = 0;
+
+/** Statistics are not in the music outbox; poll their pending days at a calm cadence. */
+async function observeProfile(scopeId: string): Promise<void> {
+  const now = Date.now();
+  if (now - lastProfileObservation < PROFILE_OBSERVE_INTERVAL_MS) return;
+  lastProfileObservation = now;
+  const [pending, outbox] = await Promise.all([
+    getMobileProfilePendingCount(scopeId), getMobileCloudOutbox(scopeId),
+  ]);
+  if (pending > 0) runtime.coordinator?.markLocalChange(outbox.length + pending);
+}
+
 async function observeJournal(): Promise<void> {
   const context = runtime.configuredContextCache;
   if (!context) return;
+  await observeProfile(context.scopeId);
   const generation = await getMobileCloudJournalGeneration();
   if (generation === runtime.lastObservedGeneration) return;
   await ensureMobileCloudScope(context.config);

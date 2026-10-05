@@ -3,11 +3,7 @@ import { useDesktopContentWidth } from '../../../hooks/use-desktop-content-width
 export interface LibraryLayout {
   compact: boolean;
   contentPaddingX: number;
-  dense: boolean;
   listBottomPadding: number;
-  showArtistColumn: boolean;
-  showDownloadedColumn: boolean;
-  showPlaylistColumn: boolean;
 }
 
 export function useLibraryLayout(): LibraryLayout {
@@ -18,11 +14,7 @@ export function useLibraryLayout(): LibraryLayout {
 
   return {
     compact,
-    dense,
     contentPaddingX: compact ? 12 : medium ? 24 : 32,
     listBottomPadding: dense ? 24 : compact ? 36 : 72,
-    showArtistColumn: !dense,
-    showDownloadedColumn: !compact,
-    showPlaylistColumn: !compact,
   };
 }
