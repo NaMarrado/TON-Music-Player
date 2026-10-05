@@ -204,5 +204,7 @@
   "transferImported": "Импортировано песен: {{tracks}}, плейлистов: {{playlists}}",
   "transferProfileImported": "Профиль импортирован",
   "transferFailed": "Что-то пошло не так",
-  "transferNothing": "Нечего экспортировать"
+  "transferNothing": "Нечего экспортировать",
+  "studioTabTitle": "Студия",
+  "studioTabText": "Показывать вкладку «Студия» внизу."
 }

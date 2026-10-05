@@ -11,6 +11,7 @@ import { detectDeviceLanguage } from './constants';
 import { AboutCard } from './about-card';
 import { EqualizerCard } from './equalizer-card';
 import { PickModal } from './pick-modal';
+import { StudioTabCard } from './studio-tab-card';
 import { TransferCard, type TransferRow } from './transfer-card';
 import { FrequencyCard } from './frequency-card';
 import { LanguageCard } from './language-card';
@@ -146,6 +147,7 @@ export function SettingsScreen() {
       </View>
 
       <SettingsGroup label={t('generalGroup')}>
+        <StudioTabCard />
         <LanguageCard
           title={t('languageSection')}
           autoLabel={t('languageAuto')}

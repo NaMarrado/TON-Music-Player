@@ -204,5 +204,7 @@
   "transferImported": "Importováno {{tracks}} písní, {{playlists}} playlistů",
   "transferProfileImported": "Profil importován",
   "transferFailed": "Něco se pokazilo",
-  "transferNothing": "Není co exportovat"
+  "transferNothing": "Není co exportovat",
+  "studioTabTitle": "Studio",
+  "studioTabText": "Zobrazit kartu Studio dole."
 }

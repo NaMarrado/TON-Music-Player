@@ -204,5 +204,7 @@
   "transferImported": "יובאו {{tracks}} שירים, {{playlists}} פלייליסטים",
   "transferProfileImported": "הפרופיל יובא",
   "transferFailed": "משהו השתבש",
-  "transferNothing": "אין מה לייצא"
+  "transferNothing": "אין מה לייצא",
+  "studioTabTitle": "סטודיו",
+  "studioTabText": "הצגת לשונית הסטודיו למטה."
 }

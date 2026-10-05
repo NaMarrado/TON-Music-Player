@@ -37,6 +37,7 @@ export const PROFILE_SETTING_VALIDATORS: Record<string, (value: string) => boole
   cloud_auto_sync_enabled: isBoolean,
   sync_audio_over_cellular: isBoolean,
   concurrent_downloads: inRange(1, 16),
+  studio_tab_enabled: isBoolean,
 };
 
 export const PROFILE_SETTING_KEYS: Record<string, true> = Object.fromEntries(Object.keys(PROFILE_SETTING_VALIDATORS).map((key) => [key, true]));
