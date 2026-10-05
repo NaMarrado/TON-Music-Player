@@ -17,6 +17,7 @@ import {
   moveClip,
   placeTransition,
   projectDurationSec,
+  STUDIO_NEW_CLIP_GAIN_DB,
   STUDIO_NEW_LANE_VOLUME,
   secondsPerBar,
   setAssetAnalysis,
@@ -201,7 +202,7 @@ function addLane(asset: StudioAsset): void {
   const trackId = newStudioId('t');
   editProject((project) => {
     const withAsset = project.assets[asset.id] ? project : addAsset(project, asset);
-    return addClipToTrack(addTrack(withAsset, createTrack(trackId, [], STUDIO_NEW_LANE_VOLUME)), trackId, createClip(clipId, withAsset.assets[asset.id], get().playheadSec));
+    return addClipToTrack(addTrack(withAsset, createTrack(trackId, [], STUDIO_NEW_LANE_VOLUME)), trackId, { ...createClip(clipId, withAsset.assets[asset.id], get().playheadSec), gainDb: STUDIO_NEW_CLIP_GAIN_DB });
   });
   set({ selectedClipId: clipId, selectedTrackId: trackId });
   if (get().autoFit) fitToWindow();

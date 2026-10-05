@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   beginExportMobileLibrary,
@@ -8,16 +8,27 @@ import {
   usesShareSheetLibraryExportOutput,
   type LibraryTransferProgress,
   type LibraryExportSelection,
+  type LibraryImportPlaylistChoice,
 } from '../../services/library-transfer';
+import { getSetting } from '../../services/db-queries';
+import { restoreAudioSettings } from '../../services/audio-settings/restore';
 import { loadPlaylists } from '../../stores/playlist-store';
 import { reconcileLibraryTracks } from '../../stores/library-store';
 import { showToast } from '../../stores/toast-store';
 
+const PROGRESS_INTERVAL_MS = 250;
+
+/** The open tick list: playlists or songs to export, or the playlists of a file being imported. */
+export type TransferPicker =
+  | { mode: 'export-playlists' | 'export-songs' }
+  | { mode: 'import-playlists'; items: LibraryImportPlaylistChoice[]; resolve: (indexes: number[] | null) => void };
+
 export function useLibraryTransferActions() {
-  const { t } = useTranslation('settings');
+  const { t, i18n } = useTranslation('settings');
+  const lastProgress = useRef<{ phase: string; at: number }>({ phase: '', at: 0 });
   const [isExportingLibrary, setIsExportingLibrary] = useState(false);
   const [isImportingLibrary, setIsImportingLibrary] = useState(false);
-  const [showExportPicker, setShowExportPicker] = useState(false);
+  const [picker, setPicker] = useState<TransferPicker | null>(null);
   const [transferProgress, setTransferProgress] = useState<{
     title: string;
     message: string;
@@ -35,6 +46,11 @@ export function useLibraryTransferActions() {
       setTransferProgress(null);
       return;
     }
+    // Redrawing the screen for every single song was the slowest part of an export; a few updates a second are enough.
+    const now = Date.now();
+    const last = lastProgress.current;
+    if (last.phase === progress.phase && progress.current < progress.total && now - last.at < PROGRESS_INTERVAL_MS) return;
+    lastProgress.current = { phase: progress.phase, at: now };
     const message = progress.phase === 'queued'
       ? t('transferQueued')
       : progress.phase === 'preparing'
@@ -64,13 +80,14 @@ export function useLibraryTransferActions() {
     });
   }, [t]);
 
-  const openExportPicker = useCallback(async () => {
+  /** Opens the tick list for a playlist or song export. The lists are read fresh, so new playlists and songs are offered. */
+  const openExportPicker = useCallback(async (mode: 'export-playlists' | 'export-songs') => {
     if (isExportingLibrary || isImportingLibrary) {
       return;
     }
 
-    await loadPlaylists();
-    setShowExportPicker(true);
+    await (mode === 'export-playlists' ? loadPlaylists() : reconcileLibraryTracks({ immediate: true, loadIfUninitialized: true }));
+    setPicker({ mode });
   }, [isExportingLibrary, isImportingLibrary]);
 
   const exportLibrary = useCallback(async (selection: LibraryExportSelection) => {
@@ -121,7 +138,8 @@ export function useLibraryTransferActions() {
     }
   }, [isExportingLibrary, isImportingLibrary, t, updateTransferProgress]);
 
-  const importLibrary = useCallback(async () => {
+  /** Imports a bundle. With choosePlaylists the user ticks which playlists of the file to bring in. */
+  const importLibrary = useCallback(async (choosePlaylists = false) => {
     if (isExportingLibrary || isImportingLibrary) {
       return;
     }
@@ -140,7 +158,9 @@ export function useLibraryTransferActions() {
         name: archive.name,
       }, (progress) => {
         updateTransferProgress('import', progress, taskCancel);
-      });
+      }, choosePlaylists
+        ? { choosePlaylists: (items) => new Promise<number[] | null>((resolve) => setPicker({ mode: 'import-playlists', items, resolve })) }
+        : undefined);
       taskCancel = task.cancel;
       setTransferProgress((current) => current ? { ...current, cancel: task.cancel } : current);
       const result = await task.result;
@@ -153,6 +173,15 @@ export function useLibraryTransferActions() {
         reconcileLibraryTracks({ immediate: true, loadIfUninitialized: true }),
         loadPlaylists(),
       ]);
+
+      if (result.profileApplied) {
+        // Restored sound settings and language take effect at once, without restarting the app.
+        await restoreAudioSettings();
+        const language = await getSetting('language');
+        if (language && language !== i18n.language) await i18n.changeLanguage(language);
+        showToast(t('transferProfileImported'), 'success', 5000);
+        return;
+      }
 
       showToast(
         t('importLibrarySuccessToast', {
@@ -191,8 +220,8 @@ export function useLibraryTransferActions() {
     isExportingLibrary,
     isImportingLibrary,
     openExportPicker,
-    setShowExportPicker,
-    showExportPicker,
+    picker,
+    setPicker,
     transferProgress,
   };
 }

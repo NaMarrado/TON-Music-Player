@@ -1,6 +1,6 @@
 import type { AllowedInvokeChannel, AllowedOnChannel } from '../shared/ipc-channels';
 import type { DiscordPresencePayload } from '../shared/discord-presence';
-import type { ProfileExportResult, ProfileImportSummary } from '../shared/profile-ipc';
+import type { ExportRequest, ExportResult, ImportInspectResult, ImportRequest, ImportResult } from '../shared/transfer-ipc';
 import type { StudioExportRequest, StudioExportResult, StudioProgressEvent, StudioTempDownloadRequest, StudioTempDownloadResult } from '../shared/studio-ipc';
 import type { ListeningProfileSummary, ListeningSessionSnapshot, PlaybackObservation, ProfileDevice, ProfileQuery } from '@ton/core';
 
@@ -191,19 +191,13 @@ interface ElectronAPI {
     channel: 'playlist:smart-query',
     config: import('@ton/core').SmartPlaylistConfig,
   ): Promise<import('@ton/core').Track[]>;
-  invoke(
-    channel: 'export:start',
-    options?: { destinationPath?: string; bundleFormat?: 'archive' | 'folder' },
-  ): Promise<{ trackCount: number; playlistCount: number; sizeBytes: number }>;
+  invoke(channel: 'export:start', options?: ExportRequest): Promise<ExportResult>;
   invoke(
     channel: 'export:summary',
   ): Promise<{ exportableTrackCount: number; exportablePlaylistCount: number }>;
-  invoke(
-    channel: 'import:start',
-    options?: { bundlePath?: string },
-  ): Promise<{ importedTracks: number; skippedTracks: number; importedPlaylists: number }>;
-  invoke(channel: 'profile:export', options?: { destinationPath?: string }): Promise<ProfileExportResult>;
-  invoke(channel: 'profile:import', options?: { sourcePath?: string }): Promise<ProfileImportSummary>;
+  invoke(channel: 'import:inspect', options?: { bundlePath?: string }): Promise<ImportInspectResult>;
+  invoke(channel: 'import:discard', token: string): Promise<void>;
+  invoke(channel: 'import:start', options?: ImportRequest): Promise<ImportResult>;
   on(channel: AllowedOnChannel, callback: (...args: unknown[]) => void): void;
   on(channel: 'profile:flush-listening', callback: (requestId: string) => void): void;
   on(channel: 'studio:progress', callback: (event: StudioProgressEvent) => void): void;

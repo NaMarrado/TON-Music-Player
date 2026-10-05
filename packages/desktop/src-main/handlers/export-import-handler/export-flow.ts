@@ -2,7 +2,10 @@ import fs from 'node:fs';
 import { BrowserWindow } from 'electron';
 import os from 'os';
 import type { ExportManifest } from '@ton/core';
+import { getDesktopCloudConfig } from '../../services/cloud-sync/config';
+import { getDb } from '../../services/database';
 import { measurePerfAsync } from '../../services/perf';
+import { collectDesktopProfile } from '../../services/profile-bundle';
 import {
   createExportArchiveOffthread,
   createExportFolderOffthread,
@@ -63,6 +66,7 @@ export async function startLibraryExport(
     win,
     options?.destinationPath,
     options?.bundleFormat,
+    options?.kind,
   );
 
   if (!destination) {
@@ -70,7 +74,7 @@ export async function startLibraryExport(
   }
 
   const sendProgress = createProgressSender(event.sender, 'export:progress');
-  const bundleType: ExportManifest['bundle_type'] = options?.includeLibrary === false ? 'playlist' : 'library';
+  const bundleType: ExportManifest['bundle_type'] = options?.kind ?? (options?.includeLibrary === false ? 'playlist' : 'library');
   const totalTrackSizeBytes = await sumFileSizes([
     ...trackFiles.map((trackFile) => trackFile.filePath),
     ...artworkFiles.map((artworkFile) => artworkFile.filePath),
@@ -87,6 +91,8 @@ export async function startLibraryExport(
     library_track_hashes: libraryTrackHashes,
     tracks: trackEntries,
     playlists: playlistEntries,
+    // A Profile export carries everything else too: settings with keys, the R2 connection, stars and listening history.
+    profile: bundleType === 'profile' ? collectDesktopProfile(getDb(), { cloud: getDesktopCloudConfig() }) : undefined,
   };
 
   return runAtomicExport(

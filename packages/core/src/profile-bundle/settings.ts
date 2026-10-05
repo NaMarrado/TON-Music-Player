@@ -6,6 +6,7 @@ const inRange = (low: number, high: number) => (value: string): boolean => {
   const number = Number(value);
   return Number.isFinite(number) && number >= low && number <= high;
 };
+const isKey = (value: string): boolean => value.length <= 512 && !/[\r\n]/.test(value);
 const isEqBands = (value: string): boolean => {
   try {
     const parsed: unknown = JSON.parse(value);
@@ -16,9 +17,9 @@ const isEqBands = (value: string): boolean => {
 };
 
 /**
- * The only settings a profile file may carry or restore. A key is listed here because it is a plain preference that means
- * the same on every device. Nothing that identifies a device, points at a folder, holds a credential or describes a running
- * session is allowed, and a test enforces that. Each key has a validator, so a hand-edited file cannot store nonsense.
+ * The settings a profile file carries and restores, keys included. Each key has a validator, so a hand-edited file cannot
+ * store nonsense. Not listed, and so never carried: folders, the device's own ids and running state, which belong to one
+ * device. The R2 connection travels separately (see ProfileBundle.cloud) because its secret is stored encrypted.
  */
 export const PROFILE_SETTING_VALIDATORS: Record<string, (value: string) => boolean> = {
   language: (value) => (SUPPORTED_LANGUAGES as readonly string[]).includes(value),
@@ -31,6 +32,11 @@ export const PROFILE_SETTING_VALIDATORS: Record<string, (value: string) => boole
   frequency_hz: inRange(20, 20000),
   download_quality_profile: (value) => value === 'normal' || value === 'best_compatible',
   volume_percent: inRange(0, 1000),
+  spotify_client_id: isKey,
+  spotify_client_secret: isKey,
+  cloud_auto_sync_enabled: isBoolean,
+  sync_audio_over_cellular: isBoolean,
+  concurrent_downloads: inRange(1, 16),
 };
 
 export const PROFILE_SETTING_KEYS: Record<string, true> = Object.fromEntries(Object.keys(PROFILE_SETTING_VALIDATORS).map((key) => [key, true]));

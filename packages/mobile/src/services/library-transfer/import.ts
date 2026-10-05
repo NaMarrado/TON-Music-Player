@@ -6,6 +6,7 @@ import {
   type LibraryTransferTask,
   type LibraryTransferProgress,
 } from './shared';
+import type { LibraryImportOptions } from './types';
 import { canUseNativeLibraryTransfer, createLibraryTransferJobId } from './runtime';
 import { isLibraryTransferCancelledError } from './cancellation';
 import { acquireMobileJob } from '../job-scheduler';
@@ -15,13 +16,14 @@ import { importMobileLibraryJs } from './import-js';
 export async function beginImportMobileLibrary(
   source: LibraryImportSource,
   onProgress?: (progress: LibraryTransferProgress) => void,
+  options?: LibraryImportOptions,
 ): Promise<LibraryTransferTask<LibraryImportResult>> {
   if (!isSupportedLibraryArchiveName(source.name)) {
     throw new Error(INVALID_LIBRARY_ARCHIVE_ERROR);
   }
 
   if (canUseNativeLibraryTransfer()) {
-    return startAndroidImportTask(source, onProgress);
+    return startAndroidImportTask(source, onProgress, options);
   }
 
   const jobId = createLibraryTransferJobId('library-import');
@@ -65,6 +67,7 @@ export async function beginImportMobileLibrary(
           source,
           onProgress,
           () => cancelRequested,
+          options,
         );
       } catch (error) {
         if (isLibraryTransferCancelledError(error)) {
@@ -81,7 +84,8 @@ export async function beginImportMobileLibrary(
 export async function importMobileLibrary(
   source: LibraryImportSource,
   onProgress?: (progress: LibraryTransferProgress) => void,
+  options?: LibraryImportOptions,
 ): Promise<LibraryImportResult | null> {
-  const task = await beginImportMobileLibrary(source, onProgress);
+  const task = await beginImportMobileLibrary(source, onProgress, options);
   return task.result;
 }

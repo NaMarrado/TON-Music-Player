@@ -3,6 +3,7 @@ export * from './curves';
 export * from './timeline';
 export * from './project-ops';
 export * from './connect';
+export * from './slider-scale';
 export * from './reverb';
 export * from './render-args';
 export * from './playback-plan';

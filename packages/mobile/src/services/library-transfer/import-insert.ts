@@ -9,6 +9,24 @@ import {
   type PreparedImportTrack,
 } from './import-helper-types';
 
+const BUSY_RETRIES = 10;
+
+/**
+ * An exclusive transaction runs on its own connection, which does not wait for other writers: if the app is writing at
+ * that moment it fails at once with "database is locked". The transaction is rolled back then, so it is simply tried again.
+ */
+async function withBusyRetry(run: () => Promise<void>): Promise<void> {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      await run();
+      return;
+    } catch (error) {
+      if (attempt >= BUSY_RETRIES || !String(error).includes('database is locked')) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 250 * attempt));
+    }
+  }
+}
+
 async function insertPreparedTracks(
   txn: Awaited<ReturnType<typeof getDb>>,
   preparedTracks: PreparedImportTrack[],
@@ -71,7 +89,9 @@ export async function insertImportedLibraryAsync(
   throwIfLibraryTransferCancelled(shouldCancel);
 
   const playlistIds: number[] = [];
-  await db.withExclusiveTransactionAsync(async (txn) => {
+  await withBusyRetry(() => db.withExclusiveTransactionAsync(async (txn) => {
+    // A retried attempt starts again from nothing: the failed one was rolled back.
+    playlistIds.length = 0;
     for (const reconciliation of reconciliationsByTrackId.values()) {
       throwIfLibraryTransferCancelled(shouldCancel);
       await txn.runAsync(
@@ -83,9 +103,19 @@ export async function insertImportedLibraryAsync(
     }
     await insertPreparedTracks(txn, preparedTracks, trackIdsByHash, shouldCancel);
 
+    // Every playlist in the file is created as it is; other playlists are never touched. Only an identical one (same name,
+    // same songs in the same order) is not created twice, so importing the same file again changes nothing.
     for (let index = 0; index < manifest.playlists.length; index += 1) {
       throwIfLibraryTransferCancelled(shouldCancel);
       const playlist = manifest.playlists[index];
+      const trackIds = playlist.track_hashes.map((hash) => trackIdsByHash[hash]).filter((trackId): trackId is number => Boolean(trackId));
+      const wanted = trackIds.join(',');
+      let identical = false;
+      for (const row of await txn.getAllAsync<{ id: number }>('SELECT id FROM playlists WHERE lower(trim(name)) = lower(trim(?))', [playlist.name])) {
+        const members = await txn.getAllAsync<{ track_id: number }>('SELECT track_id FROM playlist_tracks WHERE playlist_id = ? ORDER BY position, id', [row.id]);
+        if (members.map((member) => member.track_id).join(',') === wanted) identical = true;
+      }
+      if (identical) continue;
       const now = Math.floor(Date.now() / 1000);
       const result = await txn.runAsync(
         `INSERT INTO playlists (name, description, cover_path, is_smart, smart_rules, sort_order, created_at, updated_at)
@@ -105,17 +135,13 @@ export async function insertImportedLibraryAsync(
       playlistIds.push(playlistId);
       sortOrder += 1;
 
-      let position = 0;
-      for (const hash of playlist.track_hashes) {
+      for (let position = 0; position < trackIds.length; position += 1) {
         throwIfLibraryTransferCancelled(shouldCancel);
-        const trackId = trackIdsByHash[hash];
-        if (!trackId) continue;
         await txn.runAsync(
           'INSERT INTO playlist_tracks (playlist_id, track_id, position) VALUES (?, ?, ?)',
-          [playlistId, trackId, position],
+          [playlistId, trackIds[position], position],
         );
-        position += 1;
-        if (position % 25 === 0) {
+        if ((position + 1) % 25 === 0) {
           await yieldToUiAsync();
           throwIfLibraryTransferCancelled(shouldCancel);
         }
@@ -124,6 +150,6 @@ export async function insertImportedLibraryAsync(
       await yieldToUiAsync();
       throwIfLibraryTransferCancelled(shouldCancel);
     }
-  });
+  }));
   return playlistIds;
 }

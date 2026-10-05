@@ -7,6 +7,7 @@ import { resolveExportBundleType } from './bundle-type';
 import { buildExportLabel, preparePlaylistEntries, prepareTrackExports } from './export-helpers';
 import { throwIfLibraryTransferCancelled } from './cancellation';
 import { getLibraryTransferDeviceName } from './platform-label';
+import { collectMobileProfile } from '../profile-bundle/profile-data';
 
 export type MobileExportPayload = {
   bundleType: LibraryExportResult['bundleType'];
@@ -30,11 +31,13 @@ export async function buildExportPayload(
   throwIfLibraryTransferCancelled(shouldCancel);
   const allTracks = await getAllTracksForTransfer();
   const allPlaylists = await getAllPlaylists();
-  const selectedPlaylistIds = new Set(selection.playlistIds);
+  // A Profile export always carries every playlist, whatever the screen had loaded. Library is the songs only.
+  const everyPlaylist = selection.kind === 'profile';
+  const selectedPlaylistIds = new Set(everyPlaylist ? allPlaylists.map((playlist) => playlist.id) : selection.playlistIds);
   const selectedTrackIds = new Set(selection.trackIds ?? []);
   const selectedPlaylists = allPlaylists.filter((playlist) => selectedPlaylistIds.has(playlist.id));
   const bundleType = resolveExportBundleType(selection);
-  const exportLabel = buildExportLabel(selection, selectedPlaylists.map((playlist) => playlist.name));
+  const exportLabel = selection.kind === 'profile' ? 'Profile' : buildExportLabel(selection, selectedPlaylists.map((playlist) => playlist.name));
   const selectedTrackMap = new Map<number, Track>();
   const playlistTrackIdsByPlaylistId = new Map<number, number[]>();
 
@@ -79,6 +82,8 @@ export async function buildExportPayload(
     library_track_hashes: [...new Set(preparedTracks.map((prepared) => prepared.fileHash))],
     tracks: trackEntries,
     playlists: playlistEntries,
+    // A Profile export carries everything else too: settings with keys, the R2 connection, stars and listening history.
+    profile: bundleType === 'profile' ? await collectMobileProfile() : undefined,
   };
 
   return {

@@ -1,11 +1,18 @@
 import { useTranslation } from 'react-i18next';
 import {
+  STUDIO_MAX_SPEED,
+  STUDIO_MAX_TONE_DB,
+  STUDIO_MAX_VOLUME,
+  STUDIO_MIN_SPEED,
+  STUDIO_NEW_CLIP_GAIN_DB,
   STUDIO_NEW_LANE_VOLUME,
   STUDIO_PRESETS,
   applyPreset,
   clipBpm,
+  clipGainToLinear,
   connectClip,
   findClip,
+  linearToClipGain,
   syncClipTempo,
   updateClip,
   updateTrack,
@@ -113,8 +120,8 @@ export function StudioEdit() {
         </StudioSection>
 
         <StudioSection id="speed" title={t('sections.speed')}>
-          <StudioSlider control="speed" value={clip?.speed ?? 1} min={0.25} max={2} step={0.01} resetTo={1} disabled={noClip} format={(v) => `${v.toFixed(2)}×`} onChange={(speed) => setClip({ speed }, 'speed')} />
-          <StudioSlider control="pitch" value={clip?.semitones ?? 0} min={-12} max={12} step={1} resetTo={0} disabled={noClip} format={(v) => signed(v, '')} onChange={(semitones) => setClip({ semitones }, 'semitones')} />
+          <StudioSlider control="speed" value={clip?.speed ?? 1} min={STUDIO_MIN_SPEED} max={STUDIO_MAX_SPEED} step={0.01} neutral={1} resetTo={1} disabled={noClip} format={(v) => `${v.toFixed(2)}×`} onChange={(speed) => setClip({ speed }, 'speed')} />
+          <StudioSlider control="pitch" value={clip?.semitones ?? 0} min={-24} max={24} step={1} neutral={0} resetTo={0} disabled={noClip} format={(v) => signed(v, '')} onChange={(semitones) => setClip({ semitones }, 'semitones')} />
           <div className="studio-row">
             <StudioButton control="keep-pitch" onClick={() => setClip({ pitchLock: !clip?.pitchLock }, 'lock')} active={clip?.pitchLock ?? false} disabled={noClip} label><LockIcon /></StudioButton>
             <StudioButton control="reverse" onClick={() => setClip({ reverse: !clip?.reverse }, 'reverse')} active={clip?.reverse ?? false} disabled={noClip} label><ReverseIcon /></StudioButton>
@@ -130,11 +137,11 @@ export function StudioEdit() {
         </StudioSection>
 
         <StudioSection id="sound" title={t('sections.sound')}>
-          <StudioSlider control="clip-volume" value={clip?.gainDb ?? 0} min={-24} max={12} step={0.5} resetTo={0} disabled={noClip} format={(v) => signed(v, ' dB')} onChange={(gainDb) => setClip({ gainDb }, 'gain')} />
-          <StudioSlider control="lane-volume" value={track?.volume ?? STUDIO_NEW_LANE_VOLUME} min={0} max={1} step={0.01} resetTo={STUDIO_NEW_LANE_VOLUME} disabled={noLane} format={percent} onChange={(volume) => editProject((p) => updateTrack(p, trackId, { volume }), `vol:${trackId}`)} />
+          <StudioSlider control="clip-volume" value={clipGainToLinear(clip?.gainDb ?? STUDIO_NEW_CLIP_GAIN_DB)} min={0} max={STUDIO_MAX_VOLUME} step={0.01} neutral={1} resetTo={clipGainToLinear(STUDIO_NEW_CLIP_GAIN_DB)} disabled={noClip} format={percent} onChange={(linear) => setClip({ gainDb: linearToClipGain(linear) }, 'gain')} />
+          <StudioSlider control="lane-volume" value={track?.volume ?? STUDIO_NEW_LANE_VOLUME} min={0} max={STUDIO_MAX_VOLUME} step={0.01} neutral={1} resetTo={STUDIO_NEW_LANE_VOLUME} disabled={noLane} format={percent} onChange={(volume) => editProject((p) => updateTrack(p, trackId, { volume }), `vol:${trackId}`)} />
           <StudioSlider control="balance" value={effects?.pan ?? 0} min={-1} max={1} step={0.01} resetTo={0} disabled={noLane} format={(v) => (Math.abs(v) < 0.02 ? '0' : `${v < 0 ? 'L' : 'R'}${Math.round(Math.abs(v) * 100)}`)} onChange={(pan) => setEffects({ pan }, 'pan')} />
-          <StudioSlider control="bass" value={effects?.bassDb ?? 0} min={-12} max={15} step={0.5} resetTo={0} disabled={noLane} format={(v) => signed(v, ' dB')} onChange={(bassDb) => setEffects({ bassDb }, 'bass')} />
-          <StudioSlider control="treble" value={effects?.trebleDb ?? 0} min={-12} max={12} step={0.5} resetTo={0} disabled={noLane} format={(v) => signed(v, ' dB')} onChange={(trebleDb) => setEffects({ trebleDb }, 'treble')} />
+          <StudioSlider control="bass" value={effects?.bassDb ?? 0} min={-STUDIO_MAX_TONE_DB} max={STUDIO_MAX_TONE_DB} step={0.5} neutral={0} resetTo={0} disabled={noLane} format={(v) => signed(v, ' dB')} onChange={(bassDb) => setEffects({ bassDb }, 'bass')} />
+          <StudioSlider control="treble" value={effects?.trebleDb ?? 0} min={-STUDIO_MAX_TONE_DB} max={STUDIO_MAX_TONE_DB} step={0.5} neutral={0} resetTo={0} disabled={noLane} format={(v) => signed(v, ' dB')} onChange={(trebleDb) => setEffects({ trebleDb }, 'treble')} />
         </StudioSection>
 
         <StudioSection id="effects" title={t('sections.effects')}>

@@ -8,20 +8,21 @@ import {
   type ProfileBundleInput,
 } from '../../packages/core/src/profile-bundle/index.ts';
 import type { ProfileSessionRecord } from '../../packages/core/src/services/listening-profile/records.ts';
+import type { CloudStorageConfig } from '../../packages/core/src/types/cloud-sync.ts';
 
-const SECRETS = {
-  cloud_r2_config: '{"accountId":"acct","bucket":"my-private-bucket"}',
-  cloud_r2_secret_access_key: '{"mode":"safeStorage","value":"TOP-SECRET-BLOB"}',
+/** Belong to this device only: folders, the device's own ids, running state. They never travel. */
+const DEVICE_BOUND = {
   cloud_r2_device_id: 'desktop-0000-1111',
-  spotify_client_id: 'spotify-client-id-123',
-  spotify_client_secret: 'spotify-client-secret-456',
+  cloud_r2_last_revision: 'REVISION-MARKER-55',
   download_directory: 'C:/Users/me/Music',
   library_directories: '["C:/Users/me/Music"]',
-  playback_session: '{"queue":[]}',
-  listening_profile_device: '{"device_id":"x"}',
+  playback_session: '{"queue":["SESSION-MARKER"]}',
+  listening_profile_device: '{"device_id":"DEVICE-MARKER"}',
   listening_profile_active_session: 'ACTIVE-SESSION-MARKER-9f3',
   schema_version: 'SCHEMA-MARKER-77',
+  storage_layout_version: 'LAYOUT-MARKER-3',
 };
+/** Everything else travels, keys included. */
 const PORTABLE = {
   language: 'cs',
   loudness_normalization: 'true',
@@ -33,6 +34,14 @@ const PORTABLE = {
   frequency_hz: '432',
   download_quality_profile: 'best_compatible',
   volume_percent: '37',
+  spotify_client_id: 'spotify-client-id-123',
+  spotify_client_secret: 'spotify-client-secret-456',
+  cloud_auto_sync_enabled: 'true',
+  sync_audio_over_cellular: 'false',
+  concurrent_downloads: '3',
+};
+const CLOUD: CloudStorageConfig = {
+  accountId: 'acct', bucket: 'my-private-bucket', prefix: 'ton', accessKeyId: 'AKID-123', secretAccessKey: 'R2-SECRET-XYZ', jurisdiction: 'eu',
 };
 
 function record(id = 'sess-1'): ProfileSessionRecord {
@@ -63,82 +72,67 @@ function input(overrides: Partial<ProfileBundleInput> = {}): ProfileBundleInput 
   return {
     deviceName: 'My PC',
     platform: 'desktop',
-    settings: { ...PORTABLE, ...SECRETS },
+    settings: { ...PORTABLE, ...DEVICE_BOUND },
+    cloud: CLOUD,
     starred: ['sha256:bbb', 'sha256:aaa', 'sha256:aaa'],
-    playlists: [{ name: 'Road', description: null, is_smart: false, smart_rules: null, track_hashes: ['h1', 'h2'] }],
     listening: [record()],
     ...overrides,
   };
 }
 
-test('building a bundle keeps the portable settings and drops every secret and device-specific one', () => {
+test('a profile carries every setting and key, the R2 config with its secret, and nothing that belongs to the device', () => {
   const bundle = buildProfileBundle(input(), 1_700_000_100_000);
   assert.deepEqual(bundle.settings, PORTABLE);
+  assert.deepEqual(bundle.cloud, CLOUD);
   const text = JSON.stringify(bundle);
-  for (const value of Object.values(SECRETS)) assert.equal(text.includes(value), false, 'a secret value is in the file: ' + value);
-  for (const key of Object.keys(SECRETS)) assert.equal(text.includes(key), false, 'a secret key name is in the file: ' + key);
+  for (const value of Object.values(DEVICE_BOUND)) assert.equal(text.includes(value), false, 'a device-bound value is in the file: ' + value);
   assert.equal(bundle.format, 'ton-profile');
-  assert.equal(bundle.version, 1);
+  assert.equal(bundle.version, 2);
   assert.equal(bundle.created_at, 1_700_000_100_000);
 });
 
-test('the allowlist contains no key that looks like a secret, a path, a device id or session state', () => {
-  const dangerous = /secret|token|password|passwd|credential|access_key|key_id|r2|spotify|cloud|device|director|path|session|license|hash|schema|layout|started_at|total_ms|backfilled|revision/i;
+test('the setting list contains no folder, device id or running state', () => {
+  const deviceBound = /director|path|device_id|session|schema|layout|started_at|total_ms|backfilled|revision/i;
   const keys = Object.keys(PROFILE_SETTING_KEYS);
-  assert.ok(keys.length >= 8, 'the allowlist is suspiciously short');
-  for (const key of keys) assert.equal(dangerous.test(key), false, `"${key}" must not be exportable`);
+  assert.ok(keys.includes('spotify_client_secret'), 'the Spotify key must travel');
+  for (const key of keys) assert.equal(deviceBound.test(key), false, `"${key}" belongs to the device`);
 });
 
-test('a bundle survives being written and read, with stars deduplicated and sorted', () => {
+test('a bundle survives being written and read, keys and all, with stars deduplicated and sorted', () => {
   const bundle = buildProfileBundle(input());
   assert.deepEqual(bundle.starred, ['sha256:aaa', 'sha256:bbb']);
-  const parsed = parseProfileBundle(JSON.stringify(bundle));
+  const parsed = parseProfileBundle(JSON.parse(JSON.stringify(bundle)));
   assert.deepEqual(parsed.bundle, bundle);
   assert.deepEqual(parsed.ignoredSettings, []);
+  assert.equal(parsed.bundle.cloud?.secretAccessKey, 'R2-SECRET-XYZ');
   assert.equal(parsed.bundle.listening.length, 1);
-  assert.equal(parsed.bundle.playlists[0].track_hashes.length, 2);
+  const noCloud = buildProfileBundle(input({ cloud: null }));
+  assert.equal(parseProfileBundle(JSON.parse(JSON.stringify(noCloud))).bundle.cloud, null);
 });
 
-test('parsing rejects files that are not a TON profile', () => {
+test('parsing rejects anything that is not a TON profile', () => {
   const good = JSON.parse(JSON.stringify(buildProfileBundle(input())));
-  const cases: Array<[string, string]> = [
-    ['not json', '{nope'],
-    ['an array', '[]'],
-    ['another format', JSON.stringify({ ...good, format: 'something-else' })],
-    ['a future version', JSON.stringify({ ...good, version: 2 })],
-    ['stars that are not a list', JSON.stringify({ ...good, starred: 'sha256:aaa' })],
-    ['a star that is not text', JSON.stringify({ ...good, starred: [42] })],
-    ['playlists that are not a list', JSON.stringify({ ...good, playlists: {} })],
-    ['a playlist without a name', JSON.stringify({ ...good, playlists: [{ ...good.playlists[0], name: '' }] })],
-    ['listening that is not a list', JSON.stringify({ ...good, listening: null })],
-    ['a damaged listening record', JSON.stringify({ ...good, listening: [{ ...good.listening[0], listened_ms: -5 }] })],
-    ['a listening record whose intervals exceed the measured time', JSON.stringify({ ...good, listening: [{ ...good.listening[0], listened_ms: 10 }] })],
+  const cases: Array<[string, unknown]> = [
+    ['not an object', []],
+    ['another format', { ...good, format: 'something-else' }],
+    ['an older or newer version', { ...good, version: 1 }],
+    ['stars that are not a list', { ...good, starred: 'sha256:aaa' }],
+    ['a star that is not text', { ...good, starred: [42] }],
+    ['listening that is not a list', { ...good, listening: null }],
+    ['a damaged listening record', { ...good, listening: [{ ...good.listening[0], listened_ms: -5 }] }],
+    ['a cloud config without a bucket', { ...good, cloud: { ...good.cloud, bucket: 7 } }],
+    ['a cloud config with an unknown jurisdiction', { ...good, cloud: { ...good.cloud, jurisdiction: 'mars' } }],
   ];
-  for (const [label, text] of cases) assert.throws(() => parseProfileBundle(text), undefined, `accepted ${label}`);
+  for (const [label, value] of cases) assert.throws(() => parseProfileBundle(value), undefined, `accepted ${label}`);
 });
 
-test('a hand-edited file cannot smuggle a secret or an invalid setting back in', () => {
+test('a hand-edited file cannot write folders, device ids or nonsense values', () => {
   const good = JSON.parse(JSON.stringify(buildProfileBundle(input())));
-  good.settings = {
-    ...good.settings,
-    cloud_r2_secret_access_key: 'EVIL',
-    spotify_client_secret: 'EVIL',
-    download_directory: 'C:/Windows',
-    language: 'xx',
-    volume_percent: 'loud',
-    eq_bands: '[1,2]',
-    loudness_normalization: 'maybe',
-  };
-  const parsed = parseProfileBundle(JSON.stringify(good));
-  assert.equal(parsed.bundle.settings.cloud_r2_secret_access_key, undefined);
-  assert.equal(parsed.bundle.settings.spotify_client_secret, undefined);
-  assert.equal(parsed.bundle.settings.download_directory, undefined);
-  assert.equal(parsed.bundle.settings.language, undefined, 'an unknown language must be dropped');
-  assert.equal(parsed.bundle.settings.volume_percent, undefined, 'a non-numeric volume must be dropped');
-  assert.equal(parsed.bundle.settings.eq_bands, undefined, 'EQ bands that are not ten numbers must be dropped');
-  assert.equal(parsed.bundle.settings.loudness_normalization, undefined, 'a non-boolean flag must be dropped');
-  assert.deepEqual([...parsed.ignoredSettings].sort(), ['cloud_r2_secret_access_key', 'download_directory', 'eq_bands', 'language', 'loudness_normalization', 'spotify_client_secret', 'volume_percent']);
-  assert.equal(parsed.bundle.settings.eq_preset, 'bass', 'valid settings must be kept');
+  good.settings = { ...good.settings, download_directory: 'C:/Windows', cloud_r2_device_id: 'stolen', language: 'xx', volume_percent: 'loud', eq_bands: '[1,2]' };
+  const parsed = parseProfileBundle(good);
+  for (const key of ['download_directory', 'cloud_r2_device_id', 'language', 'volume_percent', 'eq_bands']) assert.equal(parsed.bundle.settings[key], undefined, key);
+  assert.deepEqual([...parsed.ignoredSettings].sort(), ['cloud_r2_device_id', 'download_directory', 'eq_bands', 'language', 'volume_percent']);
+  assert.equal(parsed.bundle.settings.spotify_client_secret, 'spotify-client-secret-456', 'valid keys must be kept');
 });
 
 test('a track is identified by its content hash first, then its file hash, and otherwise cannot be identified', () => {
