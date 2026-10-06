@@ -351,3 +351,67 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             COMPILER_INDEX_STORE_ENABLE=NO \
             build
+
+  ios-ipa:
+    name: "DEV: iOS IPA (unsigned, for SideStore)"
+    if: ${{ github.ref == 'refs/heads/dev' && github.event_name == 'workflow_dispatch' && (github.event.inputs.target == 'all' || github.event.inputs.target == 'ios') }}
+    runs-on: macos-15
+    timeout-minutes: 75
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable pnpm
+        shell: bash
+        run: |
+          corepack enable
+          corepack prepare pnpm@10 --activate
+          pnpm --version
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install CocoaPods
+        working-directory: packages/mobile/ios
+        run: RUBYOPT=-rlogger pod install
+
+      - name: Build unsigned iPhone app (Release)
+        working-directory: packages/mobile/ios
+        run: |
+          xcodebuild \
+            -workspace TON.xcworkspace \
+            -scheme TON \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "${RUNNER_TEMP}/TONDeviceData" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            build
+
+      - name: Package IPA
+        shell: bash
+        run: |
+          set -euo pipefail
+          app="${RUNNER_TEMP}/TONDeviceData/Build/Products/Release-iphoneos/TON.app"
+          test -d "$app"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' -c 'Print :CFBundleShortVersionString' -c 'Print :CFBundleVersion' "$app/Info.plist"
+          mkdir -p "${RUNNER_TEMP}/ipa/Payload"
+          cp -R "$app" "${RUNNER_TEMP}/ipa/Payload/"
+          (cd "${RUNNER_TEMP}/ipa" && zip -qry "${GITHUB_WORKSPACE}/TON-ios-unsigned.ipa" Payload)
+          ls -la "${GITHUB_WORKSPACE}/TON-ios-unsigned.ipa"
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: TON-ios-unsigned
+          path: TON-ios-unsigned.ipa
+          retention-days: 7
