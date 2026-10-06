@@ -7,12 +7,13 @@ import { useLibrarySelectionState } from './use-library-selection-state';
 
 export function useLibrarySelection(
   displayTracks: Track[],
+  playbackTracks: Track[],
   queueSource: PlaybackQueueSourceDescriptor,
 ) {
   const { t } = useTranslation('library');
   const selectionState = useLibrarySelectionState(displayTracks);
   const playbackActions = useLibraryPlaybackActions(
-    displayTracks,
+    playbackTracks,
     selectionState.selectedTracks,
     selectionState.clearSelection,
     queueSource,

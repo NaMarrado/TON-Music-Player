@@ -7,6 +7,8 @@ import { useTranslation } from 'react-i18next';
 import type { PlaylistParams } from '../../types/navigation';
 import { ActionSheet, type ActionSheetOption } from '../../components/action-sheet';
 import { TrackRow } from '../../components/track-row';
+import { StarButton } from '../../components/star-button';
+import { isTrackStarred } from '../../stores/library-store';
 import { EmptyState } from '../../components/empty-state';
 import { EditPlaylistModal } from '../../components/edit-playlist-modal';
 import { LibraryTransferProgressModal } from '../../components/library-transfer-progress-modal';
@@ -16,6 +18,7 @@ import {
   useMobileFastScroll,
 } from '../../components/mobile-fast-scroller';
 import { PlaylistHero } from './playlist-hero';
+import { useOpenInStudio } from '../studio-screen/use-open-in-studio';
 import { PlaylistReorderControls, PlaylistTrackNumber } from './playlist-reorder-controls';
 import { PlaylistSelectionToolbar } from './playlist-selection-toolbar';
 import { usePlaylistScreen } from './use-playlist-screen';
@@ -27,6 +30,7 @@ export function PlaylistScreen({ route }: Props) {
   const { t } = useTranslation('playlist');
   const { t: tc } = useTranslation('common');
   const navigation = useNavigation();
+  const openInStudio = useOpenInStudio();
   const [showActionsMenu, setShowActionsMenu] = useState(false);
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [reorderMode, setReorderMode] = useState(false);
@@ -185,7 +189,7 @@ export function PlaylistScreen({ route }: Props) {
           onMoveDown={() => { void handleMoveTrack(item.playlist_track_id, 1); }}
           onMoveUp={() => { void handleMoveTrack(item.playlist_track_id, -1); }}
         />
-      ) : undefined}
+      ) : selectionActive ? undefined : <StarButton trackId={item.id} starred={isTrackStarred(item)} />}
       onPress={() => {
         if (!reorderMode) handleTrackPress(item, index);
       }}
@@ -224,6 +228,12 @@ export function PlaylistScreen({ route }: Props) {
         <PlaylistSelectionToolbar
           selectedCountLabel={t('selectedCount', { count: selectedPlaylistTrackIds.length })}
           onPlaySelection={handlePlaySelection}
+          onEditSelectionInStudio={selectedPlaylistTrackIds.length === 1 ? () => {
+            const track = tracks.find((candidate) => candidate.playlist_track_id === selectedPlaylistTrackIds[0]);
+            clearSelection();
+            if (track) openInStudio(track);
+          } : undefined}
+          editInStudioLabel={t('editInStudio')}
           onRemoveSelection={() => { void handleRemoveSelection(); }}
           onClearSelection={clearSelection}
         />

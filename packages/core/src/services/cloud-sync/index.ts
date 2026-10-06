@@ -39,6 +39,7 @@ export {
 } from './r2-cleanup-execution';
 export {
   buildCloudLocalDeletionPreview,
+  CLOUD_REPLACED_TRACK_KEY_PREFIX,
   partitionCloudManifestForLocalExclusions,
   type CloudLocalExclusionPartition,
 } from './local-exclusions';

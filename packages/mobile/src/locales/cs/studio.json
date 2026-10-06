@@ -280,5 +280,9 @@
   "clearTitle": "Vyčistit Studio?",
   "clearText": "Z editoru se odeberou všechny písně. Tlačítkem Zpět je můžete vrátit. Knihovna a exportované mixy zůstanou beze změny.",
   "exporting": "Ukládání mixu",
-  "saved": "Mix byl uložen do vaší Knihovny"
+  "saved": "Mix byl uložen do vaší Knihovny",
+  "replaceText": "Nahradit „{{title}}“ všude, kde se používá, nebo uložit úpravu jako novou skladbu.",
+  "replaceOriginal": "Nahradit původní",
+  "saveAsNew": "Uložit jako novou",
+  "replaced": "Skladba upravena"
 }

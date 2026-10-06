@@ -280,5 +280,9 @@
   "clearTitle": "清空 Studio?",
   "clearText": "编辑器中的所有歌曲都会被移除。你可以用撤销把它们找回来。你的音乐库和已导出的混音不会改变。",
   "exporting": "正在保存混音",
-  "saved": "混音已保存到你的音乐库"
+  "saved": "混音已保存到你的音乐库",
+  "replaceText": "在所有使用“{{title}}”的地方替换它，或将编辑另存为新歌曲。",
+  "replaceOriginal": "替换原曲",
+  "saveAsNew": "另存为新歌曲",
+  "replaced": "歌曲已更新"
 }

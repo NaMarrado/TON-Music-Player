@@ -44,5 +44,12 @@
   "duplicatePlaylistAddAgain": "Dodaj ponownie",
   "duplicatePlaylistSkip": "Pomiń",
   "duplicatePlaylistAddThis": "Dodaj ten utwór",
-  "duplicatePlaylistAddAll": "Dodaj wszystkie duplikaty"
+  "duplicatePlaylistAddAll": "Dodaj wszystkie duplikaty",
+  "starred": "Ulubione",
+  "starTrack": "Dodaj do ulubionych",
+  "unstarTrack": "Usuń z ulubionych",
+  "starFailed": "Nie udało się zmienić ulubionego utworu",
+  "emptyStarred": "Brak ulubionych utworów",
+  "emptyStarredHint": "Oznacz utwór gwiazdką, aby znaleźć go tutaj.",
+  "editInStudio": "Edytuj w Studio"
 }

@@ -15,12 +15,14 @@ import { SongsHeader } from './songs-header';
 export function LibraryListHeader({
   playlists,
   filterQuery,
+  starredOnly,
   tracks,
   onCreatePlaylist,
   onPlayAll,
 }: {
   playlists: Playlist[];
   filterQuery: string;
+  starredOnly: boolean;
   tracks: Track[];
   onCreatePlaylist: () => void;
   onPlayAll: () => void;
@@ -51,6 +53,8 @@ export function LibraryListHeader({
         showPlayAll={tracks.length > 0}
         playAllLabel={t('playAll')}
         summaryLabel={summaryLabel}
+        starredOnly={starredOnly}
+        starredLabel={t('starred')}
         onPlayAll={onPlayAll}
       />
     </>

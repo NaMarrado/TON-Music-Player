@@ -44,5 +44,12 @@
   "duplicatePlaylistAddAgain": "Ajouter à nouveau",
   "duplicatePlaylistSkip": "Ignorer",
   "duplicatePlaylistAddThis": "Ajouter ce morceau",
-  "duplicatePlaylistAddAll": "Ajouter tous les doublons"
+  "duplicatePlaylistAddAll": "Ajouter tous les doublons",
+  "starred": "Favoris",
+  "starTrack": "Ajouter aux favoris",
+  "unstarTrack": "Retirer des favoris",
+  "starFailed": "Impossible de modifier le favori",
+  "emptyStarred": "Aucun titre favori pour le moment",
+  "emptyStarredHint": "Marquez un titre avec une étoile pour le retrouver ici.",
+  "editInStudio": "Modifier dans Studio"
 }

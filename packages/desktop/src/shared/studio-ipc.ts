@@ -16,6 +16,8 @@ export interface StudioExportRequest {
   project: StudioProject;
   title: string;
   artist: string;
+  /** Library song whose audio the render replaces (a quick edit) instead of adding a new song. */
+  replaceTrackId?: number;
 }
 
 export interface StudioExportResult {

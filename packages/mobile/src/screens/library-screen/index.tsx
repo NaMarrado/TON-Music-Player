@@ -4,6 +4,8 @@ import { FlashList, type ListRenderItemInfo } from '@shopify/flash-list';
 import type { Track } from '@ton/core';
 import { useTranslation } from 'react-i18next';
 import { TrackRow } from '../../components/track-row';
+import { StarButton } from '../../components/star-button';
+import { isTrackStarred } from '../../stores/library-store';
 import { EmptyState } from '../../components/empty-state';
 import { ActionSheet } from '../../components/action-sheet';
 import { PlaylistPicker } from '../../components/playlist-picker';
@@ -13,6 +15,7 @@ import { LibraryToolbar } from './library-toolbar';
 import { LibraryTransferProgressModal } from '../../components/library-transfer-progress-modal';
 import { useLibraryTransferActions } from '../settings-screen/use-library-transfer-actions';
 import { useLibraryScreen } from './use-library-screen';
+import { useOpenInStudio } from '../studio-screen/use-open-in-studio';
 import {
   MobileFastScroller,
   useMobileFastScroll,
@@ -22,6 +25,7 @@ export function LibraryScreen() {
   const { t } = useTranslation('library');
   const { t: ts } = useTranslation('settings');
   const transfer = useLibraryTransferActions();
+  const openInStudio = useOpenInStudio();
   const [pendingExportTrackIds, setPendingExportTrackIds] = useState<number[] | null>(null);
   const {
     clearSelection,
@@ -38,6 +42,7 @@ export function LibraryScreen() {
     handleTrackPress,
     isLoading,
     isRefreshing,
+    starredOnly,
     playlists,
     playlistPickerTrackIds,
     removePromptDescription,
@@ -61,11 +66,12 @@ export function LibraryScreen() {
     <LibraryListHeader
       playlists={playlists}
       filterQuery={filterQuery}
+      starredOnly={starredOnly}
       tracks={displayTracks}
       onCreatePlaylist={() => setShowCreatePlaylist(true)}
       onPlayAll={handlePlayAll}
     />
-  ), [filterQuery, handlePlayAll, playlists, setShowCreatePlaylist, displayTracks]);
+  ), [filterQuery, handlePlayAll, playlists, setShowCreatePlaylist, displayTracks, starredOnly]);
 
   const renderTrack = useCallback(({ item }: ListRenderItemInfo<Track>) => (
     <TrackRow
@@ -74,6 +80,7 @@ export function LibraryScreen() {
       selectionMode={selectionActive}
       onPress={() => handleTrackPress(item)}
       onLongPress={() => handleTrackLongPress(item)}
+      rightAccessory={selectionActive ? undefined : <StarButton trackId={item.id} starred={isTrackStarred(item)} />}
     />
   ), [handleTrackLongPress, handleTrackPress, selectedTrackIdSet, selectionActive]);
 
@@ -88,6 +95,12 @@ export function LibraryScreen() {
         onExportSelection={() => {
           setPendingExportTrackIds([...selectedTrackIds]);
         }}
+        onEditSelectionInStudio={selectedTrackIds.length === 1 ? () => {
+          const track = displayTracks.find((candidate) => candidate.id === selectedTrackIds[0]);
+          clearSelection();
+          if (track) openInStudio(track);
+        } : undefined}
+        editInStudioLabel={t('editInStudio')}
         onRemoveSelection={() => { void handleRemoveSelection(); }}
         onClearSelection={clearSelection}
         onOpenSortMenu={() => setShowSortMenu(true)}
@@ -117,7 +130,11 @@ export function LibraryScreen() {
           ListHeaderComponent={listHeader}
           renderItem={renderTrack}
           ListEmptyComponent={
-            isLoading ? null : <EmptyState message={filterQuery ? t('noResults') : t('emptyLibrary')} />
+            isLoading ? null : (
+              <EmptyState
+                message={filterQuery ? t('noResults') : starredOnly ? t('emptyStarred') : t('emptyLibrary')}
+              />
+            )
           }
         />
         <MobileFastScroller

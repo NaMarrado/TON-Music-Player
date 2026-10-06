@@ -280,5 +280,9 @@
   "clearTitle": "Vider le Studio ?",
   "clearText": "Tous les morceaux sont retirés de l’éditeur. Vous pouvez les récupérer avec Annuler. Votre bibliothèque et les mix exportés restent intacts.",
   "exporting": "Enregistrement du mix",
-  "saved": "Mix enregistré dans votre Bibliothèque"
+  "saved": "Mix enregistré dans votre Bibliothèque",
+  "replaceText": "Remplacer « {{title}} » partout où il est utilisé, ou enregistrer la modification comme nouveau titre.",
+  "replaceOriginal": "Remplacer l’original",
+  "saveAsNew": "Enregistrer comme nouveau",
+  "replaced": "Titre mis à jour"
 }

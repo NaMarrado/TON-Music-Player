@@ -42,5 +42,6 @@
   "sortDownloaded": "Heruntergeladen",
   "sortDuration": "Dauer",
   "filterPlaceholder": "Titel filtern...",
-  "noResults": "Keine passenden Titel"
+  "noResults": "Keine passenden Titel",
+  "editInStudio": "Im Studio bearbeiten"
 }

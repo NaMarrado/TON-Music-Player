@@ -280,5 +280,9 @@
   "clearTitle": "¿Borrar el Studio?",
   "clearText": "Se quitan todas las canciones del editor. Puedes recuperarlas con Deshacer. Tu biblioteca y las mezclas exportadas no cambian.",
   "exporting": "Guardando la mezcla",
-  "saved": "Mezcla guardada en tu Biblioteca"
+  "saved": "Mezcla guardada en tu Biblioteca",
+  "replaceText": "Reemplaza «{{title}}» en todos los lugares donde se usa o guarda la edición como una canción nueva.",
+  "replaceOriginal": "Reemplazar original",
+  "saveAsNew": "Guardar como nueva",
+  "replaced": "Canción actualizada"
 }

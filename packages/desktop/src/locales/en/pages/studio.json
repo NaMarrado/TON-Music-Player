@@ -280,5 +280,9 @@
   "exporting": "Saving the mix",
   "saved": "Mix saved to your Library",
   "removeConfirmText": "Remove this song from the editor? Your Library stays untouched.",
-  "removeConfirmAction": "Remove"
+  "removeConfirmAction": "Remove",
+  "replaceText": "Replace “{{title}}” everywhere it is used, or save the edit as a new song.",
+  "replaceOriginal": "Replace original",
+  "saveAsNew": "Save as new",
+  "replaced": "Song updated"
 }

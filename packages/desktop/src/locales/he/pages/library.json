@@ -51,5 +51,7 @@
   "duplicatePlaylistAddAgain": "הוסף שוב",
   "duplicatePlaylistSkip": "דלג",
   "duplicatePlaylistAddThis": "הוסף את השיר הזה",
-  "duplicatePlaylistAddAll": "הוסף את כל הכפילויות"
+  "duplicatePlaylistAddAll": "הוסף את כל הכפילויות",
+  "editInStudio": "עריכה ב-Studio",
+  "editInStudioHint": "פותח את השיר ב-Studio כדי לקצר או לשנות אותו ולשמור אותו באותו מקום."
 }

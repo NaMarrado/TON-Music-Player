@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { getFilteredTracks } from '@ton/core';
+import { getFilteredTracks, matchesTrackFilter } from '@ton/core';
 import { useTranslation } from 'react-i18next';
 import {
+  isTrackStarred,
   setFilterQuery,
   setSortBy,
   useLibraryStore,
@@ -10,6 +11,7 @@ import {
 } from '../../stores/library-store';
 import { createPlaylist, loadPlaylists, usePlaylistStore } from '../../stores/playlist-store';
 import { playTracks } from '../../services/playback-bridge';
+import { STARRED_LIBRARY_SOURCE_ID } from '../../services/playback-bridge/queue-source-reconcile';
 import { showToast } from '../../stores/toast-store';
 import type { ActionSheetOption } from '../../components/action-sheet';
 import { SORT_KEYS } from './constants';
@@ -21,6 +23,7 @@ export function useLibraryScreen() {
   const sortBy = useLibraryStore((state) => state.sortBy);
   const sortOrder = useLibraryStore((state) => state.sortOrder);
   const filterQuery = useLibraryStore((state) => state.filterQuery);
+  const starredOnly = useLibraryStore((state) => state.starredOnly);
   const isLoading = useLibraryStore((state) => state.isLoading);
   const playlists = usePlaylistStore((state) => state.playlists);
   const hasPlaylistsLoaded = usePlaylistStore((state) => state.hasLoaded);
@@ -42,27 +45,28 @@ export function useLibraryScreen() {
     }
   }, [hasPlaylistsLoaded, isPlaylistLoading]);
 
+  // Search only narrows what is shown; playback and the queue follow the whole (optionally starred) Library, like the desktop.
+  const playbackTracks = useMemo(
+    () => getFilteredTracks(starredOnly ? tracks.filter(isTrackStarred) : tracks, '', sortBy, sortOrder),
+    [tracks, sortBy, sortOrder, starredOnly],
+  );
   const displayTracks = useMemo(
-    () => getFilteredTracks(tracks, filterQuery, sortBy, sortOrder),
-    [tracks, filterQuery, sortBy, sortOrder],
+    () => (filterQuery ? playbackTracks.filter((track) => matchesTrackFilter(track, filterQuery)) : playbackTracks),
+    [playbackTracks, filterQuery],
   );
   const queueSource = useMemo(() => ({
     kind: 'library' as const,
-    filter_query: filterQuery || undefined,
+    ...(starredOnly ? { source_id: STARRED_LIBRARY_SOURCE_ID } : {}),
     sort_by: sortBy,
     sort_order: sortOrder,
-  }), [filterQuery, sortBy, sortOrder]);
-  const selection = useLibrarySelection(displayTracks, queueSource);
-
-  const handlePlay = useCallback((index: number) => {
-    playTracks(displayTracks, index, queueSource);
-  }, [displayTracks, queueSource]);
+  }), [sortBy, sortOrder, starredOnly]);
+  const selection = useLibrarySelection(displayTracks, playbackTracks, queueSource);
 
   const handlePlayAll = useCallback(() => {
-    if (displayTracks.length > 0) {
-      playTracks(displayTracks, 0, queueSource);
+    if (playbackTracks.length > 0) {
+      playTracks(playbackTracks, 0, queueSource);
     }
-  }, [displayTracks, queueSource]);
+  }, [playbackTracks, queueSource]);
 
   const handleCreatePlaylist = useCallback(async (name: string) => {
     const trimmedName = name.trim();
@@ -99,11 +103,11 @@ export function useLibraryScreen() {
     filterQuery,
     ...selection,
     handleCreatePlaylist,
-    handlePlay,
     handlePlayAll,
     handleRefresh,
     isLoading,
     isRefreshing,
+    starredOnly,
     playlists,
     setShowCreatePlaylist,
     setShowSortMenu,

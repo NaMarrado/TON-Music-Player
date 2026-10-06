@@ -42,5 +42,6 @@
   "sortDownloaded": "Descargado",
   "sortDuration": "Duración",
   "filterPlaceholder": "Filtrar canciones...",
-  "noResults": "No hay canciones coincidentes"
+  "noResults": "No hay canciones coincidentes",
+  "editInStudio": "Editar en Studio"
 }

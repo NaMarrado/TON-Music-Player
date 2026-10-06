@@ -17,8 +17,10 @@ import albumEn from './en/album.json';
 import albumCs from './cs/album.json';
 import nowPlayingEn from './en/now-playing.json';
 import studioEn from './en/studio.json';
+import profileEn from './en/profile.json';
 import nowPlayingCs from './cs/now-playing.json';
 import studioCs from './cs/studio.json';
+import profileCs from './cs/profile.json';
 import homeEs from './es/home.json';
 import libraryEs from './es/library.json';
 import searchEs from './es/search.json';
@@ -29,6 +31,7 @@ import artistEs from './es/artist.json';
 import albumEs from './es/album.json';
 import nowPlayingEs from './es/now-playing.json';
 import studioEs from './es/studio.json';
+import profileEs from './es/profile.json';
 import homeDe from './de/home.json';
 import libraryDe from './de/library.json';
 import searchDe from './de/search.json';
@@ -39,6 +42,7 @@ import artistDe from './de/artist.json';
 import albumDe from './de/album.json';
 import nowPlayingDe from './de/now-playing.json';
 import studioDe from './de/studio.json';
+import profileDe from './de/profile.json';
 import homeFr from './fr/home.json';
 import libraryFr from './fr/library.json';
 import searchFr from './fr/search.json';
@@ -49,6 +53,7 @@ import artistFr from './fr/artist.json';
 import albumFr from './fr/album.json';
 import nowPlayingFr from './fr/now-playing.json';
 import studioFr from './fr/studio.json';
+import profileFr from './fr/profile.json';
 import homePt from './pt/home.json';
 import libraryPt from './pt/library.json';
 import searchPt from './pt/search.json';
@@ -59,6 +64,7 @@ import artistPt from './pt/artist.json';
 import albumPt from './pt/album.json';
 import nowPlayingPt from './pt/now-playing.json';
 import studioPt from './pt/studio.json';
+import profilePt from './pt/profile.json';
 import homeIt from './it/home.json';
 import libraryIt from './it/library.json';
 import searchIt from './it/search.json';
@@ -69,6 +75,7 @@ import artistIt from './it/artist.json';
 import albumIt from './it/album.json';
 import nowPlayingIt from './it/now-playing.json';
 import studioIt from './it/studio.json';
+import profileIt from './it/profile.json';
 import homePl from './pl/home.json';
 import libraryPl from './pl/library.json';
 import searchPl from './pl/search.json';
@@ -79,6 +86,7 @@ import artistPl from './pl/artist.json';
 import albumPl from './pl/album.json';
 import nowPlayingPl from './pl/now-playing.json';
 import studioPl from './pl/studio.json';
+import profilePl from './pl/profile.json';
 import homeRu from './ru/home.json';
 import libraryRu from './ru/library.json';
 import searchRu from './ru/search.json';
@@ -89,6 +97,7 @@ import artistRu from './ru/artist.json';
 import albumRu from './ru/album.json';
 import nowPlayingRu from './ru/now-playing.json';
 import studioRu from './ru/studio.json';
+import profileRu from './ru/profile.json';
 import homeJa from './ja/home.json';
 import libraryJa from './ja/library.json';
 import searchJa from './ja/search.json';
@@ -99,6 +108,7 @@ import artistJa from './ja/artist.json';
 import albumJa from './ja/album.json';
 import nowPlayingJa from './ja/now-playing.json';
 import studioJa from './ja/studio.json';
+import profileJa from './ja/profile.json';
 import homeAr from './ar/home.json';
 import libraryAr from './ar/library.json';
 import searchAr from './ar/search.json';
@@ -109,6 +119,7 @@ import artistAr from './ar/artist.json';
 import albumAr from './ar/album.json';
 import nowPlayingAr from './ar/now-playing.json';
 import studioAr from './ar/studio.json';
+import profileAr from './ar/profile.json';
 import homeHe from './he/home.json';
 import libraryHe from './he/library.json';
 import searchHe from './he/search.json';
@@ -119,6 +130,7 @@ import artistHe from './he/artist.json';
 import albumHe from './he/album.json';
 import nowPlayingHe from './he/now-playing.json';
 import studioHe from './he/studio.json';
+import profileHe from './he/profile.json';
 import homeZh from './zh/home.json';
 import libraryZh from './zh/library.json';
 import searchZh from './zh/search.json';
@@ -129,6 +141,7 @@ import artistZh from './zh/artist.json';
 import albumZh from './zh/album.json';
 import nowPlayingZh from './zh/now-playing.json';
 import studioZh from './zh/studio.json';
+import profileZh from './zh/profile.json';
 
 export const mobileResources: Record<SupportedLanguage, Record<string, LocaleResourceObject>> = {
   en: {
@@ -142,6 +155,7 @@ export const mobileResources: Record<SupportedLanguage, Record<string, LocaleRes
     album: albumEn,
     nowPlaying: nowPlayingEn,
     studio: studioEn,
+    profile: profileEn,
   },
   cs: {
     home: homeCs,
@@ -154,6 +168,7 @@ export const mobileResources: Record<SupportedLanguage, Record<string, LocaleRes
     album: albumCs,
     nowPlaying: nowPlayingCs,
     studio: studioCs,
+    profile: profileCs,
   },
   es: {
     home: homeEs,
@@ -166,6 +181,7 @@ export const mobileResources: Record<SupportedLanguage, Record<string, LocaleRes
     album: albumEs,
     nowPlaying: nowPlayingEs,
     studio: studioEs,
+    profile: profileEs,
   },
   de: {
     home: homeDe,
@@ -178,6 +194,7 @@ export const mobileResources: Record<SupportedLanguage, Record<string, LocaleRes
     album: albumDe,
     nowPlaying: nowPlayingDe,
     studio: studioDe,
+    profile: profileDe,
   },
   fr: {
     home: homeFr,
@@ -190,6 +207,7 @@ export const mobileResources: Record<SupportedLanguage, Record<string, LocaleRes
     album: albumFr,
     nowPlaying: nowPlayingFr,
     studio: studioFr,
+    profile: profileFr,
   },
   pt: {
     home: homePt,
@@ -202,6 +220,7 @@ export const mobileResources: Record<SupportedLanguage, Record<string, LocaleRes
     album: albumPt,
     nowPlaying: nowPlayingPt,
     studio: studioPt,
+    profile: profilePt,
   },
   it: {
     home: homeIt,
@@ -214,6 +233,7 @@ export const mobileResources: Record<SupportedLanguage, Record<string, LocaleRes
     album: albumIt,
     nowPlaying: nowPlayingIt,
     studio: studioIt,
+    profile: profileIt,
   },
   pl: {
     home: homePl,
@@ -226,6 +246,7 @@ export const mobileResources: Record<SupportedLanguage, Record<string, LocaleRes
     album: albumPl,
     nowPlaying: nowPlayingPl,
     studio: studioPl,
+    profile: profilePl,
   },
   ru: {
     home: homeRu,
@@ -238,6 +259,7 @@ export const mobileResources: Record<SupportedLanguage, Record<string, LocaleRes
     album: albumRu,
     nowPlaying: nowPlayingRu,
     studio: studioRu,
+    profile: profileRu,
   },
   ja: {
     home: homeJa,
@@ -250,6 +272,7 @@ export const mobileResources: Record<SupportedLanguage, Record<string, LocaleRes
     album: albumJa,
     nowPlaying: nowPlayingJa,
     studio: studioJa,
+    profile: profileJa,
   },
   ar: {
     home: homeAr,
@@ -262,6 +285,7 @@ export const mobileResources: Record<SupportedLanguage, Record<string, LocaleRes
     album: albumAr,
     nowPlaying: nowPlayingAr,
     studio: studioAr,
+    profile: profileAr,
   },
   he: {
     home: homeHe,
@@ -274,6 +298,7 @@ export const mobileResources: Record<SupportedLanguage, Record<string, LocaleRes
     album: albumHe,
     nowPlaying: nowPlayingHe,
     studio: studioHe,
+    profile: profileHe,
   },
   zh: {
     home: homeZh,
@@ -286,5 +311,6 @@ export const mobileResources: Record<SupportedLanguage, Record<string, LocaleRes
     album: albumZh,
     nowPlaying: nowPlayingZh,
     studio: studioZh,
+    profile: profileZh,
   },
 };

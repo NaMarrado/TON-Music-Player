@@ -7,7 +7,9 @@ import type {
   CloudTrackRecordV2,
 } from '@ton/core';
 import {
+  CLOUD_REPLACED_TRACK_KEY_PREFIX,
   createCloudDeletedPlaylistRecordV2,
+  createCloudDeletedTrackRecordV2,
   createCloudLivePlaylistRecordV2,
   createCloudLiveTrackRecordV2,
   createEmptyCloudLibraryManifestV2,
@@ -139,6 +141,15 @@ export function createV2MutationBuilder(input: {
       }
     }
     for (const item of outbox) {
+      if (item.entity_type === 'track' && item.operation === 'delete' && item.entity_key.startsWith(CLOUD_REPLACED_TRACK_KEY_PREFIX)) {
+        const hash = item.entity_key.slice(CLOUD_REPLACED_TRACK_KEY_PREFIX.length);
+        // Skip it if the same audio is live again here (for example the edit was undone by importing the original).
+        const liveAgain = [...tracks.values()].some((serialized) => serialized.entry.content_hash_sha256 === hash);
+        if (hash && !liveAgain) {
+          trackRecords.push(createCloudDeletedTrackRecordV2(hash, nextVersion()));
+        }
+        continue;
+      }
       if (item.entity_type !== 'playlist' || item.operation !== 'delete') continue;
       let cloudId: string | undefined;
       try { cloudId = (JSON.parse(item.payload_json || '{}') as { cloud_id?: string }).cloud_id; }

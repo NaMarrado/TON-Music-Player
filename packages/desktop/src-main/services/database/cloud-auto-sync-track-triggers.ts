@@ -116,7 +116,8 @@ export function createCloudAutoSyncTrackTriggers(db: Database.Database): void {
       WHERE id = 1;
     END;
 
+    -- Old local-only track deletes are dropped; a Studio replacement (replaced:<hash>) is still waiting to be published.
     DELETE FROM cloud_sync_outbox
-    WHERE entity_type = 'track' AND operation = 'delete';
+    WHERE entity_type = 'track' AND operation = 'delete' AND entity_key NOT LIKE 'replaced:%';
   `);
 }

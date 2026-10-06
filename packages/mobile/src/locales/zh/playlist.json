@@ -42,5 +42,6 @@
   "sortDownloaded": "下载时间",
   "sortDuration": "时长",
   "filterPlaceholder": "筛选歌曲...",
-  "noResults": "没有匹配的歌曲"
+  "noResults": "没有匹配的歌曲",
+  "editInStudio": "在 Studio 中编辑"
 }

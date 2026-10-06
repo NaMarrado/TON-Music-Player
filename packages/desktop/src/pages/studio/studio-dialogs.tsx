@@ -1,10 +1,10 @@
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { projectDurationSec, type StudioProject } from '@ton/core';
+import { projectContentStartSec, projectDurationSec, type StudioProject } from '@ton/core';
 import { Dialog } from '../../components/ui/dialog';
 import { showToast } from '../../stores/toast-store';
 import { formatClock } from './studio-format';
-import { cancelExport, exportMix, resetProject, useStudioStore } from './studio-store';
+import { activeEditTarget, cancelExport, exportMix, replaceEditedTrack, resetProject, useStudioStore } from './studio-store';
 
 function Action({ id, onClick, disabled = false, primary = false, children }: { id: string; onClick: () => void; disabled?: boolean; primary?: boolean; children: ReactNode }) {
   return (
@@ -25,6 +25,7 @@ function ExportForm({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation('pages/studio');
   const project = useStudioStore((state) => state.project);
   const exporting = useStudioStore((state) => state.exporting);
+  const editTarget = useStudioStore(activeEditTarget);
   const [title, setTitle] = useState(() => suggestName(useStudioStore.getState().project, t('defaultName')));
 
   const save = async () => {
@@ -35,9 +36,16 @@ function ExportForm({ onClose }: { onClose: () => void }) {
     }
   };
 
+  const replace = async () => {
+    if (await replaceEditedTrack()) {
+      showToast(t('replaced'), 'success');
+      onClose();
+    }
+  };
+
   return (
     <div className="studio-dialog">
-      <p className="studio-dialog-text">{t('exportText')}</p>
+      <p className="studio-dialog-text">{editTarget ? t('replaceText', { title: editTarget.title }) : t('exportText')}</p>
       <input
         className="studio-dialog-input"
         type="text"
@@ -48,7 +56,7 @@ function ExportForm({ onClose }: { onClose: () => void }) {
         disabled={exporting !== null}
         maxLength={120}
       />
-      <div className="studio-dialog-meta">{formatClock(projectDurationSec(project))}</div>
+      <div className="studio-dialog-meta">{formatClock(projectDurationSec(project) - (editTarget ? projectContentStartSec(project) : 0))}</div>
       {exporting && (
         <div className="studio-progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(exporting.progress * 100)} aria-label={t('exporting')}>
           <i style={{ width: `${Math.round(exporting.progress * 100)}%` }} />
@@ -56,7 +64,10 @@ function ExportForm({ onClose }: { onClose: () => void }) {
       )}
       <div className="studio-dialog-actions">
         <Action id="dialog-cancel" onClick={exporting ? cancelExport : onClose}>{t('cancel')}</Action>
-        <Action id="dialog-save" primary onClick={() => void save()} disabled={exporting !== null || title.trim() === ''}>{t('save')}</Action>
+        <Action id="dialog-save" primary={!editTarget} onClick={() => void save()} disabled={exporting !== null || title.trim() === ''}>{t(editTarget ? 'saveAsNew' : 'save')}</Action>
+        {editTarget && (
+          <Action id="dialog-replace" primary onClick={() => void replace()} disabled={exporting !== null}>{t('replaceOriginal')}</Action>
+        )}
       </div>
     </div>
   );

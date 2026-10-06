@@ -280,5 +280,9 @@
   "exporting": "Mix wird gespeichert",
   "saved": "Mix in deiner Mediathek gespeichert",
   "removeConfirmText": "Diesen Song aus dem Editor entfernen? Deine Bibliothek bleibt unverändert.",
-  "removeConfirmAction": "Entfernen"
+  "removeConfirmAction": "Entfernen",
+  "replaceText": "„{{title}}“ überall ersetzen, wo er verwendet wird, oder die Bearbeitung als neuen Titel speichern.",
+  "replaceOriginal": "Original ersetzen",
+  "saveAsNew": "Als neu speichern",
+  "replaced": "Titel aktualisiert"
 }

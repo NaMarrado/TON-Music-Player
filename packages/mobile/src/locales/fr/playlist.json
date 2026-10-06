@@ -42,5 +42,6 @@
   "sortDownloaded": "Téléchargé",
   "sortDuration": "Durée",
   "filterPlaceholder": "Filtrer les titres...",
-  "noResults": "Aucun titre correspondant"
+  "noResults": "Aucun titre correspondant",
+  "editInStudio": "Modifier dans Studio"
 }
