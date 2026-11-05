@@ -53,9 +53,20 @@ export async function syncCloudLibraryV2ForDesktop(
   }
   const cancelled = options.signal?.aborted
     || (musicError instanceof Error && musicError.message === 'cloud_sync_cancelled');
+  const mode = options.mode ?? 'sync';
+  if (!musicError && mode !== 'upload') {
+    // Runs after this cycle applied and mirrored the current R2 manifest, so a cover another device has just
+    // published counts as present and is never replaced by a YouTube thumbnail. The next publishing sync (upload or
+    // Auto Sync) uploads what it queued.
+    const coveredTrackIds = await repairMissingCloudCovers(activateDesktopCloudScope(requireConfig()))
+      .catch((error: unknown) => {
+        console.warn('[cloud] Cover repair failed; the sync continues without it.', error);
+        return [];
+      });
+    if (coveredTrackIds.length > 0) options.onTracksApplied?.(coveredTrackIds);
+  }
   if (!cancelled) {
     const config = requireConfig();
-    const mode = options.mode ?? 'sync';
     try {
       await syncDesktopProfile(config, activateDesktopCloudScope(config), {
         publish: mode !== 'fetch', fetch: mode !== 'upload', signal: options.signal,
@@ -84,13 +95,6 @@ async function syncCloudMusicV2ForDesktop(
   const mode = requestedMode;
   const shouldUpload = mode !== 'fetch';
   const shouldApply = mode !== 'upload';
-  // Covers missing on R2 are fixed locally and queued on every sync, Sync now included; a sync that publishes
-  // (upload or Auto Sync) uploads them, and a fetch keeps them protected until then.
-  const coveredTrackIds = await repairMissingCloudCovers(scopeId).catch((error: unknown) => {
-    console.warn('[cloud] Cover repair failed; the sync continues without it.', error);
-    return [];
-  });
-  if (coveredTrackIds.length > 0) options.onTracksApplied?.(coveredTrackIds);
   const durableOutbox = readDesktopCloudOutbox(scopeId);
   const outbox = shouldUpload ? durableOutbox : [];
   // Entity mutations are protected independently from administrative reconcile
