@@ -84,14 +84,13 @@ async function syncCloudMusicV2ForDesktop(
   const mode = requestedMode;
   const shouldUpload = mode !== 'fetch';
   const shouldApply = mode !== 'upload';
-  if (shouldUpload) {
-    // Covers missing on R2 are queued now, so the outbox read below publishes them.
-    const coveredTrackIds = await repairMissingCloudCovers(scopeId).catch((error: unknown) => {
-      console.warn('[cloud] Cover repair failed; the sync continues without it.', error);
-      return [];
-    });
-    if (coveredTrackIds.length > 0) options.onTracksApplied?.(coveredTrackIds);
-  }
+  // Covers missing on R2 are fixed locally and queued on every sync, Sync now included; a sync that publishes
+  // (upload or Auto Sync) uploads them, and a fetch keeps them protected until then.
+  const coveredTrackIds = await repairMissingCloudCovers(scopeId).catch((error: unknown) => {
+    console.warn('[cloud] Cover repair failed; the sync continues without it.', error);
+    return [];
+  });
+  if (coveredTrackIds.length > 0) options.onTracksApplied?.(coveredTrackIds);
   const durableOutbox = readDesktopCloudOutbox(scopeId);
   const outbox = shouldUpload ? durableOutbox : [];
   // Entity mutations are protected independently from administrative reconcile

@@ -98,14 +98,13 @@ async function runMobileMusicV2Sync(
       const result: CloudSyncResult = { ...EMPTY_RESULT };
       const scopeId = await ensureMobileCloudScope(config);
       const state = await getMobileCloudPersistedState(scopeId);
-      if (mode !== 'fetch') {
-        // Covers missing on R2 are queued now, so the outbox publishes them below.
-        const coveredTrackIds = await repairMissingCloudCovers().catch((error: unknown) => {
-          console.warn('[cloud] Cover repair failed; the sync continues without it.', error);
-          return [];
-        });
-        if (coveredTrackIds.length > 0) void upsertTracksByIds(coveredTrackIds).catch(() => {});
-      }
+      // Covers missing on R2 are fixed locally and queued on every sync, Sync now included; a sync that publishes
+      // (upload or Auto Sync) uploads them, and a fetch keeps them protected until then.
+      const coveredTrackIds = await repairMissingCloudCovers().catch((error: unknown) => {
+        console.warn('[cloud] Cover repair failed; the sync continues without it.', error);
+        return [];
+      });
+      if (coveredTrackIds.length > 0) void upsertTracksByIds(coveredTrackIds).catch(() => {});
       const durableOutbox = await getMobileCloudOutbox(scopeId);
       const outbox = mode === 'fetch' ? [] : durableOutbox;
       // A fetch publishes nothing: all queued local edits remain protected.

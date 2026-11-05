@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import { getDb } from '../database';
 import { downloadCoverArt, youtubeFallbackThumbnailUrl } from '../downloader/artwork';
+import { selectCoverRepairCandidates } from './cover-repair-candidates';
 
 const COVER_BACKFILL_BATCH = 50;
 const COVER_BACKFILL_PARALLEL = 4;
@@ -9,29 +10,14 @@ const COVER_BACKFILL_PARALLEL = 4;
 const coverBackfillAttempted = new Set<number>();
 const coverRepublishAttempted = new Set<number>();
 
-/** The R2 record of the song in the cloud library being synced, as mirrored by the last sync. */
-const PUBLISHED_TRACK_RECORD = `
-  SELECT 1 FROM cloud_sync_entities entity
-  WHERE entity.scope_id = ?
-    AND entity.entity_type = 'track'
-    AND entity.entity_key = lower(tracks.content_hash_sha256)
-    AND entity.is_deleted = 0`;
-
 /**
- * Covers missing on R2 are repaired before a sync publishes (the phone app does the same):
- * - A YouTube song without a cover gets the YouTube thumbnail. Songs whose R2 record has a cover are skipped: that
- *   cover is still being fetched from R2, and a thumbnail would replace it everywhere.
- * - A song this computer has a cover for, but which R2 has without one, is queued again so the cover gets uploaded.
- * Both go through the outbox, so the sync that follows publishes them. Returns the ids of songs that got a new cover.
+ * Covers missing on R2 are repaired before every sync (the phone app does the same). Both kinds go through the outbox,
+ * so the next sync that publishes (upload or Auto Sync) uploads them. Returns the ids of songs that got a new cover.
  */
 export async function repairMissingCloudCovers(scopeId: string): Promise<number[]> {
   const db = getDb();
-  const unpublished = db.prepare(
-    `SELECT id, cover_art_path FROM tracks
-     WHERE in_library = 1 AND cover_art_path IS NOT NULL AND cover_art_path != ''
-       AND EXISTS (${PUBLISHED_TRACK_RECORD}
-         AND json_extract(entity.record_json, '$.entry.artwork_object_key') IS NULL)`,
-  ).all(scopeId) as Array<{ id: number; cover_art_path: string }>;
+  const candidates = selectCoverRepairCandidates(db, scopeId);
+  const unpublished = candidates.republish;
   const requeue = db.prepare('UPDATE tracks SET cover_art_path = cover_art_path WHERE id = ?');
   for (const row of unpublished) {
     if (coverRepublishAttempted.has(row.id)) continue;
@@ -40,13 +26,7 @@ export async function repairMissingCloudCovers(scopeId: string): Promise<number[
     if (fs.existsSync(row.cover_art_path)) requeue.run(row.id);
   }
 
-  const pending = (db.prepare(
-    `SELECT id, youtube_id FROM tracks
-     WHERE in_library = 1 AND (cover_art_path IS NULL OR cover_art_path = '')
-       AND youtube_id IS NOT NULL AND youtube_id != ''
-       AND NOT EXISTS (${PUBLISHED_TRACK_RECORD}
-         AND json_extract(entity.record_json, '$.entry.artwork_object_key') IS NOT NULL)`,
-  ).all(scopeId) as Array<{ id: number; youtube_id: string }>)
+  const pending = candidates.backfill
     .filter((row) => !coverBackfillAttempted.has(row.id))
     .slice(0, COVER_BACKFILL_BATCH);
   pending.forEach((row) => coverBackfillAttempted.add(row.id));

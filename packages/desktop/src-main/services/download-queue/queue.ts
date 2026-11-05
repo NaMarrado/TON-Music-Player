@@ -7,7 +7,9 @@ import {
   toDownloadFailureMessage,
 } from '@ton/core';
 import type { DownloadItem, DownloadRequest } from '@ton/core';
+import { getDb } from '../database';
 import { downloadItem } from '../downloader';
+import { findActiveDownloadId } from './active-download';
 import { createDownloadCallbacks } from './callbacks';
 import { broadcastDownloadEvent } from './broadcast';
 import {
@@ -15,7 +17,6 @@ import {
   clearFailedDownloads,
   clearNonActiveDownloads,
   countPendingOrActiveDownloads,
-  findActiveDownloadId,
   getNextPendingDownload,
   getSpotifyPlaylistSourcePositions,
   insertDownloadRequest,
@@ -44,7 +45,7 @@ export class DownloadQueue {
   }
 
   enqueue(request: DownloadRequest): number {
-    const activeId = findActiveDownloadId(request);
+    const activeId = findActiveDownloadId(getDb(), request);
     if (activeId != null) return activeId;
     const id = insertDownloadRequest(request);
     this.emitStateChange();
