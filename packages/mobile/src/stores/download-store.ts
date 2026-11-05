@@ -66,7 +66,30 @@ export function subscribeToDownloads(): () => void {
   };
 }
 
-export async function enqueueDownload(input: DownloadInput): Promise<EnqueueDownloadResult> {
+/** Songs being added right now, so a second tap during the async checks cannot queue the same song again. */
+const pendingEnqueues = new Map<string, Promise<EnqueueDownloadResult>>();
+
+function downloadSourceKey(input: Pick<DownloadInput, 'source' | 'sourceId'>): string {
+  return `${input.source}:${input.sourceId}`;
+}
+
+export function enqueueDownload(input: DownloadInput): Promise<EnqueueDownloadResult> {
+  const sourceKey = downloadSourceKey(input);
+  const pending = pendingEnqueues.get(sourceKey);
+  if (pending) {
+    return pending.then((result) => (
+      result.status === 'queued' ? { ...result, status: 'duplicate' } : result
+    ));
+  }
+
+  const enqueue = enqueueDownloadOnce(input).finally(() => {
+    pendingEnqueues.delete(sourceKey);
+  });
+  pendingEnqueues.set(sourceKey, enqueue);
+  return enqueue;
+}
+
+async function enqueueDownloadOnce(input: DownloadInput): Promise<EnqueueDownloadResult> {
   const existingLibraryTrackId = await getExistingLibraryTrackId(input);
   if (existingLibraryTrackId != null) {
     return {
@@ -114,14 +137,16 @@ export async function enqueueDownloadBatch(
   let savedCount = 0;
 
   for (const input of inputs) {
-    const sourceKey = `${input.source}:${input.sourceId}`;
+    const sourceKey = downloadSourceKey(input);
     const isAlreadySaved = existingTrackIds[sourceKey] != null;
     if (isAlreadySaved) {
       savedCount += 1;
       continue;
     }
 
-    const duplicate = queue.findDuplicate(input) || plannedSourceIds.has(sourceKey);
+    const duplicate = queue.findDuplicate(input)
+      || plannedSourceIds.has(sourceKey)
+      || pendingEnqueues.has(sourceKey);
     if (duplicate) {
       duplicateCount += 1;
       continue;
@@ -140,11 +165,22 @@ export async function enqueueDownloadBatch(
     };
   }
 
-  await ensureDownloadRuntimePermission().catch(() => false);
-  const ids = await queue.enqueueBatch(queuedInputs, {
-    notifyEvery: 20,
-    onProgress,
+  let finishBatch!: () => void;
+  const batchDone = new Promise<EnqueueDownloadResult>((resolve) => {
+    finishBatch = () => resolve({ id: null, status: 'duplicate' });
   });
+  for (const sourceKey of plannedSourceIds) pendingEnqueues.set(sourceKey, batchDone);
+  let ids: number[];
+  try {
+    await ensureDownloadRuntimePermission().catch(() => false);
+    ids = await queue.enqueueBatch(queuedInputs, {
+      notifyEvery: 20,
+      onProgress,
+    });
+  } finally {
+    for (const sourceKey of plannedSourceIds) pendingEnqueues.delete(sourceKey);
+    finishBatch();
+  }
 
   return {
     duplicateCount,

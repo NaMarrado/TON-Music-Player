@@ -21,7 +21,7 @@ import {
 } from '../services/cloud-sync/auto-sync';
 import { markPerf, measurePerfAsync } from '../services/perf';
 import { subscribeToDownloads } from '../stores/download-store';
-import { loadTracks } from '../stores/library-store';
+import { loadTracks, restoreLibraryFilters } from '../stores/library-store';
 import { loadPlaylists } from '../stores/playlist-store';
 import {
   restoreMobilePlaybackSession,
@@ -56,6 +56,7 @@ export function useAppInit() {
       await Promise.all([
         measurePerfAsync('app-init:audio-settings', () => restoreAudioSettings()),
         measurePerfAsync('app-init:library', () => loadTracks()),
+        measurePerfAsync('app-init:library-filters', () => restoreLibraryFilters()),
         measurePerfAsync('app-init:playlists', () => loadPlaylists()),
       ]);
       await measurePerfAsync('app-init:playback-session', async () => {

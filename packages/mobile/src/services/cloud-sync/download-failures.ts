@@ -1,6 +1,6 @@
 import type { CloudR2CleanupFailureSummary } from '@ton/core';
 import { getCloudDownloadRetryDelaySeconds } from './download-failure-policy';
-import { runMobileCloudDbLane } from './db-lane';
+import { runMobileCloudDbLane, runMobileCloudDbTransaction } from './db-lane';
 
 const FAILURE_DELETE_BATCH_SIZE = 200;
 
@@ -39,7 +39,7 @@ export async function recordMobileCloudDownloadFailure(
   const message = error instanceof Error && error.message
     ? error.message
     : 'cloud_sync_track_download_failed';
-  await runMobileCloudDbLane(async (db) => db.withExclusiveTransactionAsync(async (txn) => {
+  await runMobileCloudDbTransaction(async (txn) => {
     const previous = await txn.getFirstAsync<{
       manifest_revision: string;
       attempt_count: number;
@@ -70,7 +70,7 @@ export async function recordMobileCloudDownloadFailure(
         failedAt, attemptCount, nextRetryAt,
       ],
     );
-  }));
+  });
 }
 
 export async function countMobileCloudDownloadFailures(
@@ -124,8 +124,7 @@ export async function clearMobileCloudDownloadFailures(
 ): Promise<void> {
   const uniqueHashes = [...new Set(contentHashes.map((hash) => hash.toLowerCase()))];
   if (uniqueHashes.length === 0) return;
-  await runMobileCloudDbLane(async (db) => {
-    await db.withTransactionAsync(async () => {
+  await runMobileCloudDbTransaction(async (db) => {
     for (let offset = 0; offset < uniqueHashes.length; offset += FAILURE_DELETE_BATCH_SIZE) {
       const batch = uniqueHashes.slice(offset, offset + FAILURE_DELETE_BATCH_SIZE);
       const placeholders = batch.map(() => '?').join(', ');
@@ -135,6 +134,5 @@ export async function clearMobileCloudDownloadFailures(
         [scopeId, ...batch],
       );
     }
-    });
   });
 }

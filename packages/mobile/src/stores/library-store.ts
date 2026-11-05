@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { Track, SortField, SortOrder } from '@ton/core';
-import { getAllTracks, getTracksByIds, toggleTrackStarInDb } from '../services/db-queries';
+import { getAllTracks, getSetting, getTracksByIds, setSetting, toggleTrackStarInDb } from '../services/db-queries';
 import {
   deleteTracksEverywhere as deleteTrackRowsEverywhere,
 } from '../services/track-removal';
@@ -172,7 +172,16 @@ export function setFilterQuery(query: string): void {
   useLibraryStore.setState({ filterQuery: query });
 }
 
+const STARRED_ONLY_SETTING = 'library_starred_only';
+
 export function setStarredOnly(starredOnly: boolean): void {
+  useLibraryStore.setState({ starredOnly });
+  void setSetting(STARRED_ONLY_SETTING, starredOnly ? 'true' : 'false').catch(() => {});
+}
+
+/** Restores the Starred filter the user left on, before the Library is first shown. */
+export async function restoreLibraryFilters(): Promise<void> {
+  const starredOnly = (await getSetting(STARRED_ONLY_SETTING)) === 'true';
   useLibraryStore.setState({ starredOnly });
 }
 

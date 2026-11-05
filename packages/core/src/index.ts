@@ -243,6 +243,7 @@ export {
   createEmptyCloudLibraryManifestV2,
   createCloudLivePlaylistRecordV2,
   createCloudLiveTrackRecordV2,
+  keepPublishedTrackBlobs,
   createSha256Hasher,
   compareCloudEntityVersions,
   compareCloudTracksForLibrary,

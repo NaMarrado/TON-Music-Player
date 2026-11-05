@@ -1,4 +1,5 @@
 import type { ExportManifest } from '@ton/core';
+import { runMobileCloudDbTransaction } from '../cloud-sync/db-lane';
 import { getDb } from '../database';
 import { throwIfLibraryTransferCancelled } from './cancellation';
 import { yieldToUiAsync } from './file-helpers';
@@ -8,24 +9,6 @@ import {
   type ExistingImportTrackReconciliation,
   type PreparedImportTrack,
 } from './import-helper-types';
-
-const BUSY_RETRIES = 10;
-
-/**
- * An exclusive transaction runs on its own connection, which does not wait for other writers: if the app is writing at
- * that moment it fails at once with "database is locked". The transaction is rolled back then, so it is simply tried again.
- */
-async function withBusyRetry(run: () => Promise<void>): Promise<void> {
-  for (let attempt = 1; ; attempt += 1) {
-    try {
-      await run();
-      return;
-    } catch (error) {
-      if (attempt >= BUSY_RETRIES || !String(error).includes('database is locked')) throw error;
-      await new Promise((resolve) => setTimeout(resolve, 250 * attempt));
-    }
-  }
-}
 
 async function insertPreparedTracks(
   txn: Awaited<ReturnType<typeof getDb>>,
@@ -89,9 +72,7 @@ export async function insertImportedLibraryAsync(
   throwIfLibraryTransferCancelled(shouldCancel);
 
   const playlistIds: number[] = [];
-  await withBusyRetry(() => db.withExclusiveTransactionAsync(async (txn) => {
-    // A retried attempt starts again from nothing: the failed one was rolled back.
-    playlistIds.length = 0;
+  await runMobileCloudDbTransaction(async (txn) => {
     for (const reconciliation of reconciliationsByTrackId.values()) {
       throwIfLibraryTransferCancelled(shouldCancel);
       await txn.runAsync(
@@ -150,6 +131,6 @@ export async function insertImportedLibraryAsync(
       await yieldToUiAsync();
       throwIfLibraryTransferCancelled(shouldCancel);
     }
-  }));
+  });
   return playlistIds;
 }

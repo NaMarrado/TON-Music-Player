@@ -13,6 +13,7 @@ import { migrate016 } from '../../packages/mobile/src/services/migrations/016-lo
 import { shouldDiscoverMissingLocalEntities } from '../../packages/mobile/src/services/cloud-sync/missing-local-policy.ts';
 import { selectMobileCloudApplyDeltaFromState } from '../../packages/mobile/src/services/cloud-sync/v2-apply-delta-policy.ts';
 import { selectMissingLocalEntityIds } from '../../packages/mobile/src/services/cloud-sync/v2-prepare-upload-policy.ts';
+import { keepPublishedTrackBlobs } from '../../packages/core/src/services/cloud-sync/manifest-records.ts';
 
 function createCloudRecord(index: number) {
   const hash = index.toString(16).padStart(64, '0');
@@ -375,4 +376,40 @@ test('mobile local exclusion migration keeps delete local and clears it on re-im
   } finally {
     db.close();
   }
+});
+
+test('republishing without a local cover keeps the published cover; a new local cover replaces a missing one', () => {
+  const published = {
+    ...createCloudRecord(1).entry,
+    artwork_hash_sha256: 'c'.repeat(64),
+    artwork_object_key: 'ton/library/cover.jpg',
+    artwork_file_name: 'cover.jpg',
+  };
+  // A star toggle on a phone whose copy has no cover file.
+  const starredWithoutCover = {
+    ...createCloudRecord(1).entry,
+    object_key: 'local-key',
+    metadata: { ...createCloudRecord(1).entry.metadata, rating: 5 },
+  };
+  const kept = keepPublishedTrackBlobs(starredWithoutCover, published);
+  assert.equal(kept.metadata.rating, 5);
+  assert.equal(kept.object_key, published.object_key);
+  assert.equal(kept.artwork_hash_sha256, 'c'.repeat(64));
+  assert.equal(kept.artwork_object_key, 'ton/library/cover.jpg');
+  assert.equal(kept.artwork_file_name, 'cover.jpg');
+
+  // The phone now has the cover the first upload missed.
+  const nowWithCover = {
+    ...createCloudRecord(2).entry,
+    artwork_hash_sha256: 'd'.repeat(64),
+    artwork_object_key: 'ton/library/new-cover.jpg',
+    artwork_file_name: 'new-cover.jpg',
+  };
+  const added = keepPublishedTrackBlobs(nowWithCover, createCloudRecord(2).entry);
+  assert.equal(added.artwork_object_key, 'ton/library/new-cover.jpg');
+  assert.equal(added.artwork_hash_sha256, 'd'.repeat(64));
+
+  // A different local cover is a real change and is published.
+  const changed = keepPublishedTrackBlobs({ ...nowWithCover, content_hash_sha256: published.content_hash_sha256 }, published);
+  assert.equal(changed.artwork_object_key, 'ton/library/new-cover.jpg');
 });

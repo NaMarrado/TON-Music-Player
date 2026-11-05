@@ -190,7 +190,12 @@ export async function startAndroidLibraryExport<Result>(
   }
 }
 
-/** SHA-256 of a local file computed natively on Android; null where the native module is not available. */
+type IosFileHashModule = { hashFileSha256(path: string): Promise<string> };
+
+/** SHA-256 of a local file computed natively off the JS thread; null where no native module is available. */
 export function hashFileSha256Native(path: string): Promise<string> | null {
+  if (Platform.OS === 'ios') {
+    return (NativeModules.IosFileHash as IosFileHashModule | undefined)?.hashFileSha256(path) ?? null;
+  }
   return getModule()?.hashFileSha256(path) ?? null;
 }

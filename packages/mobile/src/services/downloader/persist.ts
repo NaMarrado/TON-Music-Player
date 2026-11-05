@@ -1,4 +1,4 @@
-import { downloadCoverArt } from '../cover-art';
+import { downloadTrackCoverArt } from '../cover-art';
 import { insertTrack } from '../db-queries';
 import type { DownloadFormat, DownloadInput } from './types';
 
@@ -21,14 +21,7 @@ export async function persistDownloadedTrack({
   safeName,
   videoId,
 }: PersistDownloadedTrackInput): Promise<number> {
-  let coverArtPath: string | null = null;
-  if (coverUrl) {
-    try {
-      coverArtPath = await downloadCoverArt(coverUrl, safeName);
-    } catch {
-      // non-fatal
-    }
-  }
+  const coverArtPath = await downloadTrackCoverArt(coverUrl, safeName, videoId);
 
   return insertTrack({
     file_path: filePath,

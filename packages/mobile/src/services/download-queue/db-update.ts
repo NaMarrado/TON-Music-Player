@@ -1,5 +1,6 @@
 import type { SQLiteBindValue } from 'expo-sqlite';
 import { getDb } from '../database';
+import { runMobileCloudDbTransaction } from '../cloud-sync/db-lane';
 import type { DownloadFormat } from '../downloader';
 
 export async function updateQueueItemStatus(
@@ -28,7 +29,7 @@ export async function updateQueueItemStatus(
 export async function completeQueueItemRecord(id: number, trackId: number): Promise<boolean> {
   const completedAt = Math.floor(Date.now() / 1000);
   let completed = false;
-  await getDb().withExclusiveTransactionAsync(async (db) => {
+  await runMobileCloudDbTransaction(async (db) => {
     const queueResult = await db.runAsync(
       `UPDATE download_queue SET status = 'completed', error_message = NULL,
        progress = 1, completed_at = ?, resolved_source_id = (

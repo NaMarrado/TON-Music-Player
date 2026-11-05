@@ -261,7 +261,8 @@ function seedHarness(trackCount: number, failAudioEvery: number, specialNames: b
       artwork_hash_sha256: null,
       artwork_object_key: null,
       artwork_file_name: null,
-      youtube_id: null,
+      // --youtube-id gives the last song a YouTube source and no cover, like a phone download whose cover failed.
+      youtube_id: options.youtubeId && index === trackCount - 1 ? options.youtubeId : null,
       spotify_id: null,
       soundcloud_id: null,
       source_url: null,
@@ -416,6 +417,7 @@ function parseOptions(args: string[]): {
   port: number;
   specialNames: boolean;
   tracks: number;
+  youtubeId: string | null;
 } {
   const readNumber = (name: string, fallback: number): number => {
     const value = args.find((argument) => argument.startsWith(`--${name}=`))?.split('=')[1];
@@ -431,5 +433,6 @@ function parseOptions(args: string[]): {
     port: readNumber('port', 9462),
     specialNames: args.includes('--special-names'),
     tracks: Math.max(1, readNumber('tracks', 1_600)),
+    youtubeId: args.find((argument) => argument.startsWith('--youtube-id='))?.split('=')[1] || null,
   };
 }

@@ -94,6 +94,24 @@ export function createCloudLiveTrackRecordV2(
   };
 }
 
+/**
+ * Republishing a song reuses the blobs already on R2. The cover stays as published unless this device has a
+ * different cover: a device without a local cover (its artwork download failed) must not wipe everyone's cover.
+ */
+export function keepPublishedTrackBlobs(entry: CloudTrackEntry, published: CloudTrackEntry): CloudTrackEntry {
+  const keepPublishedArtwork = published.artwork_object_key != null
+    && (entry.artwork_hash_sha256 == null || entry.artwork_hash_sha256 === published.artwork_hash_sha256);
+  return {
+    ...entry,
+    object_key: published.object_key,
+    ...(keepPublishedArtwork ? {
+      artwork_hash_sha256: published.artwork_hash_sha256,
+      artwork_object_key: published.artwork_object_key,
+      artwork_file_name: published.artwork_file_name,
+    } : {}),
+  };
+}
+
 export function createCloudDeletedTrackRecordV2(
   contentHashSha256: string,
   version: CloudEntityVersionV2,
