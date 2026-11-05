@@ -9,8 +9,9 @@ const LOCK_RETRY_FIRST_DELAY_MS = 10;
 const LOCK_RETRY_MAX_DELAY_MS = 200;
 const LOCK_RETRY_GIVE_UP_MS = 60_000;
 
+/** Only a lock held by another connection clears by waiting; other errors (SQLITE_LOCKED included) are rethrown. */
 function isDatabaseLockedError(error: unknown): boolean {
-  return /database is locked|database table is locked|SQLITE_BUSY|SQLITE_LOCKED/i.test(String(error));
+  return /database is locked|SQLITE_BUSY/i.test(String(error));
 }
 
 export async function retryWhileDatabaseLocked<T>(

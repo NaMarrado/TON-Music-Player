@@ -108,8 +108,9 @@ async function enqueueDownloadOnce(input: DownloadInput): Promise<EnqueueDownloa
     };
   }
 
-  await ensureDownloadRuntimePermission().catch(() => false);
   const id = await queue.enqueue(input);
+  // The notification permission only affects download notifications; the song is queued without waiting for the prompt.
+  void ensureDownloadRuntimePermission().catch(() => false);
   return {
     id,
     status: 'queued',
@@ -172,11 +173,11 @@ export async function enqueueDownloadBatch(
   for (const sourceKey of plannedSourceIds) pendingEnqueues.set(sourceKey, batchDone);
   let ids: number[];
   try {
-    await ensureDownloadRuntimePermission().catch(() => false);
     ids = await queue.enqueueBatch(queuedInputs, {
       notifyEvery: 20,
       onProgress,
     });
+    void ensureDownloadRuntimePermission().catch(() => false);
   } finally {
     for (const sourceKey of plannedSourceIds) pendingEnqueues.delete(sourceKey);
     finishBatch();

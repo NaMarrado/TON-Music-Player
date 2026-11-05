@@ -5,7 +5,7 @@ import {
   type CloudSyncProgress,
   type CloudSyncResult,
 } from '@ton/core';
-import { backfillMissingYoutubeCovers } from '../cover-art';
+import { repairMissingCloudCovers } from '../cover-art';
 import { scheduleMobileJob } from '../job-scheduler';
 import { upsertTracksByIds } from '../../stores/library-store';
 import { syncMobileProfile } from '../listening-profile/store';
@@ -99,8 +99,8 @@ async function runMobileMusicV2Sync(
       const scopeId = await ensureMobileCloudScope(config);
       const state = await getMobileCloudPersistedState(scopeId);
       if (mode !== 'fetch') {
-        // Songs whose cover failed to download get it now, and the outbox publishes it below.
-        const coveredTrackIds = await backfillMissingYoutubeCovers().catch(() => []);
+        // Covers missing on R2 are queued now, so the outbox publishes them below.
+        const coveredTrackIds = await repairMissingCloudCovers().catch(() => []);
         if (coveredTrackIds.length > 0) void upsertTracksByIds(coveredTrackIds).catch(() => {});
       }
       const durableOutbox = await getMobileCloudOutbox(scopeId);
