@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Linking, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Linking, Platform, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { LUFS_TARGET_DEFAULT } from '@ton/core';
 import { useTranslation } from 'react-i18next';
 import { getMobileUpdateActionKey } from '../../services/app-update';
@@ -147,7 +147,7 @@ export function SettingsScreen() {
       </View>
 
       <SettingsGroup label={t('generalGroup')}>
-        <StudioTabCard />
+        {Platform.OS !== 'ios' && <StudioTabCard />}
         <LanguageCard
           title={t('languageSection')}
           autoLabel={t('languageAuto')}
