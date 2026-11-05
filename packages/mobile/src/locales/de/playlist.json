@@ -43,5 +43,6 @@
   "sortDuration": "Dauer",
   "filterPlaceholder": "Titel filtern...",
   "noResults": "Keine passenden Titel",
-  "editInStudio": "Im Studio bearbeiten"
+  "editInStudio": "Im Studio bearbeiten",
+  "exportSelected": "Auswahl exportieren ({{count}})"
 }

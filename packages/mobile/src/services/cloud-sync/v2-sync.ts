@@ -53,6 +53,16 @@ export async function runMobileCloudV2Sync(
   }
   const cancelled = options.signal?.aborted
     || (failure instanceof Error && failure.message === 'cloud_sync_cancelled');
+  if (!failure && options.mode !== 'upload') {
+    // Runs after this cycle applied and mirrored the current R2 manifest, so a cover another device has just
+    // published counts as present and is never replaced by a YouTube thumbnail. The next publishing sync (upload or
+    // Auto Sync) uploads what it queued.
+    const coveredTrackIds = await repairMissingCloudCovers().catch((error: unknown) => {
+      console.warn('[cloud] Cover repair failed; the sync continues without it.', error);
+      return [];
+    });
+    if (coveredTrackIds.length > 0) void upsertTracksByIds(coveredTrackIds).catch(() => {});
+  }
   if (!cancelled) {
     try {
       const scopeId = await ensureMobileCloudScope(options.config);
@@ -98,11 +108,6 @@ async function runMobileMusicV2Sync(
       const result: CloudSyncResult = { ...EMPTY_RESULT };
       const scopeId = await ensureMobileCloudScope(config);
       const state = await getMobileCloudPersistedState(scopeId);
-      if (mode !== 'fetch') {
-        // Covers missing on R2 are queued now, so the outbox publishes them below.
-        const coveredTrackIds = await repairMissingCloudCovers().catch(() => []);
-        if (coveredTrackIds.length > 0) void upsertTracksByIds(coveredTrackIds).catch(() => {});
-      }
       const durableOutbox = await getMobileCloudOutbox(scopeId);
       const outbox = mode === 'fetch' ? [] : durableOutbox;
       // A fetch publishes nothing: all queued local edits remain protected.

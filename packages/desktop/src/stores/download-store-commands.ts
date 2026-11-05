@@ -36,7 +36,10 @@ export async function startDownload(request: DownloadRequest): Promise<number> {
         : 'normal');
     const persistedRequest = { ...request, quality_profile: storedProfile };
     const id = (await ipc('download:start', persistedRequest)) as number;
-    appendDownloadItem(createPendingDownloadItem(id, persistedRequest));
+    // The main process returns the existing id when this song is already queued or downloading.
+    if (!useDownloadStore.getState().itemsById[id]) {
+      appendDownloadItem(createPendingDownloadItem(id, persistedRequest));
+    }
     return id;
   } catch (error) {
     showToast(error instanceof Error ? error.message : 'Failed to start download', 'error');

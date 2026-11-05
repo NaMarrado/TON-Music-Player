@@ -4,7 +4,7 @@ import { readTrackMetadataOffthread } from '../metadata-reader';
 import { getFileStatsAsync } from '../file-scanner';
 import { getDb } from '../database';
 import { getFfmpegPathAsync } from '../binary-manager';
-import { downloadCoverArt } from './artwork';
+import { downloadTrackCoverArt } from './artwork';
 import type { ResolvedDesktopDownload } from './resolve';
 import { settleDesktopPlaylistImportQueueItem } from '../playlist-import/targets';
 
@@ -20,8 +20,8 @@ export async function importDownloadedTrack(
 
   const metadata = await readTrackMetadataOffthread(outputFile, stats.size);
   let coverArtPath = metadata.cover_art_path;
-  if (!coverArtPath && resolved.coverUrl && metadata.file_hash) {
-    coverArtPath = await downloadCoverArt(resolved.coverUrl, metadata.file_hash);
+  if (!coverArtPath && metadata.file_hash) {
+    coverArtPath = await downloadTrackCoverArt(resolved.coverUrl, metadata.file_hash, resolved.youtubeId);
   }
 
   const db = getDb();

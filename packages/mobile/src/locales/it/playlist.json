@@ -43,5 +43,6 @@
   "sortDuration":"Durata",
   "filterPlaceholder":"Filtra brani...",
   "noResults":"Nessun brano corrispondente",
-  "editInStudio":"Modifica in Studio"
+  "editInStudio":"Modifica in Studio",
+  "exportSelected": "Esporta selezionati ({{count}})"
 }

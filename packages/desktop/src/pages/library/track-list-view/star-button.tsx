@@ -9,9 +9,11 @@ export function StarButton({ trackId, rating, disabled = false }: {
   disabled?: boolean;
 }) {
   const { t } = useTranslation('pages/library');
-  const [pending, setPending] = useState(false);
+  // The star shows the clicked state at once; if saving fails it flips back and a toast says so.
+  const [savingStarred, setSavingStarred] = useState<boolean | null>(null);
   const pendingRef = useRef(false);
-  const starred = (rating ?? 0) > 0;
+  const pending = savingStarred !== null;
+  const starred = savingStarred ?? (rating ?? 0) > 0;
   const label = t(starred ? 'unstarTrack' : 'starTrack');
 
   return (
@@ -27,14 +29,14 @@ export function StarButton({ trackId, rating, disabled = false }: {
         event.stopPropagation();
         if (pendingRef.current) return;
         pendingRef.current = true;
-        setPending(true);
+        setSavingStarred(!starred);
         try {
           await toggleTrackStar(trackId);
         } catch {
           showToast(t('starFailed'), 'error');
         } finally {
           pendingRef.current = false;
-          setPending(false);
+          setSavingStarred(null);
         }
       }}
     >

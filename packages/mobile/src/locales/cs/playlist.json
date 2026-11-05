@@ -43,5 +43,6 @@
   "sortDuration": "Délka",
   "filterPlaceholder": "Filtrovat skladby...",
   "noResults": "Žádné odpovídající skladby",
-  "editInStudio": "Upravit ve Studiu"
+  "editInStudio": "Upravit ve Studiu",
+  "exportSelected": "Exportovat vybrané ({{count}})"
 }

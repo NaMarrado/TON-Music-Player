@@ -43,5 +43,6 @@
   "sortDuration": "时长",
   "filterPlaceholder": "筛选歌曲...",
   "noResults": "没有匹配的歌曲",
-  "editInStudio": "在 Studio 中编辑"
+  "editInStudio": "在 Studio 中编辑",
+  "exportSelected": "导出所选 ({{count}})"
 }

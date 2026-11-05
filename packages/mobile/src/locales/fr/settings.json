@@ -80,6 +80,7 @@
   "cloudSyncDialogDescription": "Choisissez si vous souhaitez restaurer les morceaux précédemment supprimés de cet appareil.",
   "cloudSyncRestoreDeleted": "Retélécharger les morceaux supprimés ({{count}})",
   "cloudSyncConfirm": "Synchroniser",
+  "cloudSyncDontShowAgain": "Ne plus afficher",
   "cloudWorking": "Traitement...",
   "cloudCleanupSectionTitle": "Libérer le stockage cloud",
   "cloudCleanupDescription": "Supprime de R2 les morceaux absents de la Library locale de cet appareil. Cela libère de l'espace dans R2. Les morceaux supprimés disparaîtront aussi des playlists synchronisées et des autres appareils.",

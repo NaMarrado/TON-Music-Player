@@ -43,5 +43,6 @@
   "sortDuration": "المدة",
   "filterPlaceholder": "تصفية المقاطع...",
   "noResults": "لا توجد مقاطع مطابقة",
-  "editInStudio": "تحرير في Studio"
+  "editInStudio": "تحرير في Studio",
+  "exportSelected": "تصدير المحدد ({{count}})"
 }

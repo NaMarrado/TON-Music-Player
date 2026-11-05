@@ -286,10 +286,12 @@ export function CloudSyncModal({
   formatRestoreDeleted: (count: number) => string;
   labels: Record<string, string>;
   onClose: () => void;
-  onConfirm: (restoreLocallyDeleted: boolean) => void;
+  /** `rememberChoice`: "Don't show again" is ticked, so later syncs use this answer without asking. */
+  onConfirm: (restoreLocallyDeleted: boolean, rememberChoice: boolean) => void;
   preview: CloudLocalDeletionPreview;
 }) {
   const [restoreDeleted, setRestoreDeleted] = useState(false);
+  const [rememberChoice, setRememberChoice] = useState(false);
   const canRestore = preview.deletedTracks > 0;
   return (
     <Modal transparent visible animationType="fade" onRequestClose={busy ? undefined : onClose}>
@@ -313,6 +315,19 @@ export function CloudSyncModal({
               {formatRestoreDeleted(preview.deletedTracks)}
             </Text>
           </Pressable>
+          <Pressable
+            disabled={busy}
+            onPress={() => setRememberChoice((value) => !value)}
+            className="flex-row items-center mt-3"
+            style={{ paddingHorizontal: 4 }}
+          >
+            <Feather
+              name={rememberChoice ? 'check-square' : 'square'}
+              size={17}
+              color={rememberChoice ? '#e8e8e8' : '#777'}
+            />
+            <Text className="text-text-secondary text-[13px] ml-3 flex-1">{labels.syncDontShowAgain}</Text>
+          </Pressable>
           <View className="flex-row justify-end mt-5">
             <Pressable
               disabled={busy}
@@ -324,7 +339,7 @@ export function CloudSyncModal({
             </Pressable>
             <Pressable
               disabled={busy}
-              onPress={() => onConfirm(restoreDeleted)}
+              onPress={() => onConfirm(restoreDeleted, rememberChoice)}
               className="bg-white items-center"
               style={{ borderRadius: 18, opacity: busy ? 0.5 : 1, paddingHorizontal: 20, paddingVertical: 10 }}
             >

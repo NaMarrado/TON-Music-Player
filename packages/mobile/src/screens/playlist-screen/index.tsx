@@ -29,13 +29,17 @@ export function PlaylistScreen({ route }: Props) {
   const { id } = route.params;
   const { t } = useTranslation('playlist');
   const { t: tc } = useTranslation('common');
+  const { t: tl } = useTranslation('library');
   const navigation = useNavigation();
   const openInStudio = useOpenInStudio();
   const [showActionsMenu, setShowActionsMenu] = useState(false);
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [reorderMode, setReorderMode] = useState(false);
+  /** Selected songs waiting for the export format choice (individual files or ZIP), like in the Library. */
+  const [pendingExportTrackIds, setPendingExportTrackIds] = useState<number[] | null>(null);
   const {
     clearSelection,
+    selectedTracks,
     cancelTransfer,
     handleDelete,
     handleExportBundle,
@@ -97,10 +101,17 @@ export function PlaylistScreen({ route }: Props) {
       onPress: () => { void handleImportBundle(); },
     },
     {
-      label: t('exportBundle'),
+      // Export covers the selected songs when any are selected, otherwise the whole playlist.
+      label: selectionActive ? t('exportSelected', { count: selectedTracks.length }) : t('exportBundle'),
       icon: 'upload',
       disabled: tracks.length === 0,
-      onPress: () => { void handleExportBundle(); },
+      onPress: () => {
+        if (selectionActive) {
+          setPendingExportTrackIds([...new Set(selectedTracks.map((track) => track.id))]);
+        } else {
+          void handleExportBundle();
+        }
+      },
     },
     {
       label: t('editPlaylist'),
@@ -116,6 +127,8 @@ export function PlaylistScreen({ route }: Props) {
   ], [
     handleDelete,
     handleExportBundle,
+    selectedTracks,
+    tracks.length,
     handleImportBundle,
     t,
     setShowEditModal,
@@ -303,6 +316,22 @@ export function PlaylistScreen({ route }: Props) {
         title={playlist?.name}
         options={playlistActions}
         onClose={() => setShowActionsMenu(false)}
+      />
+
+      <ActionSheet
+        visible={pendingExportTrackIds != null}
+        title={tl('exportFormatTitle')}
+        options={(['individual_files', 'archive'] as const).map((outputMode) => ({
+          label: tl(outputMode === 'archive' ? 'exportZipArchive' : 'exportIndividualFiles'),
+          icon: outputMode === 'archive' ? 'archive' : 'file',
+          onPress: () => {
+            const trackIds = pendingExportTrackIds ?? [];
+            setPendingExportTrackIds(null);
+            clearSelection();
+            void handleExportBundle({ trackIds, outputMode });
+          },
+        }))}
+        onClose={() => setPendingExportTrackIds(null)}
       />
 
       <ActionSheet

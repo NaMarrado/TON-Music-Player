@@ -34,3 +34,19 @@ export async function downloadCoverArt(coverUrl: string, fileHash: string): Prom
     return null;
   }
 }
+
+/** YouTube serves this size for every video, unlike the larger thumbnails search results sometimes point to. */
+export function youtubeFallbackThumbnailUrl(videoId: string): string {
+  return `https://i.ytimg.com/vi/${encodeURIComponent(videoId)}/hqdefault.jpg`;
+}
+
+/** Downloads a song's cover, falling back to the standard YouTube thumbnail when the given URL fails. */
+export async function downloadTrackCoverArt(
+  coverUrl: string | null,
+  fileHash: string,
+  youtubeId: string | null,
+): Promise<string | null> {
+  const cover = coverUrl ? await downloadCoverArt(coverUrl, fileHash) : null;
+  if (cover || !youtubeId) return cover;
+  return downloadCoverArt(youtubeFallbackThumbnailUrl(youtubeId), fileHash);
+}

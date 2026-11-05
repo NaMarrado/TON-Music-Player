@@ -125,7 +125,10 @@ export function usePlaylistTransferActions(
     }
   }, [id, isExportingBundle, isImportingBundle, navigation, t, ts, updateTransferProgress]);
 
-  const handleExportBundle = useCallback(async () => {
+  /** Exports the selected songs when given, otherwise the whole playlist. */
+  const handleExportBundle = useCallback(async (
+    selectedSongs?: { trackIds: number[]; outputMode: 'archive' | 'individual_files' },
+  ) => {
     if (isImportingBundle || isExportingBundle) {
       return;
     }
@@ -133,10 +136,17 @@ export function usePlaylistTransferActions(
     setIsExportingBundle(true);
     try {
       let taskCancel: (() => Promise<void>) | null = null;
-      const task = await beginExportMobileLibrary({
-        includeLibrary: false,
-        playlistIds: [id],
-      }, (progress) => {
+      const task = await beginExportMobileLibrary(selectedSongs
+        ? {
+          includeLibrary: false,
+          outputMode: selectedSongs.outputMode,
+          playlistIds: [],
+          trackIds: selectedSongs.trackIds,
+        }
+        : {
+          includeLibrary: false,
+          playlistIds: [id],
+        }, (progress) => {
         updateTransferProgress('export', progress, taskCancel);
       });
       taskCancel = task.cancel;

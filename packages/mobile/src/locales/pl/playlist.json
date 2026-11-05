@@ -43,5 +43,6 @@
   "sortDuration": "Czas trwania",
   "filterPlaceholder": "Filtruj utwory...",
   "noResults": "Brak pasujących utworów",
-  "editInStudio": "Edytuj w Studio"
+  "editInStudio": "Edytuj w Studio",
+  "exportSelected": "Eksportuj zaznaczone ({{count}})"
 }

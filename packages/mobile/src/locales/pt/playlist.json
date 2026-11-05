@@ -43,5 +43,6 @@
   "sortDuration": "Duração",
   "filterPlaceholder": "Filtrar faixas...",
   "noResults": "Nenhuma faixa correspondente",
-  "editInStudio": "Editar no Studio"
+  "editInStudio": "Editar no Studio",
+  "exportSelected": "Exportar selecionados ({{count}})"
 }
