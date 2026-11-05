@@ -29,6 +29,9 @@ import {
   startMobilePlaybackSessionPersistence,
 } from '../services/playback-session';
 
+/** The icon font preload never holds the app on the splash screen longer than this. */
+const ICON_FONT_WAIT_MS = 1_500;
+
 export function useAppInit() {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,9 +52,11 @@ export function useAppInit() {
     try {
       markPerf('app-init:start');
       // Icons render empty until their font is loaded; loading them before the first frame keeps the stars and the
-      // other icons from popping in later. Runs alongside the database work.
-      const iconFonts = Promise.all([Feather.loadFont(), FontAwesome.loadFont(), MaterialCommunityIcons.loadFont()])
-        .catch(() => undefined);
+      // other icons from popping in later. Runs alongside the database work and never blocks startup for long.
+      const iconFonts = Promise.race([
+        Promise.all([Feather.loadFont(), FontAwesome.loadFont(), MaterialCommunityIcons.loadFont()]),
+        new Promise((resolve) => setTimeout(resolve, ICON_FONT_WAIT_MS)),
+      ]).catch(() => undefined);
       await measurePerfAsync('app-init:database', () => initDatabase());
       await Promise.all([
         measurePerfAsync('app-init:ios-sandbox-path-repair', () => repairIosSandboxPaths()),
