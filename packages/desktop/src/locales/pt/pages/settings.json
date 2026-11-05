@@ -104,6 +104,7 @@
   "cloudSyncDialogDescription": "Escolha se pretende restaurar músicas anteriormente eliminadas deste dispositivo.",
   "cloudSyncRestoreDeleted": "Transferir novamente músicas eliminadas ({{count}})",
   "cloudSyncConfirm": "Sincronizar",
+  "cloudSyncDontShowAgain": "Não mostrar novamente",
   "cloudCancel": "Cancelar",
   "cloudWorking": "A processar...",
   "cloudCleanupSectionTitle": "Libertar armazenamento na nuvem",

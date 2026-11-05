@@ -46,5 +46,7 @@
   "toastAddedToLibrary_other": "רצועות {{count}} נוספו לספרייה",
   "toastAlreadyInLibrary": "כל הרצועות כבר נמצאות בספרייה",
   "toastAddToLibraryError": "הוספת רצועות לספרייה נכשלה",
-  "importing": "מייבא..."
+  "importing": "מייבא...",
+  "exportSelected": "ייצא נבחרים ({{count}})",
+  "exportedSongs": "יוצאו {{count}} שירים"
 }

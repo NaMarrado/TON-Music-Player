@@ -46,5 +46,7 @@
   "toastAddedToLibrary_other": "تمت إضافة مسارات {{count}} إلى المكتبة",
   "toastAlreadyInLibrary": "جميع المسارات موجودة بالفعل في المكتبة",
   "toastAddToLibraryError": "فشلت إضافة المسارات إلى المكتبة",
-  "importing": "جارٍ الاستيراد..."
+  "importing": "جارٍ الاستيراد...",
+  "exportSelected": "تصدير المحدد ({{count}})",
+  "exportedSongs": "تم تصدير {{count}} أغنية"
 }

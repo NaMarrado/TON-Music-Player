@@ -19,6 +19,7 @@ export {
 export {
   checkDuplicates,
   exportPlaylist,
+  exportSongs,
   importFilesToPlaylist,
   importFolderAsPlaylist,
   pickImportPath,

@@ -104,6 +104,7 @@
   "cloudSyncDialogDescription": "Wähle, ob zuvor von diesem Gerät gelöschte Songs wiederhergestellt werden sollen.",
   "cloudSyncRestoreDeleted": "Zuvor gelöschte Songs erneut herunterladen ({{count}})",
   "cloudSyncConfirm": "Synchronisieren",
+  "cloudSyncDontShowAgain": "Nicht mehr anzeigen",
   "cloudCancel": "Abbrechen",
   "cloudWorking": "Wird verarbeitet...",
   "cloudCleanupSectionTitle": "Cloud-Speicher bereinigen",

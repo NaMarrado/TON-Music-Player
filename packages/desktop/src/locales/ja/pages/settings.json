@@ -104,6 +104,7 @@
   "cloudSyncDialogDescription": "このデバイスから以前削除した曲を復元するか選択してください。",
   "cloudSyncRestoreDeleted": "以前削除した曲を再ダウンロード ({{count}})",
   "cloudSyncConfirm": "同期",
+  "cloudSyncDontShowAgain": "今後表示しない",
   "cloudCancel": "キャンセル",
   "cloudWorking": "働く...",
   "cloudCleanupSectionTitle": "クラウドストレージを空ける",

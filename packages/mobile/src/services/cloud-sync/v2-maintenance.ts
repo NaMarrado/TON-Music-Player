@@ -8,7 +8,7 @@ import { normalizeCloudPrefix } from '@ton/core';
 import { updateMobileCloudPersistedState } from './local-state';
 import { MobileR2Client } from './r2-client';
 import { liveManifestObjectKeys } from './v2-upload';
-import { runMobileCloudDbLane } from './db-lane';
+import { runMobileCloudDbLane, runMobileCloudDbTransaction } from './db-lane';
 
 export async function queueBlobGcTransitions(
   scopeId: string,
@@ -64,7 +64,7 @@ export async function queueBlobGcTransitions(
   }
   const liveKeys = liveManifestObjectKeys(published);
   const eligibleAt = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
-  await runMobileCloudDbLane((connection) => connection.withExclusiveTransactionAsync(async (db) => {
+  await runMobileCloudDbTransaction(async (db) => {
     const queued = await db.getAllAsync<{ object_key: string }>(
       'SELECT object_key FROM cloud_sync_blob_gc WHERE scope_id = ?', [scopeId],
     );
@@ -83,7 +83,7 @@ export async function queueBlobGcTransitions(
         [scopeId, key, eligibleAt],
       );
     }
-  }));
+  });
 }
 
 export async function runDailyCloudMaintenance(

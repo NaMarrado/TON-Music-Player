@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { InteractionManager, Platform } from 'react-native';
+import { Feather, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import { initDatabase } from '../services/database';
 import { getSetting } from '../services/db-queries';
 import {
@@ -21,12 +22,15 @@ import {
 } from '../services/cloud-sync/auto-sync';
 import { markPerf, measurePerfAsync } from '../services/perf';
 import { subscribeToDownloads } from '../stores/download-store';
-import { loadTracks } from '../stores/library-store';
+import { loadTracks, restoreLibraryFilters } from '../stores/library-store';
 import { loadPlaylists } from '../stores/playlist-store';
 import {
   restoreMobilePlaybackSession,
   startMobilePlaybackSessionPersistence,
 } from '../services/playback-session';
+
+/** The icon font preload never holds the app on the splash screen longer than this. */
+const ICON_FONT_WAIT_MS = 1_500;
 
 export function useAppInit() {
   const [ready, setReady] = useState(false);
@@ -47,16 +51,26 @@ export function useAppInit() {
     setReady(false);
     try {
       markPerf('app-init:start');
+      // Icons render empty until their font is loaded; loading them before the first frame keeps the stars and the
+      // other icons from popping in later. Runs alongside the database work and never blocks startup for long.
+      const iconFonts = Promise.race([
+        Promise.all([Feather.loadFont(), FontAwesome.loadFont(), MaterialCommunityIcons.loadFont()]),
+        new Promise((resolve) => setTimeout(resolve, ICON_FONT_WAIT_MS)),
+      ]).catch(() => undefined);
       await measurePerfAsync('app-init:database', () => initDatabase());
-      await measurePerfAsync('app-init:ios-sandbox-path-repair', () => repairIosSandboxPaths());
-      await measurePerfAsync('app-init:language', async () => {
-        const storedLanguage = await getSetting('language');
-        await applyStoredLanguagePreference(storedLanguage);
-      });
+      await Promise.all([
+        measurePerfAsync('app-init:ios-sandbox-path-repair', () => repairIosSandboxPaths()),
+        measurePerfAsync('app-init:language', async () => {
+          const storedLanguage = await getSetting('language');
+          await applyStoredLanguagePreference(storedLanguage);
+        }),
+      ]);
       await Promise.all([
         measurePerfAsync('app-init:audio-settings', () => restoreAudioSettings()),
         measurePerfAsync('app-init:library', () => loadTracks()),
+        measurePerfAsync('app-init:library-filters', () => restoreLibraryFilters()),
         measurePerfAsync('app-init:playlists', () => loadPlaylists()),
+        measurePerfAsync('app-init:icon-fonts', () => iconFonts),
       ]);
       await measurePerfAsync('app-init:playback-session', async () => {
         await setupPlayer();

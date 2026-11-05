@@ -1,5 +1,10 @@
 import type { ExpoConfig } from 'expo/config';
 
+// Icon fonts are bundled into the app so icons show on the first frame instead of after a runtime font load.
+const ICON_FONT_DIR = '../../node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts';
+const ICON_FONTS = ['Feather', 'FontAwesome', 'MaterialCommunityIcons']
+  .map((name) => `${ICON_FONT_DIR}/${name}.ttf`);
+
 const config: ExpoConfig = {
   name: 'TON',
   slug: 'ton-player',
@@ -44,6 +49,7 @@ const config: ExpoConfig = {
   },
   plugins: [
     'expo-sqlite',
+    ['expo-font', { fonts: ICON_FONTS }],
     'expo-localization',
     'expo-notifications',
     'expo-background-task',

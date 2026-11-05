@@ -1,7 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 import type { CloudStorageConfig } from '@ton/core';
 import { buildMobileCloudScopeId } from './config';
-import { runMobileCloudDbLane } from './db-lane';
+import { runMobileCloudDbLane, runMobileCloudDbTransaction } from './db-lane';
 
 export interface MobileCloudOutboxRow {
   scope_id: string;
@@ -36,36 +36,34 @@ export interface MobileCloudProtectedEntities {
 
 export async function ensureMobileCloudScope(config: CloudStorageConfig): Promise<string> {
   const scopeId = buildMobileCloudScopeId(config);
-  await runMobileCloudDbLane(async (db) => {
-    await db.withExclusiveTransactionAsync(async (txn) => {
-      await txn.runAsync(
-        `INSERT OR IGNORE INTO cloud_sync_state(scope_id)
-         VALUES (?)`,
-        [scopeId],
-      );
-      await txn.runAsync(
-        `INSERT INTO cloud_sync_outbox(
-           scope_id, entity_type, entity_key, local_id, operation,
-           payload_json, generation, created_at
-         )
-         SELECT ?, entity_type, entity_key, local_id, operation,
-                payload_json, generation, created_at
-         FROM cloud_sync_outbox
-         WHERE scope_id = ''
-         ON CONFLICT(scope_id, entity_type, entity_key) DO UPDATE SET
-           local_id = excluded.local_id,
-           operation = excluded.operation,
-           payload_json = excluded.payload_json,
-           generation = MAX(cloud_sync_outbox.generation, excluded.generation),
-           created_at = MAX(cloud_sync_outbox.created_at, excluded.created_at)`,
-        [scopeId],
-      );
-      await txn.runAsync("DELETE FROM cloud_sync_outbox WHERE scope_id = ''");
-      await txn.runAsync(
-        'UPDATE cloud_sync_control SET active_scope_id = ? WHERE id = 1',
-        [scopeId],
-      );
-    });
+  await runMobileCloudDbTransaction(async (txn) => {
+    await txn.runAsync(
+      `INSERT OR IGNORE INTO cloud_sync_state(scope_id)
+       VALUES (?)`,
+      [scopeId],
+    );
+    await txn.runAsync(
+      `INSERT INTO cloud_sync_outbox(
+         scope_id, entity_type, entity_key, local_id, operation,
+         payload_json, generation, created_at
+       )
+       SELECT ?, entity_type, entity_key, local_id, operation,
+              payload_json, generation, created_at
+       FROM cloud_sync_outbox
+       WHERE scope_id = ''
+       ON CONFLICT(scope_id, entity_type, entity_key) DO UPDATE SET
+         local_id = excluded.local_id,
+         operation = excluded.operation,
+         payload_json = excluded.payload_json,
+         generation = MAX(cloud_sync_outbox.generation, excluded.generation),
+         created_at = MAX(cloud_sync_outbox.created_at, excluded.created_at)`,
+      [scopeId],
+    );
+    await txn.runAsync("DELETE FROM cloud_sync_outbox WHERE scope_id = ''");
+    await txn.runAsync(
+      'UPDATE cloud_sync_control SET active_scope_id = ? WHERE id = 1',
+      [scopeId],
+    );
   });
   return scopeId;
 }
@@ -308,17 +306,13 @@ export async function updateMobileCloudPersistedState(
 export async function withMobileCloudOutboxSuppressed<T>(
   run: (db: SQLiteDatabase) => Promise<T>,
 ): Promise<T> {
-  return runMobileCloudDbLane(async (db) => {
-    let result!: T;
-    await db.withExclusiveTransactionAsync(async (txn) => {
-      await txn.runAsync('UPDATE cloud_sync_control SET suppress_outbox = 1 WHERE id = 1');
-      try {
-        result = await run(txn);
-      } finally {
-        await txn.runAsync('UPDATE cloud_sync_control SET suppress_outbox = 0 WHERE id = 1');
-      }
-    });
-    return result;
+  return runMobileCloudDbTransaction(async (txn) => {
+    await txn.runAsync('UPDATE cloud_sync_control SET suppress_outbox = 1 WHERE id = 1');
+    try {
+      return await run(txn);
+    } finally {
+      await txn.runAsync('UPDATE cloud_sync_control SET suppress_outbox = 0 WHERE id = 1');
+    }
   });
 }
 

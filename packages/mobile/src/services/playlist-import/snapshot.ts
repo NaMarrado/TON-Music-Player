@@ -1,5 +1,5 @@
 import type { LoadedPlaylistImport, Playlist } from '@ton/core';
-import { getDb } from '../database';
+import { runMobileCloudDbTransaction } from '../cloud-sync/db-lane';
 
 export interface MobilePlaylistImportSnapshotItem {
   id: number;
@@ -26,10 +26,9 @@ function mapPlaylist(row: Playlist): Playlist {
 export async function replacePlaylistImportSnapshot(
   input: LoadedPlaylistImport,
 ): Promise<MobilePlaylistImportSnapshot> {
-  const db = getDb();
   let snapshot: MobilePlaylistImportSnapshot | null = null;
 
-  await db.withExclusiveTransactionAsync(async (txn) => {
+  await runMobileCloudDbTransaction(async (txn) => {
     const existing = await txn.getFirstAsync<ExistingImportSourceRow>(
       `SELECT id, playlist_id, source_name
        FROM playlist_import_sources

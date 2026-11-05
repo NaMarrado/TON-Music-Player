@@ -38,6 +38,7 @@ export {
   createCloudLiveTrackRecordV2,
   createEmptyCloudLibraryManifest,
   createEmptyCloudLibraryManifestV2,
+  keepPublishedTrackBlobs,
   nextCloudEntityVersion,
 } from './manifest-records';
 export { parseCloudLibraryManifestV2 } from './manifest-validation';

@@ -104,6 +104,7 @@
   "cloudSyncDialogDescription": "Zvolte, zda chcete obnovit skladby dříve smazané z tohoto zařízení.",
   "cloudSyncRestoreDeleted": "Znovu stáhnout dříve smazané skladby ({{count}})",
   "cloudSyncConfirm": "Synchronizovat",
+  "cloudSyncDontShowAgain": "Už nezobrazovat",
   "cloudCancel": "Zrušit",
   "cloudWorking": "Pracuji...",
   "cloudCleanupSectionTitle": "Uvolnit cloudové úložiště",

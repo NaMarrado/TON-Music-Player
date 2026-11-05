@@ -46,5 +46,7 @@
   "toastAddedToLibrary_other": "{{count}} Titel zur Mediathek hinzugefügt",
   "toastAlreadyInLibrary": "Alle Titel sind bereits in der Mediathek",
   "toastAddToLibraryError": "Titel konnten nicht zur Mediathek hinzugefügt werden",
-  "importing": "Wird importiert..."
+  "importing": "Wird importiert...",
+  "exportSelected": "Auswahl exportieren ({{count}})",
+  "exportedSongs": "{{count}} Songs exportiert"
 }

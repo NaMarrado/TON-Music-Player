@@ -215,7 +215,9 @@ export function CloudSyncDialog({
   onCancel,
   onConfirm,
   preview,
+  rememberChoice,
   restoreDeleted,
+  setRememberChoice,
   setRestoreDeleted,
   t,
 }: {
@@ -223,7 +225,9 @@ export function CloudSyncDialog({
   onCancel: () => void;
   onConfirm: () => void;
   preview: CloudLocalDeletionPreview;
+  rememberChoice: boolean;
   restoreDeleted: boolean;
+  setRememberChoice: (value: boolean) => void;
   setRestoreDeleted: (value: boolean) => void;
   t: Translator;
 }) {
@@ -246,6 +250,19 @@ export function CloudSyncDialog({
         />
         <span style={{ color: 'var(--text-primary)', fontSize: '0.82rem' }}>
           {t('cloudSyncRestoreDeleted', { count: preview.deletedTracks })}
+        </span>
+      </label>
+      <label style={{
+        alignItems: 'center', cursor: 'pointer', display: 'flex', gap: '10px', marginTop: '12px',
+      }}>
+        <input
+          type="checkbox"
+          checked={rememberChoice}
+          disabled={busy}
+          onChange={(event) => setRememberChoice(event.target.checked)}
+        />
+        <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+          {t('cloudSyncDontShowAgain')}
         </span>
       </label>
       <div className="flex justify-end gap-3" style={{ marginTop: '22px' }}>

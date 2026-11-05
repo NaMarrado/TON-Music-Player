@@ -104,6 +104,7 @@
   "cloudSyncDialogDescription": "اختر ما إذا كنت تريد استعادة الأغاني التي حذفتها سابقًا من هذا الجهاز.",
   "cloudSyncRestoreDeleted": "تنزيل الأغاني المحذوفة سابقًا مجددًا ({{count}})",
   "cloudSyncConfirm": "مزامنة",
+  "cloudSyncDontShowAgain": "لا تعرض هذا مرة أخرى",
   "cloudCancel": "إلغاء",
   "cloudWorking": "عمل...",
   "cloudCleanupSectionTitle": "إخلاء مساحة التخزين السحابي",

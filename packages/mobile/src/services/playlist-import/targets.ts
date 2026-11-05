@@ -1,5 +1,5 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
-import { getDb } from '../database';
+import { runMobileCloudDbTransaction } from '../cloud-sync/db-lane';
 import { reconcileLibraryTracks } from '../../stores/library-store';
 
 export interface PlaylistImportTargetAssignments {
@@ -101,13 +101,12 @@ export async function assignPlaylistImportTargets(
   assignments: PlaylistImportTargetAssignments,
   importSourceIdsToReconcile: number[] = [],
 ): Promise<number[]> {
-  const db = getDb();
   const affectedPlaylistIds = new Set<number>();
   const trackIdsToRevalidate = new Set(
     assignments.tracks.map((assignment) => assignment.trackId),
   );
 
-  await db.withExclusiveTransactionAsync(async (txn) => {
+  await runMobileCloudDbTransaction(async (txn) => {
     for (const assignment of assignments.tracks) {
       await txn.runAsync('UPDATE tracks SET in_library = 1 WHERE id = ?', [assignment.trackId]);
       await updateImportItemIds(txn, assignment.importItemIds, 'track_id', assignment.trackId);
@@ -167,10 +166,9 @@ export async function settlePlaylistImportQueueItem(
   queueId: number,
   trackId: number,
 ): Promise<number[]> {
-  const db = getDb();
   const affectedPlaylistIds = new Set<number>();
 
-  await db.withExclusiveTransactionAsync(async (txn) => {
+  await runMobileCloudDbTransaction(async (txn) => {
     const sources = await txn.getAllAsync<{ import_source_id: number }>(
       `SELECT DISTINCT import_source_id
        FROM playlist_import_items

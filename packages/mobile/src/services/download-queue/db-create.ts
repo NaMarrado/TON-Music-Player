@@ -1,5 +1,6 @@
 import type { SQLiteBindValue } from 'expo-sqlite';
 import { getDb } from '../database';
+import { runMobileCloudDbTransaction } from '../cloud-sync/db-lane';
 import type { DownloadInput } from '../downloader';
 
 const INSERT_QUEUE_SQL = `INSERT INTO download_queue (
@@ -24,7 +25,7 @@ export async function insertQueueItemRecords(
 ): Promise<Array<{ id: number; input: DownloadInput }>> {
   if (inputs.length === 0) return [];
   const inserted: Array<{ id: number; input: DownloadInput }> = [];
-  await getDb().withExclusiveTransactionAsync(async (db) => {
+  await runMobileCloudDbTransaction(async (db) => {
     for (const input of inputs) {
       const result = await db.runAsync(INSERT_QUEUE_SQL, inputValues(input));
       inserted.push({ id: result.lastInsertRowId, input });

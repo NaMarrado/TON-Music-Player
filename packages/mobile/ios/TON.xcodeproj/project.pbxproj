@@ -43,6 +43,11 @@
 		9DA95B3E94C14B80A6D4520C /* TONIosPlaybackEngineSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DA95B3E94C14B80A6D4521C /* TONIosPlaybackEngineSession.swift */; };
 		9DA95B3E94C14B80A6D4520D /* TONIosPlaybackEngineScheduling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DA95B3E94C14B80A6D4521D /* TONIosPlaybackEngineScheduling.swift */; };
 		9DA95B3E94C14B80A6D4520E /* TONIosPlaybackEngineState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DA95B3E94C14B80A6D4521E /* TONIosPlaybackEngineState.swift */; };
+		E1F00D0000000000000000A1 /* IosFileHash.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F00D0000000000000000B1 /* IosFileHash.swift */; };
+		E1F00D0000000000000000A2 /* IosFileHashBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = E1F00D0000000000000000B2 /* IosFileHashBridge.m */; };
+		E1F00D0000000000000000A3 /* Feather.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E1F00D0000000000000000B3 /* Feather.ttf */; };
+		E1F00D0000000000000000A4 /* FontAwesome.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E1F00D0000000000000000B4 /* FontAwesome.ttf */; };
+		E1F00D0000000000000000A5 /* MaterialCommunityIcons.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E1F00D0000000000000000B5 /* MaterialCommunityIcons.ttf */; };
 		A96593CAFA69437EF52834D7 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 28FF38A94675D6E6914B5747 /* PrivacyInfo.xcprivacy */; };
 		AB11E970C91B4475A043F9BA /* TONIosDownloadActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 238CB9F512BF4EEE90807B7B /* TONIosDownloadActivityManager.swift */; };
 		ADE95B3E94C14B80A6D45201 /* TONDownloadActivityRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADE95B3E94C14B80A6D45211 /* TONDownloadActivityRuntime.swift */; };
@@ -87,6 +92,11 @@
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = TON/main.m; sourceTree = "<group>"; };
 		238CB9F512BF4EEE90807B7B /* TONIosDownloadActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TONIosDownloadActivityManager.swift; sourceTree = "<group>"; };
 		28FF38A94675D6E6914B5747 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = TON/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		E1F00D0000000000000000B1 /* IosFileHash.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/IosFileHash.swift; sourceTree = "<group>"; };
+		E1F00D0000000000000000B2 /* IosFileHashBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TON/IosFileHashBridge.m; sourceTree = "<group>"; };
+		E1F00D0000000000000000B3 /* Feather.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = Feather.ttf; path = "../../../node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Feather.ttf"; sourceTree = "<group>"; };
+		E1F00D0000000000000000B4 /* FontAwesome.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = FontAwesome.ttf; path = "../../../node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome.ttf"; sourceTree = "<group>"; };
+		E1F00D0000000000000000B5 /* MaterialCommunityIcons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = MaterialCommunityIcons.ttf; path = "../../../node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialCommunityIcons.ttf"; sourceTree = "<group>"; };
 		51AF544ECF54450ABF0F15D7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		58A95B3E94C14B80A6D45111 /* TONIosBackgroundDownloadModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/TONIosBackgroundDownloadModels.swift; sourceTree = "<group>"; };
 		58A95B3E94C14B80A6D45112 /* TONIosBackgroundDownloadsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TON/TONIosBackgroundDownloadsManager.swift; sourceTree = "<group>"; };
@@ -188,6 +198,11 @@
 				9DA95B3E94C14B80A6D4521E /* TONIosPlaybackEngineState.swift */,
 				6AA95B3E94C14B80A6D45111 /* TONIosPlaybackTrack.swift */,
 				28FF38A94675D6E6914B5747 /* PrivacyInfo.xcprivacy */,
+				E1F00D0000000000000000B1 /* IosFileHash.swift */,
+				E1F00D0000000000000000B2 /* IosFileHashBridge.m */,
+				E1F00D0000000000000000B3 /* Feather.ttf */,
+				E1F00D0000000000000000B4 /* FontAwesome.ttf */,
+				E1F00D0000000000000000B5 /* MaterialCommunityIcons.ttf */,
 			);
 			name = TON;
 			sourceTree = "<group>";
@@ -368,6 +383,9 @@
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
 				A96593CAFA69437EF52834D7 /* PrivacyInfo.xcprivacy in Resources */,
+				E1F00D0000000000000000A3 /* Feather.ttf in Resources */,
+				E1F00D0000000000000000A4 /* FontAwesome.ttf in Resources */,
+				E1F00D0000000000000000A5 /* MaterialCommunityIcons.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -508,6 +526,8 @@
 				58A95B3E94C14B80A6D45103 /* IosBackgroundDownloads.swift in Sources */,
 				7BA95B3E94C14B80A6D45103 /* IosLoudnessAnalyzerBridge.m in Sources */,
 				7BA95B3E94C14B80A6D45102 /* IosLoudnessAnalyzer.swift in Sources */,
+				E1F00D0000000000000000A2 /* IosFileHashBridge.m in Sources */,
+				E1F00D0000000000000000A1 /* IosFileHash.swift in Sources */,
 				8CA95B3E94C14B80A6D45102 /* IosAudioNormalizerBridge.m in Sources */,
 				8CA95B3E94C14B80A6D45101 /* IosAudioNormalizer.swift in Sources */,
 				9DA95B3E94C14B80A6D45208 /* IosAudioNormalizerRemux.swift in Sources */,

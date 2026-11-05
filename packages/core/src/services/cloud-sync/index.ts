@@ -70,6 +70,7 @@ export {
   createCloudDeletedTrackRecordV2,
   createCloudLivePlaylistRecordV2,
   createCloudLiveTrackRecordV2,
+  keepPublishedTrackBlobs,
   compareCloudEntityVersions,
   compareCloudTracksForLibrary,
   convertCloudLibraryManifestV1ToV2,

@@ -104,6 +104,7 @@
   "cloudSyncDialogDescription": "Choose whether to restore songs you previously deleted from this device.",
   "cloudSyncRestoreDeleted": "Download previously deleted songs again ({{count}})",
   "cloudSyncConfirm": "Sync",
+  "cloudSyncDontShowAgain": "Don't show again",
   "cloudCancel": "Cancel",
   "cloudWorking": "Working...",
   "cloudCleanupSectionTitle": "Clean up cloud storage",

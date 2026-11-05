@@ -104,6 +104,7 @@
   "cloudSyncDialogDescription": "Choisissez si vous souhaitez restaurer les morceaux précédemment supprimés de cet appareil.",
   "cloudSyncRestoreDeleted": "Retélécharger les morceaux supprimés ({{count}})",
   "cloudSyncConfirm": "Synchroniser",
+  "cloudSyncDontShowAgain": "Ne plus afficher",
   "cloudCancel": "Annuler",
   "cloudWorking": "Traitement...",
   "cloudCleanupSectionTitle": "Libérer le stockage cloud",

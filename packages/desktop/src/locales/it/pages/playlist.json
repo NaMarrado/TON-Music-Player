@@ -46,5 +46,7 @@
   "toastAddedToLibrary_other": "{{count}} brani aggiunti alla libreria",
   "toastAlreadyInLibrary": "Tutti i brani sono già nella libreria",
   "toastAddToLibraryError": "Impossibile aggiungere i brani alla libreria",
-  "importing": "Importazione..."
+  "importing": "Importazione...",
+  "exportSelected": "Esporta selezionati ({{count}})",
+  "exportedSongs": "{{count}} brani esportati"
 }

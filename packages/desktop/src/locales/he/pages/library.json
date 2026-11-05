@@ -53,5 +53,7 @@
   "duplicatePlaylistAddThis": "הוסף את השיר הזה",
   "duplicatePlaylistAddAll": "הוסף את כל הכפילויות",
   "editInStudio": "עריכה ב-Studio",
-  "editInStudioHint": "פותח את השיר ב-Studio כדי לקצר או לשנות אותו ולשמור אותו באותו מקום."
+  "editInStudioHint": "פותח את השיר ב-Studio כדי לקצר או לשנות אותו ולשמור אותו באותו מקום.",
+  "exportSelected": "ייצא נבחרים ({{count}})",
+  "exportedSongs": "יוצאו {{count}} שירים"
 }

@@ -46,5 +46,7 @@
   "toastAddedToLibrary_other": "{{count}} tracks added to library",
   "toastAlreadyInLibrary": "All tracks are already in library",
   "toastAddToLibraryError": "Failed to add tracks to library",
-  "importing": "Importing..."
+  "importing": "Importing...",
+  "exportSelected": "Export selected ({{count}})",
+  "exportedSongs": "Exported {{count}} songs"
 }

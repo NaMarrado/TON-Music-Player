@@ -5,7 +5,9 @@ import {
   type CloudSyncProgress,
   type CloudSyncResult,
 } from '@ton/core';
+import { repairMissingCloudCovers } from '../cover-art';
 import { scheduleMobileJob } from '../job-scheduler';
+import { upsertTracksByIds } from '../../stores/library-store';
 import { syncMobileProfile } from '../listening-profile/store';
 import { getMobileCloudDeviceId } from './config';
 import {
@@ -96,6 +98,11 @@ async function runMobileMusicV2Sync(
       const result: CloudSyncResult = { ...EMPTY_RESULT };
       const scopeId = await ensureMobileCloudScope(config);
       const state = await getMobileCloudPersistedState(scopeId);
+      if (mode !== 'fetch') {
+        // Covers missing on R2 are queued now, so the outbox publishes them below.
+        const coveredTrackIds = await repairMissingCloudCovers().catch(() => []);
+        if (coveredTrackIds.length > 0) void upsertTracksByIds(coveredTrackIds).catch(() => {});
+      }
       const durableOutbox = await getMobileCloudOutbox(scopeId);
       const outbox = mode === 'fetch' ? [] : durableOutbox;
       // A fetch publishes nothing: all queued local edits remain protected.

@@ -1,9 +1,10 @@
 import { useCallback } from 'react';
 import { reconcileLibraryTracks } from '../../../../stores/library-store';
+import { exportSongs } from '../../../../stores/playlist-store';
 import { dismissToast, showToast } from '../../../../stores/toast-store';
 import type { LibraryPageActionsArgs } from './types';
 
-type UseLibraryTransferActionsArgs = Pick<LibraryPageActionsArgs, 't'>;
+type UseLibraryTransferActionsArgs = Pick<LibraryPageActionsArgs, 'selectedIds' | 't'>;
 type ExportStartResult = {
   trackCount: number;
   playlistCount: number;
@@ -15,7 +16,7 @@ function hasExportedContent(result: ExportStartResult): boolean {
 }
 
 export function useLibraryTransferActions(
-  { t, refreshExportSummary }: UseLibraryTransferActionsArgs & Pick<LibraryPageActionsArgs, 'refreshExportSummary'>,
+  { selectedIds, t, refreshExportSummary }: UseLibraryTransferActionsArgs & Pick<LibraryPageActionsArgs, 'refreshExportSummary'>,
 ) {
   const handleImport = useCallback(async () => {
     const loadingId = showToast(t('scanning'), 'loading', 0);
@@ -35,15 +36,18 @@ export function useLibraryTransferActions(
     }
   }, [t]);
 
+  /** Export covers the selected songs when any are selected, otherwise the whole Library. */
   const handleExportLibrary = useCallback(async () => {
     const ipc = window.api.invoke as (...args: unknown[]) => Promise<unknown>;
     const loadingId = showToast(t('exporting') || 'Exporting...', 'loading', 0);
     try {
-      const result = (await ipc('export:start')) as {
-        trackCount: number;
-        playlistCount: number;
-        sizeBytes: number;
-      };
+      if (selectedIds.size > 0) {
+        const result = await exportSongs([...selectedIds]);
+        dismissToast(loadingId);
+        if (result.trackCount > 0) showToast(t('exportedSongs', { count: result.trackCount }), 'success');
+        return;
+      }
+      const result = (await ipc('export:start')) as ExportStartResult;
       dismissToast(loadingId);
       if (hasExportedContent(result)) {
         showToast(t('exportSuccess'), 'success');
@@ -56,7 +60,7 @@ export function useLibraryTransferActions(
     } finally {
       void refreshExportSummary();
     }
-  }, [refreshExportSummary, t]);
+  }, [refreshExportSummary, selectedIds, t]);
 
   return {
     handleExportLibrary,

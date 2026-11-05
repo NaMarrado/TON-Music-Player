@@ -12,6 +12,7 @@ import {
   createCloudLivePlaylistRecordV2,
   createCloudLiveTrackRecordV2,
   createEmptyCloudLibraryManifestV2,
+  keepPublishedTrackBlobs,
   nextCloudEntityVersion,
 } from '@ton/core';
 import type { MobileCloudOutboxRow } from './local-state';
@@ -21,21 +22,6 @@ function parseDeletePayload(row: MobileCloudOutboxRow): Record<string, unknown> 
   if (!row.payload_json) return {};
   try { return JSON.parse(row.payload_json) as Record<string, unknown>; }
   catch { return {}; }
-}
-
-function preserveExistingTrackBlobKeys(
-  entry: CloudTrackEntry,
-  remote: CloudTrackRecordV2 | undefined,
-): CloudTrackEntry {
-  if (!remote || remote.deleted) return entry;
-  const sameArtwork = entry.artwork_hash_sha256 != null
-    && entry.artwork_hash_sha256 === remote.entry.artwork_hash_sha256;
-  return {
-    ...entry,
-    object_key: remote.entry.object_key,
-    artwork_object_key: sameArtwork ? remote.entry.artwork_object_key : entry.artwork_object_key,
-    artwork_file_name: sameArtwork ? remote.entry.artwork_file_name : entry.artwork_file_name,
-  };
 }
 
 function preserveExistingPlaylistBlobKeys(
@@ -77,9 +63,9 @@ export function buildLocalMutationManifest(
         const localAt = normalizeDownloadedAt(entry.downloaded_at);
         const remoteAt = normalizeDownloadedAt(existing.entry.downloaded_at);
         const downloadedAt = localAt && remoteAt ? Math.min(localAt, remoteAt) : localAt ?? remoteAt;
-        const reconciled = preserveExistingTrackBlobKeys({
+        const reconciled = keepPublishedTrackBlobs({
           ...preferred, downloaded_at: downloadedAt,
-        }, existing);
+        }, existing.entry);
         tracks.set(entry.content_hash_sha256, createCloudLiveTrackRecordV2(reconciled, nextVersion()));
       }
       return;
@@ -116,9 +102,10 @@ export function buildLocalMutationManifest(
       if (row.operation === 'upsert' && row.local_id != null) {
         const entry = prepared?.trackEntryByLocalId.get(row.local_id);
         if (entry) {
-          const reconciled = preserveExistingTrackBlobKeys(
-            entry, remoteTracks.get(entry.content_hash_sha256),
-          );
+          const remoteTrack = remoteTracks.get(entry.content_hash_sha256);
+          const reconciled = !remoteTrack || remoteTrack.deleted
+            ? entry
+            : keepPublishedTrackBlobs(entry, remoteTrack.entry);
           tracks.set(entry.content_hash_sha256, createCloudLiveTrackRecordV2(reconciled, version));
         }
       } else if (row.operation === 'delete' && row.entity_key.startsWith(CLOUD_REPLACED_TRACK_KEY_PREFIX)) {
