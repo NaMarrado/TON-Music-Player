@@ -8,7 +8,7 @@ const ICON_FONTS = ['Feather', 'FontAwesome', 'MaterialCommunityIcons']
 const config: ExpoConfig = {
   name: 'TON',
   slug: 'ton-player',
-  version: '1.0.50',
+  version: '1.0.51',
   icon: './assets/icon.png',
   scheme: 'ton',
   orientation: 'portrait',
@@ -16,7 +16,7 @@ const config: ExpoConfig = {
   newArchEnabled: true,
   android: {
     package: 'com.ton.player',
-    versionCode: 1000050,
+    versionCode: 1000051,
     icon: './assets/android-icon.png',
     permissions: [
       'android.permission.FOREGROUND_SERVICE',
@@ -34,7 +34,7 @@ const config: ExpoConfig = {
   },
   ios: {
     bundleIdentifier: 'cz.ton.player',
-    buildNumber: '1000050',
+    buildNumber: '1000051',
     icon: './assets/icon.png',
     infoPlist: {
       LSSupportsOpeningDocumentsInPlace: true,
