@@ -53,5 +53,7 @@
   "duplicatePlaylistAddThis": "Přidat tuto skladbu",
   "duplicatePlaylistAddAll": "Přidat všechny duplicity",
   "editInStudio": "Upravit ve Studiu",
-  "editInStudioHint": "Otevře skladbu ve Studiu, kde ji můžeš zkrátit nebo upravit a uložit zpět na stejné místo."
+  "editInStudioHint": "Otevře skladbu ve Studiu, kde ji můžeš zkrátit nebo upravit a uložit zpět na stejné místo.",
+  "exportSelected": "Exportovat vybrané ({{count}})",
+  "exportedSongs": "Exportováno skladeb: {{count}}"
 }

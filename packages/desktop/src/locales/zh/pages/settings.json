@@ -104,6 +104,7 @@
   "cloudSyncDialogDescription": "选择是否恢复之前从此设备删除的歌曲。",
   "cloudSyncRestoreDeleted": "重新下载之前删除的歌曲 ({{count}})",
   "cloudSyncConfirm": "同步",
+  "cloudSyncDontShowAgain": "不再显示",
   "cloudCancel": "取消",
   "cloudWorking": "在职的...",
   "cloudCleanupSectionTitle": "释放云存储空间",

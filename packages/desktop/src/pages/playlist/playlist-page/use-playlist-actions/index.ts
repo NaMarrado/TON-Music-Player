@@ -12,7 +12,7 @@ export function usePlaylistActions({
   t,
 }: UsePlaylistActionsArgs) {
   const playbackActions = usePlaybackActions(playbackTracksRef);
-  const fileActions = usePlaylistFileActions({ playlist, t });
+  const fileActions = usePlaylistFileActions({ playbackTracksRef, playlist, selectedIds, t });
   const mutationActions = usePlaylistMutationActions({
     clearSelection,
     navigate,

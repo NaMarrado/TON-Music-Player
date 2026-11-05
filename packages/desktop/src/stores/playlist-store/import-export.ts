@@ -1,3 +1,4 @@
+import type { ExportResult } from '../../shared/transfer-ipc';
 import type {
   DuplicateCheck,
   ImportFolderResult,
@@ -24,6 +25,16 @@ export async function exportPlaylist(
   playlistId: number,
 ): Promise<string | null> {
   return (await invokeIpc('playlist:export', playlistId)) as string | null;
+}
+
+/** Exports exactly these songs (the current selection) as one bundle. */
+export async function exportSongs(trackIds: number[]): Promise<ExportResult> {
+  return (await invokeIpc('export:start', {
+    kind: 'songs',
+    includeLibrary: false,
+    playlistIds: [],
+    trackIds,
+  })) as ExportResult;
 }
 
 export async function importFolderAsPlaylist(

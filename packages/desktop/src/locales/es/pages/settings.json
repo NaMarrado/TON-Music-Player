@@ -104,6 +104,7 @@
   "cloudSyncDialogDescription": "Elige si quieres restaurar las canciones eliminadas anteriormente de este dispositivo.",
   "cloudSyncRestoreDeleted": "Volver a descargar canciones eliminadas ({{count}})",
   "cloudSyncConfirm": "Sincronizar",
+  "cloudSyncDontShowAgain": "No volver a mostrar",
   "cloudCancel": "Cancelar",
   "cloudWorking": "Procesando...",
   "cloudCleanupSectionTitle": "Liberar almacenamiento en la nube",

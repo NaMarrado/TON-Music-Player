@@ -46,5 +46,7 @@
   "toastAddedToLibrary_other": "{{count}} skladeb přidáno do knihovny",
   "toastAlreadyInLibrary": "Všechny skladby jsou již v knihovně",
   "toastAddToLibraryError": "Nepodařilo se přidat do knihovny",
-  "importing": "Importuji..."
+  "importing": "Importuji...",
+  "exportSelected": "Exportovat vybrané ({{count}})",
+  "exportedSongs": "Exportováno skladeb: {{count}}"
 }

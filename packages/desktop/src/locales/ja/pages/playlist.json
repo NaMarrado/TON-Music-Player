@@ -46,5 +46,7 @@
   "toastAddedToLibrary_other": "{{count}} トラックがライブラリに追加されました",
   "toastAlreadyInLibrary": "すべてのトラックはすでにライブラリにあります",
   "toastAddToLibraryError": "ライブラリへのトラックの追加に失敗しました",
-  "importing": "インポート中..."
+  "importing": "インポート中...",
+  "exportSelected": "選択項目を書き出す ({{count}})",
+  "exportedSongs": "{{count}} 曲を書き出しました"
 }

@@ -46,5 +46,7 @@
   "toastAddedToLibrary_other": "{{count}} 曲目已添加到音乐音乐库中",
   "toastAlreadyInLibrary": "所有曲目均已在音乐库中",
   "toastAddToLibraryError": "无法将曲目添加到音乐音乐库中",
-  "importing": "输入..."
+  "importing": "输入...",
+  "exportSelected": "导出所选 ({{count}})",
+  "exportedSongs": "已导出 {{count}} 首歌曲"
 }

@@ -13,6 +13,7 @@ import {
   createCloudLivePlaylistRecordV2,
   createCloudLiveTrackRecordV2,
   createEmptyCloudLibraryManifestV2,
+  keepPublishedTrackBlobs,
   nextCloudEntityVersion,
 } from '@ton/core';
 import type { DesktopCloudOutboxEntry, DesktopCloudSyncStateRow } from './auto-sync-store';
@@ -81,15 +82,9 @@ export function createV2MutationBuilder(input: {
       const candidate = mergeLiveV1
         ? mergeV1BootstrapTrackEntry(previous.entry, serialized.entry)
         : serialized.entry;
-      const entry: CloudTrackEntry = !previous || previous.deleted ? candidate : {
-        ...candidate,
-        object_key: previous.entry.object_key,
-        artwork_object_key:
-          previous.entry.artwork_hash_sha256 === candidate.artwork_hash_sha256
-            && previous.entry.artwork_object_key
-            ? previous.entry.artwork_object_key
-            : candidate.artwork_object_key,
-      };
+      const entry: CloudTrackEntry = !previous || previous.deleted
+        ? candidate
+        : keepPublishedTrackBlobs(candidate, previous.entry);
       trackRecords.push(createCloudLiveTrackRecordV2(entry, nextVersion()));
       if (!previous || previous.deleted || previous.entry.object_key !== entry.object_key) {
         requiredAudio.set(serialized.entry.content_hash_sha256, { serialized, key: entry.object_key });

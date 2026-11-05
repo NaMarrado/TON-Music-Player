@@ -26,17 +26,26 @@ interface LibraryState {
   isStale: boolean;
 }
 
+const STARRED_ONLY_KEY = 'library:starredOnly';
+
 export const useLibraryStore = create<LibraryState>()(() => ({
   tracks: [],
   sortBy: 'added_at',
   sortOrder: 'desc',
   filterQuery: '',
-  starredOnly: false,
+  // The store is also loaded by Node tests, which have no localStorage.
+  starredOnly: globalThis.localStorage?.getItem(STARRED_ONLY_KEY) === 'true',
   viewMode: 'list',
   isLoading: false,
   hasLoaded: false,
   isStale: false,
 }));
+
+/** The Starred filter stays as the user left it across restarts. */
+export function setStarredOnly(starredOnly: boolean): void {
+  useLibraryStore.setState({ starredOnly });
+  localStorage.setItem(STARRED_ONLY_KEY, String(starredOnly));
+}
 
 /** Load all tracks from DB into the store (with playlist names). */
 const LIBRARY_RECONCILE_DELAY_MS = 100;

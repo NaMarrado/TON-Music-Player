@@ -36,6 +36,9 @@ interface CloudSectionProps {
   t: Translator;
 }
 
+/** "Don't show again" in the Sync dialog: the remembered answer ('restore' | 'skip') to restoring deleted songs. */
+const SYNC_DELETED_CHOICE_KEY = 'cloud:syncDeletedChoice';
+
 export function CloudSection({ layout, t }: CloudSectionProps) {
   const [form, setForm] = useState<CloudFormState>(EMPTY_CLOUD_FORM);
   const [hasSecret, setHasSecret] = useState(false);
@@ -53,6 +56,7 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
   const [syncPreview, setSyncPreview] = useState<CloudLocalDeletionPreview | null>(null);
   const [restoreDeleted, setRestoreDeleted] = useState(false);
   const [syncPreparing, setSyncPreparing] = useState(false);
+  const [rememberSyncChoice, setRememberSyncChoice] = useState(false);
 
   useEffect(() => {
     void Promise.all([
@@ -216,6 +220,11 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
   }, [t]);
 
   const prepareSync = useCallback(async () => {
+    const rememberedChoice = localStorage.getItem(SYNC_DELETED_CHOICE_KEY);
+    if (rememberedChoice === 'restore' || rememberedChoice === 'skip') {
+      await runTask('cloud:sync-now', rememberedChoice === 'restore');
+      return;
+    }
     setSyncPreparing(true);
     setStatus(null);
     try {
@@ -230,6 +239,7 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
       }
       setSyncPreview(preview);
       setRestoreDeleted(false);
+      setRememberSyncChoice(false);
       setShowSync(true);
     } catch (error) {
       setStatus(formatCloudError(error, t));
@@ -284,8 +294,15 @@ export function CloudSection({ layout, t }: CloudSectionProps) {
           busy={busy}
           onCancel={() => setShowSync(false)}
           onConfirm={() => {
-            void runTask('cloud:sync-now', restoreDeleted).then(() => setShowSync(false));
+            if (rememberSyncChoice) {
+              localStorage.setItem(SYNC_DELETED_CHOICE_KEY, restoreDeleted ? 'restore' : 'skip');
+            }
+            // The dialog closes at once; progress stays visible in this section while the sync runs.
+            setShowSync(false);
+            void runTask('cloud:sync-now', restoreDeleted);
           }}
+          rememberChoice={rememberSyncChoice}
+          setRememberChoice={setRememberSyncChoice}
           preview={syncPreview}
           restoreDeleted={restoreDeleted}
           setRestoreDeleted={setRestoreDeleted}

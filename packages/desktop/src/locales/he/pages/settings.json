@@ -104,6 +104,7 @@
   "cloudSyncDialogDescription": "בחר אם לשחזר שירים שמחקת בעבר מהמכשיר הזה.",
   "cloudSyncRestoreDeleted": "הורד שוב שירים שנמחקו בעבר ({{count}})",
   "cloudSyncConfirm": "סנכרן",
+  "cloudSyncDontShowAgain": "אל תציג שוב",
   "cloudCancel": "ביטול",
   "cloudWorking": "עובד...",
   "cloudCleanupSectionTitle": "פינוי אחסון בענן",

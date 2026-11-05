@@ -123,6 +123,7 @@ export function PlaylistHeader({
             align="end"
             compact
             isSmart={isSmart}
+            selectedCount={selectedCount}
             t={t}
             tracksCount={tracks.length}
             onDelete={onDelete}

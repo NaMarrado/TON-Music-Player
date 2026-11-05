@@ -3,7 +3,9 @@ type HeaderActionsProps = {
   compact: boolean;
   hasAnyTracks: boolean;
   hasExportableContent: boolean;
-  t: (key: string) => string;
+  /** Selected songs; Export exports just these when any are selected. */
+  selectedCount: number;
+  t: (key: string, vars?: Record<string, unknown>) => string;
   onPlayAll: () => void;
   onImport: () => void;
   onExportLibrary: () => void;
@@ -58,6 +60,7 @@ export function HeaderActions({
   compact,
   hasAnyTracks,
   hasExportableContent,
+  selectedCount,
   t,
   onPlayAll,
   onImport,
@@ -101,7 +104,12 @@ export function HeaderActions({
             {t('import')}
           </HeaderButton>
 
-          <HeaderButton compact={compact} fillWidth={compact} onClick={onExportLibrary} disabled={!hasExportableContent}>
+          <HeaderButton
+            compact={compact}
+            fillWidth={compact}
+            onClick={onExportLibrary}
+            disabled={!hasExportableContent && selectedCount === 0}
+          >
             <svg
               width="14"
               height="14"
@@ -116,7 +124,7 @@ export function HeaderActions({
               <polyline points="17 8 12 3 7 8" />
               <line x1="12" y1="3" x2="12" y2="15" />
             </svg>
-            {t('exportLibrary')}
+            {selectedCount > 0 ? t('exportSelected', { count: selectedCount }) : t('exportLibrary')}
           </HeaderButton>
         </>
       )}

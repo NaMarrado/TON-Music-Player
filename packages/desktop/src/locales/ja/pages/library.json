@@ -53,5 +53,7 @@
   "duplicatePlaylistAddThis": "この曲を追加",
   "duplicatePlaylistAddAll": "重複をすべて追加",
   "editInStudio": "Studioで編集",
-  "editInStudioHint": "この曲をStudioで開いてカットや変更を行い、同じ場所に保存します。"
+  "editInStudioHint": "この曲をStudioで開いてカットや変更を行い、同じ場所に保存します。",
+  "exportSelected": "選択項目を書き出す ({{count}})",
+  "exportedSongs": "{{count}} 曲を書き出しました"
 }

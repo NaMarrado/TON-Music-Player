@@ -11,6 +11,7 @@ type PlaylistActionsProps = {
   align?: 'start' | 'end';
   compact: boolean;
   isSmart: boolean;
+  selectedCount: number;
   t: (key: string, vars?: Record<string, unknown>) => string;
   tracksCount: number;
   onDelete: () => void;
@@ -24,6 +25,7 @@ export function PlaylistActions({
   align = 'start',
   compact,
   isSmart,
+  selectedCount,
   t,
   tracksCount,
   onDelete,
@@ -67,7 +69,7 @@ export function PlaylistActions({
         <>
           <ActionButton compact={compact} fillWidth={compact} onClick={onExport}>
             <ExportIcon />
-            {t('export')}
+            {selectedCount > 0 ? t('exportSelected', { count: selectedCount }) : t('export')}
           </ActionButton>
 
         </>

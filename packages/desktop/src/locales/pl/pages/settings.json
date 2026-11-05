@@ -104,6 +104,7 @@
   "cloudSyncDialogDescription": "Wybierz, czy przywrócić utwory wcześniej usunięte z tego urządzenia.",
   "cloudSyncRestoreDeleted": "Pobierz ponownie usunięte utwory ({{count}})",
   "cloudSyncConfirm": "Synchronizuj",
+  "cloudSyncDontShowAgain": "Nie pokazuj ponownie",
   "cloudCancel": "Anuluj",
   "cloudWorking": "Pracujący...",
   "cloudCleanupSectionTitle": "Zwolnij miejsce w chmurze",

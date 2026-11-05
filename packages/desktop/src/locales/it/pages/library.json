@@ -53,5 +53,7 @@
   "duplicatePlaylistAddThis": "Aggiungi questo brano",
   "duplicatePlaylistAddAll": "Aggiungi tutti i duplicati",
   "editInStudio": "Modifica in Studio",
-  "editInStudioHint": "Apre il brano in Studio per tagliarlo o modificarlo e lo salva nello stesso posto."
+  "editInStudioHint": "Apre il brano in Studio per tagliarlo o modificarlo e lo salva nello stesso posto.",
+  "exportSelected": "Esporta selezionati ({{count}})",
+  "exportedSongs": "{{count}} brani esportati"
 }

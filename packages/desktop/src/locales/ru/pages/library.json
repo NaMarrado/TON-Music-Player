@@ -53,5 +53,7 @@
   "duplicatePlaylistAddThis": "Добавить этот трек",
   "duplicatePlaylistAddAll": "Добавить все дубликаты",
   "editInStudio": "Изменить в Studio",
-  "editInStudioHint": "Открывает трек в Studio, чтобы обрезать или изменить его и сохранить на том же месте."
+  "editInStudioHint": "Открывает трек в Studio, чтобы обрезать или изменить его и сохранить на том же месте.",
+  "exportSelected": "Экспорт выбранного ({{count}})",
+  "exportedSongs": "Экспортировано песен: {{count}}"
 }

@@ -4,7 +4,7 @@ import { FilterInput } from './filter-input';
 import { SelectionBar } from './selection-bar';
 import type { LibraryHeaderProps } from './types';
 import type { LibraryLayout } from '../library-page/use-library-layout';
-import { useLibraryStore } from '../../../stores/library-store';
+import { setStarredOnly } from '../../../stores/library-store';
 
 export function LibraryHeader({
   canExport,
@@ -72,8 +72,8 @@ export function LibraryHeader({
               width: '100%',
             }}
           >
-            <div className="min-w-0" style={{ flex: '0 1 auto' }}>
-              {selectedIds.size > 0 ? (
+            <div className="flex min-w-0 flex-wrap items-center" style={{ flex: '0 1 auto', gap: '10px' }}>
+              {selectedIds.size > 0 && (
                 <SelectionBar
                   compact={layout.compact}
                   deleteConfirm={deleteConfirm}
@@ -87,18 +87,19 @@ export function LibraryHeader({
                   onDelete={onDelete}
                   onBulkAddToPlaylist={onBulkAddToPlaylist}
                 />
-              ) : (
-                <HeaderActions
-                  compact={false}
-                  canPlay={playbackTrackCount > 0}
-                  hasAnyTracks={hasAnyTracks}
-                  hasExportableContent={canExport && hasExportableContent}
-                  t={t}
-                  onPlayAll={onPlayAll}
-                  onImport={onImport}
-                  onExportLibrary={onExportLibrary}
-                />
               )}
+              {/* Export stays in place during selection: it exports the selected songs, otherwise the whole Library. */}
+              <HeaderActions
+                compact={false}
+                canPlay={playbackTrackCount > 0}
+                hasAnyTracks={hasAnyTracks}
+                hasExportableContent={canExport && hasExportableContent}
+                selectedCount={selectedIds.size}
+                t={t}
+                onPlayAll={onPlayAll}
+                onImport={onImport}
+                onExportLibrary={onExportLibrary}
+              />
             </div>
 
             {/* Starred and the filter wrap together, so the second row is one aligned bar instead of a loose search box. */}
@@ -109,7 +110,7 @@ export function LibraryHeader({
               <button
                 type="button"
                 aria-pressed={starredOnly}
-                onClick={() => useLibraryStore.setState({ starredOnly: !starredOnly })}
+                onClick={() => setStarredOnly(!starredOnly)}
                 className="download-btn inline-flex shrink-0 items-center gap-2 cursor-pointer"
                 style={{
                   height: '36px',

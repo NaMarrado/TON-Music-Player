@@ -104,6 +104,7 @@
   "cloudSyncDialogDescription": "Scegli se ripristinare i brani eliminati in precedenza da questo dispositivo.",
   "cloudSyncRestoreDeleted": "Scarica di nuovo i brani eliminati ({{count}})",
   "cloudSyncConfirm": "Sincronizza",
+  "cloudSyncDontShowAgain": "Non mostrare più",
   "cloudCancel": "Annulla",
   "cloudWorking": "Operazione in corso...",
   "cloudCleanupSectionTitle": "Libera spazio nel cloud",

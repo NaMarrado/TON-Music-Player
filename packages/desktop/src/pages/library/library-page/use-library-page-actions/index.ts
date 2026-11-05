@@ -16,7 +16,7 @@ export function useLibraryPageActions({
   t,
 }: LibraryPageActionsArgs) {
   const playbackActions = useLibraryPlaybackActions({ playbackTracksRef });
-  const transferActions = useLibraryTransferActions({ refreshExportSummary, t });
+  const transferActions = useLibraryTransferActions({ refreshExportSummary, selectedIds, t });
   const playlistActions = useLibraryPlaylistActions({
     contextMenu,
     selectedIds,

@@ -104,6 +104,7 @@
   "cloudSyncDialogDescription": "Выберите, нужно ли восстановить треки, ранее удалённые с этого устройства.",
   "cloudSyncRestoreDeleted": "Снова скачать удалённые треки ({{count}})",
   "cloudSyncConfirm": "Синхронизировать",
+  "cloudSyncDontShowAgain": "Больше не показывать",
   "cloudCancel": "Отменить",
   "cloudWorking": "Работающий...",
   "cloudCleanupSectionTitle": "Освободить облачное хранилище",
