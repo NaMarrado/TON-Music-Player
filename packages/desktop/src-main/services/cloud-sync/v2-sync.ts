@@ -14,6 +14,7 @@ import {
   getDesktopCloudDeviceId,
   setDesktopCloudLastRevision,
 } from './config';
+import { repairMissingCloudCovers } from './cover-repair';
 import { DesktopR2Client } from './r2-client';
 import { EMPTY_RESULT, emitProgress, requireConfig } from './sync-common';
 import { applyCloudManifestV2 } from './v2-apply';
@@ -79,11 +80,19 @@ async function syncCloudMusicV2ForDesktop(
   const client = new DesktopR2Client(config);
   const deviceId = getDesktopCloudDeviceId();
   const state = readDesktopCloudSyncState(scopeId);
-  const durableOutbox = readDesktopCloudOutbox(scopeId);
   const requestedMode = options.mode ?? 'sync';
   const mode = requestedMode;
   const shouldUpload = mode !== 'fetch';
   const shouldApply = mode !== 'upload';
+  if (shouldUpload) {
+    // Covers missing on R2 are queued now, so the outbox read below publishes them.
+    const coveredTrackIds = await repairMissingCloudCovers(scopeId).catch((error: unknown) => {
+      console.warn('[cloud] Cover repair failed; the sync continues without it.', error);
+      return [];
+    });
+    if (coveredTrackIds.length > 0) options.onTracksApplied?.(coveredTrackIds);
+  }
+  const durableOutbox = readDesktopCloudOutbox(scopeId);
   const outbox = shouldUpload ? durableOutbox : [];
   // Entity mutations are protected independently from administrative reconcile
   // work. A pre-existing reconcile is not a reason to block first-time imports.

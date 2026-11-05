@@ -28,8 +28,12 @@ import {
   subscribeMobileCloudAutoSyncStatus,
 } from '../../services/cloud-sync/auto-sync';
 import { getMobileCloudAudioOverCellularEnabled } from '../../services/cloud-sync/config';
+import { getSetting, setSetting } from '../../services/db-queries';
 import { reconcileLibraryTracks } from '../../stores/library-store';
 import { loadPlaylists } from '../../stores/playlist-store';
+
+/** "Don't show again" in the Sync dialog: the remembered answer ('restore' | 'skip') to restoring deleted songs. */
+const SYNC_DELETED_CHOICE_SETTING = 'cloud_sync_deleted_choice';
 
 type CloudForm = {
   accountId: string;
@@ -288,6 +292,11 @@ export function useCloudSyncSettings() {
   }, [t]);
 
   const prepareCloudSync = useCallback(async (): Promise<CloudLocalDeletionPreview | null> => {
+    const rememberedChoice = await getSetting(SYNC_DELETED_CHOICE_SETTING).catch(() => null);
+    if (rememberedChoice === 'restore' || rememberedChoice === 'skip') {
+      void runCloudTask('fetch', rememberedChoice === 'restore');
+      return null;
+    }
     setCloudBusy(true);
     setCloudError(null);
     try {
@@ -298,7 +307,7 @@ export function useCloudSyncSettings() {
     } finally {
       setCloudBusy(false);
     }
-  }, [t]);
+  }, [runCloudTask, t]);
 
   const cancelCloudTask = useCallback(() => {
     cancelMobileCloudAutoSyncRun();
@@ -419,7 +428,10 @@ export function useCloudSyncSettings() {
     refreshCloudLocalState,
     refreshCloudCleanupPreview,
     saveAndTestCloud,
-    syncCloud: (restoreLocallyDeleted: boolean) => {
+    syncCloud: (restoreLocallyDeleted: boolean, rememberChoice = false) => {
+      if (rememberChoice) {
+        void setSetting(SYNC_DELETED_CHOICE_SETTING, restoreLocallyDeleted ? 'restore' : 'skip').catch(() => {});
+      }
       void runCloudTask('fetch', restoreLocallyDeleted);
     },
     toggleCloudAutoSync,

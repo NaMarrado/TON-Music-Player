@@ -80,6 +80,7 @@
   "cloudSyncDialogDescription": "Wähle, ob zuvor von diesem Gerät gelöschte Songs wiederhergestellt werden sollen.",
   "cloudSyncRestoreDeleted": "Zuvor gelöschte Songs erneut herunterladen ({{count}})",
   "cloudSyncConfirm": "Synchronisieren",
+  "cloudSyncDontShowAgain": "Nicht mehr anzeigen",
   "cloudWorking": "Wird verarbeitet...",
   "cloudCleanupSectionTitle": "Cloud-Speicher bereinigen",
   "cloudCleanupDescription": "Löscht Songs aus R2, die nicht in der lokalen Library dieses Geräts vorhanden sind. Dadurch wird R2-Speicher freigegeben. Gelöschte Songs verschwinden auch aus synchronisierten Playlists und von anderen Geräten.",

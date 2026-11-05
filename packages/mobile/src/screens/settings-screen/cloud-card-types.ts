@@ -50,9 +50,10 @@ export type CloudCardProps = {
   onCleanup: () => Promise<'completed' | 'stale' | 'cancelled'>;
   onPrepareCleanup: () => Promise<boolean>;
   onLoad: () => void;
+  /** Resolves to null when there is nothing to ask: no deleted songs, or a remembered answer already started the sync. */
   onPrepareSync: () => Promise<CloudLocalDeletionPreview | null>;
   onSaveTest: () => void;
-  onSync: (restoreLocallyDeleted: boolean) => void;
+  onSync: (restoreLocallyDeleted: boolean, rememberChoice?: boolean) => void;
   onToggleAutoSync: (enabled: boolean) => void;
   onToggleAudioOverCellular: (enabled: boolean) => void;
   onUpdate: (patch: Partial<CloudForm>) => void;

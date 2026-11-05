@@ -43,5 +43,6 @@
   "sortDuration": "長さ",
   "filterPlaceholder": "曲を絞り込む...",
   "noResults": "一致する曲がありません",
-  "editInStudio": "Studioで編集"
+  "editInStudio": "Studioで編集",
+  "exportSelected": "選択項目を書き出す ({{count}})"
 }

@@ -80,6 +80,7 @@
   "cloudSyncDialogDescription": "Choose whether to restore songs you previously deleted from this device.",
   "cloudSyncRestoreDeleted": "Download previously deleted songs again ({{count}})",
   "cloudSyncConfirm": "Sync",
+  "cloudSyncDontShowAgain": "Don't show again",
   "cloudWorking": "Working...",
   "cloudCleanupSectionTitle": "Clean up cloud storage",
   "cloudCleanupDescription": "Deletes songs from R2 that are not in this device's local Library. Use this to free space in R2. The deleted songs will also disappear from synced playlists and other devices.",

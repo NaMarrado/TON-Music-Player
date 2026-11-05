@@ -248,8 +248,8 @@ export function CloudCard({
           formatRestoreDeleted={formatSyncRestoreDeleted}
           labels={labels}
           onClose={() => setSyncPreview(null)}
-          onConfirm={(restoreLocallyDeleted) => {
-            onSync(restoreLocallyDeleted);
+          onConfirm={(restoreLocallyDeleted, rememberChoice) => {
+            onSync(restoreLocallyDeleted, rememberChoice);
             setSyncPreview(null);
           }}
           preview={syncPreview}

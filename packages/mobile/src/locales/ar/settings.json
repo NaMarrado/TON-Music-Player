@@ -80,6 +80,7 @@
   "cloudSyncDialogDescription": "اختر ما إذا كنت تريد استعادة الأغاني التي حذفتها سابقًا من هذا الجهاز.",
   "cloudSyncRestoreDeleted": "تنزيل الأغاني المحذوفة سابقًا مجددًا ({{count}})",
   "cloudSyncConfirm": "مزامنة",
+  "cloudSyncDontShowAgain": "لا تعرض هذا مرة أخرى",
   "cloudWorking": "عمل...",
   "cloudCleanupSectionTitle": "إخلاء مساحة التخزين السحابي",
   "cloudCleanupDescription": "يحذف من R2 الأغاني غير الموجودة في المكتبة المحلية لهذا الجهاز. استخدمه لإخلاء مساحة في R2. ستختفي الأغاني المحذوفة أيضًا من قوائم التشغيل المتزامنة والأجهزة الأخرى.",

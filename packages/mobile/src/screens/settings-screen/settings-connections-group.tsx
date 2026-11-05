@@ -129,6 +129,7 @@ export function SettingsConnectionsGroup({
           syncDialogTitle: t('cloudSyncDialogTitle'),
           syncDialogDescription: t('cloudSyncDialogDescription'),
           syncConfirm: t('cloudSyncConfirm'),
+          syncDontShowAgain: t('cloudSyncDontShowAgain'),
           cancel: tc('cancel'),
           working: t('cloudWorking'),
           cleanupSectionTitle: t('cloudCleanupSectionTitle'),

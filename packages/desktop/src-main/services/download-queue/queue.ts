@@ -15,6 +15,7 @@ import {
   clearFailedDownloads,
   clearNonActiveDownloads,
   countPendingOrActiveDownloads,
+  findActiveDownloadId,
   getNextPendingDownload,
   getSpotifyPlaylistSourcePositions,
   insertDownloadRequest,
@@ -43,6 +44,8 @@ export class DownloadQueue {
   }
 
   enqueue(request: DownloadRequest): number {
+    const activeId = findActiveDownloadId(request);
+    if (activeId != null) return activeId;
     const id = insertDownloadRequest(request);
     this.emitStateChange();
     this.scheduleNext();

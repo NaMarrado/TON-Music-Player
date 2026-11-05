@@ -80,6 +80,7 @@
   "cloudSyncDialogDescription": "Elige si quieres restaurar las canciones eliminadas anteriormente de este dispositivo.",
   "cloudSyncRestoreDeleted": "Volver a descargar canciones eliminadas ({{count}})",
   "cloudSyncConfirm": "Sincronizar",
+  "cloudSyncDontShowAgain": "No volver a mostrar",
   "cloudWorking": "Procesando...",
   "cloudCleanupSectionTitle": "Liberar almacenamiento en la nube",
   "cloudCleanupDescription": "Elimina de R2 las canciones que no están en la biblioteca local de este dispositivo. Así se libera espacio en R2. Las canciones eliminadas también desaparecerán de las playlists sincronizadas y de otros dispositivos.",
